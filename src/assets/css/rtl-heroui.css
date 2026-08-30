@@ -1,0 +1,31 @@
+/* HeroUI RTL Fixes */
+[dir="rtl"] .heroui-input-wrapper {
+  text-align: right;
+}
+
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+  text-align: right;
+}
+
+[dir="rtl"] .heroui-modal-close-button {
+  right: auto;
+  left: 0.75rem;
+}
+
+[dir="rtl"] .heroui-dropdown-menu {
+  text-align: right;
+}
+
+[dir="rtl"] .heroui-popover-content {
+  text-align: right;
+}
+
+[dir="rtl"] .heroui-autocomplete-popover {
+  text-align: right;
+}
+
+[dir="rtl"] .heroui-select-popover {
+  text-align: right;
+}

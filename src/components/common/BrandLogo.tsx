@@ -1,0 +1,86 @@
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { PATHS } from '@/common/constants/PATHS';
+import { useTranslation } from '@/common/i18n';
+
+interface BrandLogoProps {
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  showText?: boolean;
+  className?: string;
+  variant?: 'auto' | 'light' | 'dark';
+}
+
+export function BrandLogo({
+  size = 'md',
+  showText = true,
+  className = '',
+  variant = 'auto',
+}: BrandLogoProps) {
+  const { isPersian } = useTranslation();
+
+  const sizeClasses = {
+    sm: { icon: 'w-10 h-10', img: 38, title: 'text-base font-black', sub: 'text-[9.5px]' },
+    md: { icon: 'w-13 h-13 sm:w-14 sm:h-14', img: 52, title: 'text-lg sm:text-xl font-black', sub: 'text-[10.5px]' },
+    lg: { icon: 'w-16 h-16 sm:w-18 sm:h-18', img: 68, title: 'text-xl sm:text-2xl font-black', sub: 'text-xs' },
+    xl: { icon: 'w-20 h-20 sm:w-24 sm:h-24', img: 90, title: 'text-2xl sm:text-3xl font-black', sub: 'text-sm' },
+  }[size];
+
+  const titleColor =
+    variant === 'dark'
+      ? 'text-[#f7f4ee] group-hover:text-[#d4be9b]'
+      : variant === 'light'
+        ? 'text-[#1d241d] group-hover:text-[#9f815b]'
+        : 'text-[#1d241d] dark:text-[#f7f4ee] group-hover:text-[#9f815b] dark:group-hover:text-[#d4be9b]';
+
+  const subColor =
+    variant === 'dark'
+      ? 'text-[#a69c8e]'
+      : variant === 'light'
+        ? 'text-[#73695c]'
+        : 'text-[#73695c] dark:text-[#a69c8e]';
+
+  return (
+    <Link href={PATHS.HOME} className={`flex items-center gap-3.5 group ${className}`}>
+      {/* Official Brand Monogram Emblem (Enlarged & Prominent) */}
+      <div
+        className={`${sizeClasses.icon} relative rounded-2xl bg-gradient-to-br from-[#2a342a] via-[#1e251e] to-[#141914] border-2 border-[#bfa27a]/50 flex items-center justify-center shadow-xl shadow-black/30 group-hover:border-[#d4be9b] group-hover:scale-105 transition-all duration-300 overflow-hidden flex-shrink-0 p-1.5`}
+      >
+        {/* Ambient Gold Halo Glow */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#9f815b]/25 via-transparent to-[#d4be9b]/35 pointer-events-none" />
+
+        <div className="relative w-full h-full flex items-center justify-center">
+          <Image
+            src="/images/logo/hatef-aroma-logo-cropped.png"
+            alt="Hatef Aroma Official Logo"
+            width={sizeClasses.img}
+            height={sizeClasses.img}
+            className="w-full h-full object-contain filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)] transition-transform duration-300 group-hover:scale-110"
+            priority
+          />
+        </div>
+      </div>
+
+      {/* Brand Typography */}
+      {showText && (
+        <div className="flex flex-col select-none justify-center">
+          <div className="flex items-center gap-2">
+            <span
+              className={`${sizeClasses.title} tracking-tight ${titleColor} transition-colors`}
+            >
+              HatefAroma
+            </span>
+            <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#bfa27a]/25 text-[#d4be9b] border border-[#bfa27a]/40 font-sans shadow-xs">
+              {isPersian ? 'هاتف آروما' : 'Niche'}
+            </span>
+          </div>
+          <span className={`${sizeClasses.sub} ${subColor} tracking-wider font-medium -mt-0.5 font-sans`}>
+            Luxury Perfumes & Cosmetics
+          </span>
+        </div>
+      )}
+    </Link>
+  );
+}

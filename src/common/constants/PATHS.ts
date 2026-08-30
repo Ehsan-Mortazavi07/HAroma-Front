@@ -1,0 +1,25 @@
+export const PATHS = {
+  HOME: '/',
+  PRODUCTS: '/products',
+  PRODUCT: (slug: string) => `/products/${encodeURIComponent(slug)}`,
+  CATEGORY: (slug: string) => `/products?category=${encodeURIComponent(slug)}`,
+  CART: '/cart',
+  CHECKOUT: '/checkout',
+  VIP: '/vip',
+  PROFILE: '/profile',
+  SIGN_IN: '/auth/sign-in',
+  SIGN_UP: '/auth/sign-up',
+
+  // Admin Routes
+  ADMIN_DASHBOARD: '/admin/dashboard',
+  ADMIN_PRODUCTS: '/admin/products',
+  ADMIN_PRODUCT_NEW: '/admin/products/new',
+  ADMIN_PRODUCT_EDIT: (id: string) => `/admin/products/${id}/edit`,
+  ADMIN_CATEGORIES: '/admin/categories',
+  ADMIN_ATTRIBUTES: '/admin/attributes',
+  ADMIN_ORDERS: '/admin/orders',
+  ADMIN_COUPONS: '/admin/coupons',
+  ADMIN_VIP_PLANS: '/admin/vip-plans',
+  ADMIN_USERS: '/admin/users',
+  ADMIN_PAGE_SECTIONS: '/admin/page-sections',
+};
