@@ -141,7 +141,7 @@ export function CartDrawer() {
                         </div>
 
                         <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center gap-1.5 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] rounded-xl p-0.5">
+                          <div className="flex items-center gap-1 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] rounded-2xl p-0.5">
                             <button
                               type="button"
                               aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
@@ -154,11 +154,11 @@ export function CartDrawer() {
                                   }),
                                 )
                               }
-                              className="w-7 h-7 rounded-lg bg-[#ffffff] dark:bg-[#2e3a2e] text-[#1d241d] dark:text-[#f7f4ee] text-xs font-black flex items-center justify-center shadow-xs hover:bg-[#f0eae0] dark:hover:bg-[#384638] transition-colors focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
+                              className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#ffffff] dark:bg-[#2e3a2e] text-[#1d241d] dark:text-[#f7f4ee] text-sm font-black flex items-center justify-center shadow-xs hover:bg-[#f0eae0] dark:hover:bg-[#384638] transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
                             >
                               -
                             </button>
-                            <span className="w-6 text-center text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]" aria-live="polite">
+                            <span className="w-7 text-center text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] font-mono" aria-live="polite">
                               {isPersian ? toPersianDigits(quantity) : quantity}
                             </span>
                             <button
@@ -173,7 +173,7 @@ export function CartDrawer() {
                                   }),
                                 )
                               }
-                              className="w-7 h-7 rounded-lg bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] text-xs font-black flex items-center justify-center shadow-xs transition-colors focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
+                              className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] text-sm font-black flex items-center justify-center shadow-xs transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
                             >
                               +
                             </button>
@@ -189,7 +189,7 @@ export function CartDrawer() {
                                 }),
                               )
                             }
-                            className="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-rose-400"
+                            className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-rose-400"
                             aria-label={t.common.remove}
                             title={t.common.remove}
                           >

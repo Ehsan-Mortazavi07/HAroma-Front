@@ -161,7 +161,9 @@ export function Navbar() {
                     {isProfileMenuOpen && (
                       <div
                         onClick={() => setIsProfileMenuOpen(false)}
-                        className="absolute left-0 mt-2 w-56 bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl shadow-2xl border border-[#e6dcce] dark:border-[#344034] p-2 z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150"
+                        className={`absolute ${
+                          isPersian ? 'left-0' : 'right-0'
+                        } mt-2 w-56 bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl shadow-2xl border border-[#e6dcce] dark:border-[#344034] p-2 z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150`}
                       >
                         <div className="px-3 py-2.5 border-b border-[#e6dcce] dark:border-[#2e3a2e] mb-1">
                           <div className="font-bold text-sm truncate">{user.fullName}</div>
@@ -262,9 +264,15 @@ export function Navbar() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t.nav.searchPlaceholder}
-              className="w-full h-11 px-4 pl-11 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] text-[#1d241d] dark:text-[#f7f4ee] text-xs sm:text-sm border border-[#e6dcce] dark:border-[#3e4c3e] focus:outline-none focus:ring-2 focus:ring-[#bfa27a]"
+              className={`w-full h-11 px-4 ${
+                isPersian ? 'pl-11 pr-4' : 'pr-11 pl-4'
+              } rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] text-[#1d241d] dark:text-[#f7f4ee] text-xs sm:text-sm border border-[#e6dcce] dark:border-[#3e4c3e] focus:outline-none focus:ring-2 focus:ring-[#bfa27a]`}
             />
-            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#73695c] dark:text-[#a69c8e]" />
+            <Search
+              className={`w-4 h-4 absolute ${
+                isPersian ? 'left-3.5' : 'right-3.5'
+              } top-3.5 text-[#73695c] dark:text-[#a69c8e]`}
+            />
           </form>
 
           <div className="flex flex-col gap-1 text-sm font-bold">

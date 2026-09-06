@@ -4,10 +4,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Globe, Check } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { setLang, LangMode } from '@/stores/ui/uiSlice';
+import { useTranslation } from '@/common/i18n';
 
 export function LanguageSwitcher() {
   const dispatch = useAppDispatch();
   const currentLang = useAppSelector((state) => state.ui.lang);
+  const { isRTL } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -54,7 +56,11 @@ export function LanguageSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-44 rounded-2xl bg-[#1c231c] border border-[#3a473a] shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+        <div
+          className={`absolute ${
+            isRTL ? 'left-0' : 'right-0'
+          } mt-2 w-44 rounded-2xl bg-[#1c231c] border border-[#3a473a] shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150`}
+        >
           <div className="px-3 py-1.5 border-b border-[#2e3a2e] text-[11px] font-bold text-[#a69c8e]">
             {currentLang === 'fa' ? 'انتخاب زبان سایت' : 'Select Language'}
           </div>

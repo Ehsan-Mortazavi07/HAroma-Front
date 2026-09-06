@@ -48,11 +48,12 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
     return (
       <button
         onClick={handleIncrement}
-        className={`w-full flex items-center justify-center gap-1.5 rounded-xl font-bold transition-all bg-[#f0eae0] hover:bg-[#e6dcce] text-[#7a5d3e] dark:bg-[#2a342a] dark:hover:bg-[#344034] dark:text-[#d4be9b] border border-[#bfa27a]/30 shadow-xs ${
-          size === 'sm' ? 'py-1.5 text-xs' : size === 'lg' ? 'py-3 text-base' : 'py-2 text-sm'
+        aria-label={isPersian ? `افزودن ${product.title} به سبد خرید` : `Add ${product.title} to bag`}
+        className={`w-full flex items-center justify-center gap-2 rounded-2xl font-bold transition-all bg-[#f0eae0] hover:bg-[#e6dcce] text-[#7a5d3e] dark:bg-[#2a342a] dark:hover:bg-[#344034] dark:text-[#d4be9b] border border-[#bfa27a]/30 shadow-xs min-h-[44px] touch-manipulation active:scale-98 ${
+          size === 'sm' ? 'py-2 px-3 text-xs' : size === 'lg' ? 'py-3.5 px-5 text-base' : 'py-2.5 px-4 text-sm'
         }`}
       >
-        <Plus className={size === 'sm' ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
+        <Plus className="w-4 h-4" />
         <span>{isPersian ? 'افزودن به سبد' : 'Add to Bag'}</span>
       </button>
     );
@@ -60,26 +61,31 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
 
   return (
     <div
-      className={`w-full flex items-center justify-between px-2 rounded-xl font-bold bg-[#f0eae0] dark:bg-[#242c24] border border-[#bfa27a]/40 text-[#1d241d] dark:text-[#f7f4ee] shadow-sm ${
-        size === 'sm' ? 'py-1 text-xs' : size === 'lg' ? 'py-2.5 text-base' : 'py-1.5 text-sm'
-      }`}
+      className={`w-full flex items-center justify-between p-1 rounded-2xl font-bold bg-[#f0eae0] dark:bg-[#242c24] border border-[#bfa27a]/40 text-[#1d241d] dark:text-[#f7f4ee] shadow-sm min-h-[44px]`}
     >
       <button
+        type="button"
         onClick={handleDecrement}
-        className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#e2d7c5] hover:bg-[#d8ccb8] dark:bg-[#2e3a2e] dark:hover:bg-[#3e4c3e] text-[#1d241d] dark:text-[#f7f4ee] transition-colors"
+        aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
+        className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl bg-[#e2d7c5] hover:bg-[#d8ccb8] dark:bg-[#2e3a2e] dark:hover:bg-[#3e4c3e] text-[#1d241d] dark:text-[#f7f4ee] transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
       >
-        <Minus className="w-3.5 h-3.5" />
+        <Minus className="w-4 h-4" />
       </button>
 
-      <span className="font-extrabold text-sm px-2 text-[#1d241d] dark:text-[#d4be9b]">
+      <span
+        className="font-extrabold text-sm px-2 text-[#1d241d] dark:text-[#d4be9b] font-mono min-w-[28px] text-center"
+        aria-live="polite"
+      >
         {isPersian ? toPersianDigits(quantity) : quantity}
       </span>
 
       <button
+        type="button"
         onClick={handleIncrement}
-        className="w-7 h-7 flex items-center justify-center rounded-lg bg-[#bfa27a] hover:bg-[#d4be9b] text-[#1d241d] font-bold shadow-sm transition-colors"
+        aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
+        className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] font-black shadow-sm transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
       >
-        <Plus className="w-3.5 h-3.5" />
+        <Plus className="w-4 h-4" />
       </button>
     </div>
   );

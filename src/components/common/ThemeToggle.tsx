@@ -4,10 +4,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Sun, Moon, Monitor, Check } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { setTheme, ThemeMode } from '@/stores/ui/uiSlice';
+import { useTranslation } from '@/common/i18n';
 
 export function ThemeToggle() {
   const dispatch = useAppDispatch();
   const currentTheme = useAppSelector((state) => state.ui.theme);
+  const { isRTL } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -58,7 +60,11 @@ export function ThemeToggle() {
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-44 rounded-2xl bg-[#1c231c] border border-[#3a473a] shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+        <div
+          className={`absolute ${
+            isRTL ? 'left-0' : 'right-0'
+          } mt-2 w-44 rounded-2xl bg-[#1c231c] border border-[#3a473a] shadow-xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150`}
+        >
           <div className="px-3 py-1.5 border-b border-[#2e3a2e] text-[11px] font-bold text-[#a69c8e]">
             انتخاب پوسته سایت
           </div>
