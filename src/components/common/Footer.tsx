@@ -47,21 +47,21 @@ export function Footer() {
     : footerConfig?.copyrightEn || '© 2026 Hatef Aroma Luxury Perfumes. All rights reserved.';
 
   return (
-    <footer className="bg-[#f8f5f0] dark:bg-[#141914] text-[#1d241d] dark:text-[#f7f4ee] border-t border-[#e6dcce] dark:border-[#2e3a2e] pt-16 pb-8 transition-colors">
+    <footer className="bg-brand-bg text-brand-text border-t border-brand-border pt-16 pb-8 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-brand-border">
           {/* Col 1: Brand Info */}
           <div className="lg:col-span-2 space-y-4">
             <BrandLogo size="lg" />
 
-            <p className="text-xs sm:text-sm text-[#73695c] dark:text-[#a69c8e] leading-relaxed max-w-md">
+            <p className="text-xs sm:text-sm text-brand-text-muted leading-relaxed max-w-md">
               {aboutText}
             </p>
 
             {/* Payment & Trust Badges */}
             <div className="pt-2">
-              <div className="text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] mb-2 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-[#9f815b]" />
+              <div className="text-xs font-bold text-brand-text mb-2 flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-brand-bronze" />
                 <span>{isPersian ? 'روش‌های پرداخت و نمادهای اعتماد:' : 'Accepted Payments & Trust:'}</span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -71,7 +71,7 @@ export function Footer() {
                 ).map((badge) => (
                   <span
                     key={badge}
-                    className="px-2.5 py-1 rounded-lg bg-[#ffffff] dark:bg-[#1c231c] text-[11px] font-bold text-[#1d241d] dark:text-[#d4be9b] border border-[#e6dcce] dark:border-[#344034] shadow-xs"
+                    className="px-2.5 py-1 rounded-lg bg-brand-surface text-[11px] font-bold text-brand-text dark:text-brand-gold border border-brand-border shadow-xs"
                   >
                     {badge}
                   </span>
@@ -82,14 +82,14 @@ export function Footer() {
 
           {/* Col 2: Categories */}
           <div className="space-y-3">
-            <h4 className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
+            <h4 className="font-bold text-sm text-brand-text">
               {isPersian ? 'دسته‌بندی‌های اصلی' : 'Categories'}
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
                 <Link
                   href="/products?category=men-perfumes"
-                  className="hover:text-[#9f815b] dark:hover:text-[#d4be9b] transition-colors flex items-center gap-1"
+                  className="hover:text-brand-bronze dark:hover:text-brand-gold transition-colors flex items-center gap-1"
                 >
                   <span>{t.nav.menPerfumes}</span>
                 </Link>
@@ -97,7 +97,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/products?category=women-perfumes"
-                  className="hover:text-[#9f815b] dark:hover:text-[#d4be9b] transition-colors flex items-center gap-1"
+                  className="hover:text-brand-bronze dark:hover:text-brand-gold transition-colors flex items-center gap-1"
                 >
                   <span>{t.nav.womenPerfumes}</span>
                 </Link>
@@ -105,7 +105,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/products?category=unisex-perfumes"
-                  className="hover:text-[#9f815b] dark:hover:text-[#d4be9b] transition-colors flex items-center gap-1"
+                  className="hover:text-brand-bronze dark:hover:text-brand-gold transition-colors flex items-center gap-1"
                 >
                   <span>{t.nav.unisexPerfumes}</span>
                 </Link>
@@ -113,7 +113,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/products?category=body-splash"
-                  className="hover:text-[#9f815b] dark:hover:text-[#d4be9b] transition-colors flex items-center gap-1"
+                  className="hover:text-brand-bronze dark:hover:text-brand-gold transition-colors flex items-center gap-1"
                 >
                   <span>{t.nav.bodySplash}</span>
                 </Link>
@@ -121,7 +121,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/products?category=skin-care"
-                  className="hover:text-[#9f815b] dark:hover:text-[#d4be9b] transition-colors flex items-center gap-1"
+                  className="hover:text-brand-bronze dark:hover:text-brand-gold transition-colors flex items-center gap-1"
                 >
                   <span>{t.nav.skinCare}</span>
                 </Link>
@@ -129,7 +129,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/products?category=gift-sets"
-                  className="hover:text-[#9f815b] dark:hover:text-[#d4be9b] transition-colors flex items-center gap-1"
+                  className="hover:text-brand-bronze dark:hover:text-brand-gold transition-colors flex items-center gap-1"
                 >
                   <span>{t.nav.giftSets}</span>
                 </Link>
@@ -139,28 +139,28 @@ export function Footer() {
 
           {/* Col 3: Customer Service */}
           <div className="space-y-3">
-            <h4 className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
+            <h4 className="font-bold text-sm text-brand-text">
               {isPersian ? 'خدمات مشتریان' : 'Customer Service'}
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link href={PATHS.VIP} className="hover:text-[#9f815b] dark:hover:text-[#d4be9b] transition-colors font-bold text-[#9f815b] dark:text-[#d4be9b] flex items-center gap-1">
+                <Link href={PATHS.VIP} className="hover:text-brand-bronze dark:hover:text-brand-gold transition-colors font-bold text-brand-bronze dark:text-brand-gold flex items-center gap-1">
                   <Crown className="w-3.5 h-3.5" />
                   <span>{t.nav.vipClub}</span>
                 </Link>
               </li>
               <li>
-                <Link href={PATHS.PROFILE} className="hover:text-[#9f815b] dark:hover:text-[#d4be9b] transition-colors">
+                <Link href={PATHS.PROFILE} className="hover:text-brand-bronze dark:hover:text-brand-gold transition-colors">
                   {t.nav.myProfile}
                 </Link>
               </li>
               <li>
-                <Link href={PATHS.CART} className="hover:text-[#9f815b] dark:hover:text-[#d4be9b] transition-colors">
+                <Link href={PATHS.CART} className="hover:text-brand-bronze dark:hover:text-brand-gold transition-colors">
                   {t.nav.cartTitle}
                 </Link>
               </li>
               <li>
-                <Link href={PATHS.SIGN_IN} className="hover:text-[#9f815b] dark:hover:text-[#d4be9b] transition-colors">
+                <Link href={PATHS.SIGN_IN} className="hover:text-brand-bronze dark:hover:text-brand-gold transition-colors">
                   {t.nav.signIn}
                 </Link>
               </li>
@@ -169,20 +169,20 @@ export function Footer() {
 
           {/* Col 4: Contact Info */}
           <div className="space-y-3">
-            <h4 className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
+            <h4 className="font-bold text-sm text-brand-text">
               {isPersian ? 'ارتباط با ما' : 'Contact Us'}
             </h4>
-            <ul className="space-y-2.5 text-xs text-[#73695c] dark:text-[#a69c8e]">
+            <ul className="space-y-2.5 text-xs text-brand-text-muted">
               <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-[#9f815b] shrink-0" />
+                <Phone className="w-4 h-4 text-brand-bronze shrink-0" />
                 <span className="font-mono">{phoneText}</span>
               </li>
               <li className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#9f815b] shrink-0" />
+                <Mail className="w-4 h-4 text-brand-bronze shrink-0" />
                 <span className="font-sans">{emailText}</span>
               </li>
               <li className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-[#9f815b] shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-brand-bronze shrink-0 mt-0.5" />
                 <span className="leading-relaxed">{addressText}</span>
               </li>
             </ul>
@@ -190,9 +190,9 @@ export function Footer() {
         </div>
 
         {/* Bottom Copyright */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#73695c] dark:text-[#a69c8e]">
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-text-muted">
           <p>{copyrightText}</p>
-          <div className="flex items-center gap-4 text-[#9f815b] dark:text-[#d4be9b] font-bold">
+          <div className="flex items-center gap-4 text-brand-bronze dark:text-brand-gold font-bold">
             <Link href={PATHS.PRODUCTS} className="hover:underline">
               {t.nav.products}
             </Link>

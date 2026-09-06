@@ -260,12 +260,12 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
   return (
     <div className="min-h-screen py-6 sm:py-10">
       {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-xs text-[#73695c] dark:text-[#a69c8e] mb-8 overflow-x-auto">
-        <Link href={PATHS.HOME} className="hover:text-[#9f815b] dark:hover:text-[#d4be9b]">
+      <nav className="flex items-center gap-2 text-xs text-brand-text-muted mb-8 overflow-x-auto">
+        <Link href={PATHS.HOME} className="hover:text-brand-gold">
           {t.nav.home}
         </Link>
         <span>/</span>
-        <Link href={PATHS.PRODUCTS} className="hover:text-[#9f815b] dark:hover:text-[#d4be9b]">
+        <Link href={PATHS.PRODUCTS} className="hover:text-brand-gold">
           {t.nav.products}
         </Link>
         {mainCategory && (
@@ -273,23 +273,23 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
             <span>/</span>
             <Link
               href={`/products?category=${mainCategory.slug}`}
-              className="hover:text-[#9f815b] dark:hover:text-[#d4be9b]"
+              className="hover:text-brand-gold"
             >
               {isPersian ? mainCategory.name : mainCategory.nameEn || mainCategory.name}
             </Link>
           </>
         )}
         <span>/</span>
-        <span className="font-bold text-[#1d241d] dark:text-[#f7f4ee] truncate max-w-xs">
+        <span className="font-bold text-brand-text truncate max-w-xs">
           {isPersian ? product.title : product.titleEn || product.title}
         </span>
       </nav>
 
       {/* Main Product Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 bg-[#ffffff] dark:bg-[#1c231c] p-6 sm:p-10 rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs mb-12 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 bg-brand-surface p-6 sm:p-10 rounded-3xl border border-brand-border shadow-xs mb-12 items-start">
         {/* Left Column: Image Gallery & Thumbnails */}
         <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-24">
-          <div className="relative w-full h-80 sm:h-96 md:h-[450px] rounded-3xl overflow-hidden bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e]">
+          <div className="relative w-full h-80 sm:h-96 md:h-[450px] rounded-3xl overflow-hidden bg-brand-surface-elevated border border-brand-border">
             <Image
               src={images[selectedImageIndex]}
               alt={product.title}
@@ -298,8 +298,8 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
               className="object-cover object-center"
             />
             {/* Free Delivery Ribbon */}
-            <div className="absolute top-4 right-4 z-10 px-3.5 py-1.5 rounded-xl bg-[#202620] text-[#d4be9b] text-xs font-bold shadow-md flex items-center gap-1.5 border border-[#bfa27a]/30">
-              <Zap className="w-3.5 h-3.5 fill-current text-[#bfa27a]" />
+            <div className="absolute top-4 right-4 z-10 px-3.5 py-1.5 rounded-xl bg-brand-olive text-brand-champagne text-xs font-bold shadow-md flex items-center gap-1.5 border border-brand-gold/30">
+              <Zap className="w-3.5 h-3.5 fill-current text-brand-gold" />
               <span>{t.common.fastDelivery}</span>
             </div>
 
@@ -317,9 +317,9 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                 <button
                   key={idx}
                   onClick={() => setSelectedImageIndex(idx)}
-                  className={`relative w-18 h-18 rounded-2xl overflow-hidden bg-[#f8f5f0] dark:bg-[#242c24] shrink-0 border-2 transition-all ${
+                  className={`relative w-18 h-18 rounded-2xl overflow-hidden bg-brand-surface-elevated shrink-0 border-2 transition-all ${
                     selectedImageIndex === idx
-                      ? 'border-[#bfa27a] shadow-md scale-105'
+                      ? 'border-brand-gold shadow-md scale-105'
                       : 'border-transparent opacity-70 hover:opacity-100'
                   }`}
                 >
@@ -333,7 +333,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
         {/* Right Column: Product Info & Actions */}
         <div className="lg:col-span-7 space-y-6">
           <div>
-            <div className="text-xs font-bold text-[#9f815b] dark:text-[#d4be9b] mb-1">
+            <div className="text-xs font-bold text-brand-bronze mb-1">
               {mainCategory
                 ? isPersian
                   ? mainCategory.name
@@ -342,11 +342,11 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                 ? 'عطر و ادکلن نیش'
                 : 'Luxury Niche Perfumes'}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-[#1d241d] dark:text-[#f7f4ee] leading-snug">
+            <h1 className="text-2xl sm:text-3xl font-black text-brand-text leading-snug">
               {isPersian ? product.title : product.titleEn || product.title}
             </h1>
             {product.titleEn && isPersian && (
-              <div className="text-sm font-semibold text-[#73695c] dark:text-[#a69c8e] mt-1 font-latin">
+              <div className="text-sm font-semibold text-brand-text-muted mt-1 font-latin">
                 {product.titleEn}
               </div>
             )}
@@ -360,15 +360,15 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                 {isPersian ? toPersianDigits(product.rating || 5) : (product.rating || 5)}
               </span>
             </div>
-            <span className="text-[#73695c] dark:text-[#a69c8e]">
+            <span className="text-brand-text-muted">
               ({isPersian ? toPersianDigits(product.reviewCount || 64) : (product.reviewCount || 64)}{' '}
               {isPersian ? 'دیدگاه ثبت شده' : 'reviews'})
             </span>
-            <span className="text-[#e6dcce] dark:text-[#2e3a2e]">|</span>
+            <span className="text-brand-border">|</span>
             <span
               className={`font-bold ${
                 isAvailable
-                  ? 'text-[#9f815b] dark:text-[#d4be9b]'
+                  ? 'text-brand-bronze'
                   : 'text-rose-600 dark:text-rose-400'
               }`}
             >
@@ -382,14 +382,14 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
 
           {/* Multi-Volume / Variant Selector */}
           {product.variants && product.variants.length > 0 && (
-            <div className="space-y-3 p-4 sm:p-5 rounded-2xl bg-[#f8f5f0]/80 dark:bg-[#242c24]/80 border border-[#e6dcce] dark:border-[#2e3a2e]">
+            <div className="space-y-3 p-4 sm:p-5 rounded-2xl bg-brand-surface-elevated/80 border border-brand-border">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-black text-[#1d241d] dark:text-[#f7f4ee] flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-[#9f815b]" />
+                <span className="font-black text-brand-text flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-brand-bronze" />
                   <span>{isPersian ? 'انتخاب حجم / تنوع محصول:' : 'Select Volume / Bottle Size:'}</span>
                 </span>
                 {selectedVariant && (
-                  <span className="text-[#9f815b] dark:text-[#d4be9b] font-black text-xs">
+                  <span className="text-brand-bronze font-black text-xs">
                     {getLocalizedVariantTitle(selectedVariant.title, isPersian)}
                   </span>
                 )}
@@ -410,18 +410,18 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                       onClick={() => setSelectedVariant(v)}
                       className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all relative flex flex-col items-center justify-center gap-0.5 border min-w-[100px] ${
                         isSelected
-                          ? 'bg-[#bfa27a] text-[#141914] border-[#d4be9b] shadow-md scale-105 font-black'
+                          ? 'bg-brand-gold text-brand-olive border-brand-champagne shadow-md scale-105 font-black'
                           : isOutOfStock
-                          ? 'opacity-40 line-through bg-[#f8f5f0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e] cursor-not-allowed'
-                          : 'bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-[#bfa27a]'
+                          ? 'opacity-40 line-through bg-brand-surface-elevated text-brand-text-muted border-brand-border cursor-not-allowed'
+                          : 'bg-brand-surface text-brand-text border-brand-border hover:border-brand-gold'
                       }`}
                     >
-                      <span className={isSelected ? 'text-[#141914]' : ''}>{localizedTitle}</span>
+                      <span className={isSelected ? 'text-brand-olive' : ''}>{localizedTitle}</span>
                       <span
                         className={`text-[11px] font-mono ${
                           isSelected
-                            ? 'text-[#141914] font-black'
-                            : 'text-[#9f815b] dark:text-[#d4be9b]'
+                            ? 'text-brand-olive font-black'
+                            : 'text-brand-bronze'
                         }`}
                       >
                         {formatToman(vPrice, isPersian)}
@@ -434,29 +434,29 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
           )}
 
           {/* Pricing Box */}
-          <div className="p-5 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] flex items-baseline justify-between">
+          <div className="p-5 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-baseline justify-between">
             <div>
-              <span className="text-xs text-[#73695c] dark:text-[#a69c8e] block mb-1">
+              <span className="text-xs text-brand-text-muted block mb-1">
                 {isPersian ? 'قیمت برای مصرف‌کننده:' : 'Retail Price:'}
               </span>
               {hasDiscount ? (
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-[#73695c] dark:text-[#a69c8e] line-through">
+                  <span className="text-sm text-brand-text-muted line-through">
                     {formatToman(activePrice, isPersian)}
                   </span>
-                  <span className="text-2xl sm:text-3xl font-black text-[#1d241d] dark:text-[#d4be9b]">
+                  <span className="text-2xl sm:text-3xl font-black text-brand-text">
                     {formatToman(activeDiscountPrice, isPersian)}
                   </span>
                 </div>
               ) : (
-                <span className="text-2xl sm:text-3xl font-black text-[#1d241d] dark:text-[#d4be9b]">
+                <span className="text-2xl sm:text-3xl font-black text-brand-text">
                   {formatToman(activePrice, isPersian)}
                 </span>
               )}
             </div>
 
             {hasDiscount && (
-              <span className="px-3 py-1 rounded-full bg-[#9f815b] text-[#f7f4ee] text-xs font-black">
+              <span className="px-3 py-1 rounded-full bg-brand-bronze text-brand-surface text-xs font-black">
                 {isPersian
                   ? `${toPersianDigits(
                       Math.round(((activePrice - (activeDiscountPrice || 0)) / activePrice) * 100),
@@ -471,7 +471,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
           {/* Dynamic Attributes Table */}
           {product.attributes && product.attributes.length > 0 && (
             <div className="space-y-2">
-              <h4 className="font-bold text-xs text-[#1d241d] dark:text-[#f7f4ee]">
+              <h4 className="font-bold text-xs text-brand-text">
                 {t.productDetail.specifications}
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -480,12 +480,12 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                   return (
                     <div
                       key={idx}
-                      className="p-3 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs"
+                      className="p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs"
                     >
-                      <div className="text-[11px] text-[#73695c] dark:text-[#a69c8e] mb-0.5 font-medium">
+                      <div className="text-[11px] text-brand-text-muted mb-0.5 font-medium">
                         {formatted.name}
                       </div>
-                      <div className="font-bold text-[#1d241d] dark:text-[#f7f4ee]">
+                      <div className="font-bold text-brand-text">
                         {formatted.value}
                       </div>
                     </div>
@@ -496,11 +496,11 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#e6dcce] dark:border-[#2e3a2e]">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-brand-border">
             <button
               onClick={handleAddToCart}
               disabled={!isAvailable}
-              className="flex-1 py-4 rounded-2xl font-black bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-[#9f815b]/20 active:scale-98 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed border border-[#d4be9b]/30"
+              className="flex-1 py-4 rounded-2xl font-black bg-brand-gold hover:bg-brand-champagne text-brand-olive shadow-lg shadow-brand-bronze/20 active:scale-98 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed border border-brand-champagne/30"
             >
               <Sparkles className="w-5 h-5" />
               <span>{t.productDetail.addToCart}</span>
@@ -509,20 +509,20 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
             <button
               onClick={handleBuyNow}
               disabled={!isAvailable}
-              className="px-6 py-4 rounded-2xl font-bold bg-[#202620] hover:bg-[#2e382e] text-[#d4be9b] border border-[#bfa27a]/40 text-sm transition-all shadow-sm active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-4 rounded-2xl font-bold bg-brand-olive hover:bg-brand-olive/90 text-brand-champagne border border-brand-gold/40 text-sm transition-all shadow-sm active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPersian ? 'خرید فوری' : 'Buy Now'}
             </button>
           </div>
 
           {/* Trust Highlights */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs text-[#73695c] dark:text-[#a69c8e]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs text-brand-text-muted">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-[#9f815b]" />
+              <ShieldCheck className="w-4 h-4 text-brand-bronze" />
               <span>{t.common.authenticityGuarantee}</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-[#9f815b]" />
+              <CheckCircle2 className="w-4 h-4 text-brand-bronze" />
               <span>{t.common.returnGuarantee}</span>
             </div>
           </div>
@@ -531,15 +531,15 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
 
       {/* Description Tab */}
       {activeDescription && (
-        <div className="bg-[#ffffff] dark:bg-[#1c231c] p-6 sm:p-10 rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] mb-12 space-y-4">
-          <h3 className="text-lg sm:text-xl font-black text-[#1d241d] dark:text-[#f7f4ee]">
+        <div className="bg-brand-surface p-6 sm:p-10 rounded-3xl border border-brand-border mb-12 space-y-4">
+          <h3 className="text-lg sm:text-xl font-black text-brand-text">
             {isPersian ? 'توضیحات و هرم بویایی عطر' : 'Fragrance Profile & Review'}
           </h3>
           <div
             dir={isDescPersian ? 'rtl' : 'ltr'}
-            className={`text-sm text-[#73695c] dark:text-[#a69c8e] leading-relaxed space-y-2 ${
+            className={`text-sm text-brand-text-muted leading-relaxed space-y-2 ${
               isDescPersian ? 'text-right' : 'text-left'
-            } [&_p]:mb-2 [&_h3]:text-sm sm:[&_h3]:text-base [&_h3]:font-black [&_h3]:text-[#1d241d] dark:[&_h3]:text-[#f7f4ee] [&_h3]:mt-4 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:mr-5 rtl:[&_ul]:mr-5 ltr:[&_ul]:ml-5 [&_ul]:space-y-1.5 [&_li]:text-xs sm:[&_li]:text-sm [&_strong]:text-[#1d241d] dark:[&_strong]:text-[#f7f4ee]`}
+            } [&_p]:mb-2 [&_h3]:text-sm sm:[&_h3]:text-base [&_h3]:font-black [&_h3]:text-brand-text [&_h3]:mt-4 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:mr-5 rtl:[&_ul]:mr-5 ltr:[&_ul]:ml-5 [&_ul]:space-y-1.5 [&_li]:text-xs sm:[&_li]:text-sm [&_strong]:text-brand-text`}
             dangerouslySetInnerHTML={{ __html: activeDescription }}
           />
         </div>
@@ -548,7 +548,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
       {/* Related Products */}
       {relatedProducts && relatedProducts.length > 0 && (
         <div className="space-y-6">
-          <h3 className="text-xl font-black text-[#1d241d] dark:text-[#f7f4ee]">
+          <h3 className="text-xl font-black text-brand-text">
             {t.productDetail.relatedProducts}
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

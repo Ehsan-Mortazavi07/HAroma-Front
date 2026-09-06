@@ -36,14 +36,14 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#202620] text-[#d4be9b] flex items-center justify-center border border-[#bfa27a]/30 shadow-md">
-            <Award className="w-5 h-5 text-[#bfa27a]" />
+          <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-gold flex items-center justify-center border border-brand-gold/30 shadow-md">
+            <Award className="w-5 h-5 text-brand-gold" />
           </div>
           <div>
-            <h2 className="text-xl sm:text-2xl font-black text-[#1d241d] dark:text-[#f7f4ee]">
+            <h2 className="text-xl sm:text-2xl font-black text-brand-text">
               {t.home.bestSellers}
             </h2>
-            <p className="text-xs text-[#73695c] dark:text-[#a69c8e]">
+            <p className="text-xs text-brand-text-muted">
               {t.home.bestSellersSub}
             </p>
           </div>
@@ -51,7 +51,7 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
 
         <Link
           href={PATHS.PRODUCTS}
-          className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#9f815b] dark:text-[#d4be9b] hover:text-[#7a5d3e] dark:hover:text-[#f7f4ee] transition-colors self-end sm:self-auto"
+          className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand-bronze dark:text-brand-gold hover:text-brand-bronze-dark dark:hover:text-brand-text transition-colors self-end sm:self-auto"
         >
           <span>{t.common.seeMore}</span>
           {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
@@ -69,8 +69,8 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
               activeTab === tab.id
-                ? 'bg-[#bfa27a] text-[#141914] shadow-sm font-black'
-                : 'bg-[#ffffff] dark:bg-[#1c231c] text-[#73695c] dark:text-[#a69c8e] hover:bg-[#f0eae0] dark:hover:bg-[#283228] border border-[#e6dcce] dark:border-[#2e3a2e]'
+                ? 'bg-brand-gold text-[#141914] shadow-sm font-black'
+                : 'bg-brand-surface text-brand-text-muted hover:bg-brand-surface-elevated border border-brand-border'
             }`}
           >
             {tab.label}

@@ -31,19 +31,19 @@ export function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl my-8 border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
-        <div className="w-20 h-20 rounded-full bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] flex items-center justify-center mb-4 text-[#9f815b]">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-brand-surface rounded-3xl my-8 border border-brand-border shadow-xs">
+        <div className="w-20 h-20 rounded-full bg-brand-surface-elevated border border-brand-border flex items-center justify-center mb-4 text-brand-bronze">
           <ShoppingBag className="w-10 h-10" />
         </div>
-        <h2 className="text-xl font-black text-[#1d241d] dark:text-[#f7f4ee] mb-2">
+        <h2 className="text-xl font-black text-brand-text mb-2">
           {t.cart.emptyTitle}
         </h2>
-        <p className="text-xs text-[#73695c] dark:text-[#a69c8e] max-w-sm mb-6 leading-relaxed">
+        <p className="text-xs text-brand-text-muted max-w-sm mb-6 leading-relaxed">
           {t.cart.emptySub}
         </p>
         <Link
           href={PATHS.PRODUCTS}
-          className="px-8 py-3.5 rounded-2xl bg-[#202620] hover:bg-[#2e382e] text-[#d4be9b] font-black text-sm border border-[#bfa27a]/40 shadow-md transition-all"
+          className="px-8 py-3.5 rounded-2xl bg-brand-olive hover:bg-brand-olive/90 text-brand-champagne font-black text-sm border border-brand-gold/40 shadow-md transition-all"
         >
           {t.cart.browseProducts}
         </Link>
@@ -53,14 +53,14 @@ export function CartPage() {
 
   return (
     <div className="min-h-screen py-8">
-      <h1 className="text-2xl sm:text-3xl font-black text-[#1d241d] dark:text-[#f7f4ee] mb-8">
+      <h1 className="text-2xl sm:text-3xl font-black text-brand-text mb-8">
         {t.cart.title}
       </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Cart Items List */}
         <div className="lg:col-span-8 space-y-4">
-          <div className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl p-6 border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs divide-y divide-[#e6dcce] dark:divide-[#2e3a2e]">
+          <div className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs divide-y divide-brand-border">
             {items.map(({ product, quantity, selectedVariant, selectedAttributes }) => {
               const itemPrice = selectedVariant
                 ? selectedVariant.discountPrice && selectedVariant.discountPrice > 0
@@ -85,23 +85,23 @@ export function CartPage() {
                   className="py-5 first:pt-0 last:pb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] shrink-0">
+                    <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-brand-surface-elevated border border-brand-border shrink-0">
                       <Image src={itemImage} alt={product.title} fill className="object-cover" />
                     </div>
 
                     <div>
                       <Link
                         href={PATHS.PRODUCT(product.slug)}
-                        className="font-bold text-sm sm:text-base text-[#1d241d] dark:text-[#f7f4ee] hover:text-[#9f815b] dark:hover:text-[#d4be9b] transition-colors line-clamp-1"
+                        className="font-bold text-sm sm:text-base text-brand-text hover:text-brand-gold transition-colors line-clamp-1"
                       >
                         {isPersian ? product.title : product.titleEn || product.title}
                       </Link>
                       {(selectedVariant || selectedAttributes) && (
-                        <span className="text-xs font-bold text-[#9f815b] dark:text-[#d4be9b] block mt-0.5">
+                        <span className="text-xs font-bold text-brand-bronze block mt-0.5">
                           {selectedVariant ? getLocalizedVariantTitle(selectedVariant.title, isPersian) : selectedAttributes}
                         </span>
                       )}
-                      <div className="text-xs font-black text-[#1d241d] dark:text-[#d4be9b] mt-1.5">
+                      <div className="text-xs font-black text-brand-text mt-1.5">
                         {formatToman(itemPrice, isPersian)}
                       </div>
                     </div>
@@ -109,7 +109,7 @@ export function CartPage() {
 
                   {/* Quantity & Actions */}
                   <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
-                    <div className="flex items-center gap-1 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] rounded-2xl p-1">
+                    <div className="flex items-center gap-1 bg-brand-surface-elevated border border-brand-border rounded-2xl p-1">
                       <button
                         type="button"
                         aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
@@ -122,11 +122,11 @@ export function CartPage() {
                             }),
                           )
                         }
-                        className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#ffffff] dark:bg-[#2e3a2e] text-[#1d241d] dark:text-[#f7f4ee] text-sm font-black flex items-center justify-center shadow-xs hover:bg-[#f0eae0] dark:hover:bg-[#384638] transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
+                        className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-brand-surface text-brand-text text-sm font-black flex items-center justify-center shadow-xs hover:bg-brand-surface-elevated transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-brand-gold"
                       >
                         -
                       </button>
-                      <span className="w-8 text-center text-xs font-extrabold text-[#1d241d] dark:text-[#f7f4ee] font-mono" aria-live="polite">
+                      <span className="w-8 text-center text-xs font-extrabold text-brand-text font-mono" aria-live="polite">
                         {isPersian ? toPersianDigits(quantity) : quantity}
                       </span>
                       <button
@@ -141,7 +141,7 @@ export function CartPage() {
                             }),
                           )
                         }
-                        className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] text-sm font-black flex items-center justify-center shadow-xs transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
+                        className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-brand-gold hover:bg-brand-champagne text-brand-olive text-sm font-black flex items-center justify-center shadow-xs transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-brand-gold"
                       >
                         +
                       </button>
@@ -181,33 +181,33 @@ export function CartPage() {
 
         {/* Order Summary Sidebar */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl p-6 border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-4">
-            <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee] pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
+          <div className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs space-y-4">
+            <h3 className="font-black text-base text-brand-text pb-3 border-b border-brand-border">
               {isPersian ? 'خلاصه سفارش' : 'Order Summary'}
             </h3>
 
             <div className="space-y-3 text-xs">
-              <div className="flex justify-between text-[#73695c] dark:text-[#a69c8e]">
+              <div className="flex justify-between text-brand-text-muted">
                 <span>{t.cart.subtotal}</span>
-                <span className="font-bold text-[#1d241d] dark:text-[#f7f4ee]">
+                <span className="font-bold text-brand-text">
                   {formatToman(subtotal, isPersian)}
                 </span>
               </div>
 
-              <div className="flex justify-between text-[#73695c] dark:text-[#a69c8e]">
+              <div className="flex justify-between text-brand-text-muted">
                 <span>{t.cart.shippingFee}</span>
-                <span className="font-bold text-[#1d241d] dark:text-[#f7f4ee]">
+                <span className="font-bold text-brand-text">
                   {shippingFee === 0
                     ? isPersian ? 'رایگان' : 'Free'
                     : formatToman(shippingFee, isPersian)}
                 </span>
               </div>
 
-              <div className="pt-3 border-t border-[#e6dcce] dark:border-[#2e3a2e] flex justify-between items-baseline">
-                <span className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
+              <div className="pt-3 border-t border-brand-border flex justify-between items-baseline">
+                <span className="font-bold text-sm text-brand-text">
                   {t.cart.total}
                 </span>
-                <span className="font-black text-lg text-[#9f815b] dark:text-[#d4be9b]">
+                <span className="font-black text-lg text-brand-bronze">
                   {formatToman(total, isPersian)}
                 </span>
               </div>
@@ -215,7 +215,7 @@ export function CartPage() {
 
             <Link
               href={PATHS.CHECKOUT}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#bfa27a] via-[#9f815b] to-[#7a5d3e] hover:from-[#d4be9b] hover:to-[#9f815b] text-[#1d241d] font-black text-sm shadow-md shadow-[#9f815b]/20 flex items-center justify-center gap-2 active:scale-98 transition-all"
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-gold via-brand-bronze to-brand-bronze-dark hover:from-brand-champagne hover:to-brand-bronze text-brand-olive font-black text-sm shadow-md shadow-brand-bronze/20 flex items-center justify-center gap-2 active:scale-98 transition-all"
             >
               <span>{t.cart.proceedToCheckout}</span>
               {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
@@ -223,13 +223,13 @@ export function CartPage() {
           </div>
 
           {/* Guarantee Highlights */}
-          <div className="p-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] space-y-2 text-xs text-[#73695c] dark:text-[#a69c8e]">
+          <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 text-xs text-brand-text-muted">
             <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-[#9f815b]" />
+              <Zap className="w-4 h-4 text-brand-bronze" />
               <span>{isPersian ? 'ارسال رایگان برای سفارش‌های بالای ۱ میلیون تومان' : 'Free shipping on orders above 1M Toman'}</span>
             </div>
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-[#9f815b]" />
+              <ShieldCheck className="w-4 h-4 text-brand-bronze" />
               <span>{t.common.authenticityGuarantee}</span>
             </div>
           </div>

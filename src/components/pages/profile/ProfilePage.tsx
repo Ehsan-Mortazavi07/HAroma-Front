@@ -236,21 +236,21 @@ export function ProfilePage() {
     switch (status) {
       case 'processing':
         return (
-          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#f0eae0] text-[#9f815b] dark:bg-[#283228] dark:text-[#d4be9b] border border-[#bfa27a]/30">
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-brand-surface-elevated text-brand-bronze border border-brand-gold/30">
             {isPersian ? 'در حال پردازش' : 'Processing'}
           </span>
         );
       case 'shipped':
         return (
-          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#f8f5f0] text-[#7a5d3e] dark:bg-[#242c24] dark:text-[#d4be9b] flex items-center gap-1 border border-[#e6dcce] dark:border-[#2e3a2e]">
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-brand-surface-elevated text-brand-bronze-dark flex items-center gap-1 border border-brand-border">
             <Truck className="w-3 h-3" />
             <span>{isPersian ? 'تحویل پست شده' : 'Shipped'}</span>
           </span>
         );
       case 'delivered':
         return (
-          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#e6dcce] text-[#1d241d] dark:bg-[#2e3a2e] dark:text-[#f7f4ee] flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3 text-[#9f815b]" />
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-brand-champagne text-brand-text flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3 text-brand-bronze" />
             <span>{isPersian ? 'تحویل داده شده' : 'Delivered'}</span>
           </span>
         );
@@ -262,7 +262,7 @@ export function ProfilePage() {
         );
       default:
         return (
-          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#f0eae0] text-[#73695c] dark:bg-[#242c24] dark:text-[#a69c8e]">
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-brand-surface-elevated text-brand-text-muted">
             {isPersian ? 'در انتظار پرداخت' : 'Pending'}
           </span>
         );
@@ -274,25 +274,25 @@ export function ProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* User Info & VIP Card Column */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl p-6 border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-5">
+          <div className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs space-y-5">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#d4be9b] to-[#9f815b] text-[#1d241d] font-black text-xl flex items-center justify-center shadow-md shadow-[#9f815b]/20 shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-champagne to-brand-bronze text-brand-olive font-black text-xl flex items-center justify-center shadow-md shadow-brand-bronze/20 shrink-0">
                 {user.fullName.charAt(0)}
               </div>
               <div className="min-w-0">
-                <h2 className="text-lg font-black text-[#1d241d] dark:text-[#f7f4ee] truncate">{user.fullName}</h2>
-                <span className="text-xs text-[#73695c] dark:text-[#a69c8e] font-sans">@{user.username}</span>
+                <h2 className="text-lg font-black text-brand-text truncate">{user.fullName}</h2>
+                <span className="text-xs text-brand-text-muted font-sans">@{user.username}</span>
               </div>
             </div>
 
-            <div className="space-y-2 pt-4 border-t border-[#e6dcce] dark:border-[#2e3a2e] text-xs text-[#73695c] dark:text-[#a69c8e]">
+            <div className="space-y-2 pt-4 border-t border-brand-border text-xs text-brand-text-muted">
               <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#9f815b] shrink-0" />
+                <Mail className="w-4 h-4 text-brand-bronze shrink-0" />
                 <span className="truncate font-sans">{user.email}</span>
               </div>
               {user.phone && (
                 <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-[#9f815b] shrink-0" />
+                  <Phone className="w-4 h-4 text-brand-bronze shrink-0" />
                   <span className="font-mono">{user.phone}</span>
                 </div>
               )}
@@ -303,11 +303,11 @@ export function ProfilePage() {
               onClick={() => setActiveTab(activeTab === 'edit' ? 'orders' : 'edit')}
               className={`w-full py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all border ${
                 activeTab === 'edit'
-                  ? 'bg-[#f0eae0] dark:bg-[#283228] text-[#9f815b] dark:text-[#d4be9b] border-[#bfa27a]/40 font-black'
-                  : 'bg-[#f8f5f0] dark:bg-[#242c24] text-[#1d241d] dark:text-[#f7f4ee] border-[#e6dcce] dark:border-[#2e3a2e] hover:bg-[#e6dcce] dark:hover:bg-[#2e382e]'
+                  ? 'bg-brand-surface-elevated text-brand-bronze border-brand-gold/40 font-black'
+                  : 'bg-brand-surface-elevated text-brand-text border-brand-border hover:bg-brand-champagne/40'
               }`}
             >
-              <Edit3 className="w-4 h-4 text-[#9f815b]" />
+              <Edit3 className="w-4 h-4 text-brand-bronze" />
               <span>
                 {activeTab === 'edit'
                   ? isPersian ? 'مشاهده سفارشات' : 'View Orders'
@@ -318,7 +318,7 @@ export function ProfilePage() {
             {(user.role === 'admin' || user.role === 'editor') && (
               <Link
                 href={PATHS.ADMIN_DASHBOARD}
-                className="w-full py-3 rounded-2xl bg-[#202620] hover:bg-[#2c352c] text-[#d4be9b] font-bold text-xs flex items-center justify-center gap-2 transition-colors border border-[#bfa27a]/30 shadow-sm"
+                className="w-full py-3 rounded-2xl bg-brand-olive hover:bg-brand-olive/90 text-brand-champagne font-bold text-xs flex items-center justify-center gap-2 transition-colors border border-brand-gold/30 shadow-sm"
               >
                 <LayoutDashboard className="w-4 h-4" />
                 <span>
@@ -341,44 +341,44 @@ export function ProfilePage() {
 
           {/* VIP Status Card */}
           {user.isVip ? (
-            <div className="rounded-3xl p-6 bg-gradient-to-br from-[#262f26] to-[#141914] text-[#f7f4ee] border border-[#bfa27a]/40 shadow-xl space-y-4">
+            <div className="rounded-3xl p-6 bg-gradient-to-br from-[#262f26] to-[#141914] text-[#f7f4ee] border border-brand-gold/40 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Crown className="w-5 h-5 text-[#d4be9b]" />
-                  <span className="font-black text-sm text-[#d4be9b]">{t.profile.vipActiveCard}</span>
+                  <Crown className="w-5 h-5 text-brand-gold" />
+                  <span className="font-black text-sm text-brand-gold">{t.profile.vipActiveCard}</span>
                 </div>
                 <VipBadge size="sm" text="VIP" />
               </div>
 
-              <p className="text-xs text-[#e6dcce] leading-relaxed">
+              <p className="text-xs text-brand-champagne leading-relaxed">
                 {t.profile.vipPerksActive}
               </p>
 
               {user.vipExpiresAt && (
-                <div className="text-[11px] text-[#a69c8e]">
+                <div className="text-[11px] text-brand-text-muted">
                   {t.profile.vipExpires(new Date(user.vipExpiresAt).toLocaleDateString(isPersian ? 'fa-IR' : 'en-US'))}
                 </div>
               )}
 
               <Link
                 href={PATHS.VIP}
-                className="block text-center py-2.5 rounded-xl bg-[#bfa27a] text-[#1d241d] font-black text-xs hover:bg-[#d4be9b] transition-colors"
+                className="block text-center py-2.5 rounded-xl bg-brand-gold text-brand-olive font-black text-xs hover:bg-brand-champagne transition-colors"
               >
                 {t.profile.upgradeVip}
               </Link>
             </div>
           ) : (
-            <div className="rounded-3xl p-6 bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] space-y-3">
+            <div className="rounded-3xl p-6 bg-brand-surface border border-brand-border space-y-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[#9f815b]" />
-                <h3 className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">{t.profile.joinVipTitle}</h3>
+                <Sparkles className="w-5 h-5 text-brand-bronze" />
+                <h3 className="font-bold text-sm text-brand-text">{t.profile.joinVipTitle}</h3>
               </div>
-              <p className="text-xs text-[#73695c] dark:text-[#a69c8e] leading-relaxed">
+              <p className="text-xs text-brand-text-muted leading-relaxed">
                 {t.profile.joinVipSub}
               </p>
               <Link
                 href={PATHS.VIP}
-                className="block text-center py-2.5 rounded-xl bg-[#202620] hover:bg-[#2e382e] text-[#d4be9b] border border-[#bfa27a]/40 font-bold text-xs transition-colors"
+                className="block text-center py-2.5 rounded-xl bg-brand-olive hover:bg-brand-olive/90 text-brand-champagne border border-brand-gold/40 font-bold text-xs transition-colors"
               >
                 {t.hero.joinVip}
               </Link>
@@ -389,13 +389,13 @@ export function ProfilePage() {
         {/* Main Content Column: Tabs & Forms */}
         <div className="lg:col-span-8 space-y-6">
           {/* Tab Navigation Header */}
-          <div className="flex items-center gap-2 bg-[#ffffff] dark:bg-[#1c231c] p-2 rounded-2xl border border-[#e6dcce] dark:border-[#2e3a2e]">
+          <div className="flex items-center gap-2 bg-brand-surface p-2 rounded-2xl border border-brand-border">
             <button
               onClick={() => setActiveTab('orders')}
               className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
                 activeTab === 'orders'
-                  ? 'bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] shadow-sm'
-                  : 'text-[#73695c] dark:text-[#a69c8e] hover:text-[#1d241d] dark:hover:text-[#f7f4ee]'
+                  ? 'bg-gradient-to-r from-brand-gold to-brand-bronze text-brand-olive shadow-sm'
+                  : 'text-brand-text-muted hover:text-brand-text'
               }`}
             >
               <ShoppingBag className="w-4 h-4" />
@@ -409,8 +409,8 @@ export function ProfilePage() {
               onClick={() => setActiveTab('edit')}
               className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
                 activeTab === 'edit'
-                  ? 'bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] shadow-sm'
-                  : 'text-[#73695c] dark:text-[#a69c8e] hover:text-[#1d241d] dark:hover:text-[#f7f4ee]'
+                  ? 'bg-gradient-to-r from-brand-gold to-brand-bronze text-brand-olive shadow-sm'
+                  : 'text-brand-text-muted hover:text-brand-text'
               }`}
             >
               <Edit3 className="w-4 h-4" />
@@ -420,13 +420,13 @@ export function ProfilePage() {
 
           {activeTab === 'orders' ? (
             /* Orders Tab Content */
-            <div className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl p-6 sm:p-8 border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
+            <div className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-brand-border">
                 <div className="flex items-center gap-2">
-                  <ShoppingBag className="w-5 h-5 text-[#9f815b]" />
-                  <h3 className="text-lg font-black text-[#1d241d] dark:text-[#f7f4ee]">{t.profile.ordersTitle}</h3>
+                  <ShoppingBag className="w-5 h-5 text-brand-bronze" />
+                  <h3 className="text-lg font-black text-brand-text">{t.profile.ordersTitle}</h3>
                 </div>
-                <span className="text-xs font-bold text-[#73695c] dark:text-[#a69c8e]">
+                <span className="text-xs font-bold text-brand-text-muted">
                   {t.profile.itemsCount(isPersian ? toPersianDigits(orders.length) : orders.length)}
                 </span>
               </div>
@@ -436,17 +436,17 @@ export function ProfilePage() {
                   {[...Array(3)].map((_, i) => (
                     <div
                       key={i}
-                      className="h-28 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] animate-pulse border border-[#e6dcce] dark:border-[#2e3a2e]"
+                      className="h-28 rounded-2xl bg-brand-surface-elevated animate-pulse border border-brand-border"
                     />
                   ))}
                 </div>
               ) : orders.length === 0 ? (
-                <div className="text-center py-12 text-[#73695c] dark:text-[#a69c8e] space-y-3">
-                  <ShoppingBag className="w-12 h-12 text-[#9f815b] mx-auto opacity-50" />
+                <div className="text-center py-12 text-brand-text-muted space-y-3">
+                  <ShoppingBag className="w-12 h-12 text-brand-bronze mx-auto opacity-50" />
                   <p className="text-sm font-semibold">{t.profile.emptyOrders}</p>
                   <Link
                     href={PATHS.PRODUCTS}
-                    className="inline-block px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] font-bold text-xs shadow-md"
+                    className="inline-block px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-gold to-brand-bronze text-brand-olive font-bold text-xs shadow-md"
                   >
                     {t.home.curatedPicks}
                   </Link>
@@ -456,32 +456,32 @@ export function ProfilePage() {
                   {orders.map((order) => (
                     <div
                       key={order._id}
-                      className="p-5 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] space-y-3 hover:border-[#bfa27a] transition-all"
+                      className="p-5 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-3 hover:border-brand-gold transition-all"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-3">
-                          <span className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
+                          <span className="font-bold text-sm text-brand-text">
                             {t.profile.orderNum} {isPersian ? toPersianDigits(order.orderNumber) : order.orderNumber}
                           </span>
                           {getStatusBadge(order.status)}
                         </div>
-                        <div className="text-xs text-[#73695c] dark:text-[#a69c8e]">
+                        <div className="text-xs text-brand-text-muted">
                           {new Date(order.createdAt).toLocaleDateString(isPersian ? 'fa-IR' : 'en-US')}
                         </div>
                       </div>
 
                       {order.trackingCode && (
-                        <div className="px-3 py-1.5 rounded-xl bg-[#ffffff] dark:bg-[#1c231c] text-xs font-mono text-[#9f815b] dark:text-[#d4be9b] border border-[#e6dcce] dark:border-[#2e3a2e] flex items-center justify-between">
+                        <div className="px-3 py-1.5 rounded-xl bg-brand-surface text-xs font-mono text-brand-bronze border border-brand-border flex items-center justify-between">
                           <span>{t.profile.trackingCode}</span>
                           <span className="font-bold">{order.trackingCode}</span>
                         </div>
                       )}
 
-                      <div className="pt-2 border-t border-[#e6dcce] dark:border-[#2e3a2e] flex items-center justify-between text-xs">
-                        <span className="text-[#73695c] dark:text-[#a69c8e]">
+                      <div className="pt-2 border-t border-brand-border flex items-center justify-between text-xs">
+                        <span className="text-brand-text-muted">
                           {t.profile.itemsCount(isPersian ? toPersianDigits(order.items?.length || 0) : (order.items?.length || 0))}
                         </span>
-                        <span className="font-black text-sm text-[#1d241d] dark:text-[#d4be9b]">
+                        <span className="font-black text-sm text-brand-text">
                           {formatToman(order.total, isPersian)}
                         </span>
                       </div>
@@ -494,14 +494,14 @@ export function ProfilePage() {
             /* Edit Profile Tab Content */
             <form onSubmit={handleProfileSubmit} className="space-y-6">
               {/* Personal Details Card */}
-              <div className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl p-6 sm:p-8 border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-6">
-                <div className="flex items-center gap-2 pb-4 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-                  <User className="w-5 h-5 text-[#9f815b]" />
+              <div className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs space-y-6">
+                <div className="flex items-center gap-2 pb-4 border-b border-brand-border">
+                  <User className="w-5 h-5 text-brand-bronze" />
                   <div>
-                    <h3 className="text-base font-black text-[#1d241d] dark:text-[#f7f4ee]">
+                    <h3 className="text-base font-black text-brand-text">
                       {isPersian ? 'اطلاعات فردی و شناسایی' : 'Personal Information'}
                     </h3>
-                    <p className="text-xs text-[#73695c] dark:text-[#a69c8e] mt-0.5">
+                    <p className="text-xs text-brand-text-muted mt-0.5">
                       {isPersian
                         ? 'نام، نام کاربری، ایمیل و شماره تماس خود را در اینجا ویرایش نمایید (یکتایی بررسی می‌شود)'
                         : 'Update your name, unique username, email, and phone number'}
@@ -511,7 +511,7 @@ export function ProfilePage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <label className="block font-bold mb-1.5 text-[#1d241d] dark:text-[#f7f4ee]">
+                    <label className="block font-bold mb-1.5 text-brand-text">
                       {isPersian ? 'نام و نام خانوادگی *' : 'Full Name *'}
                     </label>
                     <input
@@ -520,12 +520,12 @@ export function ProfilePage() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder={isPersian ? 'مثال: علیرضا محمدی' : 'e.g. John Doe'}
-                      className="w-full h-11 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold mb-1.5 text-[#1d241d] dark:text-[#f7f4ee]">
+                    <label className="block font-bold mb-1.5 text-brand-text">
                       {isPersian ? 'نام کاربری (یکتا در سیستم) *' : 'Username (Unique) *'}
                     </label>
                     <input
@@ -534,12 +534,12 @@ export function ProfilePage() {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="e.g. john_doe"
-                      className="w-full h-11 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-mono font-bold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-bold text-brand-text focus:ring-2 focus:ring-brand-gold"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold mb-1.5 text-[#1d241d] dark:text-[#f7f4ee]">
+                    <label className="block font-bold mb-1.5 text-brand-text">
                       {isPersian ? 'آدرس ایمیل (یکتا در سیستم) *' : 'Email Address (Unique) *'}
                     </label>
                     <input
@@ -548,12 +548,12 @@ export function ProfilePage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="user@example.com"
-                      className="w-full h-11 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-semibold font-sans text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold font-sans text-brand-text focus:ring-2 focus:ring-brand-gold"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold mb-1.5 text-[#1d241d] dark:text-[#f7f4ee]">
+                    <label className="block font-bold mb-1.5 text-brand-text">
                       {isPersian ? 'شماره موبایل' : 'Phone Number'}
                     </label>
                     <input
@@ -561,22 +561,22 @@ export function ProfilePage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="09123456789"
-                      className="w-full h-11 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-semibold font-mono text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold font-mono text-brand-text focus:ring-2 focus:ring-brand-gold"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Password & Security Card */}
-              <div className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl p-6 sm:p-8 border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-6">
-                <div className="flex items-center justify-between pb-4 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
+              <div className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-brand-border">
                   <div className="flex items-center gap-2">
-                    <KeyRound className="w-5 h-5 text-[#9f815b]" />
+                    <KeyRound className="w-5 h-5 text-brand-bronze" />
                     <div>
-                      <h3 className="text-base font-black text-[#1d241d] dark:text-[#f7f4ee]">
+                      <h3 className="text-base font-black text-brand-text">
                         {isPersian ? 'تغییر رمز عبور' : 'Change Password'}
                       </h3>
-                      <p className="text-xs text-[#73695c] dark:text-[#a69c8e] mt-0.5">
+                      <p className="text-xs text-brand-text-muted mt-0.5">
                         {isPersian
                           ? 'جهت تغییر رمز عبور، حتماً باید کلمه عبور فعلی را وارد نمایید'
                           : 'You must provide your current password to set a new one'}
@@ -590,7 +590,7 @@ export function ProfilePage() {
                       setResetModalOpen(true);
                       setResetStep(1);
                     }}
-                    className="text-xs font-bold text-[#9f815b] hover:text-[#bfa27a] underline flex items-center gap-1"
+                    className="text-xs font-bold text-brand-bronze hover:text-brand-gold underline flex items-center gap-1"
                   >
                     <HelpCircle className="w-3.5 h-3.5" />
                     <span>{isPersian ? 'رمز فعلی را فراموش کرده‌اید؟' : 'Forgot current password?'}</span>
@@ -599,7 +599,7 @@ export function ProfilePage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                   <div>
-                    <label className="block font-bold mb-1.5 text-[#1d241d] dark:text-[#f7f4ee]">
+                    <label className="block font-bold mb-1.5 text-brand-text">
                       {isPersian ? 'کلمه عبور فعلی' : 'Current Password'}
                     </label>
                     <input
@@ -607,12 +607,12 @@ export function ProfilePage() {
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder={isPersian ? 'رمز فعلی حساب' : 'Current Password'}
-                      className="w-full h-11 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-sans text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-sans text-brand-text focus:ring-2 focus:ring-brand-gold"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold mb-1.5 text-[#1d241d] dark:text-[#f7f4ee]">
+                    <label className="block font-bold mb-1.5 text-brand-text">
                       {isPersian ? 'کلمه عبور جدید' : 'New Password'}
                     </label>
                     <input
@@ -620,12 +620,12 @@ export function ProfilePage() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full h-11 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-sans text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-sans text-brand-text focus:ring-2 focus:ring-brand-gold"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold mb-1.5 text-[#1d241d] dark:text-[#f7f4ee]">
+                    <label className="block font-bold mb-1.5 text-brand-text">
                       {isPersian ? 'تکرار کلمه عبور جدید' : 'Confirm New Password'}
                     </label>
                     <input
@@ -633,7 +633,7 @@ export function ProfilePage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full h-11 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-sans text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-sans text-brand-text focus:ring-2 focus:ring-brand-gold"
                     />
                   </div>
                 </div>
@@ -644,7 +644,7 @@ export function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab('orders')}
-                  className="px-6 py-3 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] text-xs font-bold border border-[#e6dcce] dark:border-[#2e3a2e] hover:bg-[#e6dcce] dark:hover:bg-[#2e382e] transition-colors"
+                  className="px-6 py-3 rounded-2xl bg-brand-surface-elevated text-brand-text-muted text-xs font-bold border border-brand-border hover:bg-brand-champagne/30 transition-colors"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </button>
@@ -652,7 +652,7 @@ export function ProfilePage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-8 py-3 rounded-2xl bg-gradient-to-r from-[#bfa27a] via-[#9f815b] to-[#7a5d3e] hover:from-[#d4be9b] hover:to-[#9f815b] text-[#1d241d] text-xs font-black shadow-md shadow-[#9f815b]/20 flex items-center justify-center gap-2 active:scale-98 transition-all disabled:opacity-50"
+                  className="px-8 py-3 rounded-2xl bg-gradient-to-r from-brand-gold via-brand-bronze to-brand-bronze-dark hover:from-brand-champagne hover:to-brand-bronze text-brand-olive text-xs font-black shadow-md shadow-brand-bronze/20 flex items-center justify-center gap-2 active:scale-98 transition-all disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" />
                   <span>
@@ -670,17 +670,17 @@ export function ProfilePage() {
       {/* Forgot / Reset Password Modal */}
       {resetModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl p-6 sm:p-8 max-w-md w-full border border-[#e6dcce] dark:border-[#2e3a2e] shadow-2xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
+          <div className="bg-brand-surface text-brand-text rounded-3xl p-6 sm:p-8 max-w-md w-full border border-brand-border shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-brand-border">
               <div className="flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-[#9f815b]" />
+                <KeyRound className="w-5 h-5 text-brand-bronze" />
                 <h3 className="font-black text-base">
                   {isPersian ? 'بازنشانی رمز عبور' : 'Reset Password'}
                 </h3>
               </div>
               <button
                 onClick={() => setResetModalOpen(false)}
-                className="p-1.5 rounded-xl text-[#73695c] hover:bg-[#f0eae0] dark:hover:bg-[#283228]"
+                className="p-1.5 rounded-xl text-brand-text-muted hover:bg-brand-surface-elevated"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -688,7 +688,7 @@ export function ProfilePage() {
 
             {resetStep === 1 ? (
               <form onSubmit={handleSendResetCode} className="space-y-4 text-xs">
-                <p className="text-[#73695c] dark:text-[#a69c8e] leading-relaxed">
+                <p className="text-brand-text-muted leading-relaxed">
                   {isPersian
                     ? 'جهت بازیابی رمز عبور، ایمیل یا نام کاربری حساب خود را وارد کنید تا کد تایید برای شما ارسال شود:'
                     : 'Enter your account email or username to receive a 6-digit password reset code:'}
@@ -704,7 +704,7 @@ export function ProfilePage() {
                     value={resetIdentifier}
                     onChange={(e) => setResetIdentifier(e.target.value)}
                     placeholder="user@example.com / username"
-                    className="w-full h-11 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold text-xs focus:ring-2 focus:ring-[#bfa27a]"
+                    className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border font-semibold text-xs focus:ring-2 focus:ring-brand-gold"
                   />
                 </div>
 
@@ -712,7 +712,7 @@ export function ProfilePage() {
                   <button
                     type="submit"
                     disabled={resetLoading}
-                    className="flex-1 py-3 rounded-2xl font-black bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] shadow-md transition-all active:scale-98 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-2xl font-black bg-gradient-to-r from-brand-gold to-brand-bronze text-brand-olive shadow-md transition-all active:scale-98 flex items-center justify-center gap-2"
                   >
                     <Send className="w-4 h-4" />
                     <span>{resetLoading ? (isPersian ? 'در حال ارسال...' : 'Sending...') : (isPersian ? 'ارسال کد تایید' : 'Send Code')}</span>
@@ -720,7 +720,7 @@ export function ProfilePage() {
                   <button
                     type="button"
                     onClick={() => setResetModalOpen(false)}
-                    className="px-5 py-3 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] font-bold border border-[#e6dcce] dark:border-[#2e3a2e]"
+                    className="px-5 py-3 rounded-2xl bg-brand-surface-elevated font-bold border border-brand-border"
                   >
                     {isPersian ? 'انصراف' : 'Cancel'}
                   </button>
@@ -728,7 +728,7 @@ export function ProfilePage() {
               </form>
             ) : (
               <form onSubmit={handleConfirmReset} className="space-y-4 text-xs">
-                <p className="text-[#73695c] dark:text-[#a69c8e] leading-relaxed">
+                <p className="text-brand-text-muted leading-relaxed">
                   {isPersian
                     ? `کد تایید ۶ رقمی به آدرس ${maskedEmail} ارسال شد. لطفاً کد را وارد کرده و رمز جدید خود را تعیین کنید:`
                     : `A 6-digit code was sent to ${maskedEmail}. Please enter the code and set your new password:`}
@@ -744,7 +744,7 @@ export function ProfilePage() {
                     value={resetCode}
                     onChange={(e) => setResetCode(e.target.value)}
                     placeholder="123456"
-                    className="w-full h-11 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-mono text-center tracking-widest text-sm font-black focus:ring-2 focus:ring-[#bfa27a]"
+                    className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border font-mono text-center tracking-widest text-sm font-black focus:ring-2 focus:ring-brand-gold"
                   />
                 </div>
 
@@ -758,7 +758,7 @@ export function ProfilePage() {
                     value={resetNewPassword}
                     onChange={(e) => setResetNewPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full h-11 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-sans text-xs focus:ring-2 focus:ring-[#bfa27a]"
+                    className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border font-sans text-xs focus:ring-2 focus:ring-brand-gold"
                   />
                 </div>
 
@@ -766,7 +766,7 @@ export function ProfilePage() {
                   <button
                     type="submit"
                     disabled={resetLoading}
-                    className="flex-1 py-3 rounded-2xl font-black bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] shadow-md transition-all active:scale-98 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-2xl font-black bg-gradient-to-r from-brand-gold to-brand-bronze text-brand-olive shadow-md transition-all active:scale-98 flex items-center justify-center gap-2"
                   >
                     <Check className="w-4 h-4" />
                     <span>{resetLoading ? (isPersian ? 'در حال تایید...' : 'Verifying...') : (isPersian ? 'تغییر و ثبت رمز جدید' : 'Set New Password')}</span>
@@ -774,7 +774,7 @@ export function ProfilePage() {
                   <button
                     type="button"
                     onClick={() => setResetStep(1)}
-                    className="px-4 py-3 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] font-bold border border-[#e6dcce] dark:border-[#2e3a2e]"
+                    className="px-4 py-3 rounded-2xl bg-brand-surface-elevated font-bold border border-brand-border"
                   >
                     {isPersian ? 'مرحله قبل' : 'Back'}
                   </button>

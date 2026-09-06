@@ -102,38 +102,38 @@ export function VipPage({ plans }: VipPageProps) {
               key={plan._id}
               className={`relative rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
                 isPopular
-                  ? 'bg-[#ffffff] dark:bg-[#1c231c] border-2 border-[#bfa27a] shadow-2xl scale-102 z-10'
-                  : 'bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] shadow-md hover:border-[#bfa27a]'
+                  ? 'bg-brand-surface border-2 border-brand-gold shadow-2xl scale-102 z-10'
+                  : 'bg-brand-surface border border-brand-border shadow-md hover:border-brand-gold'
               }`}
             >
               {isPopular && (
-                <div className="absolute -top-3.5 right-1/2 translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-[#d4be9b] via-[#bfa27a] to-[#9f815b] text-[#1d241d] font-black text-xs shadow-md">
+                <div className="absolute -top-3.5 right-1/2 translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-brand-champagne via-brand-gold to-brand-bronze text-brand-olive font-black text-xs shadow-md">
                   {t.vip.popularChoice}
                 </div>
               )}
 
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-black text-[#1d241d] dark:text-[#f7f4ee]">
+                  <h3 className="text-xl font-black text-brand-text">
                     {planTitle}
                   </h3>
-                  <span className="px-2.5 py-1 rounded-xl text-xs font-black bg-[#f0eae0] dark:bg-[#283228] text-[#9f815b] dark:text-[#d4be9b] border border-[#bfa27a]/30">
+                  <span className="px-2.5 py-1 rounded-xl text-xs font-black bg-brand-surface-elevated text-brand-bronze border border-brand-gold/30">
                     {t.vip.daysPlan(isPersian ? toPersianDigits(plan.durationDays) : plan.durationDays)}
                   </span>
                 </div>
 
                 {planDesc && (
-                  <p className="text-xs text-[#73695c] dark:text-[#a69c8e] mb-6 leading-relaxed">
+                  <p className="text-xs text-brand-text-muted mb-6 leading-relaxed">
                     {planDesc}
                   </p>
                 )}
 
                 {/* Price */}
-                <div className="mb-6 pb-6 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-                  <div className="text-2xl sm:text-3xl font-black text-[#1d241d] dark:text-[#d4be9b]">
+                <div className="mb-6 pb-6 border-b border-brand-border">
+                  <div className="text-2xl sm:text-3xl font-black text-brand-text">
                     {formatToman(plan.price, isPersian)}
                   </div>
-                  <div className="text-[11px] text-[#73695c] dark:text-[#a69c8e] mt-0.5">
+                  <div className="text-[11px] text-brand-text-muted mt-0.5">
                     {t.vip.discountIncluded(isPersian ? toPersianDigits(plan.discountPercent) : plan.discountPercent)}
                   </div>
                 </div>
@@ -141,8 +141,8 @@ export function VipPage({ plans }: VipPageProps) {
                 {/* Perks List */}
                 <div className="space-y-3 mb-8">
                   {planPerks.map((perk, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-xs font-semibold text-[#1d241d] dark:text-[#e6dcce]">
-                      <CheckCircle2 className="w-4 h-4 text-[#9f815b] shrink-0 mt-0.5" />
+                    <div key={idx} className="flex items-start gap-2 text-xs font-semibold text-brand-text">
+                      <CheckCircle2 className="w-4 h-4 text-brand-bronze shrink-0 mt-0.5" />
                       <span>{perk}</span>
                     </div>
                   ))}
@@ -154,8 +154,8 @@ export function VipPage({ plans }: VipPageProps) {
                 disabled={subscribingId === plan._id}
                 className={`w-full py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 ${
                   isPopular
-                    ? 'bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] shadow-[#9f815b]/20 active:scale-98'
-                    : 'bg-[#202620] hover:bg-[#2e382e] text-[#d4be9b] border border-[#bfa27a]/40 active:scale-98'
+                    ? 'bg-brand-gold hover:bg-brand-champagne text-brand-olive shadow-brand-bronze/20 active:scale-98'
+                    : 'bg-brand-olive hover:bg-brand-olive/90 text-brand-champagne border border-brand-gold/40 active:scale-98'
                 }`}
               >
                 {subscribingId === plan._id ? (
@@ -173,56 +173,56 @@ export function VipPage({ plans }: VipPageProps) {
       </div>
 
       {/* Perks Comparison Matrix */}
-      <div className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl p-8 border border-[#e6dcce] dark:border-[#2e3a2e] shadow-sm">
-        <h3 className="text-xl font-black text-[#1d241d] dark:text-[#f7f4ee] mb-6 text-center">
+      <div className="bg-brand-surface rounded-3xl p-8 border border-brand-border shadow-sm">
+        <h3 className="text-xl font-black text-brand-text mb-6 text-center">
           {t.vip.matrixTitle}
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-          <div className="p-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] space-y-2">
-            <div className="w-10 h-10 rounded-2xl bg-[#202620] text-[#d4be9b] flex items-center justify-center mx-auto border border-[#bfa27a]/30">
-              <Zap className="w-5 h-5 text-[#bfa27a]" />
+          <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2">
+            <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
+              <Zap className="w-5 h-5 text-brand-gold" />
             </div>
-            <h4 className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
+            <h4 className="font-bold text-sm text-brand-text">
               {t.vip.freeShippingPerk}
             </h4>
-            <p className="text-xs text-[#73695c] dark:text-[#a69c8e]">
+            <p className="text-xs text-brand-text-muted">
               {t.vip.freeShippingPerkSub}
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] space-y-2">
-            <div className="w-10 h-10 rounded-2xl bg-[#202620] text-[#d4be9b] flex items-center justify-center mx-auto border border-[#bfa27a]/30">
-              <Star className="w-5 h-5 text-[#bfa27a]" />
+          <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2">
+            <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
+              <Star className="w-5 h-5 text-brand-gold" />
             </div>
-            <h4 className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
+            <h4 className="font-bold text-sm text-brand-text">
               {t.vip.permanentDiscountPerk}
             </h4>
-            <p className="text-xs text-[#73695c] dark:text-[#a69c8e]">
+            <p className="text-xs text-brand-text-muted">
               {t.vip.permanentDiscountPerkSub}
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] space-y-2">
-            <div className="w-10 h-10 rounded-2xl bg-[#202620] text-[#d4be9b] flex items-center justify-center mx-auto border border-[#bfa27a]/30">
-              <Gift className="w-5 h-5 text-[#bfa27a]" />
+          <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2">
+            <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
+              <Gift className="w-5 h-5 text-brand-gold" />
             </div>
-            <h4 className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
+            <h4 className="font-bold text-sm text-brand-text">
               {t.vip.samplesPerk}
             </h4>
-            <p className="text-xs text-[#73695c] dark:text-[#a69c8e]">
+            <p className="text-xs text-brand-text-muted">
               {t.vip.samplesPerkSub}
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] space-y-2">
-            <div className="w-10 h-10 rounded-2xl bg-[#202620] text-[#d4be9b] flex items-center justify-center mx-auto border border-[#bfa27a]/30">
-              <ShieldCheck className="w-5 h-5 text-[#bfa27a]" />
+          <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2">
+            <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
+              <ShieldCheck className="w-5 h-5 text-brand-gold" />
             </div>
-            <h4 className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
+            <h4 className="font-bold text-sm text-brand-text">
               {t.vip.consultationPerk}
             </h4>
-            <p className="text-xs text-[#73695c] dark:text-[#a69c8e]">
+            <p className="text-xs text-brand-text-muted">
               {t.vip.consultationPerkSub}
             </p>
           </div>

@@ -63,19 +63,19 @@ export function CartDrawer() {
             style={{ willChange: 'transform' }}
             className={`fixed top-0 bottom-0 ${
               isRTL ? 'left-0 border-r' : 'right-0 border-l'
-            } w-full max-w-md h-full bg-[#ffffff] dark:bg-[#141914] shadow-2xl flex flex-col z-10 border-[#e6dcce] dark:border-[#2e3a2e]`}
+            } w-full max-w-md h-full bg-brand-surface shadow-2xl flex flex-col z-10 border-brand-border`}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-[#344034] bg-[#202620] text-[#f7f4ee] shrink-0">
               <div className="flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5 text-[#d4be9b]" />
+                <ShoppingBag className="w-5 h-5 text-brand-gold" />
                 <h3 className="font-bold text-base">
                   {t.cart.title}
                 </h3>
               </div>
               <button
                 onClick={closeDrawer}
-                className="p-1.5 rounded-xl text-[#a69c8e] hover:text-[#f7f4ee] hover:bg-[#2a342a] transition-colors"
+                className="p-1.5 rounded-xl text-brand-text-muted hover:text-[#f7f4ee] hover:bg-[#2a342a] transition-colors"
                 aria-label="Close cart"
               >
                 <X className="w-5 h-5" />
@@ -83,11 +83,11 @@ export function CartDrawer() {
             </div>
 
             {/* Content / Items List */}
-            <div className="flex-1 overflow-y-auto p-4 divide-y divide-[#e6dcce] dark:divide-[#2e3a2e]">
+            <div className="flex-1 overflow-y-auto p-4 divide-y divide-brand-border">
               {items.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[#73695c] dark:text-[#a69c8e]">
-                  <ShoppingBag className="w-16 h-16 mb-4 text-[#9f815b] opacity-40" />
-                  <h4 className="font-bold text-base text-[#1d241d] dark:text-[#f7f4ee] mb-1">
+                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-brand-text-muted">
+                  <ShoppingBag className="w-16 h-16 mb-4 text-brand-bronze opacity-40" />
+                  <h4 className="font-bold text-base text-brand-text mb-1">
                     {t.cart.emptyTitle}
                   </h4>
                   <p className="text-xs mb-6 max-w-xs leading-relaxed">
@@ -95,7 +95,7 @@ export function CartDrawer() {
                   </p>
                   <button
                     onClick={closeDrawer}
-                    className="px-6 py-2.5 rounded-2xl bg-[#202620] hover:bg-[#2e382e] text-[#d4be9b] font-bold text-xs border border-[#bfa27a]/40 shadow-sm"
+                    className="px-6 py-2.5 rounded-2xl bg-brand-olive hover:bg-brand-olive/90 text-brand-champagne font-bold text-xs border border-brand-gold/40 shadow-sm"
                   >
                     {t.cart.browseProducts}
                   </button>
@@ -121,27 +121,27 @@ export function CartDrawer() {
 
                   return (
                     <div key={itemKey} className="py-4 first:pt-0 last:pb-0 flex gap-3">
-                      <div className="relative w-18 h-18 rounded-2xl overflow-hidden bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] shrink-0">
+                      <div className="relative w-18 h-18 rounded-2xl overflow-hidden bg-brand-surface-elevated border border-brand-border shrink-0">
                         <Image src={itemImage} alt={product.title} fill className="object-cover" />
                       </div>
 
                       <div className="flex-1 flex flex-col justify-between">
                         <div>
-                          <h4 className="font-bold text-xs text-[#1d241d] dark:text-[#f7f4ee] line-clamp-1">
+                          <h4 className="font-bold text-xs text-brand-text line-clamp-1">
                             {isPersian ? product.title : product.titleEn || product.title}
                           </h4>
                           {(selectedVariant || selectedAttributes) && (
-                            <span className="text-[11px] font-bold text-[#9f815b] dark:text-[#d4be9b] block mt-0.5">
+                            <span className="text-[11px] font-bold text-brand-bronze block mt-0.5">
                               {selectedVariant ? getLocalizedVariantTitle(selectedVariant.title, isPersian) : selectedAttributes}
                             </span>
                           )}
-                          <div className="text-xs font-black text-[#1d241d] dark:text-[#d4be9b] mt-1">
+                          <div className="text-xs font-black text-brand-text mt-1">
                             {formatToman(itemPrice, isPersian)}
                           </div>
                         </div>
 
                         <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center gap-1 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] rounded-2xl p-0.5">
+                          <div className="flex items-center gap-1 bg-brand-surface-elevated border border-brand-border rounded-2xl p-0.5">
                             <button
                               type="button"
                               aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
@@ -154,11 +154,11 @@ export function CartDrawer() {
                                   }),
                                 )
                               }
-                              className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#ffffff] dark:bg-[#2e3a2e] text-[#1d241d] dark:text-[#f7f4ee] text-sm font-black flex items-center justify-center shadow-xs hover:bg-[#f0eae0] dark:hover:bg-[#384638] transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
+                              className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-brand-surface text-brand-text text-sm font-black flex items-center justify-center shadow-xs hover:bg-brand-surface-elevated transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-brand-gold"
                             >
                               -
                             </button>
-                            <span className="w-7 text-center text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] font-mono" aria-live="polite">
+                            <span className="w-7 text-center text-xs font-bold text-brand-text font-mono" aria-live="polite">
                               {isPersian ? toPersianDigits(quantity) : quantity}
                             </span>
                             <button
@@ -173,7 +173,7 @@ export function CartDrawer() {
                                   }),
                                 )
                               }
-                              className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] text-sm font-black flex items-center justify-center shadow-xs transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
+                              className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-brand-gold hover:bg-brand-champagne text-brand-olive text-sm font-black flex items-center justify-center shadow-xs transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-brand-gold"
                             >
                               +
                             </button>
@@ -205,10 +205,10 @@ export function CartDrawer() {
 
             {/* Footer Summary & Checkout */}
             {items.length > 0 && (
-              <div className="p-4 border-t border-[#e6dcce] dark:border-[#2e3a2e] bg-[#f8f5f0] dark:bg-[#1c231c] space-y-3 shrink-0">
-                <div className="flex items-center justify-between text-xs font-bold text-[#73695c] dark:text-[#a69c8e]">
+              <div className="p-4 border-t border-brand-border bg-brand-surface-elevated space-y-3 shrink-0">
+                <div className="flex items-center justify-between text-xs font-bold text-brand-text-muted">
                   <span>{t.cart.subtotal}</span>
-                  <span className="text-sm font-black text-[#1d241d] dark:text-[#d4be9b]">
+                  <span className="text-sm font-black text-brand-text">
                     {formatToman(subtotal, isPersian)}
                   </span>
                 </div>
@@ -217,7 +217,7 @@ export function CartDrawer() {
                   <Link
                     href={PATHS.CART}
                     onClick={closeDrawer}
-                    className="py-3 rounded-2xl bg-[#ffffff] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-[#1d241d] dark:text-[#f7f4ee] font-bold text-xs flex items-center justify-center gap-1 hover:bg-[#f0eae0] dark:hover:bg-[#2e382e] transition-colors"
+                    className="py-3 rounded-2xl bg-brand-surface border border-brand-border text-brand-text font-bold text-xs flex items-center justify-center gap-1 hover:bg-brand-surface-elevated transition-colors"
                   >
                     <span>{t.cart.viewCart}</span>
                   </Link>
@@ -225,7 +225,7 @@ export function CartDrawer() {
                   <Link
                     href={PATHS.CHECKOUT}
                     onClick={closeDrawer}
-                    className="py-3 rounded-2xl bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-[#9f815b]/20 active:scale-98 transition-all border border-[#d4be9b]/30"
+                    className="py-3 rounded-2xl bg-brand-gold hover:bg-brand-champagne text-brand-olive font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-brand-bronze/20 active:scale-98 transition-all border border-brand-champagne/30"
                   >
                     <span>{t.cart.proceedToCheckout}</span>
                     {isRTL ? <ArrowLeft className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}

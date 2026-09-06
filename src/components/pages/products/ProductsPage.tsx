@@ -122,12 +122,12 @@ export function ProductsPage({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Top Header & Sort Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#e6dcce] dark:border-[#2e3a2e] mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-brand-border mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#1d241d] dark:text-[#f7f4ee]">
+          <h1 className="text-2xl sm:text-3xl font-black text-brand-text">
             {isPersian ? 'فروشگاه عطر و ادکلن‌های نیش' : 'Luxury Perfumes & Niche Fragrances'}
           </h1>
-          <p className="text-xs text-[#73695c] dark:text-[#a69c8e] mt-1">
+          <p className="text-xs text-brand-text-muted mt-1">
             {isPersian
               ? `نمایش ${toPersianDigits(total)} محصول با ضمانت اصالت ۱۰۰٪ فیزیکی`
               : `Showing ${total} genuine products`}
@@ -138,20 +138,20 @@ export function ProductsPage({
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileFilterOpen(true)}
-            className="lg:hidden flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]"
+            className="lg:hidden flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-brand-surface border border-brand-border text-xs font-bold text-brand-text"
           >
-            <Filter className="w-4 h-4 text-[#9f815b]" />
+            <Filter className="w-4 h-4 text-brand-bronze" />
             <span>{isPersian ? 'فیلترها' : 'Filters'}</span>
           </button>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-[#73695c] dark:text-[#a69c8e] hidden sm:inline-block">
+            <span className="text-xs font-bold text-brand-text-muted hidden sm:inline-block">
               {isPersian ? 'مرتب‌سازی:' : 'Sort by:'}
             </span>
             <select
               value={selectedSort}
               onChange={(e) => setSelectedSort(e.target.value)}
-              className="px-4 py-2.5 rounded-2xl bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] text-xs font-bold border border-[#e6dcce] dark:border-[#2e3a2e] focus:ring-2 focus:ring-[#bfa27a] cursor-pointer"
+              className="px-4 py-2.5 rounded-2xl bg-brand-surface text-brand-text text-xs font-bold border border-brand-border focus:ring-2 focus:ring-brand-gold cursor-pointer"
             >
               {sortOptions.map((opt) => (
                 <option key={opt.id} value={opt.id}>
@@ -168,17 +168,17 @@ export function ProductsPage({
         <aside
           className={`lg:block lg:sticky lg:top-24 ${
             isMobileFilterOpen
-              ? 'fixed inset-0 z-50 bg-[#ffffff] dark:bg-[#141914] p-6 overflow-y-auto'
+              ? 'fixed inset-0 z-50 bg-brand-surface p-6 overflow-y-auto'
               : 'hidden'
           } lg:p-0 lg:bg-transparent lg:dark:bg-transparent space-y-6`}
         >
           {isMobileFilterOpen && (
-            <div className="flex items-center justify-between pb-4 border-b border-[#e6dcce] dark:border-[#2e3a2e] lg:hidden">
-              <h3 className="font-bold text-lg text-[#1d241d] dark:text-[#f7f4ee]">{isPersian ? 'فیلتر محصولات' : 'Filters'}</h3>
+            <div className="flex items-center justify-between pb-4 border-b border-brand-border lg:hidden">
+              <h3 className="font-bold text-lg text-brand-text">{isPersian ? 'فیلتر محصولات' : 'Filters'}</h3>
               <button
                 type="button"
                 onClick={() => setIsMobileFilterOpen(false)}
-                className="p-2 rounded-xl bg-[#f8f5f0] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee]"
+                className="p-2 rounded-xl bg-brand-surface-elevated text-brand-text"
                 aria-label={isPersian ? 'بستن فیلترها' : 'Close filters'}
               >
                 <X className="w-5 h-5" />
@@ -186,10 +186,10 @@ export function ProductsPage({
             </div>
           )}
 
-          <div className="bg-[#ffffff] dark:bg-[#1c231c] p-6 rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-6">
+          <div className="bg-brand-surface p-6 rounded-3xl border border-brand-border shadow-xs space-y-6">
             {/* Categories */}
             <div>
-              <h3 className="font-black text-sm text-[#1d241d] dark:text-[#f7f4ee] mb-3">
+              <h3 className="font-black text-sm text-brand-text mb-3">
                 {isPersian ? 'دسته‌بندی‌ها' : 'Categories'}
               </h3>
               <div className="space-y-1.5" role="listbox" aria-label={isPersian ? 'دسته‌بندی‌ها' : 'Categories'}>
@@ -198,8 +198,8 @@ export function ProductsPage({
                   onClick={() => handleCategorySelect('')}
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                     selectedCategory === ''
-                      ? 'bg-[#bfa27a] text-[#141914] font-black shadow-sm'
-                      : 'text-[#73695c] dark:text-[#a69c8e] hover:bg-[#f0eae0] dark:hover:bg-[#242c24] hover:text-[#1d241d] dark:hover:text-[#f7f4ee]'
+                      ? 'bg-brand-gold text-brand-olive font-black shadow-sm'
+                      : 'text-brand-text-muted hover:bg-brand-surface-elevated hover:text-brand-text'
                   }`}
                 >
                   <span>{isPersian ? 'همه دسته‌بندی‌ها' : 'All Categories'}</span>
@@ -213,8 +213,8 @@ export function ProductsPage({
                     onClick={() => handleCategorySelect(cat.slug)}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                       selectedCategory === cat.slug
-                        ? 'bg-[#bfa27a] text-[#141914] font-black shadow-sm'
-                        : 'text-[#73695c] dark:text-[#a69c8e] hover:bg-[#f0eae0] dark:hover:bg-[#242c24] hover:text-[#1d241d] dark:hover:text-[#f7f4ee]'
+                        ? 'bg-brand-gold text-brand-olive font-black shadow-sm'
+                        : 'text-brand-text-muted hover:bg-brand-surface-elevated hover:text-brand-text'
                     }`}
                   >
                     <span>{isPersian ? cat.name : cat.nameEn || cat.name}</span>
@@ -225,21 +225,21 @@ export function ProductsPage({
             </div>
 
             {/* Quick Toggle Switches */}
-            <div className="pt-4 border-t border-[#e6dcce] dark:border-[#2e3a2e] space-y-3">
+            <div className="pt-4 border-t border-brand-border space-y-3">
               <label className="flex items-center justify-between cursor-pointer">
-                <span className="text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]">
+                <span className="text-xs font-bold text-brand-text">
                   {isPersian ? 'فقط کالاهای موجود' : 'In-Stock Only'}
                 </span>
                 <input
                   type="checkbox"
                   checked={inStockOnly}
                   onChange={(e) => setInStockOnly(e.target.checked)}
-                  className="w-4 h-4 accent-[#9f815b] rounded cursor-pointer focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
+                  className="w-4 h-4 accent-brand-bronze rounded cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-gold"
                 />
               </label>
 
               <label className="flex items-center justify-between cursor-pointer">
-                <span className="text-xs font-bold text-[#9f815b] dark:text-[#d4be9b] flex items-center gap-1">
+                <span className="text-xs font-bold text-brand-bronze flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5" />
                   {isPersian ? 'فقط محصولات ویژه VIP' : 'VIP Exclusive Only'}
                 </span>
@@ -247,7 +247,7 @@ export function ProductsPage({
                   type="checkbox"
                   checked={isVipOnly}
                   onChange={(e) => setIsVipOnly(e.target.checked)}
-                  className="w-4 h-4 accent-[#9f815b] rounded cursor-pointer focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
+                  className="w-4 h-4 accent-brand-bronze rounded cursor-pointer focus-visible:ring-2 focus-visible:ring-brand-gold"
                 />
               </label>
             </div>
@@ -261,19 +261,19 @@ export function ProductsPage({
               {[...Array(6)].map((_, i) => (
                 <div
                   key={i}
-                  className="h-80 rounded-3xl bg-[#ffffff] dark:bg-[#1c231c] animate-pulse border border-[#e6dcce] dark:border-[#2e3a2e]"
+                  className="h-80 rounded-3xl bg-brand-surface animate-pulse border border-brand-border"
                 />
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="p-12 text-center bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] space-y-3">
-              <div className="w-16 h-16 rounded-full bg-[#f8f5f0] dark:bg-[#242c24] flex items-center justify-center mx-auto text-[#9f815b]">
+            <div className="p-12 text-center bg-brand-surface rounded-3xl border border-brand-border space-y-3">
+              <div className="w-16 h-16 rounded-full bg-brand-surface-elevated flex items-center justify-center mx-auto text-brand-bronze">
                 <SlidersHorizontal className="w-8 h-8" />
               </div>
-              <h3 className="font-bold text-base text-[#1d241d] dark:text-[#f7f4ee]">
+              <h3 className="font-bold text-base text-brand-text">
                 {isPersian ? 'محصولی با این مشخصات یافت نشد' : 'No products match your criteria'}
               </h3>
-              <p className="text-xs text-[#73695c] dark:text-[#a69c8e]">
+              <p className="text-xs text-brand-text-muted">
                 {isPersian
                   ? 'لطفاً فیلترها را تغییر داده یا از بخش جستجو استفاده نمایید.'
                   : 'Try adjusting your search or filter options.'}
@@ -284,7 +284,7 @@ export function ProductsPage({
                   setInStockOnly(false);
                   setIsVipOnly(false);
                 }}
-                className="px-5 py-2 rounded-xl bg-[#202620] text-[#d4be9b] font-bold text-xs hover:bg-[#2e382e] transition-colors border border-[#bfa27a]/30"
+                className="px-5 py-2 rounded-xl bg-brand-olive text-brand-champagne font-bold text-xs hover:bg-brand-olive/90 transition-colors border border-brand-gold/30"
               >
                 پاک کردن فیلترها
               </button>
