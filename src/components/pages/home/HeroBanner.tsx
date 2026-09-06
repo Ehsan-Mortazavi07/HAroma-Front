@@ -12,8 +12,8 @@ export function HeroBanner() {
   const { t, isPersian, isRTL } = useTranslation();
 
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#262f26] via-[#202620] to-[#141914] text-brand-surface p-6 sm:p-10 lg:p-14 mb-10 shadow-2xl border border-[#3e4c3e]">
-      {/* Background Decorative Rings with Bronze Gold and Olive Glows */}
+    <section className="relative overflow-hidden rounded-3xl bg-[#181f18] text-brand-surface p-6 sm:p-10 lg:p-14 mb-10 shadow-2xl border border-brand-gold/30">
+      {/* Background Decorative Glows */}
       <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-brand-bronze/10 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-brand-gold/15 blur-3xl pointer-events-none" />
 
@@ -38,7 +38,7 @@ export function HeroBanner() {
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Link
               href={PATHS.PRODUCTS}
-              className="px-7 py-3.5 rounded-2xl font-black bg-brand-gold hover:bg-brand-champagne text-brand-olive text-sm shadow-xl shadow-brand-bronze/25 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+              className="px-7 py-3.5 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-sm shadow-xl shadow-brand-gold/20 hover:scale-105 active:scale-95 transition-all duration-300 ease-out flex items-center gap-2"
             >
               <span>{t.hero.shopNow}</span>
               {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
@@ -46,7 +46,7 @@ export function HeroBanner() {
 
             <Link
               href={PATHS.VIP}
-              className="px-6 py-3.5 rounded-2xl font-bold bg-[#2a342a] hover:bg-[#344034] text-[#f7f4ee] text-sm border border-brand-gold/40 transition-all flex items-center gap-2 shadow-sm"
+              className="px-6 py-3.5 rounded-2xl font-bold bg-[#2a342a] hover:bg-[#344034] text-[#f7f4ee] text-sm border border-brand-gold/40 transition-all duration-300 ease-out flex items-center gap-2 shadow-sm hover:scale-105 active:scale-95"
             >
               <Crown className="w-4 h-4 text-brand-gold" />
               <span>{t.hero.joinVip}</span>
@@ -84,7 +84,7 @@ export function HeroBanner() {
                 <div className="text-xs font-black text-brand-gold">{t.hero.vipOffer}</div>
                 <div className="text-[11px] text-brand-champagne">{t.home.nicheGoldCollection}</div>
               </div>
-              <span className="px-3 py-1 rounded-full bg-gradient-to-r from-brand-champagne to-brand-bronze text-brand-olive font-black text-xs shadow-sm">
+              <span className="px-3 py-1 rounded-full bg-brand-gold text-[#141914] font-black text-xs shadow-sm">
                 {t.hero.discount35}
               </span>
             </div>

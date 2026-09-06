@@ -46,10 +46,10 @@ export function BrandLogo({
     <Link href={PATHS.HOME} className={`flex items-center gap-3.5 group ${className}`}>
       {/* Official Brand Monogram Emblem (Enlarged & Prominent) */}
       <div
-        className={`${sizeClasses.icon} relative rounded-2xl bg-gradient-to-br from-[#2a342a] via-[#1e251e] to-[#141914] border-2 border-[#bfa27a]/50 flex items-center justify-center shadow-xl shadow-black/30 group-hover:border-[#d4be9b] group-hover:scale-105 transition-all duration-300 overflow-hidden flex-shrink-0 p-1.5`}
+        className={`${sizeClasses.icon} relative rounded-2xl bg-[#181f18] border-2 border-brand-gold/60 flex items-center justify-center shadow-xl shadow-black/30 group-hover:border-brand-gold group-hover:scale-105 transition-all duration-300 ease-out overflow-hidden flex-shrink-0 p-1.5`}
       >
         {/* Ambient Gold Halo Glow */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#9f815b]/25 via-transparent to-[#d4be9b]/35 pointer-events-none" />
+        <div className="absolute inset-0 bg-brand-gold/10 pointer-events-none" />
 
         <div className="relative w-full h-full flex items-center justify-center">
           <Image

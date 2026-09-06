@@ -156,7 +156,7 @@ export default function AdminVipPlansPage() {
 
         <button
           onClick={openCreateModal}
-          className="px-5 py-3 rounded-2xl bg-gradient-to-r from-[#bfa27a] via-[#9f815b] to-[#7a5d3e] hover:from-[#d4be9b] hover:to-[#9f815b] text-[#1d241d] font-black text-xs shadow-md shadow-[#9f815b]/20 flex items-center justify-center gap-2 transition-all active:scale-98"
+          className="px-5 py-3 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 flex items-center justify-center gap-2 transition-all duration-200 ease-out active:scale-98"
         >
           <Plus className="w-4 h-4" />
           <span>{isPersian ? 'افزودن پلن VIP جدید' : 'Add New VIP Plan'}</span>
@@ -442,7 +442,7 @@ export default function AdminVipPlansPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 py-3 rounded-xl font-black bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] shadow-md transition-all active:scale-98"
+                  className="flex-1 py-3 rounded-xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-md transition-all duration-200 ease-out active:scale-98"
                 >
                   {submitting
                     ? isPersian ? 'در حال ذخیره...' : 'Saving...'

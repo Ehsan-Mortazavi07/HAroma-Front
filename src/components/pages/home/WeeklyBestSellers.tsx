@@ -67,7 +67,7 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
             role="tab"
             aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
+            className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all duration-200 ease-out ${
               activeTab === tab.id
                 ? 'bg-brand-gold text-[#141914] shadow-sm font-black'
                 : 'bg-brand-surface text-brand-text-muted hover:bg-brand-surface-elevated border border-brand-border'
@@ -80,7 +80,7 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
 
       {/* Products Grid */}
       {filteredProducts.length === 0 ? (
-        <div className="p-10 text-center bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] text-[#73695c] dark:text-[#a69c8e] text-xs">
+        <div className="p-10 text-center bg-brand-surface rounded-3xl border border-brand-border text-brand-text-muted text-xs">
           {t.home.noProducts}
         </div>
       ) : (

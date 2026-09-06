@@ -135,7 +135,7 @@ export default function AdminProductsPage() {
 
         <Link
           href={PATHS.ADMIN_PRODUCT_NEW}
-          className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-[#bfa27a] via-[#9f815b] to-[#7a5d3e] hover:from-[#d4be9b] hover:to-[#9f815b] text-[#1d241d] text-xs font-black shadow-lg shadow-[#9f815b]/20 active:scale-98 transition-all self-start sm:self-auto"
+          className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 active:scale-98 transition-all duration-200 ease-out self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>{isPersian ? 'افزودن محصول جدید' : 'Add New Product'}</span>

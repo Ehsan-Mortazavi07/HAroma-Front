@@ -113,7 +113,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center gap-3">
           <Link
             href={PATHS.ADMIN_PRODUCT_NEW}
-            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] font-black text-xs shadow-md shadow-[#9f815b]/20 flex items-center gap-1.5 transition-all"
+            className="px-4 py-2.5 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 flex items-center gap-1.5 transition-all duration-200 ease-out"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>{isPersian ? '+ تعریف محصول جدید' : '+ Add New Product'}</span>

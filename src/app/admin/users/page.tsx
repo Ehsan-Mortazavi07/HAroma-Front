@@ -145,7 +145,7 @@ export default function AdminUsersPage() {
                   <tr key={user._id} className="hover:bg-[#f8f5f0] dark:hover:bg-[#242c24] transition-colors">
                     <td className="py-4 px-6 text-start">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#d4be9b] to-[#9f815b] text-[#1d241d] font-black flex items-center justify-center text-xs shadow-sm shrink-0">
+                        <div className="w-10 h-10 rounded-2xl bg-brand-gold text-[#141914] font-black flex items-center justify-center text-xs shadow-sm shrink-0">
                           {user.fullName.charAt(0)}
                         </div>
                         <div>

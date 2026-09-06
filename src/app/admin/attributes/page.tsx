@@ -282,7 +282,7 @@ export default function AdminAttributesPage() {
         {activeTab === 'variants' ? (
           <button
             onClick={openCreateTplModal}
-            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-[#bfa27a] via-[#9f815b] to-[#7a5d3e] hover:from-[#d4be9b] hover:to-[#9f815b] text-[#1d241d] font-black text-xs shadow-md shadow-[#9f815b]/20 flex items-center justify-center gap-2 transition-all active:scale-98"
+            className="px-5 py-3 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 flex items-center justify-center gap-2 transition-all duration-200 ease-out active:scale-98"
           >
             <Plus className="w-4 h-4" />
             <span>{isPersian ? 'افزودن الگوی تنوع / حجم جدید' : 'Add New Variant Template'}</span>
@@ -290,7 +290,7 @@ export default function AdminAttributesPage() {
         ) : (
           <button
             onClick={openCreateAttrModal}
-            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-[#bfa27a] via-[#9f815b] to-[#7a5d3e] hover:from-[#d4be9b] hover:to-[#9f815b] text-[#1d241d] font-black text-xs shadow-md shadow-[#9f815b]/20 flex items-center justify-center gap-2 transition-all active:scale-98"
+            className="px-5 py-3 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 flex items-center justify-center gap-2 transition-all duration-200 ease-out active:scale-98"
           >
             <Plus className="w-4 h-4" />
             <span>{isPersian ? 'افزودن ویژگی جدید' : 'Add New Attribute'}</span>
@@ -302,9 +302,9 @@ export default function AdminAttributesPage() {
       <div className="flex items-center gap-2 bg-[#ffffff] dark:bg-[#1c231c] p-2 rounded-2xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
         <button
           onClick={() => setActiveTab('variants')}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-200 ease-out flex items-center justify-center gap-2 ${
             activeTab === 'variants'
-              ? 'bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] shadow-sm'
+              ? 'bg-brand-gold text-[#141914] shadow-sm'
               : 'text-[#73695c] dark:text-[#a69c8e] hover:text-[#1d241d] dark:hover:text-[#f7f4ee]'
           }`}
         >
@@ -317,9 +317,9 @@ export default function AdminAttributesPage() {
 
         <button
           onClick={() => setActiveTab('attributes')}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-200 ease-out flex items-center justify-center gap-2 ${
             activeTab === 'attributes'
-              ? 'bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] shadow-sm'
+              ? 'bg-brand-gold text-[#141914] shadow-sm'
               : 'text-[#73695c] dark:text-[#a69c8e] hover:text-[#1d241d] dark:hover:text-[#f7f4ee]'
           }`}
         >
@@ -356,7 +356,7 @@ export default function AdminAttributesPage() {
               </p>
               <button
                 onClick={openCreateTplModal}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] font-bold text-xs shadow-sm inline-flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-bold text-xs shadow-sm inline-flex items-center gap-1.5 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>{isPersian ? 'ساخت اولین الگوی تنوع' : 'Create First Template'}</span>
@@ -471,7 +471,7 @@ export default function AdminAttributesPage() {
               </h3>
               <button
                 onClick={openCreateAttrModal}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] font-bold text-xs shadow-sm"
+                className="px-5 py-2.5 rounded-xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-bold text-xs shadow-sm transition-colors"
               >
                 {isPersian ? 'افزودن ویژگی جدید' : 'Add Attribute'}
               </button>
@@ -710,7 +710,7 @@ export default function AdminAttributesPage() {
                 <button
                   type="submit"
                   disabled={submittingTpl}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] font-black shadow-md"
+                  className="px-6 py-2.5 rounded-xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black shadow-md transition-all duration-200 ease-out active:scale-98"
                 >
                   {submittingTpl
                     ? isPersian ? 'در حال ثبت...' : 'Saving...'
@@ -860,7 +860,7 @@ export default function AdminAttributesPage() {
                 <button
                   type="submit"
                   disabled={submittingAttr}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] font-black shadow-md"
+                  className="px-6 py-2.5 rounded-xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black shadow-md transition-all duration-200 ease-out active:scale-98"
                 >
                   {submittingAttr
                     ? isPersian ? 'در حال ثبت...' : 'Saving...'

@@ -76,9 +76,9 @@ export function AdminSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ease-out ${
                   isActive
-                    ? 'bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] shadow-sm font-black'
+                    ? 'bg-brand-gold text-[#141914] shadow-sm font-black'
                     : 'text-[#e6dcce] hover:bg-[#202620] hover:text-[#f7f4ee]'
                 }`}
               >

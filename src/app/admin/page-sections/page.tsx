@@ -526,7 +526,7 @@ export default function AdminPageSectionsPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] font-black shadow-md flex items-center gap-2"
+                  className="px-6 py-2.5 rounded-xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black shadow-md flex items-center gap-2 transition-all duration-200 ease-out active:scale-98"
                 >
                   <Save className="w-4 h-4" />
                   <span>{submitting ? (isPersian ? 'در حال ذخیره...' : 'Saving...') : (isPersian ? 'ذخیره تغییرات' : 'Save Changes')}</span>

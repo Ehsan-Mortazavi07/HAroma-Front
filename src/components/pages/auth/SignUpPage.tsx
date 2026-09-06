@@ -63,15 +63,15 @@ export function SignUpPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
-      <div className="w-full max-w-md bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl p-8 border border-[#e6dcce] dark:border-[#2e3a2e] shadow-2xl space-y-6">
+      <div className="w-full max-w-md bg-brand-surface rounded-3xl p-8 border border-brand-border shadow-2xl space-y-6">
         {/* Header with Brand Logo */}
         <div className="flex flex-col items-center text-center space-y-3">
           <BrandLogo size="md" showText={false} />
           <div>
-            <h1 className="text-2xl font-black text-[#1d241d] dark:text-[#f7f4ee]">
+            <h1 className="text-2xl font-black text-brand-text">
               {t.auth.signUpTitle}
             </h1>
-            <p className="text-xs text-[#73695c] dark:text-[#a69c8e] mt-1">
+            <p className="text-xs text-brand-text-muted mt-1">
               {t.auth.signUpSub}
             </p>
           </div>
@@ -92,7 +92,7 @@ export function SignUpPage() {
           {({ errors, touched }) => (
             <Form className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] mb-1.5">
+                <label className="block text-xs font-bold text-brand-text mb-1.5">
                   {t.auth.fullName}
                 </label>
                 <div className="relative">
@@ -100,9 +100,9 @@ export function SignUpPage() {
                     name="fullName"
                     type="text"
                     placeholder={isPersian ? 'مثال: احسان مرتضوی' : 'e.g. Ehsan Mortazavi'}
-                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
                   />
-                  <User className="w-4 h-4 absolute right-4 top-4 text-[#73695c] dark:text-[#a69c8e]" />
+                  <User className="w-4 h-4 absolute right-4 top-4 text-brand-text-muted" />
                 </div>
                 {errors.fullName && touched.fullName && (
                   <div className="text-[11px] text-rose-500 mt-1 font-bold">
@@ -112,7 +112,7 @@ export function SignUpPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] mb-1.5">
+                <label className="block text-xs font-bold text-brand-text mb-1.5">
                   {t.auth.username}
                 </label>
                 <div className="relative">
@@ -120,9 +120,9 @@ export function SignUpPage() {
                     name="username"
                     type="text"
                     placeholder={isPersian ? 'نام کاربری لاتین' : 'username'}
-                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-mono text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono text-brand-text focus:ring-2 focus:ring-brand-gold"
                   />
-                  <User className="w-4 h-4 absolute right-4 top-4 text-[#73695c] dark:text-[#a69c8e]" />
+                  <User className="w-4 h-4 absolute right-4 top-4 text-brand-text-muted" />
                 </div>
                 {errors.username && touched.username && (
                   <div className="text-[11px] text-rose-500 mt-1 font-bold">
@@ -132,7 +132,7 @@ export function SignUpPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] mb-1.5">
+                <label className="block text-xs font-bold text-brand-text mb-1.5">
                   {t.auth.email}
                 </label>
                 <div className="relative">
@@ -140,9 +140,9 @@ export function SignUpPage() {
                     name="email"
                     type="email"
                     placeholder="email@example.com"
-                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-mono text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono text-brand-text focus:ring-2 focus:ring-brand-gold"
                   />
-                  <Mail className="w-4 h-4 absolute right-4 top-4 text-[#73695c] dark:text-[#a69c8e]" />
+                  <Mail className="w-4 h-4 absolute right-4 top-4 text-brand-text-muted" />
                 </div>
                 {errors.email && touched.email && (
                   <div className="text-[11px] text-rose-500 mt-1 font-bold">
@@ -152,7 +152,7 @@ export function SignUpPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] mb-1.5">
+                <label className="block text-xs font-bold text-brand-text mb-1.5">
                   {t.auth.password}
                 </label>
                 <div className="relative">
@@ -160,9 +160,9 @@ export function SignUpPage() {
                     name="password"
                     type="password"
                     placeholder="••••••••"
-                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-mono font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
                   />
-                  <Lock className="w-4 h-4 absolute right-4 top-4 text-[#73695c] dark:text-[#a69c8e]" />
+                  <Lock className="w-4 h-4 absolute right-4 top-4 text-brand-text-muted" />
                 </div>
                 {errors.password && touched.password && (
                   <div className="text-[11px] text-rose-500 mt-1 font-bold">
@@ -172,7 +172,7 @@ export function SignUpPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] mb-1.5">
+                <label className="block text-xs font-bold text-brand-text mb-1.5">
                   {t.auth.confirmPassword}
                 </label>
                 <div className="relative">
@@ -180,9 +180,9 @@ export function SignUpPage() {
                     name="confirmPassword"
                     type="password"
                     placeholder="••••••••"
-                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-mono font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
                   />
-                  <Lock className="w-4 h-4 absolute right-4 top-4 text-[#73695c] dark:text-[#a69c8e]" />
+                  <Lock className="w-4 h-4 absolute right-4 top-4 text-brand-text-muted" />
                 </div>
                 {errors.confirmPassword && touched.confirmPassword && (
                   <div className="text-[11px] text-rose-500 mt-1 font-bold">
@@ -194,7 +194,7 @@ export function SignUpPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 rounded-2xl font-black bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-[#9f815b]/20 flex items-center justify-center gap-2 text-sm transition-all active:scale-98"
+                className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98"
               >
                 {loading ? (
                   <span>{t.common.loading}</span>
@@ -209,11 +209,11 @@ export function SignUpPage() {
           )}
         </Formik>
 
-        <div className="text-center text-xs text-[#73695c] dark:text-[#a69c8e] pt-2">
+        <div className="text-center text-xs text-brand-text-muted pt-2">
           <span>{t.auth.haveAccount} </span>
           <Link
             href={PATHS.SIGN_IN}
-            className="font-bold text-[#9f815b] dark:text-[#d4be9b] hover:underline"
+            className="font-bold text-brand-bronze dark:text-brand-gold hover:underline"
           >
             {t.auth.goToSignIn}
           </Link>

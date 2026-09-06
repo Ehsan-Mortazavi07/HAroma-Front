@@ -104,7 +104,7 @@ export function Navbar() {
                 type="submit"
                 className={`absolute ${
                   isPersian ? 'left-1.5' : 'right-1.5'
-                } w-8 h-8 rounded-full bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] hover:from-[#d4be9b] hover:to-[#bfa27a] flex items-center justify-center transition-all shadow-sm`}
+                } w-8 h-8 rounded-full bg-brand-gold hover:bg-[#d4be9b] text-[#141914] flex items-center justify-center transition-all shadow-sm`}
                 aria-label="Search"
               >
                 <Search className="w-4 h-4" />
@@ -133,7 +133,7 @@ export function Navbar() {
               >
                 <ShoppingBag className="w-5 h-5 text-[#d4be9b] group-hover:scale-110 transition-transform" />
                 {totalCartCount > 0 && (
-                  <span className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-gradient-to-r from-[#d4be9b] to-[#9f815b] text-[#1d241d] text-[11px] font-black flex items-center justify-center shadow-md animate-pulse">
+                  <span className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-brand-gold text-[#141914] text-[11px] font-black flex items-center justify-center shadow-md animate-pulse">
                     {isPersian ? toPersianDigits(totalCartCount) : totalCartCount}
                   </span>
                 )}
@@ -147,7 +147,7 @@ export function Navbar() {
                       onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                       className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-2 rounded-2xl bg-[#242c24] hover:bg-[#2e3a2e] border border-[#3e4c3e] hover:border-[#bfa27a]/50 transition-all text-xs font-bold"
                     >
-                      <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#d4be9b] to-[#9f815b] text-[#1d241d] font-black flex items-center justify-center text-xs shadow-sm">
+                      <div className="w-7 h-7 rounded-xl bg-brand-gold text-[#141914] font-black flex items-center justify-center text-xs shadow-sm">
                         {user.fullName.charAt(0)}
                       </div>
                       <span className="hidden sm:inline-block max-w-[100px] truncate text-[#f7f4ee]">
@@ -163,7 +163,7 @@ export function Navbar() {
                         onClick={() => setIsProfileMenuOpen(false)}
                         className={`absolute ${
                           isPersian ? 'left-0' : 'right-0'
-                        } mt-2 w-56 bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl shadow-2xl border border-[#e6dcce] dark:border-[#344034] p-2 z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150`}
+                        } mt-2 w-56 bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-2xl shadow-2xl border border-[#e6dcce] dark:border-[#344034] p-2 z-50 space-y-1 animate-in fade-in zoom-in-95 duration-150`}
                       >
                         <div className="px-3 py-2.5 border-b border-[#e6dcce] dark:border-[#2e3a2e] mb-1">
                           <div className="font-bold text-sm truncate">{user.fullName}</div>
@@ -235,7 +235,7 @@ export function Navbar() {
                   href={link.href}
                   className={`transition-all py-1 ${
                     link.isSpecial
-                      ? 'text-[#1d241d] font-black flex items-center gap-1.5 bg-gradient-to-r from-[#d4be9b] to-[#bfa27a] px-3.5 py-1 rounded-full shadow-sm hover:scale-105'
+                      ? 'text-[#1d241d] font-black flex items-center gap-1.5 bg-brand-gold px-3.5 py-1 rounded-full shadow-sm hover:scale-105'
                       : 'text-[#e6dcce] hover:text-[#d4be9b]'
                   }`}
                 >

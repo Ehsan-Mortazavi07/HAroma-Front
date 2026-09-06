@@ -25,6 +25,9 @@
   --color-brand-primary-light: var(--brand-primary-light);
   --color-brand-accent: var(--brand-accent);
   --color-brand-accent-hover: var(--brand-accent-hover);
+
+  --ease-luxury: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -131,7 +134,7 @@
     background-color: var(--brand-bg);
     color: var(--brand-text);
     overflow-x: hidden;
-    transition: background-color 0.25s ease, color 0.25s ease;
+    transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
@@ -170,7 +173,7 @@
 }
 
 .gold-gradient {
-  background: linear-gradient(135deg, #d4be9b 0%, #9f815b 50%, #7a5d3e 100%);
+  background-color: var(--brand-gold);
 }
 
 .gold-solid-accent,
@@ -184,5 +187,13 @@
 }
 
 .olive-dark-gradient {
-  background: linear-gradient(180deg, #202620 0%, #151a15 100%);
+  background-color: var(--brand-olive);
+}
+
+.transition-luxury {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.transition-smooth {
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }

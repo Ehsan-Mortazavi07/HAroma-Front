@@ -49,7 +49,7 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
       <button
         onClick={handleIncrement}
         aria-label={isPersian ? `افزودن ${product.title} به سبد خرید` : `Add ${product.title} to bag`}
-        className={`w-full flex items-center justify-center gap-2 rounded-2xl font-bold transition-all bg-[#f0eae0] hover:bg-[#e6dcce] text-[#7a5d3e] dark:bg-[#2a342a] dark:hover:bg-[#344034] dark:text-[#d4be9b] border border-[#bfa27a]/30 shadow-xs min-h-[44px] touch-manipulation active:scale-98 ${
+        className={`w-full flex items-center justify-center gap-2 rounded-2xl font-bold transition-all duration-200 ease-out bg-brand-surface-elevated hover:bg-brand-champagne/40 text-brand-bronze dark:text-brand-gold border border-brand-gold/30 shadow-xs min-h-[44px] touch-manipulation active:scale-98 ${
           size === 'sm' ? 'py-2 px-3 text-xs' : size === 'lg' ? 'py-3.5 px-5 text-base' : 'py-2.5 px-4 text-sm'
         }`}
       >
@@ -61,19 +61,19 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
 
   return (
     <div
-      className={`w-full flex items-center justify-between p-1 rounded-2xl font-bold bg-[#f0eae0] dark:bg-[#242c24] border border-[#bfa27a]/40 text-[#1d241d] dark:text-[#f7f4ee] shadow-sm min-h-[44px]`}
+      className={`w-full flex items-center justify-between p-1 rounded-2xl font-bold bg-brand-surface-elevated border border-brand-gold/40 text-brand-text shadow-sm min-h-[44px]`}
     >
       <button
         type="button"
         onClick={handleDecrement}
         aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
-        className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl bg-[#e2d7c5] hover:bg-[#d8ccb8] dark:bg-[#2e3a2e] dark:hover:bg-[#3e4c3e] text-[#1d241d] dark:text-[#f7f4ee] transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
+        className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl bg-brand-surface hover:bg-brand-champagne/40 text-brand-text transition-all duration-150 ease-out active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-brand-gold"
       >
         <Minus className="w-4 h-4" />
       </button>
 
       <span
-        className="font-extrabold text-sm px-2 text-[#1d241d] dark:text-[#d4be9b] font-mono min-w-[28px] text-center"
+        className="font-extrabold text-sm px-2 text-brand-text dark:text-brand-gold font-mono min-w-[28px] text-center"
         aria-live="polite"
       >
         {isPersian ? toPersianDigits(quantity) : quantity}
@@ -83,7 +83,7 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
         type="button"
         onClick={handleIncrement}
         aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
-        className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] font-black shadow-sm transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
+        className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center rounded-xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black shadow-sm transition-all duration-150 ease-out active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-brand-gold"
       >
         <Plus className="w-4 h-4" />
       </button>

@@ -18,8 +18,8 @@ export function PromoCardsArches() {
       subtitle: isPersian
         ? 'بهترین هدیه برای عزیزان با امکان انتخاب از تمام محصولات'
         : 'Present a gift card and let them choose their favorite scent',
-      bgClass: 'bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] border-[#e6dcce] dark:border-[#2e3a2e]',
-      iconBg: 'bg-[#bfa27a] text-[#1d241d]',
+      bgClass: 'bg-brand-surface text-brand-text border-brand-border',
+      iconBg: 'bg-brand-gold text-[#141914]',
       icon: Gift,
       image: 'https://images.unsplash.com/photo-1512290900672-1f55b9ab0128?q=80&w=600&auto=format&fit=crop',
       href: '/products?category=gift-sets',
@@ -31,8 +31,8 @@ export function PromoCardsArches() {
       subtitle: isPersian
         ? 'تخفیف‌های دائمی، ارسال رایگان و دسترسی به عطرهای نیش'
         : 'Enjoy exclusive discounts on all types of luxury & niche perfumes',
-      bgClass: 'bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] border-[#bfa27a]/50',
-      iconBg: 'bg-[#9f815b] text-[#f7f4ee]',
+      bgClass: 'bg-brand-surface text-brand-text border-brand-gold/40',
+      iconBg: 'bg-brand-bronze text-[#f7f4ee]',
       icon: Crown,
       image: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=600&auto=format&fit=crop',
       href: PATHS.VIP,
@@ -44,8 +44,8 @@ export function PromoCardsArches() {
       subtitle: isPersian
         ? 'طراحی امضای بویایی اختصاصی بر اساس تیپ شخصیتی شما'
         : 'Consult with expert perfumers to find your signature scent',
-      bgClass: 'bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] border-[#e6dcce] dark:border-[#2e3a2e]',
-      iconBg: 'bg-[#bfa27a] text-[#1d241d]',
+      bgClass: 'bg-brand-surface text-brand-text border-brand-border',
+      iconBg: 'bg-brand-gold text-[#141914]',
       icon: Sparkles,
       image: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?q=80&w=600&auto=format&fit=crop',
       href: PATHS.PRODUCTS,
@@ -57,8 +57,8 @@ export function PromoCardsArches() {
       subtitle: isPersian
         ? 'برای کلیه سفارش‌های بالای ۱ میلیون تومان در سراسر ایران'
         : 'Free express shipping on all orders over standard threshold',
-      bgClass: 'bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] border-[#e6dcce] dark:border-[#2e3a2e]',
-      iconBg: 'bg-[#202620] text-[#d4be9b]',
+      bgClass: 'bg-brand-surface text-brand-text border-brand-border',
+      iconBg: 'bg-brand-olive text-brand-gold',
       icon: Truck,
       image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=600&auto=format&fit=crop',
       href: PATHS.PRODUCTS,
@@ -74,32 +74,32 @@ export function PromoCardsArches() {
             <Link
               key={card.id}
               href={card.href}
-              className={`group flex flex-col justify-between rounded-3xl p-6 border shadow-sm hover:shadow-xl hover:border-[#bfa27a] hover:-translate-y-1 transition-all ${card.bgClass}`}
+              className={`group flex flex-col justify-between rounded-3xl p-6 border shadow-xs hover:shadow-xl hover:border-brand-gold hover:-translate-y-1 transition-all duration-300 ease-out ${card.bgClass}`}
             >
               {/* Header */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="px-3 py-1 rounded-full text-xs font-black bg-[#f0eae0] dark:bg-[#283228] text-[#9f815b] dark:text-[#d4be9b] border border-[#bfa27a]/30">
+                  <span className="px-3 py-1 rounded-full text-xs font-black bg-brand-surface-elevated text-brand-bronze dark:text-brand-gold border border-brand-gold/30">
                     {card.tag}
                   </span>
-                  <div className={`w-9 h-9 rounded-2xl flex items-center justify-center shadow-sm ${card.iconBg}`}>
+                  <div className={`w-9 h-9 rounded-2xl flex items-center justify-center shadow-xs ${card.iconBg}`}>
                     <Icon className="w-4 h-4" />
                   </div>
                 </div>
 
                 <h3 className="font-black text-base mb-1.5 line-clamp-1">{card.title}</h3>
-                <p className="text-xs text-[#73695c] dark:text-[#a69c8e] line-clamp-2 leading-relaxed">
+                <p className="text-xs text-brand-text-muted line-clamp-2 leading-relaxed">
                   {card.subtitle}
                 </p>
               </div>
 
               {/* Arch Media Container */}
-              <div className="mt-5 relative w-full h-36 rounded-2xl overflow-hidden bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e]">
+              <div className="mt-5 relative w-full h-36 rounded-2xl overflow-hidden bg-brand-surface-elevated border border-brand-border">
                 <Image
                   src={card.image}
                   alt={card.title}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent flex items-end p-3">
                   <span className="text-xs font-bold text-white flex items-center gap-1 group-hover:underline">

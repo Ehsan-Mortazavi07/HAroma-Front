@@ -276,7 +276,7 @@ export function ProfilePage() {
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs space-y-5">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-champagne to-brand-bronze text-brand-olive font-black text-xl flex items-center justify-center shadow-md shadow-brand-bronze/20 shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-brand-gold text-[#141914] font-black text-xl flex items-center justify-center shadow-md shadow-brand-gold/20 shrink-0">
                 {user.fullName.charAt(0)}
               </div>
               <div className="min-w-0">
@@ -301,7 +301,7 @@ export function ProfilePage() {
             {/* Quick Tab Switch Button */}
             <button
               onClick={() => setActiveTab(activeTab === 'edit' ? 'orders' : 'edit')}
-              className={`w-full py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all border ${
+              className={`w-full py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-200 ease-out border ${
                 activeTab === 'edit'
                   ? 'bg-brand-surface-elevated text-brand-bronze border-brand-gold/40 font-black'
                   : 'bg-brand-surface-elevated text-brand-text border-brand-border hover:bg-brand-champagne/40'
@@ -341,7 +341,7 @@ export function ProfilePage() {
 
           {/* VIP Status Card */}
           {user.isVip ? (
-            <div className="rounded-3xl p-6 bg-gradient-to-br from-[#262f26] to-[#141914] text-[#f7f4ee] border border-brand-gold/40 shadow-xl space-y-4">
+            <div className="rounded-3xl p-6 bg-[#181f18] text-[#f7f4ee] border border-brand-gold/30 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Crown className="w-5 h-5 text-brand-gold" />
@@ -362,23 +362,23 @@ export function ProfilePage() {
 
               <Link
                 href={PATHS.VIP}
-                className="block text-center py-2.5 rounded-xl bg-brand-gold text-brand-olive font-black text-xs hover:bg-brand-champagne transition-colors"
+                className="block text-center py-2.5 rounded-xl bg-brand-gold text-[#141914] font-black text-xs hover:bg-[#d4be9b] transition-colors"
               >
                 {t.profile.upgradeVip}
               </Link>
             </div>
           ) : (
-            <div className="rounded-3xl p-6 bg-brand-surface border border-brand-border space-y-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-brand-bronze" />
-                <h3 className="font-bold text-sm text-brand-text">{t.profile.joinVipTitle}</h3>
+            <div className="rounded-3xl p-6 bg-brand-surface-elevated border border-brand-border space-y-3">
+              <div className="flex items-center gap-2 text-brand-bronze dark:text-brand-gold">
+                <Crown className="w-5 h-5" />
+                <span className="font-black text-sm">{t.profile.joinVipTitle}</span>
               </div>
               <p className="text-xs text-brand-text-muted leading-relaxed">
                 {t.profile.joinVipSub}
               </p>
               <Link
                 href={PATHS.VIP}
-                className="block text-center py-2.5 rounded-xl bg-brand-olive hover:bg-brand-olive/90 text-brand-champagne border border-brand-gold/40 font-bold text-xs transition-colors"
+                className="block text-center py-2.5 rounded-2xl bg-brand-gold text-[#141914] font-black text-xs hover:bg-[#d4be9b] transition-colors shadow-sm"
               >
                 {t.hero.joinVip}
               </Link>
@@ -386,15 +386,15 @@ export function ProfilePage() {
           )}
         </div>
 
-        {/* Main Content Column: Tabs & Forms */}
+        {/* Content Column */}
         <div className="lg:col-span-8 space-y-6">
           {/* Tab Navigation Header */}
           <div className="flex items-center gap-2 bg-brand-surface p-2 rounded-2xl border border-brand-border">
             <button
               onClick={() => setActiveTab('orders')}
-              className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-200 ease-out flex items-center justify-center gap-2 ${
                 activeTab === 'orders'
-                  ? 'bg-gradient-to-r from-brand-gold to-brand-bronze text-brand-olive shadow-sm'
+                  ? 'bg-brand-gold text-[#141914] shadow-sm'
                   : 'text-brand-text-muted hover:text-brand-text'
               }`}
             >
@@ -407,9 +407,9 @@ export function ProfilePage() {
 
             <button
               onClick={() => setActiveTab('edit')}
-              className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-200 ease-out flex items-center justify-center gap-2 ${
                 activeTab === 'edit'
-                  ? 'bg-gradient-to-r from-brand-gold to-brand-bronze text-brand-olive shadow-sm'
+                  ? 'bg-brand-gold text-[#141914] shadow-sm'
                   : 'text-brand-text-muted hover:text-brand-text'
               }`}
             >
@@ -446,7 +446,7 @@ export function ProfilePage() {
                   <p className="text-sm font-semibold">{t.profile.emptyOrders}</p>
                   <Link
                     href={PATHS.PRODUCTS}
-                    className="inline-block px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-gold to-brand-bronze text-brand-olive font-bold text-xs shadow-md"
+                    className="inline-block px-6 py-2.5 rounded-xl bg-brand-gold text-[#141914] font-bold text-xs shadow-md hover:bg-[#d4be9b] transition-colors"
                   >
                     {t.home.curatedPicks}
                   </Link>
@@ -652,7 +652,7 @@ export function ProfilePage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-8 py-3 rounded-2xl bg-gradient-to-r from-brand-gold via-brand-bronze to-brand-bronze-dark hover:from-brand-champagne hover:to-brand-bronze text-brand-olive text-xs font-black shadow-md shadow-brand-bronze/20 flex items-center justify-center gap-2 active:scale-98 transition-all disabled:opacity-50"
+                  className="px-8 py-3 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 flex items-center justify-center gap-2 active:scale-98 transition-all duration-200 ease-out disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" />
                   <span>
@@ -712,7 +712,7 @@ export function ProfilePage() {
                   <button
                     type="submit"
                     disabled={resetLoading}
-                    className="flex-1 py-3 rounded-2xl font-black bg-gradient-to-r from-brand-gold to-brand-bronze text-brand-olive shadow-md transition-all active:scale-98 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-md transition-all duration-200 ease-out active:scale-98 flex items-center justify-center gap-2"
                   >
                     <Send className="w-4 h-4" />
                     <span>{resetLoading ? (isPersian ? 'در حال ارسال...' : 'Sending...') : (isPersian ? 'ارسال کد تایید' : 'Send Code')}</span>
@@ -766,7 +766,7 @@ export function ProfilePage() {
                   <button
                     type="submit"
                     disabled={resetLoading}
-                    className="flex-1 py-3 rounded-2xl font-black bg-gradient-to-r from-brand-gold to-brand-bronze text-brand-olive shadow-md transition-all active:scale-98 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-md transition-all duration-200 ease-out active:scale-98 flex items-center justify-center gap-2"
                   >
                     <Check className="w-4 h-4" />
                     <span>{resetLoading ? (isPersian ? 'در حال تایید...' : 'Verifying...') : (isPersian ? 'تغییر و ثبت رمز جدید' : 'Set New Password')}</span>

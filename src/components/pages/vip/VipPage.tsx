@@ -64,8 +64,8 @@ export function VipPage({ plans }: VipPageProps) {
   return (
     <div className="min-h-screen py-10">
       {/* Top Hero Callout */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#171d17] via-[#202620] to-[#121712] text-[#f7f4ee] p-8 sm:p-12 mb-14 text-center border border-[#bfa27a]/40 shadow-2xl">
-        <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#d4be9b] to-[#9f815b] text-[#1d241d] flex items-center justify-center mx-auto mb-4 shadow-xl shadow-[#9f815b]/20">
+      <div className="relative overflow-hidden rounded-3xl bg-[#181f18] text-[#f7f4ee] p-8 sm:p-12 mb-14 text-center border border-brand-gold/30 shadow-2xl">
+        <div className="w-16 h-16 rounded-3xl bg-brand-gold text-[#141914] flex items-center justify-center mx-auto mb-4 shadow-xl shadow-brand-gold/20">
           <Crown className="w-9 h-9 fill-current" />
         </div>
 
@@ -78,8 +78,8 @@ export function VipPage({ plans }: VipPageProps) {
         </p>
 
         {user?.isVip && (
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#2a342a] border border-[#bfa27a]/50 text-[#d4be9b] text-xs font-bold">
-            <Sparkles className="w-4 h-4 text-[#bfa27a]" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#2a342a] border border-brand-gold/40 text-brand-gold text-xs font-bold">
+            <Sparkles className="w-4 h-4 text-brand-gold" />
             <span>{t.vip.activeStatus}</span>
           </div>
         )}
@@ -100,14 +100,14 @@ export function VipPage({ plans }: VipPageProps) {
           return (
             <div
               key={plan._id}
-              className={`relative rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
+              className={`relative rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ease-out ${
                 isPopular
                   ? 'bg-brand-surface border-2 border-brand-gold shadow-2xl scale-102 z-10'
                   : 'bg-brand-surface border border-brand-border shadow-md hover:border-brand-gold'
               }`}
             >
               {isPopular && (
-                <div className="absolute -top-3.5 right-1/2 translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-brand-champagne via-brand-gold to-brand-bronze text-brand-olive font-black text-xs shadow-md">
+                <div className="absolute -top-3.5 right-1/2 translate-x-1/2 px-4 py-1 rounded-full bg-brand-gold text-[#141914] font-black text-xs shadow-md">
                   {t.vip.popularChoice}
                 </div>
               )}

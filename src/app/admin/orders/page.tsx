@@ -329,7 +329,7 @@ export default function AdminOrdersPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 py-3 rounded-xl font-black bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] shadow-md transition-all active:scale-98"
+                  className="flex-1 py-3 rounded-xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-md transition-all duration-200 ease-out active:scale-98"
                 >
                   {submitting
                     ? isPersian ? 'در حال ثبت...' : 'Saving...'

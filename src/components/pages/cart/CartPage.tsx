@@ -215,7 +215,7 @@ export function CartPage() {
 
             <Link
               href={PATHS.CHECKOUT}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-gold via-brand-bronze to-brand-bronze-dark hover:from-brand-champagne hover:to-brand-bronze text-brand-olive font-black text-sm shadow-md shadow-brand-bronze/20 flex items-center justify-center gap-2 active:scale-98 transition-all"
+              className="w-full py-4 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-sm shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 active:scale-98 transition-all duration-300 ease-out"
             >
               <span>{t.cart.proceedToCheckout}</span>
               {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}

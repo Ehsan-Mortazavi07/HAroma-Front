@@ -289,9 +289,9 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                         key={cat._id}
                         type="button"
                         onClick={() => handleCategoryToggle(cat._id)}
-                        className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all ${
+                        className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all duration-200 ease-out ${
                           isSelected
-                            ? 'bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] shadow-sm font-black'
+                            ? 'bg-brand-gold text-[#141914] shadow-sm font-black'
                             : 'bg-[#f8f5f0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] border border-[#e6dcce] dark:border-[#2e3a2e]'
                         }`}
                       >

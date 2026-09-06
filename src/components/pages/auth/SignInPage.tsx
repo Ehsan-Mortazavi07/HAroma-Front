@@ -72,15 +72,15 @@ export function SignInPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
-      <div className="w-full max-w-md bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl p-8 border border-[#e6dcce] dark:border-[#2e3a2e] shadow-2xl space-y-6">
+      <div className="w-full max-w-md bg-brand-surface rounded-3xl p-8 border border-brand-border shadow-2xl space-y-6">
         <div className="text-center space-y-3">
           <div className="flex justify-center mb-2">
             <BrandLogo size="md" />
           </div>
-          <h1 className="text-2xl font-black text-[#1d241d] dark:text-[#f7f4ee]">
+          <h1 className="text-2xl font-black text-brand-text">
             {t.auth.signInTitle}
           </h1>
-          <p className="text-xs text-[#73695c] dark:text-[#a69c8e]">
+          <p className="text-xs text-brand-text-muted">
             {t.auth.signInSub}
           </p>
         </div>
@@ -94,7 +94,7 @@ export function SignInPage() {
           {({ errors, touched }) => (
             <Form className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] mb-1.5">
+                <label className="block text-xs font-bold text-brand-text mb-1.5">
                   {t.auth.identifier}
                 </label>
                 <div className="relative">
@@ -102,9 +102,9 @@ export function SignInPage() {
                     name="identifier"
                     type="text"
                     placeholder={isPersian ? 'admin یا ایمیل' : 'admin or admin@hatefaroma.com'}
-                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
                   />
-                  <User className="w-4 h-4 absolute right-4 top-4 text-[#73695c] dark:text-[#a69c8e]" />
+                  <User className="w-4 h-4 absolute right-4 top-4 text-brand-text-muted" />
                 </div>
                 {errors.identifier && touched.identifier && (
                   <div className="text-[11px] text-rose-500 mt-1 font-bold">
@@ -115,7 +115,7 @@ export function SignInPage() {
 
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]">
+                  <label className="text-xs font-bold text-brand-text">
                     {t.auth.password}
                   </label>
                   <Link
@@ -128,7 +128,7 @@ export function SignInPage() {
                           : 'Please contact support for password recovery.',
                       );
                     }}
-                    className="text-[11px] text-[#9f815b] dark:text-[#d4be9b] hover:underline"
+                    className="text-[11px] text-brand-bronze dark:text-brand-gold hover:underline"
                   >
                     {t.auth.forgotPassword}
                   </Link>
@@ -138,9 +138,9 @@ export function SignInPage() {
                     name="password"
                     type="password"
                     placeholder="••••••••"
-                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-mono font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
                   />
-                  <Lock className="w-4 h-4 absolute right-4 top-4 text-[#73695c] dark:text-[#a69c8e]" />
+                  <Lock className="w-4 h-4 absolute right-4 top-4 text-brand-text-muted" />
                 </div>
                 {errors.password && touched.password && (
                   <div className="text-[11px] text-rose-500 mt-1 font-bold">
@@ -152,7 +152,7 @@ export function SignInPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 rounded-2xl font-black bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-[#9f815b]/20 flex items-center justify-center gap-2 text-sm transition-all active:scale-98"
+                className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98"
               >
                 {loading ? (
                   <span>{t.common.loading}</span>
@@ -168,47 +168,47 @@ export function SignInPage() {
         </Formik>
 
         {/* Quick Demo Logins Bar */}
-        <div className="pt-4 border-t border-[#e6dcce] dark:border-[#2e3a2e] space-y-2">
-          <div className="text-[11px] font-bold text-[#73695c] dark:text-[#a69c8e] text-center">
+        <div className="pt-4 border-t border-brand-border space-y-2">
+          <div className="text-[11px] font-bold text-brand-text-muted text-center">
             {t.auth.quickLoginTitle}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => handleQuickLogin('admin', 'Admin@123456')}
               type="button"
-              className="px-2.5 py-2 rounded-xl bg-[#202620] hover:bg-[#2c352c] text-[#d4be9b] text-[11px] font-bold transition-all border border-[#bfa27a]/30 shadow-xs active:scale-98"
+              className="px-2.5 py-2 rounded-xl bg-brand-olive hover:bg-brand-olive/90 text-brand-gold text-[11px] font-bold transition-all duration-150 ease-out border border-brand-gold/30 shadow-xs active:scale-98"
             >
               {isPersian ? '👑 مدیر کل (Admin)' : '👑 Super Admin'}
             </button>
             <button
               onClick={() => handleQuickLogin('editor', 'Editor@123456')}
               type="button"
-              className="px-2.5 py-2 rounded-xl bg-[#202620] hover:bg-[#2c352c] text-[#d4be9b] text-[11px] font-bold transition-all border border-[#bfa27a]/30 shadow-xs active:scale-98"
+              className="px-2.5 py-2 rounded-xl bg-brand-olive hover:bg-brand-olive/90 text-brand-gold text-[11px] font-bold transition-all duration-150 ease-out border border-brand-gold/30 shadow-xs active:scale-98"
             >
               {isPersian ? '✏️ ادیتور (Editor)' : '✏️ Product Editor'}
             </button>
             <button
               onClick={() => handleQuickLogin('vipuser', 'Vip@123456')}
               type="button"
-              className="px-2.5 py-2 rounded-xl bg-[#f0eae0] dark:bg-[#242c24] text-[#9f815b] dark:text-[#d4be9b] text-[11px] font-bold hover:bg-[#e6dcce] dark:hover:bg-[#2e382e] transition-all border border-[#e6dcce] dark:border-[#2e3a2e] active:scale-98"
+              className="px-2.5 py-2 rounded-xl bg-brand-surface-elevated text-brand-bronze dark:text-brand-gold text-[11px] font-bold hover:bg-brand-champagne/40 transition-all duration-150 ease-out border border-brand-border active:scale-98"
             >
               {isPersian ? '⭐ کاربر VIP' : '⭐ VIP Member'}
             </button>
             <button
               onClick={() => handleQuickLogin('normaluser', 'User@123456')}
               type="button"
-              className="px-2.5 py-2 rounded-xl bg-[#f0eae0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] text-[11px] font-bold hover:bg-[#e6dcce] dark:hover:bg-[#2e382e] transition-all border border-[#e6dcce] dark:border-[#2e3a2e] active:scale-98"
+              className="px-2.5 py-2 rounded-xl bg-brand-surface-elevated text-brand-text-muted text-[11px] font-bold hover:bg-brand-champagne/40 transition-all duration-150 ease-out border border-brand-border active:scale-98"
             >
               {isPersian ? '👤 کاربر عادی' : '👤 Normal User'}
             </button>
           </div>
         </div>
 
-        <div className="text-center text-xs text-[#73695c] dark:text-[#a69c8e] pt-2">
+        <div className="text-center text-xs text-brand-text-muted pt-2">
           <span>{t.auth.noAccount} </span>
           <Link
             href={PATHS.SIGN_UP}
-            className="font-bold text-[#9f815b] dark:text-[#d4be9b] hover:underline"
+            className="font-bold text-brand-bronze dark:text-brand-gold hover:underline"
           >
             {t.auth.createAccount}
           </Link>

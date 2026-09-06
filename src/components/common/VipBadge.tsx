@@ -24,9 +24,9 @@ export function VipBadge({ size = 'sm', text = 'VIP', className = '' }: VipBadge
 
   return (
     <span
-      className={`inline-flex items-center rounded-full bg-gradient-to-r from-[#d4be9b] via-[#bfa27a] to-[#9f815b] text-[#1d241d] border border-[#f7f4ee]/40 shadow-md shadow-[#9f815b]/20 ${sizeClasses[size]} ${className}`}
+      className={`inline-flex items-center rounded-full bg-brand-gold text-[#141914] border border-brand-gold/60 shadow-xs ${sizeClasses[size]} ${className}`}
     >
-      <Crown className={`${iconSizes[size]} fill-current text-[#1d241d]`} />
+      <Crown className={`${iconSizes[size]} fill-current text-[#141914]`} />
       <span>{text}</span>
     </span>
   );
