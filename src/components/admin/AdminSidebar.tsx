@@ -47,7 +47,7 @@ export function AdminSidebar() {
     { titleFa: 'مدیریت سفارشات', titleEn: 'Orders Management', href: PATHS.ADMIN_ORDERS, icon: ShoppingBag },
     { titleFa: 'کدهای تخفیف', titleEn: 'Discount Coupons', href: PATHS.ADMIN_COUPONS, icon: Ticket, adminOnly: true },
     { titleFa: 'پلن‌های اشتراک VIP', titleEn: 'VIP Subscription Plans', href: PATHS.ADMIN_VIP_PLANS, icon: Crown, adminOnly: true },
-    { titleFa: 'مدیریت کاربران و نقش‌ها', titleEn: 'Users & Roles', href: PATHS.ADMIN_USERS, icon: Users, adminOnly: true },
+    { titleFa: 'مدیریت کاربران و نقش‌ها', titleEn: 'Users & Roles', href: PATHS.ADMIN_USERS, icon: Users },
     { titleFa: 'شخصی‌ساز صفحات و بخش‌ها', titleEn: 'Page Sections Customizer', href: PATHS.ADMIN_PAGE_SECTIONS, icon: LayoutTemplate },
   ];
 

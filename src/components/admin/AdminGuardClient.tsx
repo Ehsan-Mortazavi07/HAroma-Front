@@ -30,9 +30,9 @@ export function AdminGuardClient({ children }: { children: React.ReactNode }) {
 
     // Role-based route restrictions for editor
     const adminOnlyRoutes = [
-      '/admin/users',
       '/admin/vip-plans',
       '/admin/coupons',
+      '/admin/products/new',
     ];
 
     const isRestrictedForEditor =
@@ -40,7 +40,7 @@ export function AdminGuardClient({ children }: { children: React.ReactNode }) {
 
     if (isRestrictedForEditor) {
       toast.error(isPersian ? 'این بخش فقط برای مدیر کل (Admin) مجاز است.' : 'This section is restricted to Super Admins.');
-      router.push(PATHS.ADMIN_DASHBOARD);
+      router.push(pathname.startsWith('/admin/products') ? PATHS.ADMIN_PRODUCTS : PATHS.ADMIN_DASHBOARD);
       return;
     }
 
