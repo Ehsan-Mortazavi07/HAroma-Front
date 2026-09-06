@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Vazirmatn } from 'next/font/google';
+import { Vazirmatn, Inter } from 'next/font/google';
 import '@/assets/css/globals.css';
 import '@/assets/css/rtl-heroui.css';
 import { ClientProvider } from '@/components/providers/ClientProvider';
@@ -10,6 +10,13 @@ const vazir = Vazirmatn({
   display: 'swap',
   variable: '--font-vazir',
   fallback: ['Vazirmatn', 'Vazir', 'Tahoma', 'sans-serif'],
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+  fallback: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 });
 
 export const metadata: Metadata = {
@@ -45,7 +52,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fa" dir="rtl" className={vazir.variable} suppressHydrationWarning>
+    <html lang="fa" dir="rtl" className={`${vazir.variable} ${inter.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased min-h-screen flex flex-col selection:bg-[#bfa27a] selection:text-[#1d241d]">
         <ClientProvider>
           <AppShell>{children}</AppShell>

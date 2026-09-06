@@ -68,15 +68,15 @@ export function BrandLogo({
         <div className="flex flex-col select-none justify-center">
           <div className="flex items-center gap-2">
             <span
-              className={`${sizeClasses.title} tracking-tight ${titleColor} transition-colors`}
+              className={`${sizeClasses.title} font-latin tracking-tight ${titleColor} transition-colors`}
             >
               HatefAroma
             </span>
-            <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#bfa27a]/25 text-[#d4be9b] border border-[#bfa27a]/40 font-sans shadow-xs">
+            <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#bfa27a]/25 text-[#d4be9b] border border-[#bfa27a]/40 shadow-xs">
               {isPersian ? 'هاتف آروما' : 'Niche'}
             </span>
           </div>
-          <span className={`${sizeClasses.sub} ${subColor} tracking-wider font-medium -mt-0.5 font-sans`}>
+          <span className={`${sizeClasses.sub} ${subColor} tracking-wider font-medium -mt-0.5 font-latin`}>
             Luxury Perfumes & Cosmetics
           </span>
         </div>

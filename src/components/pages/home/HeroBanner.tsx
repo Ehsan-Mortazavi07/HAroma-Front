@@ -27,7 +27,7 @@ export function HeroBanner() {
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight sm:leading-tight">
             {t.hero.titleMain}{' '}
-            <span className="gold-gradient-text">{t.hero.titleBrand}</span>{' '}
+            <span className="gold-solid-accent">{t.hero.titleBrand}</span>{' '}
             {t.hero.titleEnd}
           </h1>
 

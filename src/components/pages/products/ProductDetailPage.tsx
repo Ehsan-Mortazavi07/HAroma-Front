@@ -346,7 +346,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
               {isPersian ? product.title : product.titleEn || product.title}
             </h1>
             {product.titleEn && isPersian && (
-              <div className="text-sm font-semibold text-[#73695c] dark:text-[#a69c8e] mt-1 font-sans">
+              <div className="text-sm font-semibold text-[#73695c] dark:text-[#a69c8e] mt-1 font-latin">
                 {product.titleEn}
               </div>
             )}

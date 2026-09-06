@@ -1,10 +1,12 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+@import "tailwindcss";
 
 @theme {
   --font-sans: 'Vazirmatn', var(--font-vazir), 'Vazir', system-ui, -apple-system, sans-serif;
   --font-heading: 'Vazirmatn', var(--font-vazir), 'Vazir', system-ui, -apple-system, sans-serif;
+  --font-latin: var(--font-inter), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -56,23 +58,35 @@
     --brand-accent-hover: #d4be9b;
   }
 
-  html,
-  body,
+  /* Direction-aware typography system */
+  html[dir="rtl"] {
+    font-family: 'Vazirmatn', var(--font-vazir), 'Vazir', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  html[dir="ltr"] {
+    font-family: var(--font-inter), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  /* Monospace & Code elements */
+  code,
+  kbd,
+  samp,
+  pre,
+  .font-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  /* Explicit Latin font utility */
+  .font-latin {
+    font-family: var(--font-inter), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  /* Inputs and interactive elements inherit context font naturally */
   input,
   button,
   select,
-  textarea,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  p,
-  span,
-  a,
-  div {
-    font-family: 'Vazirmatn', var(--font-vazir), 'Vazir', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  textarea {
+    font-family: inherit;
   }
 
   body {
@@ -121,11 +135,13 @@
   background: linear-gradient(135deg, #d4be9b 0%, #9f815b 50%, #7a5d3e 100%);
 }
 
-.gold-solid-accent {
+.gold-solid-accent,
+.gold-gradient-text {
   color: #bfa27a;
 }
 
-.dark .gold-solid-accent {
+.dark .gold-solid-accent,
+.dark .gold-gradient-text {
   color: #d4be9b;
 }
 
