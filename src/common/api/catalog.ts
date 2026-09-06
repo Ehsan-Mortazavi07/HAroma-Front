@@ -1,6 +1,6 @@
 import axiosInstance from '../axiosInstance';
 import { SERVER_BASE_API_URL } from '../constants/URL';
-import { IProduct, ICategory, IVipPlan, IPageSection } from '../interfaces';
+import { IProduct, ICategory, IBrand, IVipPlan, IPageSection } from '../interfaces';
 
 // Server-side fetching helper
 async function fetchServer<T>(path: string): Promise<T | null> {
@@ -72,6 +72,24 @@ export const getRelatedProducts = async (id: string, limit = 4): Promise<IProduc
   }
 };
 
+export const getBrands = async (params?: Record<string, any>): Promise<IBrand[]> => {
+  try {
+    const res = await axiosInstance.get('/brands', { params });
+    return res.data || [];
+  } catch {
+    return [];
+  }
+};
+
+export const getBrandBySlug = async (slug: string): Promise<IBrand | null> => {
+  try {
+    const res = await axiosInstance.get(`/brands/${slug}`);
+    return res.data;
+  } catch {
+    return null;
+  }
+};
+
 export const getCategories = async (): Promise<ICategory[]> => {
   try {
     const res = await axiosInstance.get('/categories');
@@ -117,6 +135,8 @@ export const catalogApi = {
   getVipExclusiveProducts,
   getRelatedProducts,
   getCategories,
+  getBrands,
+  getBrandBySlug,
   getAttributes,
   getVipPlans,
   getPageSections,
@@ -125,6 +145,8 @@ export const catalogApi = {
       fetchServer<{ items: IProduct[]; total: number }>(`/products${params ? `?${params}` : ''}`),
     getProductBySlug: (slug: string) => fetchServer<IProduct>(`/products/${slug}`),
     getCategories: () => fetchServer<ICategory[]>('/categories'),
+    getBrands: () => fetchServer<IBrand[]>('/brands'),
+    getBrandBySlug: (slug: string) => fetchServer<IBrand>(`/brands/${slug}`),
     getVipPlans: () => fetchServer<IVipPlan[]>('/vip-plans'),
     getPageSections: () => fetchServer<IPageSection[]>('/page-sections'),
   },

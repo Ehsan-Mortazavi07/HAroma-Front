@@ -16,6 +16,7 @@ export const PATHS = {
   ADMIN_PRODUCT_NEW: '/admin/products/new',
   ADMIN_PRODUCT_EDIT: (id: string) => `/admin/products/${id}/edit`,
   ADMIN_CATEGORIES: '/admin/categories',
+  ADMIN_BRANDS: '/admin/brands',
   ADMIN_ATTRIBUTES: '/admin/attributes',
   ADMIN_ORDERS: '/admin/orders',
   ADMIN_COUPONS: '/admin/coupons',

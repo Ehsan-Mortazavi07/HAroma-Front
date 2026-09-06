@@ -333,14 +333,28 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
         {/* Right Column: Product Info & Actions */}
         <div className="lg:col-span-7 space-y-6">
           <div>
-            <div className="text-xs font-bold text-brand-bronze mb-1">
-              {mainCategory
-                ? isPersian
-                  ? mainCategory.name
-                  : mainCategory.nameEn || mainCategory.name
-                : isPersian
-                ? 'عطر و ادکلن نیش'
-                : 'Luxury Niche Perfumes'}
+            <div className="flex flex-wrap items-center gap-2 mb-1.5">
+              <span className="text-xs font-bold text-brand-bronze">
+                {mainCategory
+                  ? isPersian
+                    ? mainCategory.name
+                    : mainCategory.nameEn || mainCategory.name
+                  : isPersian
+                  ? 'عطر و ادکلن نیش'
+                  : 'Luxury Niche Perfumes'}
+              </span>
+
+              {product.brand && (
+                <>
+                  <span className="text-brand-border">•</span>
+                  <Link
+                    href={`/products?brand=${product.brand.slug}`}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-[#f0eae0] text-[#9f815b] dark:bg-[#242c24] dark:text-[#d4be9b] border border-[#bfa27a]/30 hover:border-[#bfa27a] transition-all"
+                  >
+                    <span>{isPersian ? product.brand.name : product.brand.nameEn || product.brand.name}</span>
+                  </Link>
+                </>
+              )}
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-brand-text leading-snug">
               {isPersian ? product.title : product.titleEn || product.title}
@@ -485,17 +499,40 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                 {product.attributes.map((attr, idx) => {
                   const formatted = formatAttributeDisplay(attr);
+                  const hasMultipleValues =
+                    (attr.values && attr.values.length > 1) ||
+                    (attr.value && attr.value.includes('،'));
+                  const valList =
+                    attr.values && attr.values.length > 0
+                      ? attr.values
+                      : attr.value
+                      ? attr.value.split(/[,،]+/).map((s) => s.trim()).filter(Boolean)
+                      : [];
+
                   return (
                     <div
                       key={idx}
-                      className="p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs"
+                      className="p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs flex flex-col justify-between"
                     >
-                      <div className="text-[11px] text-brand-text-muted mb-0.5 font-medium">
+                      <div className="text-[11px] text-brand-text-muted mb-1 font-medium">
                         {formatted.name}
                       </div>
-                      <div className="font-bold text-brand-text">
-                        {formatted.value}
-                      </div>
+                      {hasMultipleValues && valList.length > 1 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {valList.map((item, vIdx) => (
+                            <span
+                              key={vIdx}
+                              className="px-2 py-0.5 rounded-lg bg-brand-surface text-brand-text border border-brand-border text-[11px] font-bold"
+                            >
+                              {isPersian ? item : translateAttributeValue(item)}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="font-bold text-brand-text">
+                          {formatted.value}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

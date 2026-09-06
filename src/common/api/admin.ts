@@ -45,6 +45,28 @@ export const adminApi = {
     return res.data;
   },
 
+  // Brands CRUD
+  getBrands: async (params?: Record<string, any>) => {
+    const res = await axiosInstance.get('/admin/brands', { params });
+    return res.data;
+  },
+  getBrand: async (id: string) => {
+    const res = await axiosInstance.get(`/admin/brands/${id}`);
+    return res.data;
+  },
+  createBrand: async (data: any) => {
+    const res = await axiosInstance.post('/admin/brands', data);
+    return res.data;
+  },
+  updateBrand: async (id: string, data: any) => {
+    const res = await axiosInstance.patch(`/admin/brands/${id}`, data);
+    return res.data;
+  },
+  deleteBrand: async (id: string) => {
+    const res = await axiosInstance.delete(`/admin/brands/${id}`);
+    return res.data;
+  },
+
   // Attributes CRUD & Quick Create
   getAttributes: async (params?: Record<string, any>) => {
     const res = await axiosInstance.get('/admin/attributes', { params });

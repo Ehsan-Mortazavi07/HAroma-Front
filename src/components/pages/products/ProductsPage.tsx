@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Filter, SlidersHorizontal, Sparkles, X, Check } from 'lucide-react';
-import { IProduct, ICategory } from '@/common/interfaces';
+import { IProduct, ICategory, IBrand } from '@/common/interfaces';
 import { ProductCard } from '@/components/common/ProductCard';
 import { useAppSelector } from '@/stores/hooks';
 import { formatToman, toPersianDigits } from '@/common/utils';
@@ -38,10 +38,14 @@ export function ProductsPage({
     initialTotal !== undefined ? initialTotal : initialData?.total || 0,
   );
   const [loading, setLoading] = useState(false);
+  const [brands, setBrands] = useState<IBrand[]>([]);
 
   // Filters State
   const [selectedCategory, setSelectedCategory] = useState<string>(
     searchParams.get('category') || '',
+  );
+  const [selectedBrand, setSelectedBrand] = useState<string>(
+    searchParams.get('brand') || '',
   );
   const [selectedSort, setSelectedSort] = useState<string>(
     searchParams.get('sort') || 'newest',
@@ -57,15 +61,29 @@ export function ProductsPage({
   );
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
+  useEffect(() => {
+    const loadBrands = async () => {
+      try {
+        const res = await catalogApi.getBrands();
+        setBrands(res || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadBrands();
+  }, []);
+
   // Sync state when URL searchParams change (e.g. from Footer / Navbar / Breadcrumbs)
   useEffect(() => {
     const urlCat = searchParams.get('category') || '';
+    const urlBrand = searchParams.get('brand') || '';
     const urlSort = searchParams.get('sort') || 'newest';
     const urlStock = searchParams.get('inStockOnly') === 'true' || searchParams.get('inStock') === 'true';
     const urlVip = searchParams.get('isVipOnly') === 'true' || searchParams.get('vip') === 'true';
     const urlQ = searchParams.get('q') || '';
 
     setSelectedCategory(urlCat);
+    setSelectedBrand(urlBrand);
     setSelectedSort(urlSort);
     setInStockOnly(urlStock);
     setIsVipOnly(urlVip);
@@ -83,11 +101,23 @@ export function ProductsPage({
     router.push(`/products?${params.toString()}`);
   };
 
+  const handleBrandSelect = (slug: string) => {
+    setSelectedBrand(slug);
+    const params = new URLSearchParams(searchParams.toString());
+    if (slug) {
+      params.set('brand', slug);
+    } else {
+      params.delete('brand');
+    }
+    router.push(`/products?${params.toString()}`);
+  };
+
   const fetchFilteredProducts = async () => {
     setLoading(true);
     try {
       const res = await catalogApi.getProducts({
         category: selectedCategory || undefined,
+        brand: selectedBrand || undefined,
         sort: selectedSort,
         inStockOnly: inStockOnly || undefined,
         isVipOnly: isVipOnly || undefined,
@@ -104,7 +134,7 @@ export function ProductsPage({
 
   useEffect(() => {
     fetchFilteredProducts();
-  }, [selectedCategory, selectedSort, inStockOnly, isVipOnly, searchQuery]);
+  }, [selectedCategory, selectedBrand, selectedSort, inStockOnly, isVipOnly, searchQuery]);
 
   useEffect(() => {
     document.title = isPersian
@@ -192,11 +222,11 @@ export function ProductsPage({
               <h3 className="font-black text-sm text-brand-text mb-3">
                 {isPersian ? 'دسته‌بندی‌ها' : 'Categories'}
               </h3>
-              <div className="space-y-1.5" role="listbox" aria-label={isPersian ? 'دسته‌بندی‌ها' : 'Categories'}>
+              <div className="space-y-1.5 max-h-72 overflow-y-auto" role="listbox" aria-label={isPersian ? 'دسته‌بندی‌ها' : 'Categories'}>
                 <button
                   type="button"
                   onClick={() => handleCategorySelect('')}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     selectedCategory === ''
                       ? 'bg-brand-gold text-brand-olive font-black shadow-sm'
                       : 'text-brand-text-muted hover:bg-brand-surface-elevated hover:text-brand-text'
@@ -206,23 +236,96 @@ export function ProductsPage({
                   {selectedCategory === '' && <Check className="w-3.5 h-3.5" />}
                 </button>
 
-                {categories.map((cat) => (
+                {categories
+                  .filter((cat) => !cat.parentId)
+                  .map((parentCat) => {
+                    const subCats = categories.filter(
+                      (c) =>
+                        c.parentId === parentCat._id ||
+                        (typeof c.parentId === 'object' && c.parentId && (c.parentId as any)._id === parentCat._id),
+                    );
+
+                    return (
+                      <React.Fragment key={parentCat._id}>
+                        <button
+                          type="button"
+                          onClick={() => handleCategorySelect(parentCat.slug)}
+                          className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            selectedCategory === parentCat.slug
+                              ? 'bg-brand-gold text-brand-olive font-black shadow-sm'
+                              : 'text-brand-text-muted hover:bg-brand-surface-elevated hover:text-brand-text'
+                          }`}
+                        >
+                          <span>{isPersian ? parentCat.name : parentCat.nameEn || parentCat.name}</span>
+                          {selectedCategory === parentCat.slug && <Check className="w-3.5 h-3.5" />}
+                        </button>
+
+                        {subCats.map((sub) => (
+                          <button
+                            key={sub._id}
+                            type="button"
+                            onClick={() => handleCategorySelect(sub.slug)}
+                            className={`w-full flex items-center justify-between py-1.5 px-3 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                              isPersian ? 'mr-3.5 pr-2 border-r-2' : 'ml-3.5 pl-2 border-l-2'
+                            } ${
+                              selectedCategory === sub.slug
+                                ? 'border-brand-gold text-brand-gold font-black bg-brand-gold/10'
+                                : 'border-brand-border text-brand-text-muted hover:text-brand-text hover:border-brand-text-muted'
+                            }`}
+                          >
+                            <span>↳ {isPersian ? sub.name : sub.nameEn || sub.name}</span>
+                            {selectedCategory === sub.slug && <Check className="w-3 h-3" />}
+                          </button>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Brands Filter */}
+            {brands.length > 0 && (
+              <div className="pt-4 border-t border-brand-border">
+                <h3 className="font-black text-sm text-brand-text mb-3">
+                  {isPersian ? 'برندها و خانه‌های عطر' : 'Fragrance Brands'}
+                </h3>
+                <div className="space-y-1.5 max-h-56 overflow-y-auto" role="listbox" aria-label={isPersian ? 'برندها' : 'Brands'}>
                   <button
-                    key={cat._id}
                     type="button"
-                    onClick={() => handleCategorySelect(cat.slug)}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                      selectedCategory === cat.slug
+                    onClick={() => handleBrandSelect('')}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      selectedBrand === ''
                         ? 'bg-brand-gold text-brand-olive font-black shadow-sm'
                         : 'text-brand-text-muted hover:bg-brand-surface-elevated hover:text-brand-text'
                     }`}
                   >
-                    <span>{isPersian ? cat.name : cat.nameEn || cat.name}</span>
-                    {selectedCategory === cat.slug && <Check className="w-3.5 h-3.5" />}
+                    <span>{isPersian ? 'همه برندها' : 'All Brands'}</span>
+                    {selectedBrand === '' && <Check className="w-3.5 h-3.5" />}
                   </button>
-                ))}
+
+                  {brands.map((b) => (
+                    <button
+                      key={b._id}
+                      type="button"
+                      onClick={() => handleBrandSelect(b.slug)}
+                      className={`w-full flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        selectedBrand === b.slug
+                          ? 'bg-brand-gold text-brand-olive font-black shadow-sm'
+                          : 'text-brand-text-muted hover:bg-brand-surface-elevated hover:text-brand-text'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {b.logo && (
+                          <img src={b.logo} alt="" className="w-4 h-4 object-contain" />
+                        )}
+                        <span>{isPersian ? b.name : b.nameEn || b.name}</span>
+                      </div>
+                      {selectedBrand === b.slug && <Check className="w-3.5 h-3.5" />}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Quick Toggle Switches */}
             <div className="pt-4 border-t border-brand-border space-y-3">

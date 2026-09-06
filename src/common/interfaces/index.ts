@@ -13,11 +13,25 @@ export interface IUser {
   createdAt?: string;
 }
 
+export interface IBrand {
+  _id: string;
+  name: string;
+  nameEn?: string;
+  slug: string;
+  description?: string;
+  logo?: string;
+  image?: string;
+  order?: number;
+  isFeatured?: boolean;
+  createdAt?: string;
+}
+
 export interface ICategory {
   _id: string;
   name: string;
   nameEn?: string;
   slug: string;
+  parentId?: string | ICategory | null;
   description?: string;
   image?: string;
   icon?: string;
@@ -39,6 +53,7 @@ export interface IProductAttribute {
   key: string;
   name: string;
   value: string;
+  values?: string[];
   unit?: string;
 }
 
@@ -78,6 +93,7 @@ export interface IProduct {
   price: number;
   discountPrice?: number | null;
   images: string[];
+  brand?: IBrand | null;
   categories: ICategory[];
   attributes: IProductAttribute[];
   variants?: IProductVariant[];
