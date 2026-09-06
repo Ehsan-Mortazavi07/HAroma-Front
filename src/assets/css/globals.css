@@ -92,9 +92,24 @@
   code,
   kbd,
   samp,
-  pre,
+  pre {
+    font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
   .font-mono {
     font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  /* In RTL (Persian/Arabic), guarantee font-mono elements use Vazirmatn with tabular numbers so Persian glyphs never break */
+  html[dir="rtl"] .font-mono {
+    font-family: 'Vazirmatn', var(--font-vazir), 'Vazir', system-ui, -apple-system, sans-serif;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* Explicit Latin Monospace */
+  .font-mono-latin {
+    font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    direction: ltr;
   }
 
   /* Explicit Latin font utility */

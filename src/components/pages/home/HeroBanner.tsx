@@ -10,28 +10,57 @@ import { useTranslation } from '@/common/i18n';
 
 export function HeroBanner() {
   const { t, isPersian, isRTL } = useTranslation();
+  const sectionRef = React.useRef<HTMLElement>(null);
+  const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    if (!sectionRef.current) return;
+    const rect = sectionRef.current.getBoundingClientRect();
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
 
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-[#181f18] text-brand-surface p-6 sm:p-10 lg:p-14 mb-10 shadow-2xl border border-brand-gold/30">
-      {/* Background Decorative Glows */}
+    <section
+      ref={sectionRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative overflow-hidden rounded-3xl bg-[#181f18] text-[#f7f4ee] p-6 sm:p-10 lg:p-14 mb-10 shadow-2xl border border-brand-gold/30 group"
+    >
+      {/* Interactive Cursor-Tracking Golden Spotlight */}
+      <div
+        className="pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out"
+        style={{
+          opacity: isHovered ? 1 : 0.45,
+          background: isHovered
+            ? `radial-gradient(650px circle at ${mousePos.x}px ${mousePos.y}px, rgba(212, 190, 155, 0.22), rgba(159, 129, 91, 0.08) 40%, transparent 75%)`
+            : `radial-gradient(600px circle at 70% 35%, rgba(212, 190, 155, 0.14), transparent 70%)`,
+        }}
+      />
+
+      {/* Background Decorative Ambient Glows */}
       <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-brand-bronze/10 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-brand-gold/15 blur-3xl pointer-events-none" />
 
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         {/* Left Content */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#2a342a] border border-brand-gold/40 text-xs font-extrabold text-brand-gold shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#202820] border border-brand-gold/40 text-xs font-extrabold text-[#d4be9b] shadow-sm">
             <Crown className="w-4 h-4 text-brand-gold" />
             <span>{t.hero.tag}</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight sm:leading-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight sm:leading-tight text-[#f7f4ee]">
             {t.hero.titleMain}{' '}
-            <span className="gold-solid-accent">{t.hero.titleBrand}</span>{' '}
+            <span className="text-[#d4be9b] font-black">{t.hero.titleBrand}</span>{' '}
             {t.hero.titleEnd}
           </h1>
 
-          <p className="text-sm sm:text-base text-brand-champagne/90 max-w-xl leading-relaxed">
+          <p className="text-sm sm:text-base text-[#e6dcce] max-w-xl leading-relaxed font-medium">
             {t.hero.description}
           </p>
 
@@ -46,7 +75,7 @@ export function HeroBanner() {
 
             <Link
               href={PATHS.VIP}
-              className="px-6 py-3.5 rounded-2xl font-bold bg-[#2a342a] hover:bg-[#344034] text-[#f7f4ee] text-sm border border-brand-gold/40 transition-all duration-300 ease-out flex items-center gap-2 shadow-sm hover:scale-105 active:scale-95"
+              className="px-6 py-3.5 rounded-2xl font-bold bg-[#202820] hover:bg-[#2c372c] text-[#f7f4ee] text-sm border border-brand-gold/40 transition-all duration-300 ease-out flex items-center gap-2 shadow-sm hover:scale-105 active:scale-95"
             >
               <Crown className="w-4 h-4 text-brand-gold" />
               <span>{t.hero.joinVip}</span>
@@ -54,7 +83,7 @@ export function HeroBanner() {
           </div>
 
           {/* Quick Perks Pill */}
-          <div className="pt-4 border-t border-[#344034] flex flex-wrap gap-4 text-xs font-semibold text-brand-champagne">
+          <div className="pt-4 border-t border-[#2e3a2e] flex flex-wrap gap-4 text-xs font-semibold text-[#e6dcce]">
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-brand-gold" />
               <span>{t.common.authenticityGuarantee}</span>
@@ -79,10 +108,10 @@ export function HeroBanner() {
             <div className="absolute inset-0 bg-gradient-to-t from-[#141914]/90 via-transparent to-transparent" />
 
             {/* Floating Glassmorphism Badge */}
-            <div className="absolute bottom-4 right-4 left-4 p-4 rounded-2xl bg-[#202620]/90 backdrop-blur-md border border-brand-gold/40 shadow-xl flex items-center justify-between">
+            <div className="absolute bottom-4 right-4 left-4 p-4 rounded-2xl bg-[#1c231c]/90 backdrop-blur-md border border-brand-gold/40 shadow-xl flex items-center justify-between">
               <div>
                 <div className="text-xs font-black text-brand-gold">{t.hero.vipOffer}</div>
-                <div className="text-[11px] text-brand-champagne">{t.home.nicheGoldCollection}</div>
+                <div className="text-[11px] text-[#e6dcce] font-medium">{t.home.nicheGoldCollection}</div>
               </div>
               <span className="px-3 py-1 rounded-full bg-brand-gold text-[#141914] font-black text-xs shadow-sm">
                 {t.hero.discount35}

@@ -198,7 +198,7 @@ export default function AdminUsersPage() {
                       </button>
                     </td>
 
-                    <td className="py-4 px-4 text-center text-[#73695c] dark:text-[#a69c8e] whitespace-nowrap font-mono text-xs">
+                    <td className="py-4 px-4 text-center text-[#73695c] dark:text-[#a69c8e] whitespace-nowrap font-medium text-xs">
                       {new Date(user.createdAt).toLocaleDateString(isPersian ? 'fa-IR' : 'en-US')}
                     </td>
 

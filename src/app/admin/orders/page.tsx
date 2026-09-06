@@ -178,7 +178,7 @@ export default function AdminOrdersPage() {
               <tbody className="divide-y divide-[#e6dcce] dark:divide-[#2e3a2e]">
                 {orders.map((order) => (
                   <tr key={order._id} className="hover:bg-[#f8f5f0] dark:hover:bg-[#242c24] transition-colors">
-                    <td className="py-4 px-6 font-mono font-bold text-[#9f815b] dark:text-[#d4be9b]">
+                    <td className="py-4 px-6 font-bold text-[#9f815b] dark:text-[#d4be9b]">
                       {isPersian ? toPersianDigits(order.orderNumber) : order.orderNumber}
                     </td>
 
@@ -270,7 +270,7 @@ export default function AdminOrdersPage() {
                       )}
                     </div>
                     <div className="text-right">
-                      <div className="font-mono font-bold text-[#9f815b] dark:text-[#d4be9b]">
+                      <div className="font-bold text-[#9f815b] dark:text-[#d4be9b]">
                         {isPersian ? `${toPersianDigits(item.quantity)} × ${formatToman(item.price, isPersian)}` : `${item.quantity} × ${formatToman(item.price, isPersian)}`}
                       </div>
                     </div>

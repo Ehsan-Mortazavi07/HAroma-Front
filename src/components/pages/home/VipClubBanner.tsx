@@ -9,6 +9,18 @@ import { useTranslation } from '@/common/i18n';
 
 export function VipClubBanner() {
   const { t, isPersian, isRTL } = useTranslation();
+  const sectionRef = React.useRef<HTMLElement>(null);
+  const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = React.useState(false);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    if (!sectionRef.current) return;
+    const rect = sectionRef.current.getBoundingClientRect();
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
 
   const perks = [
     t.vip.permanentDiscountPerkSub,
@@ -18,18 +30,35 @@ export function VipClubBanner() {
   ];
 
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-[#181f18] text-[#f7f4ee] p-8 sm:p-12 mb-16 shadow-2xl border border-brand-gold/30">
-      {/* Glow Effects */}
+    <section
+      ref={sectionRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative overflow-hidden rounded-3xl bg-[#181f18] text-[#f7f4ee] p-8 sm:p-12 mb-16 shadow-2xl border border-brand-gold/30 group"
+    >
+      {/* Interactive Cursor-Tracking Golden Spotlight */}
+      <div
+        className="pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out"
+        style={{
+          opacity: isHovered ? 1 : 0.45,
+          background: isHovered
+            ? `radial-gradient(650px circle at ${mousePos.x}px ${mousePos.y}px, rgba(212, 190, 155, 0.22), rgba(159, 129, 91, 0.08) 40%, transparent 75%)`
+            : `radial-gradient(600px circle at 80% 30%, rgba(212, 190, 155, 0.14), transparent 70%)`,
+        }}
+      />
+
+      {/* Decorative Ambient Glow */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#9f815b]/15 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         <div className="lg:col-span-8 space-y-5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2a342a] border border-brand-gold/40 text-brand-gold text-xs font-black">
-            <Crown className="w-4 h-4 fill-current text-brand-gold" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#202820] border border-brand-gold/40 text-[#d4be9b] text-xs font-black">
+            <Crown className="w-4 h-4 fill-current text-[#d4be9b]" />
             <span>{t.vip.title}</span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black leading-snug">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black leading-snug text-[#f7f4ee]">
             {t.home.vipBannerTitle}
             <span className="block text-[#d4be9b] text-lg sm:text-xl font-bold mt-1">
               {t.home.vipBannerSub}

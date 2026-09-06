@@ -158,7 +158,7 @@ export function CartDrawer() {
                             >
                               -
                             </button>
-                            <span className="w-7 text-center text-xs font-bold text-brand-text font-mono" aria-live="polite">
+                            <span className="w-7 text-center text-xs font-bold text-brand-text" aria-live="polite">
                               {isPersian ? toPersianDigits(quantity) : quantity}
                             </span>
                             <button

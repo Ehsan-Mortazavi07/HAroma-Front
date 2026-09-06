@@ -166,7 +166,7 @@ export default function AdminCouponsPage() {
               <tbody className="divide-y divide-[#e6dcce] dark:divide-[#2e3a2e]">
                 {coupons.map((coupon) => (
                   <tr key={coupon._id} className="hover:bg-[#f8f5f0] dark:hover:bg-[#242c24] transition-colors">
-                    <td className="py-4 px-6 font-mono font-black text-sm text-[#9f815b] dark:text-[#d4be9b]">
+                    <td className="py-4 px-6 font-mono-latin font-black text-sm text-[#9f815b] dark:text-[#d4be9b]">
                       {coupon.code}
                     </td>
 
@@ -258,7 +258,7 @@ export default function AdminCouponsPage() {
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   placeholder="مثال: NOURUZ1405"
-                  className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-mono font-bold uppercase focus:ring-2 focus:ring-[#bfa27a]"
+                  className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-mono-latin font-bold uppercase focus:ring-2 focus:ring-[#bfa27a]"
                 />
               </div>
 

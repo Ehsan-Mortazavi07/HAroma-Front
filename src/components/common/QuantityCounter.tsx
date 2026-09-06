@@ -73,7 +73,7 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
       </button>
 
       <span
-        className="font-extrabold text-sm px-2 text-brand-text dark:text-brand-gold font-mono min-w-[28px] text-center"
+        className="font-extrabold text-sm px-2 text-brand-text dark:text-brand-gold min-w-[28px] text-center"
         aria-live="polite"
       >
         {isPersian ? toPersianDigits(quantity) : quantity}

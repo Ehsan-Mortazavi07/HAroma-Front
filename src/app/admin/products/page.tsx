@@ -230,7 +230,7 @@ export default function AdminProductsPage() {
                           : '—'}
                       </td>
 
-                      <td className="py-4 px-4 text-start font-black text-[#1d241d] dark:text-[#d4be9b] whitespace-nowrap font-mono">
+                      <td className="py-4 px-4 text-start font-black text-[#1d241d] dark:text-[#d4be9b] whitespace-nowrap">
                         {formatToman(product.discountPrice || product.price, isPersian)}
                       </td>
 

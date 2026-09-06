@@ -185,7 +185,7 @@ export default function AdminDashboardPage() {
               <tbody className="divide-y divide-[#e6dcce] dark:divide-[#2e3a2e]">
                 {recentOrders.map((order) => (
                   <tr key={order._id} className="hover:bg-[#f8f5f0] dark:hover:bg-[#242c24] transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-[#9f815b] dark:text-[#d4be9b]">
+                    <td className="py-3.5 px-4 font-bold text-[#9f815b] dark:text-[#d4be9b]">
                       {isPersian ? toPersianDigits(order.orderNumber) : order.orderNumber}
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-[#1d241d] dark:text-[#f7f4ee]">

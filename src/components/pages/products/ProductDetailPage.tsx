@@ -408,20 +408,28 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                       type="button"
                       disabled={isOutOfStock}
                       onClick={() => setSelectedVariant(v)}
-                      className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all relative flex flex-col items-center justify-center gap-0.5 border min-w-[100px] ${
+                      className={`px-4 py-3 rounded-2xl text-xs transition-all relative flex flex-col items-center justify-between text-center gap-1.5 border min-w-[130px] sm:min-w-[145px] ${
                         isSelected
-                          ? 'bg-brand-gold text-brand-olive border-brand-champagne shadow-md scale-105 font-black'
+                          ? 'bg-brand-gold text-[#141914] border-brand-gold shadow-lg scale-105 ring-2 ring-brand-gold/40'
                           : isOutOfStock
-                          ? 'opacity-40 line-through bg-brand-surface-elevated text-brand-text-muted border-brand-border cursor-not-allowed'
-                          : 'bg-brand-surface text-brand-text border-brand-border hover:border-brand-gold'
+                          ? 'opacity-40 line-through bg-[#f0eae0] dark:bg-[#181f18] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e] cursor-not-allowed'
+                          : 'bg-white dark:bg-[#202620] text-[#1d241d] dark:text-[#f7f4ee] border-[#e6dcce] dark:border-[#344034] hover:border-brand-gold hover:bg-[#f8f5f0] dark:hover:bg-[#283228] shadow-xs'
                       }`}
                     >
-                      <span className={isSelected ? 'text-brand-olive' : ''}>{localizedTitle}</span>
                       <span
-                        className={`text-[11px] font-mono ${
+                        className={`leading-snug font-bold ${
                           isSelected
-                            ? 'text-brand-olive font-black'
-                            : 'text-brand-bronze'
+                            ? 'text-[#141914] font-black'
+                            : 'text-[#1d241d] dark:text-[#f7f4ee]'
+                        }`}
+                      >
+                        {localizedTitle}
+                      </span>
+                      <span
+                        className={`text-xs font-extrabold whitespace-nowrap mt-0.5 ${
+                          isSelected
+                            ? 'text-[#141914]'
+                            : 'text-[#9f815b] dark:text-[#d4be9b]'
                         }`}
                       >
                         {formatToman(vPrice, isPersian)}

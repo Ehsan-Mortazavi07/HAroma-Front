@@ -471,9 +471,9 @@ export function ProfilePage() {
                       </div>
 
                       {order.trackingCode && (
-                        <div className="px-3 py-1.5 rounded-xl bg-brand-surface text-xs font-mono text-brand-bronze border border-brand-border flex items-center justify-between">
-                          <span>{t.profile.trackingCode}</span>
-                          <span className="font-bold">{order.trackingCode}</span>
+                        <div className="px-3 py-1.5 rounded-xl bg-brand-surface text-xs text-brand-bronze border border-brand-border flex items-center justify-between">
+                          <span className="font-medium">{t.profile.trackingCode}</span>
+                          <span className="font-mono-latin font-bold">{order.trackingCode}</span>
                         </div>
                       )}
 
