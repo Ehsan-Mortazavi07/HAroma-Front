@@ -214,7 +214,7 @@ export function Navbar() {
                 ) : (
                   <Link
                     href={PATHS.SIGN_IN}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-[#bfa27a] via-[#9f815b] to-[#7a5d3e] hover:from-[#d4be9b] hover:to-[#9f815b] text-[#1d241d] font-black text-xs sm:text-sm shadow-md shadow-[#9f815b]/20 transition-all active:scale-98"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] font-black text-xs sm:text-sm shadow-md shadow-[#9f815b]/20 transition-all active:scale-98"
                   >
                     <User className="w-4 h-4" />
                     <span>{t.nav.signIn}</span>

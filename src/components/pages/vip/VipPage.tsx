@@ -154,7 +154,7 @@ export function VipPage({ plans }: VipPageProps) {
                 disabled={subscribingId === plan._id}
                 className={`w-full py-3.5 rounded-2xl font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 ${
                   isPopular
-                    ? 'bg-gradient-to-r from-[#bfa27a] via-[#9f815b] to-[#7a5d3e] hover:from-[#d4be9b] hover:to-[#9f815b] text-[#1d241d] shadow-[#9f815b]/20 active:scale-98'
+                    ? 'bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] shadow-[#9f815b]/20 active:scale-98'
                     : 'bg-[#202620] hover:bg-[#2e382e] text-[#d4be9b] border border-[#bfa27a]/40 active:scale-98'
                 }`}
               >

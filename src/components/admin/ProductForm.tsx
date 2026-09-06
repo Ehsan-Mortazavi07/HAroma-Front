@@ -466,7 +466,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 py-4 rounded-2xl font-black bg-gradient-to-r from-[#bfa27a] via-[#9f815b] to-[#7a5d3e] hover:from-[#d4be9b] hover:to-[#9f815b] text-[#1d241d] shadow-xl shadow-[#9f815b]/20 flex items-center justify-center gap-2 text-sm transition-all active:scale-98"
+                className="flex-1 py-4 rounded-2xl font-black bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] shadow-xl shadow-[#9f815b]/20 flex items-center justify-center gap-2 text-sm transition-all active:scale-98"
               >
                 <Save className="w-5 h-5" />
                 <span>

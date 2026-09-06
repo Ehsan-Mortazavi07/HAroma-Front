@@ -89,6 +89,26 @@
     font-family: inherit;
   }
 
+  ::selection {
+    background-color: #bfa27a;
+    color: #141914;
+  }
+
+  .dark ::selection {
+    background-color: #d4be9b;
+    color: #141914;
+  }
+
+  :focus-visible {
+    outline: 2px solid #bfa27a;
+    outline-offset: 2px;
+  }
+
+  .dark :focus-visible {
+    outline: 2px solid #d4be9b;
+    outline-offset: 2px;
+  }
+
   body {
     background-color: var(--brand-bg);
     color: var(--brand-text);

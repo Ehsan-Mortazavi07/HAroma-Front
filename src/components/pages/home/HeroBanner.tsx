@@ -38,7 +38,7 @@ export function HeroBanner() {
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Link
               href={PATHS.PRODUCTS}
-              className="px-7 py-3.5 rounded-2xl font-black bg-gradient-to-r from-[#bfa27a] via-[#9f815b] to-[#7a5d3e] hover:from-[#d4be9b] hover:to-[#9f815b] text-[#1d241d] text-sm shadow-xl shadow-[#9f815b]/25 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+              className="px-7 py-3.5 rounded-2xl font-black bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] text-sm shadow-xl shadow-[#9f815b]/25 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
             >
               <span>{t.hero.shopNow}</span>
               {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}

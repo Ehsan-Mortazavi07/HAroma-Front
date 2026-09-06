@@ -546,7 +546,7 @@ export function CheckoutPage() {
             <button
               onClick={handleConfirmOrder}
               disabled={orderSubmitting}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#bfa27a] via-[#9f815b] to-[#7a5d3e] hover:from-[#d4be9b] hover:to-[#9f815b] text-[#1d241d] font-black text-sm shadow-md shadow-[#9f815b]/20 flex items-center justify-center gap-2 transition-all active:scale-98"
+              className="w-full py-4 rounded-2xl bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] font-black text-sm shadow-md shadow-[#9f815b]/20 flex items-center justify-center gap-2 transition-all active:scale-98"
             >
               {orderSubmitting ? (
                 <span>{t.common.loading}</span>
