@@ -59,14 +59,17 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none" role="tablist" aria-label={t.home.bestSellers}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
               activeTab === tab.id
-                ? 'bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] shadow-sm font-black'
+                ? 'bg-[#bfa27a] text-[#141914] shadow-sm font-black'
                 : 'bg-[#ffffff] dark:bg-[#1c231c] text-[#73695c] dark:text-[#a69c8e] hover:bg-[#f0eae0] dark:hover:bg-[#283228] border border-[#e6dcce] dark:border-[#2e3a2e]'
             }`}
           >

@@ -31,7 +31,7 @@ export function VipClubBanner() {
 
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black leading-snug">
             {t.home.vipBannerTitle}
-            <span className="block gold-gradient-text text-lg sm:text-xl font-bold mt-1">
+            <span className="block text-[#d4be9b] text-lg sm:text-xl font-bold mt-1">
               {t.home.vipBannerSub}
             </span>
           </h2>
@@ -48,9 +48,9 @@ export function VipClubBanner() {
           <div className="pt-4 flex flex-wrap items-center gap-4">
             <Link
               href={PATHS.VIP}
-              className="px-7 py-3.5 rounded-2xl font-black bg-gradient-to-r from-[#d4be9b] via-[#bfa27a] to-[#9f815b] hover:from-[#f7f4ee] hover:to-[#bfa27a] text-[#1d241d] text-sm shadow-xl shadow-[#9f815b]/25 hover:scale-105 transition-all flex items-center gap-2"
+              className="px-7 py-3.5 rounded-2xl font-black bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] text-sm shadow-xl shadow-[#9f815b]/25 hover:scale-105 transition-all flex items-center gap-2 border border-[#d4be9b]/30"
             >
-              <Crown className="w-4 h-4 fill-current text-[#1d241d]" />
+              <Crown className="w-4 h-4 fill-current text-[#141914]" />
               <span>{t.home.vipBannerBtn}</span>
               {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
             </Link>

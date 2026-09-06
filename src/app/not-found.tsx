@@ -11,7 +11,7 @@ export default function NotFound() {
 
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center text-center p-8">
-      <div className="w-24 h-24 rounded-3xl bg-[#f0eae0] dark:bg-[#283228] text-[#9f815b] dark:text-[#d4be9b] flex items-center justify-center mb-6 border border-[#bfa27a]/30 shadow-lg animate-bounce">
+      <div className="w-24 h-24 rounded-3xl bg-[#f0eae0] dark:bg-[#283228] text-[#9f815b] dark:text-[#d4be9b] flex items-center justify-center mb-6 border border-[#bfa27a]/30 shadow-lg">
         <Compass className="w-12 h-12" />
       </div>
 
@@ -27,7 +27,7 @@ export default function NotFound() {
 
       <Link
         href={PATHS.HOME}
-        className="px-8 py-3.5 rounded-2xl font-black bg-gradient-to-r from-[#bfa27a] via-[#9f815b] to-[#7a5d3e] hover:from-[#d4be9b] hover:to-[#9f815b] text-[#1d241d] text-sm shadow-xl shadow-[#9f815b]/20 flex items-center gap-2 transition-all active:scale-98"
+        className="px-8 py-3.5 rounded-2xl font-black bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] text-sm shadow-xl shadow-[#9f815b]/20 flex items-center gap-2 transition-all active:scale-98 border border-[#d4be9b]/30"
       >
         <Home className="w-4 h-4" />
         <span>{isPersian ? 'بازگشت به صفحه اصلی' : 'Return to Home'}</span>

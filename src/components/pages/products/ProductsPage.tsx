@@ -163,21 +163,23 @@ export function ProductsPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         {/* Sidebar Filters */}
         <aside
-          className={`lg:block ${
+          className={`lg:block lg:sticky lg:top-24 ${
             isMobileFilterOpen
               ? 'fixed inset-0 z-50 bg-[#ffffff] dark:bg-[#141914] p-6 overflow-y-auto'
               : 'hidden'
-          } lg:relative lg:p-0 lg:bg-transparent lg:dark:bg-transparent space-y-6`}
+          } lg:p-0 lg:bg-transparent lg:dark:bg-transparent space-y-6`}
         >
           {isMobileFilterOpen && (
             <div className="flex items-center justify-between pb-4 border-b border-[#e6dcce] dark:border-[#2e3a2e] lg:hidden">
               <h3 className="font-bold text-lg text-[#1d241d] dark:text-[#f7f4ee]">{isPersian ? 'فیلتر محصولات' : 'Filters'}</h3>
               <button
+                type="button"
                 onClick={() => setIsMobileFilterOpen(false)}
                 className="p-2 rounded-xl bg-[#f8f5f0] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee]"
+                aria-label={isPersian ? 'بستن فیلترها' : 'Close filters'}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -190,12 +192,13 @@ export function ProductsPage({
               <h3 className="font-black text-sm text-[#1d241d] dark:text-[#f7f4ee] mb-3">
                 {isPersian ? 'دسته‌بندی‌ها' : 'Categories'}
               </h3>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5" role="listbox" aria-label={isPersian ? 'دسته‌بندی‌ها' : 'Categories'}>
                 <button
+                  type="button"
                   onClick={() => handleCategorySelect('')}
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                     selectedCategory === ''
-                      ? 'bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] font-black shadow-sm'
+                      ? 'bg-[#bfa27a] text-[#141914] font-black shadow-sm'
                       : 'text-[#73695c] dark:text-[#a69c8e] hover:bg-[#f0eae0] dark:hover:bg-[#242c24] hover:text-[#1d241d] dark:hover:text-[#f7f4ee]'
                   }`}
                 >
@@ -206,10 +209,11 @@ export function ProductsPage({
                 {categories.map((cat) => (
                   <button
                     key={cat._id}
+                    type="button"
                     onClick={() => handleCategorySelect(cat.slug)}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                       selectedCategory === cat.slug
-                        ? 'bg-gradient-to-r from-[#bfa27a] to-[#9f815b] text-[#1d241d] font-black shadow-sm'
+                        ? 'bg-[#bfa27a] text-[#141914] font-black shadow-sm'
                         : 'text-[#73695c] dark:text-[#a69c8e] hover:bg-[#f0eae0] dark:hover:bg-[#242c24] hover:text-[#1d241d] dark:hover:text-[#f7f4ee]'
                     }`}
                   >
@@ -230,7 +234,7 @@ export function ProductsPage({
                   type="checkbox"
                   checked={inStockOnly}
                   onChange={(e) => setInStockOnly(e.target.checked)}
-                  className="w-4 h-4 accent-[#9f815b] rounded cursor-pointer"
+                  className="w-4 h-4 accent-[#9f815b] rounded cursor-pointer focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
                 />
               </label>
 
@@ -243,7 +247,7 @@ export function ProductsPage({
                   type="checkbox"
                   checked={isVipOnly}
                   onChange={(e) => setIsVipOnly(e.target.checked)}
-                  className="w-4 h-4 accent-[#9f815b] rounded cursor-pointer"
+                  className="w-4 h-4 accent-[#9f815b] rounded cursor-pointer focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
                 />
               </label>
             </div>

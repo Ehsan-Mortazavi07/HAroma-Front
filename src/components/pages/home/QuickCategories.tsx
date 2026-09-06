@@ -61,10 +61,10 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
           href={PATHS.PRODUCTS}
           className="group flex flex-col items-center justify-center p-4 rounded-2xl bg-[#f0eae0] dark:bg-[#202620] border border-[#bfa27a]/40 shadow-xs hover:shadow-md hover:border-[#bfa27a] hover:-translate-y-1 transition-all text-center"
         >
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#d4be9b] to-[#9f815b] text-[#1d241d] flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform shadow-sm">
+          <div className="w-12 h-12 rounded-2xl bg-[#bfa27a] text-[#141914] flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform shadow-sm border border-[#d4be9b]/30">
             {isRTL ? <ArrowLeft className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
           </div>
-          <span className="font-black text-xs sm:text-sm text-[#1d241d] dark:text-[#d4be9b]">
+          <span className="font-black text-xs sm:text-sm text-[#141914] dark:text-[#d4be9b]">
             {t.common.seeMore}
           </span>
           <span className="text-[10px] text-[#73695c] dark:text-[#a69c8e] mt-0.5">

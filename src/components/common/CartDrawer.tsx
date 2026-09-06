@@ -143,6 +143,8 @@ export function CartDrawer() {
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center gap-1.5 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] rounded-xl p-0.5">
                             <button
+                              type="button"
+                              aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
                               onClick={() =>
                                 dispatch(
                                   updateQuantity({
@@ -152,14 +154,16 @@ export function CartDrawer() {
                                   }),
                                 )
                               }
-                              className="w-6 h-6 rounded-lg bg-[#ffffff] dark:bg-[#2e3a2e] text-[#1d241d] dark:text-[#f7f4ee] text-xs font-black flex items-center justify-center shadow-xs"
+                              className="w-7 h-7 rounded-lg bg-[#ffffff] dark:bg-[#2e3a2e] text-[#1d241d] dark:text-[#f7f4ee] text-xs font-black flex items-center justify-center shadow-xs hover:bg-[#f0eae0] dark:hover:bg-[#384638] transition-colors focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
                             >
                               -
                             </button>
-                            <span className="w-5 text-center text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]">
+                            <span className="w-6 text-center text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]" aria-live="polite">
                               {isPersian ? toPersianDigits(quantity) : quantity}
                             </span>
                             <button
+                              type="button"
+                              aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
                               onClick={() =>
                                 dispatch(
                                   updateQuantity({
@@ -169,13 +173,14 @@ export function CartDrawer() {
                                   }),
                                 )
                               }
-                              className="w-6 h-6 rounded-lg bg-[#ffffff] dark:bg-[#2e3a2e] text-[#1d241d] dark:text-[#f7f4ee] text-xs font-black flex items-center justify-center shadow-xs"
+                              className="w-7 h-7 rounded-lg bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] text-xs font-black flex items-center justify-center shadow-xs transition-colors focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
                             >
                               +
                             </button>
                           </div>
 
                           <button
+                            type="button"
                             onClick={() =>
                               dispatch(
                                 removeFromCart({
@@ -184,7 +189,9 @@ export function CartDrawer() {
                                 }),
                               )
                             }
-                            className="text-rose-500 hover:text-rose-700 p-1 transition-colors"
+                            className="text-rose-500 hover:text-rose-700 p-1.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-rose-400"
+                            aria-label={t.common.remove}
+                            title={t.common.remove}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -210,7 +217,7 @@ export function CartDrawer() {
                   <Link
                     href={PATHS.CART}
                     onClick={closeDrawer}
-                    className="py-3 rounded-2xl bg-[#ffffff] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-[#1d241d] dark:text-[#f7f4ee] font-bold text-xs flex items-center justify-center gap-1 hover:bg-[#f0eae0] transition-colors"
+                    className="py-3 rounded-2xl bg-[#ffffff] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-[#1d241d] dark:text-[#f7f4ee] font-bold text-xs flex items-center justify-center gap-1 hover:bg-[#f0eae0] dark:hover:bg-[#2e382e] transition-colors"
                   >
                     <span>{t.cart.viewCart}</span>
                   </Link>
@@ -218,7 +225,7 @@ export function CartDrawer() {
                   <Link
                     href={PATHS.CHECKOUT}
                     onClick={closeDrawer}
-                    className="py-3 rounded-2xl bg-gradient-to-r from-[#bfa27a] via-[#9f815b] to-[#7a5d3e] hover:from-[#d4be9b] hover:to-[#9f815b] text-[#1d241d] font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-[#9f815b]/20 active:scale-98 transition-all"
+                    className="py-3 rounded-2xl bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-[#9f815b]/20 active:scale-98 transition-all border border-[#d4be9b]/30"
                   >
                     <span>{t.cart.proceedToCheckout}</span>
                     {isRTL ? <ArrowLeft className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}

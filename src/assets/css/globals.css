@@ -121,10 +121,12 @@
   background: linear-gradient(135deg, #d4be9b 0%, #9f815b 50%, #7a5d3e 100%);
 }
 
-.gold-gradient-text {
-  background: linear-gradient(135deg, #d4be9b 0%, #bfa27a 50%, #9f815b 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.gold-solid-accent {
+  color: #bfa27a;
+}
+
+.dark .gold-solid-accent {
+  color: #d4be9b;
 }
 
 .olive-dark-gradient {
