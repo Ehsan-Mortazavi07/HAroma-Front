@@ -344,17 +344,31 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                   : 'Luxury Niche Perfumes'}
               </span>
 
-              {product.brand && (
-                <>
-                  <span className="text-brand-border">•</span>
-                  <Link
-                    href={`/products?brand=${product.brand.slug}`}
-                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-[#f0eae0] text-[#9f815b] dark:bg-[#242c24] dark:text-[#d4be9b] border border-[#bfa27a]/30 hover:border-[#bfa27a] transition-all"
-                  >
-                    <span>{isPersian ? product.brand.name : product.brand.nameEn || product.brand.name}</span>
-                  </Link>
-                </>
-              )}
+              {(() => {
+                const brandsList =
+                  product.brands && product.brands.length > 0
+                    ? product.brands
+                    : product.brand
+                    ? [product.brand]
+                    : [];
+                if (brandsList.length === 0) return null;
+                return (
+                  <>
+                    <span className="text-brand-border">•</span>
+                    <div className="inline-flex flex-wrap items-center gap-1.5">
+                      {brandsList.map((b) => (
+                        <Link
+                          key={b._id || b.slug}
+                          href={`/products?brand=${b.slug}`}
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-[#f0eae0] text-[#9f815b] dark:bg-[#242c24] dark:text-[#d4be9b] border border-[#bfa27a]/30 hover:border-[#bfa27a] hover:scale-105 transition-all"
+                        >
+                          <span>{isPersian ? b.name : b.nameEn || b.name}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-brand-text leading-snug">
               {isPersian ? product.title : product.titleEn || product.title}

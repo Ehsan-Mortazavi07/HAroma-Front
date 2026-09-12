@@ -23,6 +23,7 @@ export default function AdminCategoriesPage() {
   const [image, setImage] = useState('');
   const [order, setOrder] = useState(0);
   const [isFeatured, setIsFeatured] = useState(true);
+  const [isActive, setIsActive] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const loadCategories = async () => {
@@ -51,6 +52,7 @@ export default function AdminCategoriesPage() {
     setImage('');
     setOrder(categories.length + 1);
     setIsFeatured(true);
+    setIsActive(true);
     setModalOpen(true);
   };
 
@@ -70,6 +72,7 @@ export default function AdminCategoriesPage() {
     setImage(cat.image || '');
     setOrder(cat.order || 1);
     setIsFeatured(cat.isFeatured ?? true);
+    setIsActive(cat.isActive ?? true);
     setModalOpen(true);
   };
 
@@ -91,6 +94,7 @@ export default function AdminCategoriesPage() {
         image: image.trim() || undefined,
         order: Number(order) || 0,
         isFeatured,
+        isActive,
       };
 
       if (editingCat) {
@@ -107,6 +111,21 @@ export default function AdminCategoriesPage() {
       toast.error(err?.response?.data?.message || (isPersian ? 'خطا در ذخیره دسته‌بندی.' : 'Failed to save category.'));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleToggleStatus = async (cat: ICategory) => {
+    const nextStatus = cat.isActive === false ? true : false;
+    try {
+      await adminApi.updateCategory(cat._id, { isActive: nextStatus });
+      toast.success(
+        nextStatus
+          ? isPersian ? 'دسته‌بندی با موفقیت فعال شد.' : 'Category activated.'
+          : isPersian ? 'دسته‌بندی غیرفعال شد.' : 'Category deactivated.'
+      );
+      loadCategories();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || (isPersian ? 'خطا در تغییر وضعیت دسته‌بندی.' : 'Failed to toggle status.'));
     }
   };
 
@@ -174,6 +193,17 @@ export default function AdminCategoriesPage() {
                     <Layers className="w-5 h-5" />
                   </div>
                   <div className="flex flex-col items-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStatus(cat)}
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-black cursor-pointer transition-all ${
+                        cat.isActive !== false
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-500/30 hover:opacity-80'
+                          : 'bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400 border border-neutral-400/30 hover:opacity-80'
+                      }`}
+                    >
+                      {cat.isActive !== false ? (isPersian ? 'فعال' : 'Active') : (isPersian ? 'غیرفعال' : 'Inactive')}
+                    </button>
                     {cat.isFeatured && (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#f0eae0] text-[#9f815b] dark:bg-[#283228] dark:text-[#d4be9b] border border-[#bfa27a]/30">
                         {isPersian ? 'ویژه صفحه اصلی' : 'Featured'}
@@ -323,7 +353,17 @@ export default function AdminCategoriesPage() {
                   />
                 </div>
 
-                <div className="flex items-center pt-5">
+                <div className="flex flex-col gap-2 pt-2 sm:pt-4">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold">
+                    <input
+                      type="checkbox"
+                      checked={isActive}
+                      onChange={(e) => setIsActive(e.target.checked)}
+                      className="w-4 h-4 accent-[#9f815b] rounded cursor-pointer"
+                    />
+                    <span>{isPersian ? 'دسته‌بندی فعال و قابل نمایش باشد' : 'Active and visible'}</span>
+                  </label>
+
                   <label className="flex items-center gap-2 cursor-pointer font-bold">
                     <input
                       type="checkbox"

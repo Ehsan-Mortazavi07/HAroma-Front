@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Users, Search, Crown, ShieldCheck, Edit2, Trash2, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Users, Search, Crown, ShieldCheck, Edit2, Trash2, CheckCircle2, ShieldAlert, Calendar, MapPin } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { IUser } from '@/common/interfaces';
 import { toPersianDigits, toast } from '@/common/utils';
+import { formatDisplayBirthDate } from '@/common/utils/date';
 import { VipBadge } from '@/components/common/VipBadge';
 import { useTranslation } from '@/common/i18n';
 import { useAppSelector } from '@/stores/hooks';
@@ -189,6 +190,7 @@ export default function AdminUsersPage() {
                 <tr className="bg-[#f8f5f0] dark:bg-[#242c24] border-b border-[#e6dcce] dark:border-[#2e3a2e] text-[#73695c] dark:text-[#a69c8e] font-bold">
                   <th className="py-4 px-6 text-start">{isPersian ? 'کاربر' : 'User Profile'}</th>
                   <th className="py-4 px-4 text-start whitespace-nowrap">{isPersian ? 'اطلاعات تماس' : 'Contact'}</th>
+                  <th className="py-4 px-4 text-start whitespace-nowrap">{isPersian ? 'تاریخ تولد (شمسی / میلادی)' : 'Birth Date'}</th>
                   <th className="py-4 px-4 text-start whitespace-nowrap">{isPersian ? 'نقش کاربری' : 'Assigned Role'}</th>
                   <th className="py-4 px-4 text-center whitespace-nowrap">{isPersian ? 'وضعیت VIP' : 'VIP Status'}</th>
                   <th className="py-4 px-4 text-center whitespace-nowrap">{isPersian ? 'تاریخ عضویت' : 'Joined Date'}</th>
@@ -221,6 +223,34 @@ export default function AdminUsersPage() {
                       <div className="text-[11px] text-[#73695c] dark:text-[#a69c8e]">
                         {user.phone || '—'}
                       </div>
+                      {user.city && (
+                        <div className="flex items-center gap-1 text-[11px] text-[#9f815b] dark:text-[#d4be9b] font-medium mt-0.5">
+                          <MapPin className="w-3 h-3 shrink-0" />
+                          <span>{user.province ? `${user.province}، ` : ''}{user.city}</span>
+                        </div>
+                      )}
+                    </td>
+
+                    <td className="py-4 px-4 text-start whitespace-nowrap">
+                      {user.birthDate || user.birthDateShamsi ? (
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-1 text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]">
+                            <Calendar className="w-3.5 h-3.5 text-[#9f815b]" />
+                            <span>
+                              {user.birthDate
+                                ? formatDisplayBirthDate(user.birthDate, 'jalali', isPersian)
+                                : user.birthDateShamsi}
+                            </span>
+                          </div>
+                          {user.birthDate && (
+                            <div className="text-[11px] text-[#73695c] dark:text-[#a69c8e] font-sans pr-4.5">
+                              {formatDisplayBirthDate(user.birthDate, 'gregorian', false)}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-[#73695c] dark:text-[#a69c8e] font-sans">—</span>
+                      )}
                     </td>
 
                     <td className="py-4 px-4 text-start whitespace-nowrap">

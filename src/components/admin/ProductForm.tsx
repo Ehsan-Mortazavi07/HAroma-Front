@@ -16,11 +16,12 @@ import {
   Award,
   Plus,
   X,
+  Tag,
 } from 'lucide-react';
 import { IProduct, ICategory, IBrand, IProductAttribute, IProductVariant } from '@/common/interfaces';
 import { getProductFormSchema } from '@/common/validators';
 import { PATHS } from '@/common/constants/PATHS';
-import { toast } from '@/common/utils';
+import { toast, toPersianDigits } from '@/common/utils';
 import { adminApi } from '@/common/api/admin';
 import { ImageUploader } from './ImageUploader';
 import { DynamicAttributeBuilder } from './DynamicAttributeBuilder';
@@ -48,16 +49,27 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
   const [variants, setVariants] = useState<IProductVariant[]>(
     initialProduct?.variants || [],
   );
-  const [selectedBrand, setSelectedBrand] = useState<string>(
-    initialProduct?.brand
-      ? typeof initialProduct.brand === 'string'
-        ? initialProduct.brand
-        : initialProduct.brand._id
-      : '',
-  );
+  const initialBrandIds = (): string[] => {
+    if (initialProduct?.brands && initialProduct.brands.length > 0) {
+      return initialProduct.brands.map((b) => (typeof b === 'string' ? b : b._id));
+    }
+    if (initialProduct?.brand) {
+      const bId = typeof initialProduct.brand === 'string' ? initialProduct.brand : initialProduct.brand._id;
+      return bId ? [bId] : [];
+    }
+    return [];
+  };
+
+  const [selectedBrands, setSelectedBrands] = useState<string[]>(initialBrandIds);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     initialProduct?.categories?.map((c) => (typeof c === 'string' ? c : c._id)) || [],
   );
+
+  const handleBrandToggle = (brandId: string) => {
+    setSelectedBrands((prev) =>
+      prev.includes(brandId) ? prev.filter((id) => id !== brandId) : [...prev, brandId],
+    );
+  };
 
   // Quick Create Modals State
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -159,7 +171,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
       const res = await adminApi.getBrands();
       setBrands(res || []);
       if (created?._id) {
-        setSelectedBrand(created._id);
+        setSelectedBrands((prev) => [...prev, created._id]);
       }
       setIsBrandModalOpen(false);
       setNewBrandName('');
@@ -192,6 +204,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
     isVipOnly: initialProduct?.isVipOnly || false,
     isFeatured: initialProduct?.isFeatured || false,
     inStock: initialProduct?.inStock !== undefined ? initialProduct.inStock : true,
+    isPublished: initialProduct?.isPublished !== undefined ? initialProduct.isPublished : true,
   };
 
   const handleSubmit = async (values: any) => {
@@ -207,8 +220,10 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
         price: Number(values.price),
         discountPrice: values.discountPrice ? Number(values.discountPrice) : undefined,
         stockCount: Number(values.stockCount),
-        brand: selectedBrand || null,
+        brand: selectedBrands.length > 0 ? selectedBrands[0] : null,
+        brands: selectedBrands,
         categories: selectedCategories,
+        isPublished: values.isPublished !== undefined ? values.isPublished : true,
         images,
         attributes,
         variants,
@@ -387,7 +402,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                 <div className="flex items-center gap-2">
                   <Award className="w-5 h-5 text-[#9f815b]" />
                   <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? '۴. برند و خانه عطر (Brand / Perfume House)' : '4. Brand & Perfume House'}
+                    {isPersian ? '۴. برندها و خانه‌های عطر (Fragrance Brands)' : '4. Brand & Perfume House'}
                   </h3>
                 </div>
 
@@ -402,29 +417,43 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
               </div>
 
               <div>
-                <label className="block font-bold text-xs mb-2 text-[#1d241d] dark:text-[#f7f4ee]">
-                  {isPersian ? 'انتخاب خانه عطر / برند تولیدکننده:' : 'Assigned Fragrance Brand:'}
-                </label>
-                <div className="flex flex-col sm:flex-row gap-3 items-center">
-                  <select
-                    value={selectedBrand}
-                    onChange={(e) => setSelectedBrand(e.target.value)}
-                    className="w-full sm:w-1/2 h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a] cursor-pointer"
-                  >
-                    <option value="">{isPersian ? '— بدون برند (یا برند متفرقه) —' : '— Unassigned / Generic Brand —'}</option>
-                    {brands.map((b) => (
-                      <option key={b._id} value={b._id}>
-                        {isPersian ? b.name : b.nameEn || b.name} {b.nameEn && isPersian ? `(${b.nameEn})` : ''}
-                      </option>
-                    ))}
-                  </select>
-
-                  {selectedBrand && (
-                    <div className="flex items-center gap-2 text-xs font-bold text-[#9f815b] dark:text-[#d4be9b]">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      <span>{isPersian ? 'برند این عطر با موفقیت متصل شد' : 'Brand connected'}</span>
-                    </div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block font-bold text-xs text-[#1d241d] dark:text-[#f7f4ee]">
+                    {isPersian
+                      ? 'خانه‌های عطر / برندهای مرتبط (می‌توانید چند برند انتخاب کنید):'
+                      : 'Assigned Fragrance Brands (Multi-brand supported):'}
+                  </label>
+                  {selectedBrands.length > 0 && (
+                    <span className="text-[11px] font-bold text-[#9f815b] dark:text-[#d4be9b]">
+                      {isPersian
+                        ? `${toPersianDigits(selectedBrands.length)} برند متصل شده`
+                        : `${selectedBrands.length} brands selected`}
+                    </span>
                   )}
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {brands.map((b) => {
+                    const isSelected = selectedBrands.includes(b._id);
+                    return (
+                      <button
+                        key={b._id}
+                        type="button"
+                        onClick={() => handleBrandToggle(b._id)}
+                        className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all duration-200 ease-out flex items-center gap-1.5 cursor-pointer ${
+                          isSelected
+                            ? 'bg-brand-gold text-[#141914] shadow-sm font-black ring-2 ring-[#bfa27a]/40'
+                            : 'bg-[#f8f5f0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-[#bfa27a]'
+                        }`}
+                      >
+                        <Tag className="w-3.5 h-3.5 opacity-60" />
+                        <span>{isPersian ? b.name : b.nameEn || b.name}</span>
+                        {b.nameEn && isPersian && (
+                          <span className="text-[10px] font-sans opacity-70">({b.nameEn})</span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -435,7 +464,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                 <div className="flex items-center gap-2">
                   <Layers className="w-5 h-5 text-[#9f815b]" />
                   <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? '۵. دسته‌بندی‌ها و دسترسی VIP' : '5. Categories & VIP Flags'}
+                    {isPersian ? '۵. دسته‌بندی‌ها و وضعیت انتشار و VIP' : '5. Categories, Publication & VIP'}
                   </h3>
                 </div>
 
@@ -486,8 +515,17 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold">
-                <label className="flex items-center gap-2 cursor-pointer text-[#9f815b] dark:text-[#d4be9b]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold">
+                <label className="flex items-center gap-2 cursor-pointer text-emerald-600 dark:text-emerald-400 p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
+                  <Field
+                    name="isPublished"
+                    type="checkbox"
+                    className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+                  />
+                  <span>{isPersian ? 'انتشار عمومی در سایت (فعال)' : 'Published & Visible'}</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer text-[#9f815b] dark:text-[#d4be9b] p-2.5 rounded-2xl bg-[#9f815b]/10 border border-[#9f815b]/30">
                   <Field
                     name="isVipOnly"
                     type="checkbox"
@@ -496,7 +534,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   <span>{isPersian ? 'فقط مخصوص اعضای باشگاه VIP' : 'VIP Members Exclusive'}</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer text-[#1d241d] dark:text-[#f7f4ee]">
+                <label className="flex items-center gap-2 cursor-pointer text-[#1d241d] dark:text-[#f7f4ee] p-2.5 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e]">
                   <Field
                     name="isFeatured"
                     type="checkbox"
@@ -505,7 +543,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   <span>{isPersian ? 'نمایش در منتخب‌های صفحه اصلی' : 'Featured on Homepage'}</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer text-[#1d241d] dark:text-[#f7f4ee]">
+                <label className="flex items-center gap-2 cursor-pointer text-[#1d241d] dark:text-[#f7f4ee] p-2.5 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e]">
                   <Field
                     name="inStock"
                     type="checkbox"

@@ -37,6 +37,16 @@ export function ProductCard({ product }: ProductCardProps) {
       ? 'عطر و ادکلن'
       : 'Perfumes';
 
+  const brandObj =
+    product.brands && product.brands.length > 0
+      ? product.brands[0]
+      : product.brand;
+  const brandName = brandObj
+    ? isPersian
+      ? brandObj.name
+      : brandObj.nameEn || brandObj.name
+    : null;
+
   const volumeAttr = product.attributes?.find((a) => a.key === 'volume')?.value;
 
   const formatVolume = (val?: string) => {
@@ -91,10 +101,16 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* Content */}
       <div className="flex-1 flex flex-col justify-between space-y-2">
         <div>
-          {/* Category & Volume */}
+          {/* Brand/Category & Volume */}
           <div className="flex items-center justify-between text-[11px] font-bold text-brand-text-muted mb-1">
-            <span>{categoryName}</span>
-            {volumeAttr && <span className="font-mono">{formatVolume(volumeAttr)}</span>}
+            <span className="truncate">
+              {brandName ? (
+                <span className="text-brand-bronze dark:text-brand-gold font-extrabold">{brandName}</span>
+              ) : (
+                categoryName
+              )}
+            </span>
+            {volumeAttr && <span className="font-mono shrink-0 ml-1">{formatVolume(volumeAttr)}</span>}
           </div>
 
           {/* Product Title */}

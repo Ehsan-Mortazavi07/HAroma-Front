@@ -24,11 +24,15 @@ import {
   X,
   Send,
   Check,
+  Calendar,
+  MapPin,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { logout, updateUser } from '@/stores/auth/authSlice';
 import { PATHS } from '@/common/constants/PATHS';
 import { formatToman, toPersianDigits, toast, getApiErrorMessage } from '@/common/utils';
+import { formatDisplayBirthDate, isoToJalali } from '@/common/utils/date';
+import { BirthDatePicker } from '@/components/common/BirthDatePicker';
 import { VipBadge } from '@/components/common/VipBadge';
 import { IOrder } from '@/common/interfaces';
 import axiosInstance from '@/common/axiosInstance';
@@ -50,6 +54,17 @@ export function ProfilePage() {
   const [username, setUsername] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
+  const [birthDate, setBirthDate] = useState(user?.birthDate || '');
+  const [birthDateShamsi, setBirthDateShamsi] = useState(user?.birthDateShamsi || '');
+  const [province, setProvince] = useState(user?.province || '');
+  const [city, setCity] = useState(user?.city || '');
+  const [address, setAddress] = useState(user?.address || '');
+  const [postalCode, setPostalCode] = useState(user?.postalCode || '');
+  const [buildingNumber, setBuildingNumber] = useState(user?.buildingNumber || '');
+  const [unit, setUnit] = useState(user?.unit || '');
+  const [recipientName, setRecipientName] = useState(user?.recipientName || '');
+  const [recipientPhone, setRecipientPhone] = useState(user?.recipientPhone || '');
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -70,9 +85,30 @@ export function ProfilePage() {
       setUsername(user.username || '');
       setEmail(user.email || '');
       setPhone(user.phone || '');
+      setBirthDate(user.birthDate || '');
+      setBirthDateShamsi(user.birthDateShamsi || '');
+      setProvince(user.province || '');
+      setCity(user.city || '');
+      setAddress(user.address || '');
+      setPostalCode(user.postalCode || '');
+      setBuildingNumber(user.buildingNumber || '');
+      setUnit(user.unit || '');
+      setRecipientName(user.recipientName || '');
+      setRecipientPhone(user.recipientPhone || '');
       setResetIdentifier(user.email || user.username || '');
     }
   }, [user]);
+
+  const handleBirthDateChange = (isoDate: string) => {
+    setBirthDate(isoDate);
+    const jParts = isoToJalali(isoDate);
+    if (jParts) {
+      const shamsi = `${jParts[0]}/${String(jParts[1]).padStart(2, '0')}/${String(jParts[2]).padStart(2, '0')}`;
+      setBirthDateShamsi(shamsi);
+    } else {
+      setBirthDateShamsi('');
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -148,6 +184,16 @@ export function ProfilePage() {
         username: username.trim().toLowerCase(),
         email: email.trim().toLowerCase(),
         phone: phone.trim() || undefined,
+        birthDate: birthDate || null,
+        birthDateShamsi: birthDateShamsi || null,
+        province: province.trim() || undefined,
+        city: city.trim() || undefined,
+        address: address.trim() || undefined,
+        postalCode: postalCode.trim() || undefined,
+        buildingNumber: buildingNumber.trim() || undefined,
+        unit: unit.trim() || undefined,
+        recipientName: recipientName.trim() || undefined,
+        recipientPhone: recipientPhone.trim() || undefined,
       };
 
       if (newPassword) {
@@ -294,6 +340,27 @@ export function ProfilePage() {
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4 text-brand-bronze shrink-0" />
                   <span className="font-mono">{user.phone}</span>
+                </div>
+              )}
+              {user.birthDate && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-brand-bronze shrink-0" />
+                  <span className="truncate">
+                    {formatDisplayBirthDate(user.birthDate, 'jalali', isPersian)}
+                    <span className="text-[10px] text-brand-text-muted font-sans ml-1">
+                      ({formatDisplayBirthDate(user.birthDate, 'gregorian', false)})
+                    </span>
+                  </span>
+                </div>
+              )}
+              {(user.province || user.city || user.address) && (
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-brand-bronze shrink-0 mt-0.5" />
+                  <span className="leading-snug">
+                    {[user.province, user.city, user.address].filter(Boolean).join('، ')}
+                    {user.buildingNumber && ` پلاک ${user.buildingNumber}`}
+                    {user.unit && ` واحد ${user.unit}`}
+                  </span>
                 </div>
               )}
             </div>
@@ -562,6 +629,140 @@ export function ProfilePage() {
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="09123456789"
                       className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold font-mono text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    />
+                  </div>
+                </div>
+
+                {/* Date of Birth Picker */}
+                <div className="pt-4 border-t border-brand-border">
+                  <BirthDatePicker
+                    value={birthDate}
+                    onChange={handleBirthDateChange}
+                    label={isPersian ? 'تاریخ تولد (شمسی و میلادی)' : 'Date of Birth (Solar & Gregorian)'}
+                  />
+                </div>
+              </div>
+
+              {/* Default Address & Shipping Details Card */}
+              <div className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs space-y-6">
+                <div className="flex items-center gap-2 pb-4 border-b border-brand-border">
+                  <MapPin className="w-5 h-5 text-brand-bronze" />
+                  <div>
+                    <h3 className="text-base font-black text-brand-text">
+                      {isPersian ? 'آدرس و مشخصات تحویل پیش‌فرض' : 'Default Delivery Address & Shipping'}
+                    </h3>
+                    <p className="text-xs text-brand-text-muted mt-0.5">
+                      {isPersian
+                        ? 'این مشخصات به صورت خودکار در سبد خرید و مراحل ثبت سفارش شما بارگذاری خواهد شد'
+                        : 'Automatically pre-filled in your cart and future checkouts'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block font-bold mb-1.5 text-brand-text">
+                      {isPersian ? 'استان' : 'Province / State'}
+                    </label>
+                    <input
+                      type="text"
+                      value={province}
+                      onChange={(e) => setProvince(e.target.value)}
+                      placeholder={isPersian ? 'مثال: تهران' : 'e.g. Tehran'}
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1.5 text-brand-text">
+                      {isPersian ? 'شهر' : 'City'}
+                    </label>
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder={isPersian ? 'مثال: تهران' : 'e.g. Tehran'}
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block font-bold mb-1.5 text-brand-text">
+                      {isPersian ? 'نشانی پستی دقیق (خیابان، کوچه، بن‌بست)' : 'Full Street Address'}
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder={isPersian ? 'مثال: خیابان ولیعصر، نرسیده به میدان ونک، کوچه شریفی' : 'Street address, alley, details'}
+                      className="w-full p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1.5 text-brand-text">
+                      {isPersian ? 'کد پستی (۱۰ رقمی)' : 'Postal / Zip Code (10 digits)'}
+                    </label>
+                    <input
+                      type="text"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      placeholder="1234567890"
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-bold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block font-bold mb-1.5 text-brand-text">
+                        {isPersian ? 'پلاک' : 'Building / Plaque'}
+                      </label>
+                      <input
+                        type="text"
+                        value={buildingNumber}
+                        onChange={(e) => setBuildingNumber(e.target.value)}
+                        placeholder={isPersian ? 'مثال: ۱۲' : 'e.g. 12'}
+                        className="w-full h-11 px-3 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold mb-1.5 text-brand-text">
+                        {isPersian ? 'واحد' : 'Unit'}
+                      </label>
+                      <input
+                        type="text"
+                        value={unit}
+                        onChange={(e) => setUnit(e.target.value)}
+                        placeholder={isPersian ? 'مثال: ۴' : 'e.g. 4'}
+                        className="w-full h-11 px-3 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1.5 text-brand-text">
+                      {isPersian ? 'نام و نام خانوادگی تحویل‌گیرنده' : 'Recipient Name'}
+                    </label>
+                    <input
+                      type="text"
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                      placeholder={isPersian ? 'در صورت تفاوت با نام حساب' : 'If different from account name'}
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1.5 text-brand-text">
+                      {isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone Number'}
+                    </label>
+                    <input
+                      type="tel"
+                      value={recipientPhone}
+                      onChange={(e) => setRecipientPhone(e.target.value)}
+                      placeholder="0912..."
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-bold text-brand-text focus:ring-2 focus:ring-brand-gold"
                     />
                   </div>
                 </div>

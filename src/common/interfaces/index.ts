@@ -10,6 +10,16 @@ export interface IUser {
   isVip: boolean;
   vipExpiresAt?: string | null;
   avatar?: string;
+  birthDate?: string | null;
+  birthDateShamsi?: string | null;
+  province?: string;
+  city?: string;
+  address?: string;
+  postalCode?: string;
+  buildingNumber?: string;
+  unit?: string;
+  recipientName?: string;
+  recipientPhone?: string;
   createdAt?: string;
 }
 
@@ -23,6 +33,7 @@ export interface IBrand {
   image?: string;
   order?: number;
   isFeatured?: boolean;
+  isActive?: boolean;
   createdAt?: string;
 }
 
@@ -37,6 +48,7 @@ export interface ICategory {
   icon?: string;
   order?: number;
   isFeatured?: boolean;
+  isActive?: boolean;
 }
 
 export interface IAttribute {
@@ -94,6 +106,7 @@ export interface IProduct {
   discountPrice?: number | null;
   images: string[];
   brand?: IBrand | null;
+  brands?: IBrand[];
   categories: ICategory[];
   attributes: IProductAttribute[];
   variants?: IProductVariant[];
@@ -104,6 +117,7 @@ export interface IProduct {
   reviewCount: number;
   salesCount: number;
   isFeatured: boolean;
+  isPublished?: boolean;
   createdAt?: string;
 }
 
@@ -133,7 +147,7 @@ export interface ICoupon {
   expiresAt?: string | null;
   usageLimit: number;
   usedCount: number;
-  isActive: boolean;
+  isActive?: boolean;
 }
 
 export interface IOrderItem {

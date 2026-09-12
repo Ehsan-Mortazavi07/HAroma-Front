@@ -22,6 +22,14 @@ export const adminApi = {
     const res = await axiosInstance.delete(`/admin/products/${id}`);
     return res.data;
   },
+  bulkUpdateProductsStatus: async (ids: string[], isPublished: boolean) => {
+    const res = await axiosInstance.patch('/admin/products/bulk/status', { ids, isPublished });
+    return res.data;
+  },
+  bulkDeleteProducts: async (ids: string[]) => {
+    const res = await axiosInstance.post('/admin/products/bulk/delete', { ids });
+    return res.data;
+  },
 
   // Categories CRUD
   getCategories: async (params?: Record<string, any>) => {

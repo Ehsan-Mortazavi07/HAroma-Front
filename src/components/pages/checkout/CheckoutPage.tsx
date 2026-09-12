@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { clearCart } from '@/stores/cart/cartSlice';
+import { updateUser } from '@/stores/auth/authSlice';
 import { PATHS } from '@/common/constants/PATHS';
 import { formatToman, toPersianDigits, getLocalizedVariantTitle, toast } from '@/common/utils';
 import axiosInstance from '@/common/axiosInstance';
@@ -34,17 +35,33 @@ export function CheckoutPage() {
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
 
-  // Address State
+  // Address State (pre-filled from user profile or initial defaults)
   const [deliveryAddress, setDeliveryAddress] = useState({
-    fullName: user?.fullName || (isPersian ? 'احسان مرتضوی' : 'Ehsan Mortazavi'),
-    phone: user?.phone || '۰۹۱۲۰۰۰۰۰۰۱',
-    province: isPersian ? 'تهران' : 'Tehran',
-    city: isPersian ? 'تهران' : 'Tehran',
-    postalCode: '۱۹۹۹۸۸۷۷۶۶',
-    addressDetail: isPersian
-      ? 'تهران، خیابان ولیعصر، بالاتر از میدان ونک، برج آروما، طبقه ۶ واحد ۱۲'
-      : 'Tehran, Valiasr St, Above Vanak Sq, Aroma Tower, 6th Floor, Unit 12',
+    fullName: user?.recipientName || user?.fullName || (isPersian ? 'کاربر هاورما' : 'HAroma User'),
+    phone: user?.recipientPhone || user?.phone || '',
+    province: user?.province || (isPersian ? 'تهران' : 'Tehran'),
+    city: user?.city || (isPersian ? 'تهران' : 'Tehran'),
+    postalCode: user?.postalCode || '',
+    addressDetail: user?.address || '',
+    buildingNumber: user?.buildingNumber || '',
+    unit: user?.unit || '',
   });
+
+  // Sync address when user profile loads/changes
+  React.useEffect(() => {
+    if (user) {
+      setDeliveryAddress((prev) => ({
+        fullName: user.recipientName || user.fullName || prev.fullName,
+        phone: user.recipientPhone || user.phone || prev.phone,
+        province: user.province || prev.province,
+        city: user.city || prev.city,
+        postalCode: user.postalCode || prev.postalCode,
+        addressDetail: user.address || prev.addressDetail,
+        buildingNumber: user.buildingNumber || prev.buildingNumber || '',
+        unit: user.unit || prev.unit || '',
+      }));
+    }
+  }, [user]);
 
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod' | 'installment'>('online');
@@ -152,6 +169,17 @@ export function CheckoutPage() {
       setCompletedOrder(res.data);
       dispatch(clearCart());
       toast.success(isPersian ? 'سفارش شما با موفقیت ثبت گردید!' : 'Order placed successfully!');
+
+      // If user profile lacked an address before checkout, backend auto-saved it.
+      // Refresh user profile in Redux store:
+      try {
+        const profileRes = await axiosInstance.get('/users/profile');
+        if (profileRes.data) {
+          dispatch(updateUser(profileRes.data));
+        }
+      } catch {
+        // Non-blocking
+      }
     } catch (err: any) {
       const serverMsg = err?.response?.data?.message;
       let errorMsg = isPersian
@@ -276,7 +304,7 @@ export function CheckoutPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div>
                   <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                    {t.checkout.fullName}
+                    {t.checkout.fullName} (تحویل‌گیرنده)
                   </label>
                   <input
                     type="text"
@@ -290,7 +318,7 @@ export function CheckoutPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                    {t.checkout.phone}
+                    {t.checkout.phone} (تحویل‌گیرنده)
                   </label>
                   <input
                     type="text"
@@ -298,7 +326,7 @@ export function CheckoutPage() {
                     onChange={(e) =>
                       setDeliveryAddress({ ...deliveryAddress, phone: e.target.value })
                     }
-                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold font-mono text-brand-text focus:ring-2 focus:ring-brand-gold"
                   />
                 </div>
 
@@ -332,20 +360,6 @@ export function CheckoutPage() {
 
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                    {t.checkout.postalCode}
-                  </label>
-                  <input
-                    type="text"
-                    value={deliveryAddress.postalCode}
-                    onChange={(e) =>
-                      setDeliveryAddress({ ...deliveryAddress, postalCode: e.target.value })
-                    }
-                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-mono text-brand-text focus:ring-2 focus:ring-brand-gold"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
                     {t.checkout.addressDetail}
                   </label>
                   <textarea
@@ -358,21 +372,82 @@ export function CheckoutPage() {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
+                    {t.checkout.postalCode}
+                  </label>
+                  <input
+                    type="text"
+                    value={deliveryAddress.postalCode}
+                    onChange={(e) =>
+                      setDeliveryAddress({ ...deliveryAddress, postalCode: e.target.value })
+                    }
+                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-mono text-brand-text focus:ring-2 focus:ring-brand-gold"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-bold text-brand-text-muted mb-1">
+                      {isPersian ? 'پلاک' : 'Plaque'}
+                    </label>
+                    <input
+                      type="text"
+                      value={deliveryAddress.buildingNumber}
+                      onChange={(e) =>
+                        setDeliveryAddress({ ...deliveryAddress, buildingNumber: e.target.value })
+                      }
+                      className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-brand-text-muted mb-1">
+                      {isPersian ? 'واحد' : 'Unit'}
+                    </label>
+                    <input
+                      type="text"
+                      value={deliveryAddress.unit}
+                      onChange={(e) =>
+                        setDeliveryAddress({ ...deliveryAddress, unit: e.target.value })
+                      }
+                      className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
+                    />
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2 p-3 rounded-xl bg-brand-champagne/20 border border-brand-gold/30 text-[11px] text-brand-bronze-dark leading-relaxed">
+                  💡 {isPersian
+                    ? 'در صورتی که اولین خرید شما باشد و قبلاً نشانی خود را در پروفایل ثبت نکرده باشید، این مشخصات به صورت خودکار به عنوان آدرس دائم در حساب شما ذخیره خواهد شد.'
+                    : 'If this is your first purchase, this delivery address will be automatically saved to your profile.'}
+                </div>
+
                 <button
                   onClick={() => setIsEditingAddress(false)}
-                  className="sm:col-span-2 py-2.5 rounded-xl bg-brand-olive text-brand-champagne font-bold text-xs border border-brand-gold/40 shadow-xs"
+                  className="sm:col-span-2 py-2.5 rounded-xl bg-brand-olive text-brand-champagne font-bold text-xs border border-brand-gold/40 shadow-xs hover:bg-brand-olive/90 transition-colors"
                 >
                   {t.checkout.saveAddress}
                 </button>
               </div>
             ) : (
-              <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs space-y-1.5">
-                <div className="font-bold text-brand-text">
-                  {deliveryAddress.fullName} ({deliveryAddress.phone})
+              <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-brand-text">
+                    {deliveryAddress.fullName || (isPersian ? 'کاربر بدون نام' : 'Unnamed User')}
+                  </span>
+                  {deliveryAddress.phone && (
+                    <span className="font-mono text-brand-text-muted">{deliveryAddress.phone}</span>
+                  )}
                 </div>
                 <div className="text-brand-text-muted leading-relaxed">
-                  {deliveryAddress.addressDetail}
+                  {[deliveryAddress.province, deliveryAddress.city, deliveryAddress.addressDetail].filter(Boolean).join('، ')}
+                  {deliveryAddress.buildingNumber && ` - پلاک ${deliveryAddress.buildingNumber}`}
+                  {deliveryAddress.unit && ` - واحد ${deliveryAddress.unit}`}
                 </div>
+                {deliveryAddress.postalCode && (
+                  <div className="text-[11px] font-mono text-brand-bronze">
+                    {isPersian ? 'کد پستی: ' : 'Postal Code: '} {deliveryAddress.postalCode}
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -32,7 +32,6 @@ export function AdminGuardClient({ children }: { children: React.ReactNode }) {
     const adminOnlyRoutes = [
       '/admin/vip-plans',
       '/admin/coupons',
-      '/admin/products/new',
     ];
 
     const isRestrictedForEditor =

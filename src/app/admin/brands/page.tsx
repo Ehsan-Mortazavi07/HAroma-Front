@@ -23,6 +23,7 @@ export default function AdminBrandsPage() {
   const [image, setImage] = useState('');
   const [order, setOrder] = useState(0);
   const [isFeatured, setIsFeatured] = useState(true);
+  const [isActive, setIsActive] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const loadBrands = async () => {
@@ -51,6 +52,7 @@ export default function AdminBrandsPage() {
     setImage('');
     setOrder(brands.length + 1);
     setIsFeatured(true);
+    setIsActive(true);
     setModalOpen(true);
   };
 
@@ -64,6 +66,7 @@ export default function AdminBrandsPage() {
     setImage(b.image || '');
     setOrder(b.order || 1);
     setIsFeatured(b.isFeatured ?? true);
+    setIsActive(b.isActive ?? true);
     setModalOpen(true);
   };
 
@@ -85,6 +88,7 @@ export default function AdminBrandsPage() {
         image: image.trim() || undefined,
         order: Number(order) || 0,
         isFeatured,
+        isActive,
       };
 
       if (editingBrand) {
@@ -101,6 +105,21 @@ export default function AdminBrandsPage() {
       toast.error(err?.response?.data?.message || (isPersian ? 'خطا در ذخیره برند.' : 'Failed to save brand.'));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleToggleStatus = async (b: IBrand) => {
+    const nextStatus = b.isActive === false ? true : false;
+    try {
+      await adminApi.updateBrand(b._id, { isActive: nextStatus });
+      toast.success(
+        nextStatus
+          ? isPersian ? 'برند با موفقیت فعال شد.' : 'Brand activated.'
+          : isPersian ? 'برند غیرفعال شد.' : 'Brand deactivated.'
+      );
+      loadBrands();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'خطا در تغییر وضعیت برند.');
     }
   };
 
@@ -175,11 +194,24 @@ export default function AdminBrandsPage() {
                     )}
                   </div>
 
-                  {b.isFeatured && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#f0eae0] text-[#9f815b] dark:bg-[#283228] dark:text-[#d4be9b] border border-[#bfa27a]/30">
-                      {isPersian ? 'برند منتخب' : 'Featured Brand'}
-                    </span>
-                  )}
+                  <div className="flex flex-col items-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStatus(b)}
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-black cursor-pointer transition-all ${
+                        b.isActive !== false
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-500/30 hover:opacity-80'
+                          : 'bg-neutral-200 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400 border border-neutral-400/30 hover:opacity-80'
+                      }`}
+                    >
+                      {b.isActive !== false ? (isPersian ? 'فعال' : 'Active') : (isPersian ? 'غیرفعال' : 'Inactive')}
+                    </button>
+                    {b.isFeatured && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#f0eae0] text-[#9f815b] dark:bg-[#283228] dark:text-[#d4be9b] border border-[#bfa27a]/30">
+                        {isPersian ? 'برند منتخب' : 'Featured Brand'}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <h3 className="font-black text-sm text-[#1d241d] dark:text-[#f7f4ee]">
@@ -326,7 +358,17 @@ export default function AdminBrandsPage() {
                   />
                 </div>
 
-                <div className="flex items-center pt-5">
+                <div className="flex flex-col gap-2 pt-2 sm:pt-4">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold">
+                    <input
+                      type="checkbox"
+                      checked={isActive}
+                      onChange={(e) => setIsActive(e.target.checked)}
+                      className="w-4 h-4 accent-[#9f815b] rounded cursor-pointer"
+                    />
+                    <span>{isPersian ? 'برند فعال و قابل نمایش باشد' : 'Active and visible'}</span>
+                  </label>
+
                   <label className="flex items-center gap-2 cursor-pointer font-bold">
                     <input
                       type="checkbox"
