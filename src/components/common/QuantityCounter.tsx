@@ -14,24 +14,54 @@ interface QuantityCounterProps {
 
 export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) {
   const dispatch = useAppDispatch();
-  const cartItem = useAppSelector((state) =>
-    state.cart.items.find((item) => item.product._id === product._id),
+  const cartItems = useAppSelector((state) =>
+    state.cart.items.filter((item) => item.product._id === product._id),
   );
   const isPersian = useAppSelector((state) => state.ui.lang === 'fa');
 
-  const quantity = cartItem?.quantity || 0;
+  // Total quantity of this product in cart
+  const quantity = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  const primaryItem = cartItems[0];
+
+  const maxStock =
+    primaryItem?.selectedVariant?.stockCount ??
+    (product.stockCount !== undefined && product.stockCount !== null ? product.stockCount : 99);
 
   const handleIncrement = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (quantity === 0) {
-      dispatch(addToCart({ product, quantity: 1 }));
-      toast.success(`«${product.title}» به سبد خرید اضافه شد.`);
+      const defaultVariant =
+        product.variants && product.variants.length > 0
+          ? product.variants.find((v) => v.isDefault) || product.variants[0]
+          : undefined;
+
+      dispatch(
+        addToCart({
+          product,
+          quantity: 1,
+          selectedVariant: defaultVariant,
+          selectedAttributes: defaultVariant?.title,
+        }),
+      );
+      toast.success(
+        isPersian
+          ? `«${product.title}» به سبد خرید اضافه شد.`
+          : `"${product.titleEn || product.title}" added to your bag.`,
+      );
     } else {
-      if (quantity < product.stockCount) {
-        dispatch(updateQuantity({ productId: product._id, quantity: quantity + 1 }));
+      if (quantity < maxStock) {
+        dispatch(
+          updateQuantity({
+            productId: product._id,
+            variantId: primaryItem?.selectedVariant?.id,
+            quantity: (primaryItem?.quantity || quantity) + 1,
+          }),
+        );
       } else {
-        toast.error('حداکثر موجودی انبار انتخاب شده است.');
+        toast.error(
+          isPersian ? 'حداکثر موجودی انبار انتخاب شده است.' : 'Maximum stock reached.',
+        );
       }
     }
   };
@@ -39,8 +69,14 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
   const handleDecrement = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (quantity > 0) {
-      dispatch(updateQuantity({ productId: product._id, quantity: quantity - 1 }));
+    if (quantity > 0 && primaryItem) {
+      dispatch(
+        updateQuantity({
+          productId: product._id,
+          variantId: primaryItem.selectedVariant?.id,
+          quantity: primaryItem.quantity - 1,
+        }),
+      );
     }
   };
 

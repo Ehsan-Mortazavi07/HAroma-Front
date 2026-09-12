@@ -72,7 +72,9 @@ export const cartSlice = createSlice({
       const index = state.items.findIndex(
         (item) =>
           item.product._id === productId &&
-          ((!item.selectedVariant && !variantId) || item.selectedVariant?.id === variantId),
+          (variantId !== undefined
+            ? item.selectedVariant?.id === variantId
+            : true),
       );
 
       if (index !== -1) {
@@ -98,7 +100,9 @@ export const cartSlice = createSlice({
           (item) =>
             !(
               item.product._id === productId &&
-              ((!item.selectedVariant && !variantId) || item.selectedVariant?.id === variantId)
+              (variantId !== undefined
+                ? item.selectedVariant?.id === variantId
+                : true)
             ),
         );
       }
