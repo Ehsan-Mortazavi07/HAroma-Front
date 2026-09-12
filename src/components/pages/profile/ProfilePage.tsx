@@ -26,6 +26,12 @@ import {
   Check,
   Calendar,
   MapPin,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
+  ArrowLeft,
+  Settings,
+  Package,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { logout, updateUser } from '@/stores/auth/authSlice';
@@ -45,7 +51,7 @@ export function ProfilePage() {
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const { t, isPersian } = useTranslation();
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'edit'>('orders');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'addresses' | 'edit' | 'vip'>('dashboard');
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -316,186 +322,405 @@ export function ProfilePage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* User Info & VIP Card Column */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs space-y-5">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Sidebar Column (Right in RTL, Left in LTR) */}
+        <aside className="lg:col-span-4 space-y-6">
+          <div className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs space-y-6">
+            {/* User Header in Sidebar */}
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-brand-gold text-[#141914] font-black text-xl flex items-center justify-center shadow-md shadow-brand-gold/20 shrink-0">
                 {user.fullName.charAt(0)}
               </div>
               <div className="min-w-0">
-                <h2 className="text-lg font-black text-brand-text truncate">{user.fullName}</h2>
-                <span className="text-xs text-brand-text-muted font-sans">@{user.username}</span>
+                <h2 className="text-base font-black text-brand-text truncate">{user.fullName}</h2>
+                <div className="text-xs text-brand-text-muted font-mono mt-0.5 truncate">
+                  {user.phone || user.email}
+                </div>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                    {user.isVip ? (isPersian ? 'عضو طلایی VIP' : 'Golden VIP Member') : (isPersian ? 'کاربر تایید شده' : 'Verified User')}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2 pt-4 border-t border-brand-border text-xs text-brand-text-muted">
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-brand-bronze shrink-0" />
-                <span className="truncate font-sans">{user.email}</span>
-              </div>
-              {user.phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-brand-bronze shrink-0" />
-                  <span className="font-mono">{user.phone}</span>
+            {/* Sidebar Navigation Items */}
+            <div className="pt-4 border-t border-brand-border space-y-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab('dashboard')}
+                className={`w-full h-12 px-4 rounded-2xl text-xs font-bold flex items-center justify-between transition-all duration-200 cursor-pointer ${
+                  activeTab === 'dashboard'
+                    ? 'bg-[#182018] text-brand-gold border border-brand-gold/40 shadow-xs font-black dark:bg-[#141914]'
+                    : 'bg-brand-surface-elevated/40 hover:bg-brand-surface-elevated text-brand-text border border-transparent hover:border-brand-border'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <LayoutDashboard className={`w-4 h-4 ${activeTab === 'dashboard' ? 'text-brand-gold' : 'text-brand-bronze'}`} />
+                  <span>{isPersian ? 'داشبورد' : 'Dashboard'}</span>
                 </div>
-              )}
-              {user.birthDate && (
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-brand-bronze shrink-0" />
-                  <span className="truncate">
-                    {formatDisplayBirthDate(user.birthDate, 'jalali', isPersian)}
-                    <span className="text-[10px] text-brand-text-muted font-sans ml-1">
-                      ({formatDisplayBirthDate(user.birthDate, 'gregorian', false)})
+                {isPersian ? <ChevronLeft className="w-4 h-4 opacity-40" /> : <ChevronRight className="w-4 h-4 opacity-40" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('orders')}
+                className={`w-full h-12 px-4 rounded-2xl text-xs font-bold flex items-center justify-between transition-all duration-200 cursor-pointer ${
+                  activeTab === 'orders'
+                    ? 'bg-[#182018] text-brand-gold border border-brand-gold/40 shadow-xs font-black dark:bg-[#141914]'
+                    : 'bg-brand-surface-elevated/40 hover:bg-brand-surface-elevated text-brand-text border border-transparent hover:border-brand-border'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Package className={`w-4 h-4 ${activeTab === 'orders' ? 'text-brand-gold' : 'text-brand-bronze'}`} />
+                  <span>{isPersian ? 'سفارش‌ها' : 'Orders'}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {orders.length > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-brand-gold text-[#141914]">
+                      {isPersian ? toPersianDigits(orders.length) : orders.length}
                     </span>
-                  </span>
+                  )}
+                  {isPersian ? <ChevronLeft className="w-4 h-4 opacity-40" /> : <ChevronRight className="w-4 h-4 opacity-40" />}
                 </div>
-              )}
-              {(user.province || user.city || user.address) && (
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-brand-bronze shrink-0 mt-0.5" />
-                  <span className="leading-snug">
-                    {[user.province, user.city, user.address].filter(Boolean).join('، ')}
-                    {user.buildingNumber && ` پلاک ${user.buildingNumber}`}
-                    {user.unit && ` واحد ${user.unit}`}
-                  </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('addresses')}
+                className={`w-full h-12 px-4 rounded-2xl text-xs font-bold flex items-center justify-between transition-all duration-200 cursor-pointer ${
+                  activeTab === 'addresses'
+                    ? 'bg-[#182018] text-brand-gold border border-brand-gold/40 shadow-xs font-black dark:bg-[#141914]'
+                    : 'bg-brand-surface-elevated/40 hover:bg-brand-surface-elevated text-brand-text border border-transparent hover:border-brand-border'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <MapPin className={`w-4 h-4 ${activeTab === 'addresses' ? 'text-brand-gold' : 'text-brand-bronze'}`} />
+                  <span>{isPersian ? 'آدرس‌ها' : 'Addresses'}</span>
                 </div>
+                {isPersian ? <ChevronLeft className="w-4 h-4 opacity-40" /> : <ChevronRight className="w-4 h-4 opacity-40" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('vip')}
+                className={`w-full h-12 px-4 rounded-2xl text-xs font-bold flex items-center justify-between transition-all duration-200 cursor-pointer ${
+                  activeTab === 'vip'
+                    ? 'bg-[#182018] text-brand-gold border border-brand-gold/40 shadow-xs font-black dark:bg-[#141914]'
+                    : 'bg-brand-surface-elevated/40 hover:bg-brand-surface-elevated text-brand-text border border-transparent hover:border-brand-border'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Crown className={`w-4 h-4 ${activeTab === 'vip' ? 'text-brand-gold' : 'text-brand-bronze'}`} />
+                  <span>{isPersian ? 'باشگاه VIP' : 'VIP Club'}</span>
+                </div>
+                {user.isVip && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-brand-gold/20 text-brand-gold border border-brand-gold/30">
+                    VIP
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('edit')}
+                className={`w-full h-12 px-4 rounded-2xl text-xs font-bold flex items-center justify-between transition-all duration-200 cursor-pointer ${
+                  activeTab === 'edit'
+                    ? 'bg-[#182018] text-brand-gold border border-brand-gold/40 shadow-xs font-black dark:bg-[#141914]'
+                    : 'bg-brand-surface-elevated/40 hover:bg-brand-surface-elevated text-brand-text border border-transparent hover:border-brand-border'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Settings className={`w-4 h-4 ${activeTab === 'edit' ? 'text-brand-gold' : 'text-brand-bronze'}`} />
+                  <span>{isPersian ? 'تنظیمات و مشخصات' : 'Settings & Info'}</span>
+                </div>
+                {isPersian ? <ChevronLeft className="w-4 h-4 opacity-40" /> : <ChevronRight className="w-4 h-4 opacity-40" />}
+              </button>
+
+              {(user.role === 'admin' || user.role === 'editor') && (
+                <Link
+                  href={PATHS.ADMIN_DASHBOARD}
+                  className="w-full h-12 px-4 rounded-2xl bg-brand-olive hover:bg-brand-olive/90 text-brand-champagne font-bold text-xs flex items-center justify-between transition-colors border border-brand-gold/30 shadow-xs mt-2"
+                >
+                  <div className="flex items-center gap-3">
+                    <ShieldCheck className="w-4 h-4 text-brand-gold" />
+                    <span>{user.role === 'admin' ? t.nav.adminPanel : t.nav.editorPanel}</span>
+                  </div>
+                  {isPersian ? <ChevronLeft className="w-4 h-4 opacity-60" /> : <ChevronRight className="w-4 h-4 opacity-60" />}
+                </Link>
               )}
             </div>
 
-            {/* Quick Tab Switch Button */}
-            <button
-              onClick={() => setActiveTab(activeTab === 'edit' ? 'orders' : 'edit')}
-              className={`w-full py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-200 ease-out border ${
-                activeTab === 'edit'
-                  ? 'bg-brand-surface-elevated text-brand-bronze border-brand-gold/40 font-black'
-                  : 'bg-brand-surface-elevated text-brand-text border-brand-border hover:bg-brand-champagne/40'
-              }`}
-            >
-              <Edit3 className="w-4 h-4 text-brand-bronze" />
-              <span>
-                {activeTab === 'edit'
-                  ? isPersian ? 'مشاهده سفارشات' : 'View Orders'
-                  : isPersian ? 'ویرایش مشخصات و رمز عبور' : 'Edit Profile & Password'}
-              </span>
-            </button>
-
-            {(user.role === 'admin' || user.role === 'editor') && (
-              <Link
-                href={PATHS.ADMIN_DASHBOARD}
-                className="w-full py-3 rounded-2xl bg-brand-olive hover:bg-brand-olive/90 text-brand-champagne font-bold text-xs flex items-center justify-center gap-2 transition-colors border border-brand-gold/30 shadow-sm"
+            {/* Logout Link */}
+            <div className="pt-4 border-t border-brand-border">
+              <button
+                type="button"
+                onClick={() => {
+                  dispatch(logout());
+                  router.push(PATHS.HOME);
+                }}
+                className="w-full py-2.5 rounded-2xl text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
-                <LayoutDashboard className="w-4 h-4" />
-                <span>
-                  {user.role === 'admin' ? t.nav.adminPanel : t.nav.editorPanel}
-                </span>
-              </Link>
-            )}
-
-            <button
-              onClick={() => {
-                dispatch(logout());
-                router.push(PATHS.HOME);
-              }}
-              className="w-full py-2.5 rounded-2xl text-xs font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors flex items-center justify-center gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>{t.nav.logOut}</span>
-            </button>
+                <LogOut className="w-4 h-4" />
+                <span>{t.nav.logOut}</span>
+              </button>
+            </div>
           </div>
+        </aside>
 
-          {/* VIP Status Card */}
-          {user.isVip ? (
-            <div className="rounded-3xl p-6 bg-[#181f18] text-[#f7f4ee] border border-brand-gold/30 shadow-xl space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Crown className="w-5 h-5 text-brand-gold" />
-                  <span className="font-black text-sm text-brand-gold">{t.profile.vipActiveCard}</span>
+        {/* Main Content Area (Left in RTL, Right in LTR) */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* TAB 1: DASHBOARD VIEW (MATCHING SCREENSHOT) */}
+          {activeTab === 'dashboard' && (
+            <div className="space-y-6">
+              {/* Top Banner (حساب من) */}
+              <div className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-black text-brand-text">
+                    {isPersian ? 'حساب من' : 'My Account'}
+                  </h1>
+                  <p className="text-xs text-brand-text-muted mt-1.5 leading-relaxed">
+                    {isPersian
+                      ? 'سفارش‌ها، آدرس‌ها و مشخصات کاربری خود را از اینجا مدیریت کنید.'
+                      : 'Manage your orders, delivery addresses, and account details from here.'}
+                  </p>
                 </div>
-                <VipBadge size="sm" text="VIP" />
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('edit')}
+                  className="px-5 py-2.5 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 flex items-center gap-2 transition-all active:scale-98 self-start sm:self-auto cursor-pointer"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  <span>{isPersian ? 'ویرایش پروفایل' : 'Edit Profile'}</span>
+                </button>
               </div>
 
-              <p className="text-xs text-brand-champagne leading-relaxed">
-                {t.profile.vipPerksActive}
-              </p>
-
-              {user.vipExpiresAt && (
-                <div className="text-[11px] text-brand-text-muted">
-                  {t.profile.vipExpires(new Date(user.vipExpiresAt).toLocaleDateString(isPersian ? 'fa-IR' : 'en-US'))}
+              {/* Welcome & Account Identity Card */}
+              <div className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-surface-elevated border border-brand-border text-brand-bronze flex items-center justify-center font-black text-lg shrink-0">
+                    <User className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] font-semibold text-brand-text-muted">
+                      {isPersian ? 'حساب مشتری هاتف آروما' : 'HatefAroma Customer Account'}
+                    </div>
+                    <h2 className="text-base font-black text-brand-text truncate mt-0.5">
+                      {user.fullName}
+                    </h2>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-brand-text-muted font-mono">
+                      <span>{user.phone || user.email}</span>
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-sans">
+                        {isPersian ? 'تأیید شده' : 'Verified'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              )}
 
-              <Link
-                href={PATHS.VIP}
-                className="block text-center py-2.5 rounded-xl bg-brand-gold text-[#141914] font-black text-xs hover:bg-[#d4be9b] transition-colors"
-              >
-                {t.profile.upgradeVip}
-              </Link>
-            </div>
-          ) : (
-            <div className="rounded-3xl p-6 bg-brand-surface-elevated border border-brand-border space-y-3">
-              <div className="flex items-center gap-2 text-brand-bronze dark:text-brand-gold">
-                <Crown className="w-5 h-5" />
-                <span className="font-black text-sm">{t.profile.joinVipTitle}</span>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <Link
+                    href={PATHS.PRODUCTS}
+                    className="px-4 py-2.5 rounded-2xl bg-brand-surface-elevated hover:bg-brand-champagne/40 border border-brand-border text-xs font-bold text-brand-text flex items-center gap-1.5 transition-all"
+                  >
+                    <span>{isPersian ? 'ادامه خرید' : 'Continue Shopping'}</span>
+                    {isPersian ? <ArrowLeft className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
+                  </Link>
+
+                  {user.isVip ? (
+                    <div className="px-3.5 py-2 rounded-2xl bg-[#181f18] text-brand-gold border border-brand-gold/40 text-xs font-black flex items-center gap-1.5 shadow-xs">
+                      <Crown className="w-3.5 h-3.5" />
+                      <span>{isPersian ? 'عضو باشگاه طلایی' : 'VIP Member'}</span>
+                    </div>
+                  ) : (
+                    <Link
+                      href={PATHS.VIP}
+                      className="px-4 py-2.5 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black flex items-center gap-1.5 shadow-sm transition-all"
+                    >
+                      <Crown className="w-3.5 h-3.5" />
+                      <span>{isPersian ? 'عضویت در VIP' : 'Join VIP Club'}</span>
+                    </Link>
+                  )}
+                </div>
               </div>
-              <p className="text-xs text-brand-text-muted leading-relaxed">
-                {t.profile.joinVipSub}
-              </p>
-              <Link
-                href={PATHS.VIP}
-                className="block text-center py-2.5 rounded-2xl bg-brand-gold text-[#141914] font-black text-xs hover:bg-[#d4be9b] transition-colors shadow-sm"
-              >
-                {t.hero.joinVip}
-              </Link>
+
+              {/* Summary Metrics Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Orders Metric */}
+                <div
+                  onClick={() => setActiveTab('orders')}
+                  className="bg-brand-surface rounded-2xl p-5 border border-brand-border hover:border-brand-gold/60 cursor-pointer transition-all flex items-center justify-between group"
+                >
+                  <div>
+                    <span className="text-xs text-brand-text-muted font-bold block">
+                      {isPersian ? 'سفارش‌ها' : 'Orders'}
+                    </span>
+                    <span className="text-2xl font-black text-brand-text mt-1 block">
+                      {isPersian ? toPersianDigits(orders.length) : orders.length}
+                    </span>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-brand-surface-elevated flex items-center justify-center text-brand-bronze group-hover:bg-brand-gold group-hover:text-[#141914] transition-colors">
+                    <Package className="w-5 h-5" />
+                  </div>
+                </div>
+
+                {/* Address Metric */}
+                <div
+                  onClick={() => setActiveTab('addresses')}
+                  className="bg-brand-surface rounded-2xl p-5 border border-brand-border hover:border-brand-gold/60 cursor-pointer transition-all flex items-center justify-between group"
+                >
+                  <div className="min-w-0">
+                    <span className="text-xs text-brand-text-muted font-bold block">
+                      {isPersian ? 'آدرس‌ها' : 'Addresses'}
+                    </span>
+                    <span className="text-sm font-black text-brand-text mt-1 block truncate">
+                      {user.city ? `${user.city}` : (isPersian ? 'نشانی ثبت نشده' : 'Not set')}
+                    </span>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-brand-surface-elevated flex items-center justify-center text-brand-bronze group-hover:bg-brand-gold group-hover:text-[#141914] transition-colors shrink-0">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                </div>
+
+                {/* VIP Status Metric */}
+                <div
+                  onClick={() => setActiveTab('vip')}
+                  className="bg-brand-surface rounded-2xl p-5 border border-brand-border hover:border-brand-gold/60 cursor-pointer transition-all flex items-center justify-between group sm:col-span-2 lg:col-span-1"
+                >
+                  <div>
+                    <span className="text-xs text-brand-text-muted font-bold block">
+                      {isPersian ? 'باشگاه VIP' : 'VIP Club'}
+                    </span>
+                    <span className="text-sm font-black text-brand-text mt-1 block">
+                      {user.isVip ? (isPersian ? 'عضو طلایی' : 'VIP Member') : (isPersian ? 'کاربر عادی' : 'Standard')}
+                    </span>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-brand-surface-elevated flex items-center justify-center text-brand-bronze group-hover:bg-brand-gold group-hover:text-[#141914] transition-colors">
+                    <Crown className="w-5 h-5" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Access Section (دسترسی‌های سریع) */}
+              <div className="space-y-3 pt-2">
+                <h3 className="text-sm font-black text-brand-text flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-brand-gold" />
+                  <span>{isPersian ? 'دسترسی‌های سریع' : 'Quick Access'}</span>
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Quick 1: Orders */}
+                  <div
+                    onClick={() => setActiveTab('orders')}
+                    className="bg-brand-surface rounded-2xl p-5 border border-brand-border hover:border-brand-gold/60 cursor-pointer transition-all flex items-start gap-4 group"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-brand-surface-elevated text-brand-bronze flex items-center justify-center shrink-0 group-hover:bg-brand-gold group-hover:text-[#141914] transition-colors">
+                      <Package className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-brand-text">{isPersian ? 'سفارش‌ها' : 'Orders'}</h4>
+                      <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                        {isPersian ? 'وضعیت پرداخت، تأمین و پیگیری تحویل سفارش‌ها' : 'View order tracking, payment and delivery'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quick 2: Addresses */}
+                  <div
+                    onClick={() => setActiveTab('addresses')}
+                    className="bg-brand-surface rounded-2xl p-5 border border-brand-border hover:border-brand-gold/60 cursor-pointer transition-all flex items-start gap-4 group"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-brand-surface-elevated text-brand-bronze flex items-center justify-center shrink-0 group-hover:bg-brand-gold group-hover:text-[#141914] transition-colors">
+                      <MapPin className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-brand-text">{isPersian ? 'آدرس‌ها' : 'Addresses'}</h4>
+                      <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                        {isPersian ? 'نشانی‌های تحویل، پلاک و گیرنده را مدیریت کنید' : 'Manage delivery addresses, postal codes and contacts'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quick 3: Account Info */}
+                  <div
+                    onClick={() => setActiveTab('edit')}
+                    className="bg-brand-surface rounded-2xl p-5 border border-brand-border hover:border-brand-gold/60 cursor-pointer transition-all flex items-start gap-4 group"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-brand-surface-elevated text-brand-bronze flex items-center justify-center shrink-0 group-hover:bg-brand-gold group-hover:text-[#141914] transition-colors">
+                      <Settings className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-brand-text">{isPersian ? 'اطلاعات حساب' : 'Account Info'}</h4>
+                      <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                        {isPersian ? 'ویرایش مشخصات فردی، تاریخ تولد و امنیت حساب' : 'Update name, date of birth, contact and passwords'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quick 4: VIP Club */}
+                  <div
+                    onClick={() => setActiveTab('vip')}
+                    className="bg-brand-surface rounded-2xl p-5 border border-brand-border hover:border-brand-gold/60 cursor-pointer transition-all flex items-start gap-4 group"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-brand-surface-elevated text-brand-bronze flex items-center justify-center shrink-0 group-hover:bg-brand-gold group-hover:text-[#141914] transition-colors">
+                      <Crown className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-brand-text">{isPersian ? 'باشگاه مشتریان VIP' : 'VIP Club'}</h4>
+                      <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                        {isPersian ? 'تخفیف‌های دائمی، هدیه تولد و ارسال رایگان سفارش‌ها' : 'Permanent discounts, birthday gifts and free delivery'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quick 5: Admin / Editor Panel (if applicable) */}
+                  {(user.role === 'admin' || user.role === 'editor') && (
+                    <Link
+                      href={PATHS.ADMIN_DASHBOARD}
+                      className="bg-brand-surface rounded-2xl p-5 border border-brand-border hover:border-brand-gold/60 transition-all flex items-start gap-4 group sm:col-span-2"
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-brand-olive text-brand-gold flex items-center justify-center shrink-0 shadow-xs">
+                        <ShieldCheck className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-brand-text">
+                          {user.role === 'admin' ? t.nav.adminPanel : t.nav.editorPanel}
+                        </h4>
+                        <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+                          {isPersian
+                            ? 'مدیریت محصولات، سفارش‌ها، دسته‌بندی‌ها و گزارش‌های سیستم'
+                            : 'Manage products, orders, categories, and system reports'}
+                        </p>
+                      </div>
+                    </Link>
+                  )}
+                </div>
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Content Column */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* Tab Navigation Header */}
-          <div className="flex items-center gap-2 bg-brand-surface p-2 rounded-2xl border border-brand-border">
-            <button
-              onClick={() => setActiveTab('orders')}
-              className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-200 ease-out flex items-center justify-center gap-2 ${
-                activeTab === 'orders'
-                  ? 'bg-brand-gold text-[#141914] shadow-sm'
-                  : 'text-brand-text-muted hover:text-brand-text'
-              }`}
-            >
-              <ShoppingBag className="w-4 h-4" />
-              <span>{t.profile.ordersTitle}</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-black/10">
-                {isPersian ? toPersianDigits(orders.length) : orders.length}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('edit')}
-              className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-200 ease-out flex items-center justify-center gap-2 ${
-                activeTab === 'edit'
-                  ? 'bg-brand-gold text-[#141914] shadow-sm'
-                  : 'text-brand-text-muted hover:text-brand-text'
-              }`}
-            >
-              <Edit3 className="w-4 h-4" />
-              <span>{isPersian ? 'ویرایش مشخصات و حساب کاربری' : 'Edit Profile & Account'}</span>
-            </button>
-          </div>
-
-          {activeTab === 'orders' ? (
-            /* Orders Tab Content */
+          {/* TAB 2: ORDERS TAB */}
+          {activeTab === 'orders' && (
             <div className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-brand-border">
-                <div className="flex items-center gap-2">
-                  <ShoppingBag className="w-5 h-5 text-brand-bronze" />
-                  <h3 className="text-lg font-black text-brand-text">{t.profile.ordersTitle}</h3>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('dashboard')}
+                    className="p-2 rounded-xl bg-brand-surface-elevated hover:bg-brand-border text-brand-text transition-colors"
+                    title={isPersian ? 'بازگشت به داشبورد' : 'Back to Dashboard'}
+                  >
+                    {isPersian ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+                  </button>
+                  <div>
+                    <h3 className="text-base font-black text-brand-text">{t.profile.ordersTitle}</h3>
+                    <p className="text-xs text-brand-text-muted mt-0.5">
+                      {t.profile.itemsCount(isPersian ? toPersianDigits(orders.length) : orders.length)}
+                    </p>
+                  </div>
                 </div>
-                <span className="text-xs font-bold text-brand-text-muted">
-                  {t.profile.itemsCount(isPersian ? toPersianDigits(orders.length) : orders.length)}
-                </span>
               </div>
 
               {loading ? (
@@ -513,7 +738,7 @@ export function ProfilePage() {
                   <p className="text-sm font-semibold">{t.profile.emptyOrders}</p>
                   <Link
                     href={PATHS.PRODUCTS}
-                    className="inline-block px-6 py-2.5 rounded-xl bg-brand-gold text-[#141914] font-bold text-xs shadow-md hover:bg-[#d4be9b] transition-colors"
+                    className="inline-block px-6 py-2.5 rounded-2xl bg-brand-gold text-[#141914] font-bold text-xs shadow-md hover:bg-[#d4be9b] transition-colors"
                   >
                     {t.home.curatedPicks}
                   </Link>
@@ -557,22 +782,186 @@ export function ProfilePage() {
                 </div>
               )}
             </div>
-          ) : (
-            /* Edit Profile Tab Content */
+          )}
+
+          {/* TAB 3: ADDRESSES TAB */}
+          {activeTab === 'addresses' && (
+            <form onSubmit={handleProfileSubmit} className="space-y-6">
+              <div className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-brand-border">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('dashboard')}
+                      className="p-2 rounded-xl bg-brand-surface-elevated hover:bg-brand-border text-brand-text transition-colors"
+                      title={isPersian ? 'بازگشت به داشبورد' : 'Back to Dashboard'}
+                    >
+                      {isPersian ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+                    </button>
+                    <div>
+                      <h3 className="text-base font-black text-brand-text">
+                        {isPersian ? 'نشانی تحویل سفارش‌ها' : 'Delivery Address'}
+                      </h3>
+                      <p className="text-xs text-brand-text-muted mt-0.5">
+                        {isPersian
+                          ? 'این نشانی به صورت خودکار در سبد خرید و فاکتور نهایی اعمال خواهد شد'
+                          : 'This address will be automatically pre-filled in your checkout'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block font-bold mb-1.5 text-brand-text">
+                      {isPersian ? 'استان' : 'Province / State'}
+                    </label>
+                    <input
+                      type="text"
+                      value={province}
+                      onChange={(e) => setProvince(e.target.value)}
+                      placeholder={isPersian ? 'مثال: تهران' : 'e.g. Tehran'}
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1.5 text-brand-text">
+                      {isPersian ? 'شهر' : 'City'}
+                    </label>
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder={isPersian ? 'مثال: تهران' : 'e.g. Tehran'}
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block font-bold mb-1.5 text-brand-text">
+                      {isPersian ? 'نشانی پستی دقیق' : 'Full Street Address'}
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder={isPersian ? 'خیابان، کوچه، پلاک، واحد...' : 'Street address, alley, details'}
+                      className="w-full p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1.5 text-brand-text">
+                      {isPersian ? 'کد پستی (۱۰ رقمی)' : 'Postal / Zip Code (10 digits)'}
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={10}
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      placeholder="1234567890"
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-bold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold mb-1.5 text-brand-text">
+                        {isPersian ? 'پلاک' : 'Building / Plaque'}
+                      </label>
+                      <input
+                        type="text"
+                        value={buildingNumber}
+                        onChange={(e) => setBuildingNumber(e.target.value)}
+                        placeholder="12"
+                        className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-bold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold mb-1.5 text-brand-text">
+                        {isPersian ? 'واحد' : 'Unit'}
+                      </label>
+                      <input
+                        type="text"
+                        value={unit}
+                        onChange={(e) => setUnit(e.target.value)}
+                        placeholder="3"
+                        className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-bold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1.5 text-brand-text">
+                      {isPersian ? 'نام گیرنده تحویل' : 'Recipient Full Name'}
+                    </label>
+                    <input
+                      type="text"
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                      placeholder={isPersian ? 'نام تحویل‌گیرنده' : 'Recipient Name'}
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1.5 text-brand-text">
+                      {isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone'}
+                    </label>
+                    <input
+                      type="tel"
+                      value={recipientPhone}
+                      onChange={(e) => setRecipientPhone(e.target.value)}
+                      placeholder="0912..."
+                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-bold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-brand-border">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-8 py-3 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 flex items-center justify-center gap-2 active:scale-98 transition-all duration-200 ease-out disabled:opacity-50 cursor-pointer"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>
+                      {saving
+                        ? isPersian ? 'در حال ذخیره‌سازی...' : 'Saving...'
+                        : isPersian ? 'ذخیره نشانی تحویل' : 'Save Address'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+
+          {/* TAB 4: EDIT PROFILE & SECURITY TAB */}
+          {activeTab === 'edit' && (
             <form onSubmit={handleProfileSubmit} className="space-y-6">
               {/* Personal Details Card */}
               <div className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs space-y-6">
-                <div className="flex items-center gap-2 pb-4 border-b border-brand-border">
-                  <User className="w-5 h-5 text-brand-bronze" />
-                  <div>
-                    <h3 className="text-base font-black text-brand-text">
-                      {isPersian ? 'اطلاعات فردی و شناسایی' : 'Personal Information'}
-                    </h3>
-                    <p className="text-xs text-brand-text-muted mt-0.5">
-                      {isPersian
-                        ? 'نام، نام کاربری، ایمیل و شماره تماس خود را در اینجا ویرایش نمایید (یکتایی بررسی می‌شود)'
-                        : 'Update your name, unique username, email, and phone number'}
-                    </p>
+                <div className="flex items-center justify-between pb-4 border-b border-brand-border">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('dashboard')}
+                      className="p-2 rounded-xl bg-brand-surface-elevated hover:bg-brand-border text-brand-text transition-colors"
+                      title={isPersian ? 'بازگشت به داشبورد' : 'Back to Dashboard'}
+                    >
+                      {isPersian ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+                    </button>
+                    <div>
+                      <h3 className="text-base font-black text-brand-text">
+                        {isPersian ? 'اطلاعات فردی و شناسایی' : 'Personal Information'}
+                      </h3>
+                      <p className="text-xs text-brand-text-muted mt-0.5">
+                        {isPersian
+                          ? 'نام، نام کاربری، ایمیل و شماره تماس خود را در اینجا ویرایش نمایید'
+                          : 'Update your name, unique username, email, and phone number'}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -643,134 +1032,9 @@ export function ProfilePage() {
                 </div>
               </div>
 
-              {/* Default Address & Shipping Details Card */}
-              <div className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs space-y-6">
-                <div className="flex items-center gap-2 pb-4 border-b border-brand-border">
-                  <MapPin className="w-5 h-5 text-brand-bronze" />
-                  <div>
-                    <h3 className="text-base font-black text-brand-text">
-                      {isPersian ? 'آدرس و مشخصات تحویل پیش‌فرض' : 'Default Delivery Address & Shipping'}
-                    </h3>
-                    <p className="text-xs text-brand-text-muted mt-0.5">
-                      {isPersian
-                        ? 'این مشخصات به صورت خودکار در سبد خرید و مراحل ثبت سفارش شما بارگذاری خواهد شد'
-                        : 'Automatically pre-filled in your cart and future checkouts'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <label className="block font-bold mb-1.5 text-brand-text">
-                      {isPersian ? 'استان' : 'Province / State'}
-                    </label>
-                    <input
-                      type="text"
-                      value={province}
-                      onChange={(e) => setProvince(e.target.value)}
-                      placeholder={isPersian ? 'مثال: تهران' : 'e.g. Tehran'}
-                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-bold mb-1.5 text-brand-text">
-                      {isPersian ? 'شهر' : 'City'}
-                    </label>
-                    <input
-                      type="text"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder={isPersian ? 'مثال: تهران' : 'e.g. Tehran'}
-                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block font-bold mb-1.5 text-brand-text">
-                      {isPersian ? 'نشانی پستی دقیق (خیابان، کوچه، بن‌بست)' : 'Full Street Address'}
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder={isPersian ? 'مثال: خیابان ولیعصر، نرسیده به میدان ونک، کوچه شریفی' : 'Street address, alley, details'}
-                      className="w-full p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold resize-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-bold mb-1.5 text-brand-text">
-                      {isPersian ? 'کد پستی (۱۰ رقمی)' : 'Postal / Zip Code (10 digits)'}
-                    </label>
-                    <input
-                      type="text"
-                      value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value)}
-                      placeholder="1234567890"
-                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-bold text-brand-text focus:ring-2 focus:ring-brand-gold"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block font-bold mb-1.5 text-brand-text">
-                        {isPersian ? 'پلاک' : 'Building / Plaque'}
-                      </label>
-                      <input
-                        type="text"
-                        value={buildingNumber}
-                        onChange={(e) => setBuildingNumber(e.target.value)}
-                        placeholder={isPersian ? 'مثال: ۱۲' : 'e.g. 12'}
-                        className="w-full h-11 px-3 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold mb-1.5 text-brand-text">
-                        {isPersian ? 'واحد' : 'Unit'}
-                      </label>
-                      <input
-                        type="text"
-                        value={unit}
-                        onChange={(e) => setUnit(e.target.value)}
-                        placeholder={isPersian ? 'مثال: ۴' : 'e.g. 4'}
-                        className="w-full h-11 px-3 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-bold mb-1.5 text-brand-text">
-                      {isPersian ? 'نام و نام خانوادگی تحویل‌گیرنده' : 'Recipient Name'}
-                    </label>
-                    <input
-                      type="text"
-                      value={recipientName}
-                      onChange={(e) => setRecipientName(e.target.value)}
-                      placeholder={isPersian ? 'در صورت تفاوت با نام حساب' : 'If different from account name'}
-                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-bold mb-1.5 text-brand-text">
-                      {isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone Number'}
-                    </label>
-                    <input
-                      type="tel"
-                      value={recipientPhone}
-                      onChange={(e) => setRecipientPhone(e.target.value)}
-                      placeholder="0912..."
-                      className="w-full h-11 px-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-bold text-brand-text focus:ring-2 focus:ring-brand-gold"
-                    />
-                  </div>
-                </div>
-              </div>
-
               {/* Password & Security Card */}
               <div className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs space-y-6">
-                <div className="flex items-center justify-between pb-4 border-b border-brand-border">
+                <div className="flex items-center justify-between pb-4 border-b border-brand-border flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <KeyRound className="w-5 h-5 text-brand-bronze" />
                     <div>
@@ -791,7 +1055,7 @@ export function ProfilePage() {
                       setResetModalOpen(true);
                       setResetStep(1);
                     }}
-                    className="text-xs font-bold text-brand-bronze hover:text-brand-gold underline flex items-center gap-1"
+                    className="text-xs font-bold text-brand-bronze hover:text-brand-gold underline flex items-center gap-1 cursor-pointer"
                   >
                     <HelpCircle className="w-3.5 h-3.5" />
                     <span>{isPersian ? 'رمز فعلی را فراموش کرده‌اید؟' : 'Forgot current password?'}</span>
@@ -840,12 +1104,12 @@ export function ProfilePage() {
                 </div>
               </div>
 
-              {/* Submit Button */}
+              {/* Submit Actions */}
               <div className="flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setActiveTab('orders')}
-                  className="px-6 py-3 rounded-2xl bg-brand-surface-elevated text-brand-text-muted text-xs font-bold border border-brand-border hover:bg-brand-champagne/30 transition-colors"
+                  onClick={() => setActiveTab('dashboard')}
+                  className="px-6 py-3 rounded-2xl bg-brand-surface-elevated text-brand-text-muted text-xs font-bold border border-brand-border hover:bg-brand-champagne/30 transition-colors cursor-pointer"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </button>
