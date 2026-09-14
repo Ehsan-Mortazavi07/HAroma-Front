@@ -119,10 +119,38 @@ const filterCategories = [
 
 const sortOptions = [
   { label: 'جدیدترین', value: 'newest' },
-  { label: 'ارزان‌ترین', value: 'price_asc' },
-  { label: 'گران‌ترین', value: 'price_desc' },
+  { label: 'ارزان‌ترین', value: 'cheapest' },
+  { label: 'گران‌ترین', value: 'expensive' },
   { label: 'محبوب‌ترین', value: 'popular' },
+  { label: 'پرفروش‌ترین', value: 'bestseller' },
 ];
+
+const getEffectivePrice = (p: IProduct) =>
+  p.discountPrice && p.discountPrice > 0 ? p.discountPrice : p.price;
+
+const sortProductList = (items: IProduct[], sort: string): IProduct[] => {
+  const cloned = [...items];
+  switch (sort) {
+    case 'cheapest':
+    case 'price_asc':
+      return cloned.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b));
+    case 'expensive':
+    case 'price_desc':
+      return cloned.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a));
+    case 'popular':
+      return cloned.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    case 'bestseller':
+    case 'best_sellers':
+      return cloned.sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
+    case 'newest':
+    default:
+      return cloned.sort(
+        (a, b) =>
+          new Date(b.createdAt || 0).getTime() -
+          new Date(a.createdAt || 0).getTime()
+      );
+  }
+};
 
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const router = useRouter();
@@ -140,6 +168,13 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [products, setProducts] = useState<IProduct[]>([]);
   const [totalResults, setTotalResults] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  const isFilteringOrSearching = Boolean(
+    searchQuery.trim() ||
+      selectedCategory ||
+      inStockOnly ||
+      selectedSort !== 'newest'
+  );
 
   // Load brands dynamically on mount
   useEffect(() => {
@@ -183,6 +218,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
       setSearchQuery('');
       setSelectedCategory('');
       setInStockOnly(false);
+      setSelectedSort('newest');
       setIsSortDropdownOpen(false);
     }
   }, [isOpen]);
@@ -217,8 +253,8 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   useEffect(() => {
     if (!isOpen) return;
 
-    // If query is empty and no specific category selected and inStock not toggled, show brands
-    if (!searchQuery.trim() && !selectedCategory && !inStockOnly) {
+    // If query is empty, no category, not in-stock only, and sort is default 'newest', show brands
+    if (!searchQuery.trim() && !selectedCategory && !inStockOnly && selectedSort === 'newest') {
       setProducts([]);
       setTotalResults(0);
       setIsLoading(false);
@@ -233,15 +269,20 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         };
         if (searchQuery.trim()) params.q = searchQuery.trim();
         if (selectedCategory) params.category = selectedCategory;
-        if (inStockOnly) params.inStock = true;
+        if (inStockOnly) {
+          params.inStockOnly = 'true';
+          params.inStock = true;
+        }
         if (selectedSort) params.sort = selectedSort;
 
         const res = await catalogApi.getProducts(params);
         if (res?.items) {
-          setProducts(res.items);
+          const sorted = sortProductList(res.items, selectedSort);
+          setProducts(sorted);
           setTotalResults(res.total || res.items.length);
         } else if (Array.isArray(res)) {
-          setProducts(res.slice(0, 8));
+          const sorted = sortProductList(res.slice(0, 8), selectedSort);
+          setProducts(sorted);
           setTotalResults(res.length);
         } else {
           setProducts([]);
@@ -254,10 +295,17 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
       } finally {
         setIsLoading(false);
       }
-    }, 240);
+    }, 200);
 
     return () => clearTimeout(debounceTimer);
   }, [searchQuery, selectedCategory, inStockOnly, selectedSort, isOpen]);
+
+  const handleSelectSort = (sortValue: string) => {
+    setSelectedSort(sortValue);
+    setIsSortDropdownOpen(false);
+    // Instant client-side re-order if products are already present
+    setProducts((prev) => (prev.length > 0 ? sortProductList(prev, sortValue) : prev));
+  };
 
   const handleNavigateToAllResults = () => {
     const params = new URLSearchParams();
@@ -421,10 +469,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                           <button
                             key={opt.value}
                             type="button"
-                            onClick={() => {
-                              setSelectedSort(opt.value);
-                              setIsSortDropdownOpen(false);
-                            }}
+                            onClick={() => handleSelectSort(opt.value)}
                             className={`px-3 py-1.5 rounded-xl text-xs text-right font-bold transition-colors flex items-center justify-between cursor-pointer ${
                               selectedSort === opt.value
                                 ? 'bg-[#bfa27a] text-[#141914]'
@@ -470,8 +515,14 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               {/* Header of results */}
               <div className="text-[11px] font-bold text-[#73695c] dark:text-[#a69c8e] mb-2.5 pr-1 flex items-center justify-between shrink-0 select-none">
                 <span>
-                  {searchQuery.trim() || selectedCategory || inStockOnly
-                    ? `نتایج جست‌وجو (${isPersian ? toPersianDigits(totalResults) : totalResults} مورد)`
+                  {isFilteringOrSearching
+                    ? searchQuery.trim()
+                      ? `نتایج جست‌وجو (${isPersian ? toPersianDigits(totalResults) : totalResults} مورد)`
+                      : selectedCategory
+                      ? `${filterCategories.find((c) => c.slug === selectedCategory)?.title || 'دسته‌بندی'} (${isPersian ? toPersianDigits(totalResults) : totalResults} مورد)`
+                      : inStockOnly
+                      ? `محصولات موجود (${isPersian ? toPersianDigits(totalResults) : totalResults} مورد)`
+                      : `محصولات (${activeSortLabel}) (${isPersian ? toPersianDigits(totalResults) : totalResults} مورد)`
                     : 'برندها'}
                 </span>
                 {totalResults > 0 && (
@@ -488,7 +539,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
               {/* Scrollable list container */}
               <div className="flex-1 min-h-0 overflow-y-auto pr-1">
                 {/* Case 1: Empty Query & No Filters -> Valira-style "برندها" list */}
-                {!searchQuery.trim() && !selectedCategory && !inStockOnly ? (
+                {!isFilteringOrSearching ? (
                   <div className="space-y-1.5 pb-2">
                     {brands.map((brand) => (
                       <Link
@@ -644,7 +695,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             </div>
 
             {/* Modal Bottom Bar */}
-            {(searchQuery.trim() || selectedCategory || inStockOnly) && (
+            {isFilteringOrSearching && (
               <div className="mt-3 pt-3 border-t border-[#e6dcce] dark:border-[#2e3a2e] flex items-center justify-between text-xs shrink-0 select-none">
                 <span className="text-[#73695c] dark:text-[#a69c8e]">
                   نمایش {isPersian ? toPersianDigits(products.length) : products.length} از{' '}

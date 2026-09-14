@@ -202,13 +202,6 @@ export function Navbar() {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setIsMegaMenuOpen(false);
-        setIsProfileOpen(false);
-        if (isCartDrawerOpen) dispatch(toggleCartDrawer(false));
-        setIsSearchModalOpen((prev) => !prev);
-      }
       if (e.key === 'Escape') {
         setIsMegaMenuOpen(false);
         setIsProfileOpen(false);
@@ -519,17 +512,12 @@ export function Navbar() {
                   if (isCartDrawerOpen) dispatch(toggleCartDrawer(false));
                   setIsSearchModalOpen(true);
                 }}
-                className="w-48 lg:w-60 xl:w-72 h-10 px-3.5 rounded-full bg-[#242c24]/90 border border-[#3e4c3e] hover:border-[#bfa27a]/60 flex items-center justify-between text-[#a69c8e] hover:text-[#f7f4ee] transition-all shadow-inner group cursor-pointer"
+                className="w-48 lg:w-60 xl:w-72 h-10 px-3.5 rounded-full bg-[#242c24]/90 border border-[#3e4c3e] hover:border-[#bfa27a]/60 flex items-center gap-2.5 text-[#a69c8e] hover:text-[#f7f4ee] transition-all shadow-inner group cursor-pointer"
                 aria-label="جست‌وجوی محصول یا برند"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Search className="w-4 h-4 text-[#a69c8e] group-hover:text-[#bfa27a] shrink-0 transition-colors" />
-                  <span className="text-xs font-normal text-[#a69c8e] truncate select-none">
-                    جست‌وجوی محصول یا برند...
-                  </span>
-                </div>
-                <span className="text-[10px] font-mono text-[#73695c] border border-[#3e4c3e] group-hover:border-[#bfa27a]/40 group-hover:text-[#bfa27a] rounded px-1.5 py-0.5 select-none hidden lg:inline-block transition-colors">
-                  ⌘K
+                <Search className="w-4 h-4 text-[#a69c8e] group-hover:text-[#bfa27a] shrink-0 transition-colors" />
+                <span className="text-xs font-normal text-[#a69c8e] truncate select-none">
+                  جست‌وجوی محصول یا برند...
                 </span>
               </button>
             </div>
