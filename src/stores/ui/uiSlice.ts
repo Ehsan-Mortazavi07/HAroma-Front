@@ -11,8 +11,8 @@ interface UiState {
 }
 
 const getSavedTheme = (): ThemeMode => {
-  if (typeof window === 'undefined') return 'system';
-  return (localStorage.getItem('hatefaroma_theme') as ThemeMode) || 'system';
+  if (typeof window === 'undefined') return 'dark';
+  return (localStorage.getItem('hatefaroma_theme') as ThemeMode) || 'dark';
 };
 
 const getSavedLang = (): LangMode => {
@@ -21,7 +21,7 @@ const getSavedLang = (): LangMode => {
 };
 
 const initialState: UiState = {
-  theme: typeof window !== 'undefined' ? getSavedTheme() : 'system',
+  theme: typeof window !== 'undefined' ? getSavedTheme() : 'dark',
   lang: typeof window !== 'undefined' ? getSavedLang() : 'fa',
   isCartDrawerOpen: false,
   isSearchModalOpen: false,

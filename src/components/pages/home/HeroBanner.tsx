@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { Button } from '@heroui/react';
 import { Sparkles, ArrowLeft, ArrowRight, ShieldCheck, Crown } from 'lucide-react';
 import { PATHS } from '@/common/constants/PATHS';
 import { useTranslation } from '@/common/i18n';
@@ -65,21 +66,26 @@ export function HeroBanner() {
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
-            <Link
+            <Button
+              as={Link}
               href={PATHS.PRODUCTS}
-              className="px-7 py-3.5 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-sm shadow-xl shadow-brand-gold/20 hover:scale-105 active:scale-95 transition-all duration-300 ease-out flex items-center gap-2"
+              radius="full"
+              className="px-7 py-3.5 h-12 font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-sm shadow-xl shadow-brand-gold/20 flex items-center gap-2 transition-transform hover:scale-105 active:scale-95"
             >
               <span>{t.hero.shopNow}</span>
               {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-            </Link>
+            </Button>
 
-            <Link
+            <Button
+              as={Link}
               href={PATHS.VIP}
-              className="px-6 py-3.5 rounded-2xl font-bold bg-[#202820] hover:bg-[#2c372c] text-[#f7f4ee] text-sm border border-brand-gold/40 transition-all duration-300 ease-out flex items-center gap-2 shadow-sm hover:scale-105 active:scale-95"
+              radius="full"
+              variant="bordered"
+              className="px-6 py-3.5 h-12 font-bold bg-[#202820] hover:bg-[#2c372c] text-[#f7f4ee] text-sm border border-brand-gold/40 flex items-center gap-2 shadow-sm transition-transform hover:scale-105 active:scale-95"
             >
               <Crown className="w-4 h-4 text-brand-gold" />
               <span>{t.hero.joinVip}</span>
-            </Link>
+            </Button>
           </div>
 
           {/* Quick Perks Pill */}

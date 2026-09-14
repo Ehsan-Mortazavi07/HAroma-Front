@@ -11,6 +11,7 @@ interface BrandLogoProps {
   showText?: boolean;
   className?: string;
   variant?: 'auto' | 'light' | 'dark';
+  simple?: boolean;
 }
 
 export function BrandLogo({
@@ -18,6 +19,7 @@ export function BrandLogo({
   showText = true,
   className = '',
   variant = 'auto',
+  simple = false,
 }: BrandLogoProps) {
   const { isPersian } = useTranslation();
 
@@ -72,13 +74,17 @@ export function BrandLogo({
             >
               HatefAroma
             </span>
-            <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#bfa27a]/25 text-[#d4be9b] border border-[#bfa27a]/40 shadow-xs">
-              {isPersian ? 'هاتف آروما' : 'Niche'}
-            </span>
+            {!simple && (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#bfa27a]/25 text-[#d4be9b] border border-[#bfa27a]/40 shadow-xs">
+                {isPersian ? 'هاتف آروما' : 'Niche'}
+              </span>
+            )}
           </div>
-          <span className={`${sizeClasses.sub} ${subColor} tracking-wider font-medium -mt-0.5 font-latin`}>
-            Luxury Perfumes & Cosmetics
-          </span>
+          {!simple && (
+            <span className={`${sizeClasses.sub} ${subColor} tracking-wider font-medium -mt-0.5 font-latin`}>
+              Luxury Perfumes & Cosmetics
+            </span>
+          )}
         </div>
       )}
     </Link>

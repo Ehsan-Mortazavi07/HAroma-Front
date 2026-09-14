@@ -30,12 +30,14 @@ export function LanguageSwitcher() {
       nativeName: 'فارسی (FA)',
       flag: '🇮🇷',
     },
+    /*
     {
       code: 'en',
       name: 'English',
       nativeName: 'English (EN)',
       flag: '🇬🇧',
     },
+    */
   ];
 
   const handleSelect = (code: LangMode) => {
