@@ -42,6 +42,7 @@ import { PATHS } from '@/common/constants/PATHS';
 import { ThemeToggle } from './ThemeToggle';
 import { BrandLogo } from './BrandLogo';
 import { VipBadge } from './VipBadge';
+import { SearchModal } from './SearchModal';
 import { formatToman, toPersianDigits, getLocalizedVariantTitle } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 
@@ -180,6 +181,7 @@ export function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const navbarRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -200,13 +202,17 @@ export function Navbar() {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        searchInputRef.current?.focus();
+        setIsMegaMenuOpen(false);
+        setIsProfileOpen(false);
+        if (isCartDrawerOpen) dispatch(toggleCartDrawer(false));
+        setIsSearchModalOpen((prev) => !prev);
       }
       if (e.key === 'Escape') {
         setIsMegaMenuOpen(false);
         setIsProfileOpen(false);
+        setIsSearchModalOpen(false);
         if (isCartDrawerOpen) dispatch(toggleCartDrawer(false));
       }
     };
@@ -503,30 +509,29 @@ export function Navbar() {
               </div>
             </div>
 
-            {/* Search Bar */}
+            {/* Search Trigger Button (Opens Valira-style Search Palette) */}
             <div className="hidden md:flex items-center h-10 shrink-0">
-              <form onSubmit={handleSearchSubmit} className="relative">
-                <Input
-                  ref={searchInputRef}
-                  type="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="جست‌وجوی محصول یا برند..."
-                  radius="full"
-                  size="sm"
-                  variant="flat"
-                  startContent={<Search className="w-4 h-4 text-[#a69c8e] shrink-0 pointer-events-none" />}
-                  classNames={{
-                    base: 'w-48 lg:w-60 xl:w-72',
-                    mainWrapper: 'h-10',
-                    inputWrapper:
-                      'bg-[#242c24]/90 border border-[#3e4c3e] hover:border-[#bfa27a]/60 data-[focus=true]:border-[#bfa27a] data-[focus=true]:bg-[#242c24] h-10 px-3.5 transition-all shadow-inner rounded-full',
-                    input:
-                      '!border-none !outline-none !shadow-none !ring-0 !bg-transparent text-xs font-medium text-[#f7f4ee] placeholder:text-[#a69c8e] placeholder:font-normal focus:!outline-none focus:!ring-0 focus:!border-none [appearance:none] [-webkit-appearance:none] pr-1',
-                    innerWrapper: '!bg-transparent',
-                  }}
-                />
-              </form>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMegaMenuOpen(false);
+                  setIsProfileOpen(false);
+                  if (isCartDrawerOpen) dispatch(toggleCartDrawer(false));
+                  setIsSearchModalOpen(true);
+                }}
+                className="w-48 lg:w-60 xl:w-72 h-10 px-3.5 rounded-full bg-[#242c24]/90 border border-[#3e4c3e] hover:border-[#bfa27a]/60 flex items-center justify-between text-[#a69c8e] hover:text-[#f7f4ee] transition-all shadow-inner group cursor-pointer"
+                aria-label="جست‌وجوی محصول یا برند"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Search className="w-4 h-4 text-[#a69c8e] group-hover:text-[#bfa27a] shrink-0 transition-colors" />
+                  <span className="text-xs font-normal text-[#a69c8e] truncate select-none">
+                    جست‌وجوی محصول یا برند...
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono text-[#73695c] border border-[#3e4c3e] group-hover:border-[#bfa27a]/40 group-hover:text-[#bfa27a] rounded px-1.5 py-0.5 select-none hidden lg:inline-block transition-colors">
+                  ⌘K
+                </span>
+              </button>
             </div>
 
           </NavbarContent>
@@ -543,25 +548,22 @@ export function Navbar() {
               exit="exit"
               className="absolute top-full left-0 right-0 mt-3 sm:mt-4 w-full bg-[#1c231c]/95 dark:bg-[#151a15]/95 backdrop-blur-3xl border border-[#2e3a2e] rounded-[32px] p-5 sm:p-7 lg:p-8 shadow-2xl z-50 lg:max-h-[85vh] overflow-y-auto will-change-transform"
             >
-              <form onSubmit={handleSearchSubmit} className="relative block md:hidden mb-6">
-                <Input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="جست‌وجوی محصول..."
-                  radius="full"
-                  size="md"
-                  variant="flat"
-                  startContent={<Search className="w-4 h-4 text-[#a69c8e] shrink-0 pointer-events-none" />}
-                  classNames={{
-                    inputWrapper:
-                      'bg-[#242c24] border border-[#3e4c3e] hover:border-[#bfa27a]/50 data-[focus=true]:border-[#bfa27a] shadow-inner rounded-full',
-                    input:
-                      '!border-none !outline-none !shadow-none !ring-0 !bg-transparent text-sm font-medium text-[#f7f4ee] placeholder:text-[#a69c8e] focus:!outline-none focus:!ring-0 focus:!border-none [appearance:none] [-webkit-appearance:none]',
-                    innerWrapper: '!bg-transparent',
-                  }}
-                />
-              </form>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMegaMenuOpen(false);
+                  setIsSearchModalOpen(true);
+                }}
+                className="w-full h-12 px-4 rounded-full bg-[#242c24] border border-[#3e4c3e] hover:border-[#bfa27a]/60 flex items-center justify-between text-[#a69c8e] transition-colors md:hidden mb-6 cursor-pointer shadow-inner"
+              >
+                <div className="flex items-center gap-3">
+                  <Search className="w-4 h-4 text-[#a69c8e]" />
+                  <span className="text-xs text-[#a69c8e]">جست‌وجوی محصول یا برند...</span>
+                </div>
+                <span className="text-[10px] font-mono text-[#73695c] border border-[#3e4c3e] rounded px-1.5 py-0.5">
+                  جست‌وجو
+                </span>
+              </button>
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#2e3a2e] gap-4">
                 <div className="flex items-center gap-3">
@@ -993,6 +995,12 @@ export function Navbar() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* 3. Valira-Style Command Palette Search Modal */}
+        <SearchModal
+          isOpen={isSearchModalOpen}
+          onClose={() => setIsSearchModalOpen(false)}
+        />
 
       </div>
     </header>
