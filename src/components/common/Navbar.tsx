@@ -281,11 +281,11 @@ export function Navbar() {
           classNames={{
             base: 'bg-transparent p-0 overflow-visible',
             wrapper:
-              'h-16 sm:h-[68px] px-3 sm:px-4 rounded-[32px] bg-[#1c231c]/90 dark:bg-[#181f18]/90 backdrop-blur-xl border border-[#2e3a2e] shadow-2xl flex items-center justify-between select-none max-w-full gap-2 sm:gap-4',
+              'h-16 sm:h-[68px] px-2.5 sm:px-4 rounded-[32px] bg-[#1c231c]/90 dark:bg-[#181f18]/90 backdrop-blur-xl border border-[#2e3a2e] shadow-2xl flex items-center justify-between select-none max-w-full gap-1.5 sm:gap-4',
           }}
         >
           {/* Right Section: Hamburger, Logo (emblem + store name), Nav Links */}
-          <NavbarContent justify="start" className="gap-2 sm:gap-3 shrink-0">
+          <NavbarContent justify="start" className="gap-1.5 sm:gap-3 shrink-0">
             {/* Hamburger Toggle (opens Categories Mega Menu) */}
             <NavbarItem>
               <Button
@@ -322,13 +322,13 @@ export function Navbar() {
               </Button>
             </NavbarItem>
 
-            {/* Brand Logo (simple: emblem + store name only) */}
+            {/* Brand Logo (simple: emblem + store name in cursive font, shown on both mobile and desktop) */}
             <NavbarBrand className="shrink-0 grow-0">
               <BrandLogo
                 size="md"
                 variant="dark"
                 simple={true}
-                hideTextOnMobile={true}
+                hideTextOnMobile={false}
                 className="flex"
               />
             </NavbarBrand>
@@ -359,10 +359,10 @@ export function Navbar() {
           </NavbarContent>
 
           {/* Left Section: 3 Strictly Level Icons + Search Bar */}
-          <NavbarContent justify="end" className="gap-2 sm:gap-3 shrink-0 flex items-center">
+          <NavbarContent justify="end" className="gap-1.5 sm:gap-3 shrink-0 flex items-center">
             
             {/* The 3 Buttons Container - Strictly Level (هم‌سطح) */}
-            <div className="flex items-center gap-2 sm:gap-2.5 h-10 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 h-10 shrink-0">
               {/* 1. Theme Toggle (Visible on mobile and desktop) */}
               <div className="flex items-center justify-center w-10 h-10 shrink-0">
                 <ThemeToggle className="w-10 h-10 min-w-10 max-w-10 h-10 min-h-10 max-h-10 rounded-full bg-[#242c24] hover:bg-[#2e3a2e] border border-[#3e4c3e] hover:border-[#bfa27a]/60 text-[#f7f4ee] transition-colors shadow-sm flex items-center justify-center p-0" />

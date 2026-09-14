@@ -29,31 +29,31 @@ export function BrandLogo({
 
   const sizeClasses = {
     sm: {
-      icon: 'w-16 h-10 sm:w-20 sm:h-11',
-      imgWidth: 80,
-      imgHeight: 46,
-      title: 'font-script text-xl sm:text-2xl font-normal',
+      icon: 'w-12 h-8 sm:w-16 sm:h-10',
+      imgWidth: 70,
+      imgHeight: 42,
+      title: 'font-script text-base sm:text-xl font-normal',
       sub: 'text-[9.5px]',
     },
     md: {
-      icon: 'w-20 h-12 sm:w-28 sm:h-14',
+      icon: 'w-14 h-9 sm:w-24 sm:h-13 md:w-28 md:h-14',
       imgWidth: 112,
       imgHeight: 56,
-      title: 'font-script text-2xl sm:text-3xl font-normal',
+      title: 'font-script text-lg sm:text-2xl md:text-3xl font-normal',
       sub: 'text-[10.5px]',
     },
     lg: {
-      icon: 'w-28 h-15 sm:w-36 sm:h-18',
+      icon: 'w-22 h-12 sm:w-32 sm:h-16 md:w-36 md:h-18',
       imgWidth: 144,
       imgHeight: 72,
-      title: 'font-script text-3xl sm:text-4xl font-normal',
+      title: 'font-script text-2xl sm:text-3xl md:text-4xl font-normal',
       sub: 'text-xs',
     },
     xl: {
-      icon: 'w-36 h-20 sm:w-48 sm:h-24',
+      icon: 'w-28 h-15 sm:w-40 sm:h-20 md:w-48 md:h-24',
       imgWidth: 192,
       imgHeight: 96,
-      title: 'font-script text-4xl sm:text-5xl font-normal',
+      title: 'font-script text-3xl sm:text-4xl md:text-5xl font-normal',
       sub: 'text-sm',
     },
   }[size];
@@ -73,7 +73,7 @@ export function BrandLogo({
         : 'text-[#73695c] dark:text-[#a69c8e]';
 
   return (
-    <Link href={PATHS.HOME} className={`flex items-center gap-2 sm:gap-3 group ${className}`}>
+    <Link href={PATHS.HOME} className={`flex items-center gap-1.5 sm:gap-2.5 group ${className}`}>
       {/* Official Brand Monogram Emblem (Frameless, Enlarged & Stretched) */}
       <div
         className={`${sizeClasses.icon} relative flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105`}
