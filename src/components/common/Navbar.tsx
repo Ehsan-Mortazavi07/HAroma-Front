@@ -208,8 +208,10 @@ export function Navbar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isCartDrawerOpen, dispatch]);
 
-  // Click Outside
+  // Click Outside (only active when a menu is actually open)
   useEffect(() => {
+    if (!isMegaMenuOpen && !isProfileOpen && !isCartDrawerOpen) return;
+
     const handleClickOutside = (e: MouseEvent) => {
       if (navbarRef.current && !navbarRef.current.contains(e.target as Node)) {
         setIsMegaMenuOpen(false);
@@ -219,19 +221,19 @@ export function Navbar() {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isCartDrawerOpen, dispatch]);
+  }, [isMegaMenuOpen, isProfileOpen, isCartDrawerOpen, dispatch]);
 
-  // Lock body scroll on small screens
+  // Lock body scroll on small screens only when open
   useEffect(() => {
     const isAnyOpen = isMegaMenuOpen || isCartDrawerOpen;
-    if (isAnyOpen && window.innerWidth < 1024) {
+    if (!isAnyOpen) return;
+
+    if (window.innerWidth < 1024) {
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+      return () => {
+        document.body.style.overflow = '';
+      };
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
   }, [isMegaMenuOpen, isCartDrawerOpen]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {

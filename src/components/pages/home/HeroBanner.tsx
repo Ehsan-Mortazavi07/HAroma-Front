@@ -12,16 +12,15 @@ import { useTranslation } from '@/common/i18n';
 export function HeroBanner() {
   const { t, isPersian, isRTL } = useTranslation();
   const sectionRef = React.useRef<HTMLElement>(null);
-  const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
+  const spotlightRef = React.useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = React.useState(false);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    if (!sectionRef.current) return;
+    if (!sectionRef.current || !spotlightRef.current) return;
     const rect = sectionRef.current.getBoundingClientRect();
-    setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    spotlightRef.current.style.background = `radial-gradient(650px circle at ${x}px ${y}px, rgba(212, 190, 155, 0.22), rgba(159, 129, 91, 0.08) 40%, transparent 75%)`;
   };
 
   return (
@@ -29,17 +28,21 @@ export function HeroBanner() {
       ref={sectionRef}
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        if (spotlightRef.current) {
+          spotlightRef.current.style.background = `radial-gradient(600px circle at 70% 35%, rgba(212, 190, 155, 0.14), transparent 70%)`;
+        }
+      }}
       className="relative overflow-hidden rounded-3xl bg-[#181f18] text-[#f7f4ee] p-6 sm:p-10 lg:p-14 mb-10 shadow-2xl border border-brand-gold/30 group"
     >
-      {/* Interactive Cursor-Tracking Golden Spotlight */}
+      {/* Interactive Cursor-Tracking Golden Spotlight - Hardware Accelerated without React Re-renders */}
       <div
-        className="pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out"
+        ref={spotlightRef}
+        className="pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out will-change-transform"
         style={{
           opacity: isHovered ? 1 : 0.45,
-          background: isHovered
-            ? `radial-gradient(650px circle at ${mousePos.x}px ${mousePos.y}px, rgba(212, 190, 155, 0.22), rgba(159, 129, 91, 0.08) 40%, transparent 75%)`
-            : `radial-gradient(600px circle at 70% 35%, rgba(212, 190, 155, 0.14), transparent 70%)`,
+          background: `radial-gradient(600px circle at 70% 35%, rgba(212, 190, 155, 0.14), transparent 70%)`,
         }}
       />
 

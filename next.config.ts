@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: false, // Prevents duplicate double-render in dev
+  experimental: {
+    optimizePackageImports: [
+      '@heroui/react',
+      'lucide-react',
+      'framer-motion',
+    ],
+  },
   images: {
     unoptimized: true, // Loads images instantly without waiting for server-side optimization
     remotePatterns: [
