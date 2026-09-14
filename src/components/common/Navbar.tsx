@@ -324,7 +324,7 @@ export function Navbar() {
 
             {/* Brand Logo (simple: emblem + store name only) */}
             <NavbarBrand className="shrink-0 grow-0">
-              <BrandLogo size="sm" variant="dark" simple={true} className="flex" />
+              <BrandLogo size="md" variant="dark" simple={true} className="flex" />
             </NavbarBrand>
 
             {/* Nav Links (single line, no wrapping) */}
@@ -379,17 +379,28 @@ export function Navbar() {
                   <User className={`w-4 h-4 ${isProfileOpen ? 'text-[#141914]' : 'text-[#d4be9b]'}`} />
                 </Button>
 
-                {/* Profile Dropdown rendered directly underneath the Profile Button */}
+                {/* Profile Dropdown */}
                 <AnimatePresence>
                   {isProfileOpen && (
-                    <motion.div
-                      key="profile-dropdown-card"
-                      variants={floatingPanelVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit="exit"
-                      className="absolute top-full left-1/2 -translate-x-1/2 mt-3.5 w-72 bg-[#1c231c]/95 dark:bg-[#151a15]/95 backdrop-blur-3xl border border-[#2e3a2e] rounded-3xl p-4 shadow-2xl z-50 overflow-hidden text-right"
-                    >
+                    <>
+                      {/* Mobile Backdrop to prevent page distortion and allow easy tap-away */}
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        onClick={() => setIsProfileOpen(false)}
+                        className="fixed inset-0 bg-black/60 backdrop-blur-xs sm:hidden z-40"
+                      />
+
+                      <motion.div
+                        key="profile-dropdown-card"
+                        variants={floatingPanelVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        className="fixed sm:absolute inset-x-3 sm:inset-auto top-[76px] sm:top-full left-0 sm:left-1/2 sm:-translate-x-1/2 mt-0 sm:mt-3.5 w-auto sm:w-72 max-w-[calc(100vw-24px)] sm:max-w-none mx-auto sm:mx-0 bg-[#1c231c]/95 dark:bg-[#151a15]/95 backdrop-blur-3xl border border-[#2e3a2e] rounded-3xl p-4 shadow-2xl z-50 overflow-hidden text-right"
+                      >
                       {isAuthenticated && user ? (
                         <>
                           <div className="pb-3 border-b border-[#2e3a2e] mb-2">
@@ -473,8 +484,9 @@ export function Navbar() {
                         </div>
                       )}
                     </motion.div>
-                  )}
-                </AnimatePresence>
+                  </>
+                )}
+              </AnimatePresence>
               </div>
 
               {/* 3. Shopping Cart Button */}

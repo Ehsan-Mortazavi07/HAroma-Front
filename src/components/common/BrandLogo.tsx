@@ -24,8 +24,8 @@ export function BrandLogo({
   const { isPersian } = useTranslation();
 
   const sizeClasses = {
-    sm: { icon: 'w-10 h-10', img: 38, title: 'text-base font-black', sub: 'text-[9.5px]' },
-    md: { icon: 'w-13 h-13 sm:w-14 sm:h-14', img: 52, title: 'text-lg sm:text-xl font-black', sub: 'text-[10.5px]' },
+    sm: { icon: 'w-11 h-11 sm:w-12 sm:h-12', img: 44, title: 'text-base sm:text-lg font-black', sub: 'text-[9.5px]' },
+    md: { icon: 'w-12 h-12 sm:w-13 sm:h-13', img: 52, title: 'text-lg sm:text-xl font-black', sub: 'text-[10.5px]' },
     lg: { icon: 'w-16 h-16 sm:w-18 sm:h-18', img: 68, title: 'text-xl sm:text-2xl font-black', sub: 'text-xs' },
     xl: { icon: 'w-20 h-20 sm:w-24 sm:h-24', img: 90, title: 'text-2xl sm:text-3xl font-black', sub: 'text-sm' },
   }[size];
