@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingBag, Trash2, ArrowLeft, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
+import { Button, ButtonGroup, Card, CardBody, Divider } from '@heroui/react';
+import { ShoppingBag, Trash2, ArrowLeft, ArrowRight, ShieldCheck, Zap, Minus, Plus } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { updateQuantity, removeFromCart, clearCart } from '@/stores/cart/cartSlice';
 import { PATHS } from '@/common/constants/PATHS';
@@ -109,11 +110,13 @@ export function CartPage() {
 
                   {/* Quantity & Actions */}
                   <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
-                    <div className="flex items-center gap-1 bg-brand-surface-elevated border border-brand-border rounded-2xl p-1">
-                      <button
-                        type="button"
-                        aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
-                        onClick={() =>
+                    <div className="inline-flex items-center bg-brand-surface-elevated border border-brand-border rounded-full p-1 h-9 shadow-xs transition-all">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        radius="full"
+                        variant="light"
+                        onPress={() =>
                           dispatch(
                             updateQuantity({
                               productId: product._id,
@@ -122,17 +125,20 @@ export function CartPage() {
                             }),
                           )
                         }
-                        className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-brand-surface text-brand-text text-sm font-black flex items-center justify-center shadow-xs hover:bg-brand-surface-elevated transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-brand-gold"
+                        className="w-7 h-7 min-w-7 max-w-7 min-h-7 max-h-7 rounded-full text-brand-text-muted hover:text-brand-text hover:bg-brand-surface transition-colors p-0"
+                        aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
                       >
-                        -
-                      </button>
-                      <span className="w-8 text-center text-xs font-extrabold text-brand-text font-mono" aria-live="polite">
+                        <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
+                      </Button>
+                      <span className="w-8 text-center text-xs font-bold text-brand-text flex items-center justify-center select-none" aria-live="polite">
                         {isPersian ? toPersianDigits(quantity) : quantity}
                       </span>
-                      <button
-                        type="button"
-                        aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
-                        onClick={() =>
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        radius="full"
+                        variant="light"
+                        onPress={() =>
                           dispatch(
                             updateQuantity({
                               productId: product._id,
@@ -141,15 +147,20 @@ export function CartPage() {
                             }),
                           )
                         }
-                        className="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-brand-gold hover:bg-brand-champagne text-brand-olive text-sm font-black flex items-center justify-center shadow-xs transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-brand-gold"
+                        className="w-7 h-7 min-w-7 max-w-7 min-h-7 max-h-7 rounded-full text-brand-text-muted hover:text-brand-gold hover:bg-brand-gold/15 transition-colors p-0"
+                        aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
                       >
-                        +
-                      </button>
+                        <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                      </Button>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() =>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      color="danger"
+                      radius="full"
+                      onPress={() =>
                         dispatch(
                           removeFromCart({
                             productId: product._id,
@@ -157,12 +168,12 @@ export function CartPage() {
                           }),
                         )
                       }
-                      className="min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all active:scale-95 touch-manipulation focus-visible:ring-2 focus-visible:ring-rose-400"
+                      className="w-8 h-8 min-w-8 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-full"
                       aria-label={t.common.remove}
                       title={t.common.remove}
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               );

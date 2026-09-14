@@ -11,8 +11,12 @@ import {
   NavbarContent,
   NavbarItem,
   Button,
+  ButtonGroup,
   Input,
   Divider,
+  Card,
+  CardBody,
+  Chip,
 } from '@heroui/react';
 import {
   Search,
@@ -27,6 +31,8 @@ import {
   ShieldCheck,
   ArrowLeft,
   Trash2,
+  Minus,
+  Plus,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { toggleCartDrawer } from '@/stores/ui/uiSlice';
@@ -508,12 +514,16 @@ export function Navbar() {
                   placeholder="جست‌وجوی محصول یا برند..."
                   radius="full"
                   size="sm"
+                  variant="flat"
                   startContent={<Search className="w-4 h-4 text-[#a69c8e] shrink-0 pointer-events-none" />}
                   classNames={{
-                    base: 'w-44 lg:w-56 xl:w-64',
+                    base: 'w-48 lg:w-60 xl:w-72',
+                    mainWrapper: 'h-10',
                     inputWrapper:
-                      'bg-[#242c24]/80 border border-[#3e4c3e] hover:border-[#bfa27a]/50 data-[focus=true]:border-[#bfa27a] data-[focus=true]:bg-[#242c24] h-10 px-3 transition-colors shadow-inner',
-                    input: 'text-xs font-medium text-[#f7f4ee] placeholder:text-[#a69c8e] placeholder:font-normal pr-1',
+                      'bg-[#242c24]/90 border border-[#3e4c3e] hover:border-[#bfa27a]/60 data-[focus=true]:border-[#bfa27a] data-[focus=true]:bg-[#242c24] h-10 px-3.5 transition-all shadow-inner rounded-full',
+                    input:
+                      '!border-none !outline-none !shadow-none !ring-0 !bg-transparent text-xs font-medium text-[#f7f4ee] placeholder:text-[#a69c8e] placeholder:font-normal focus:!outline-none focus:!ring-0 focus:!border-none [appearance:none] [-webkit-appearance:none] pr-1',
+                    innerWrapper: '!bg-transparent',
                   }}
                 />
               </form>
@@ -541,11 +551,14 @@ export function Navbar() {
                   placeholder="جست‌وجوی محصول..."
                   radius="full"
                   size="md"
+                  variant="flat"
                   startContent={<Search className="w-4 h-4 text-[#a69c8e] shrink-0 pointer-events-none" />}
                   classNames={{
                     inputWrapper:
-                      'bg-[#242c24] border border-[#3e4c3e] hover:border-[#bfa27a]/50 data-[focus=true]:border-[#bfa27a] shadow-inner',
-                    input: 'text-sm font-medium text-[#f7f4ee] placeholder:text-[#a69c8e]',
+                      'bg-[#242c24] border border-[#3e4c3e] hover:border-[#bfa27a]/50 data-[focus=true]:border-[#bfa27a] shadow-inner rounded-full',
+                    input:
+                      '!border-none !outline-none !shadow-none !ring-0 !bg-transparent text-sm font-medium text-[#f7f4ee] placeholder:text-[#a69c8e] focus:!outline-none focus:!ring-0 focus:!border-none [appearance:none] [-webkit-appearance:none]',
+                    innerWrapper: '!bg-transparent',
                   }}
                 />
               </form>
@@ -637,7 +650,7 @@ export function Navbar() {
           )}
         </AnimatePresence>
 
-        {/* 2. Fluid Cart Panel (Exact same Category spring animation) */}
+        {/* 2. Fluid Cart Panel (Full-width container matching Category Mega Menu) */}
         <AnimatePresence>
           {isCartDrawerOpen && (
             <motion.div
@@ -646,203 +659,337 @@ export function Navbar() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="absolute top-full left-0 mt-3 sm:mt-4 w-full sm:w-[440px] max-w-[calc(100vw-2rem)] bg-[#1c231c]/95 dark:bg-[#151a15]/95 backdrop-blur-3xl border border-[#2e3a2e] rounded-[32px] p-5 sm:p-6 shadow-2xl z-50 max-h-[82vh] flex flex-col will-change-transform"
+              className="absolute top-full left-0 right-0 mt-3 sm:mt-4 w-full bg-[#1c231c]/95 dark:bg-[#151a15]/95 backdrop-blur-3xl border border-[#2e3a2e] rounded-[32px] p-5 sm:p-7 lg:p-8 shadow-2xl z-50 max-h-[85vh] overflow-y-auto will-change-transform"
             >
               {/* Cart Header */}
-              <div className="flex items-center justify-between pb-3.5 border-b border-[#2e3a2e]">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-[#242c24] flex items-center justify-center border border-[#3e4c3e]">
-                    <ShoppingBag className="w-4 h-4 text-[#bfa27a]" />
+              <div className="flex items-center justify-between pb-4 border-b border-[#2e3a2e]">
+                <div className="flex items-center gap-3">
+                  <span className="w-6 h-0.5 bg-[#bfa27a] rounded-full" />
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag className="w-5 h-5 text-[#bfa27a]" />
+                    <span className="text-sm sm:text-base font-black text-[#f7f4ee]">
+                      سبد خرید شما
+                    </span>
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      className="bg-[#bfa27a]/20 text-[#bfa27a] border border-[#bfa27a]/30 font-black text-xs h-6 px-1.5"
+                    >
+                      {isPersian ? `${toPersianDigits(totalCartCount)} کالا` : `${totalCartCount} items`}
+                    </Chip>
                   </div>
-                  <span className="font-black text-sm text-[#f7f4ee]">
-                    سبد خرید شما ({isPersian ? toPersianDigits(totalCartCount) : totalCartCount})
-                  </span>
                 </div>
 
-                <Button
-                  isIconOnly
-                  size="sm"
-                  radius="full"
-                  variant="light"
-                  onPress={() => dispatch(toggleCartDrawer(false))}
-                  className="w-8 h-8 min-w-8 text-[#a69c8e] hover:text-[#f7f4ee] hover:bg-[#242c24]"
-                  aria-label="بستن سبد"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    as={Link}
+                    href={PATHS.CART}
+                    onPress={() => dispatch(toggleCartDrawer(false))}
+                    size="sm"
+                    variant="light"
+                    className="text-xs font-bold text-[#e6dcce] hover:text-[#bfa27a] hidden sm:flex items-center gap-1.5 px-2.5 transition-colors"
+                  >
+                    <span>{t.cart.viewCart}</span>
+                  </Button>
+
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    radius="full"
+                    variant="light"
+                    onPress={() => dispatch(toggleCartDrawer(false))}
+                    className="w-8 h-8 min-w-8 text-[#a69c8e] hover:text-[#f7f4ee] hover:bg-[#242c24]"
+                    aria-label="بستن سبد"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
 
-              {/* Cart Items List */}
-              <div className="flex-1 overflow-y-auto py-3 divide-y divide-[#2e3a2e] max-h-[46vh]">
-                {cartItems.length === 0 ? (
-                  <div className="py-10 flex flex-col items-center justify-center text-center text-[#a69c8e]">
-                    <div className="w-14 h-14 rounded-full bg-[#242c24] flex items-center justify-center mb-3 border border-[#3e4c3e]">
-                      <ShoppingBag className="w-7 h-7 text-[#bfa27a] opacity-50" />
-                    </div>
-                    <h4 className="font-black text-sm text-[#f7f4ee] mb-1">
-                      {t.cart.emptyTitle}
-                    </h4>
-                    <p className="text-xs mb-5 max-w-xs text-[#a69c8e]">
-                      {t.cart.emptySub}
-                    </p>
+              {cartItems.length === 0 ? (
+                /* Empty Cart State */
+                <div className="py-14 sm:py-20 flex flex-col items-center justify-center text-center">
+                  <div className="w-20 h-20 rounded-full bg-[#242c24] flex items-center justify-center mb-4 border border-[#3e4c3e] shadow-inner">
+                    <ShoppingBag className="w-10 h-10 text-[#bfa27a]/70" />
+                  </div>
+                  <h4 className="font-black text-base sm:text-lg text-[#f7f4ee] mb-2">
+                    {t.cart.emptyTitle}
+                  </h4>
+                  <p className="text-xs sm:text-sm text-[#a69c8e] max-w-md mb-8 leading-relaxed">
+                    {t.cart.emptySub || 'هنوز کالایی به سبد خرید خود اضافه نکرده‌اید. با گشت و گذار در میان محصولات، رایحه مورد علاقه خود را انتخاب کنید.'}
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
                     <Button
                       as={Link}
                       href={PATHS.PRODUCTS}
                       onPress={() => dispatch(toggleCartDrawer(false))}
                       radius="full"
-                      className="bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] font-black text-xs px-6 h-9 shadow-sm"
+                      className="bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] font-black text-xs sm:text-sm px-7 h-11 shadow-lg shadow-[#bfa27a]/15 transition-all"
                     >
                       {t.cart.browseProducts}
                     </Button>
-                  </div>
-                ) : (
-                  cartItems.map(({ product, quantity, selectedVariant, selectedAttributes }) => {
-                    const itemPrice = selectedVariant
-                      ? selectedVariant.discountPrice && selectedVariant.discountPrice > 0
-                        ? selectedVariant.discountPrice
-                        : selectedVariant.price
-                      : product.discountPrice && product.discountPrice > 0
-                      ? product.discountPrice
-                      : product.price;
-
-                    const itemImage =
-                      product.images && product.images.length > 0
-                        ? product.images[0].startsWith('http')
-                          ? product.images[0]
-                          : `http://127.0.0.1:7731${product.images[0]}`
-                        : 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop';
-
-                    const itemKey = `${product._id}-${selectedVariant?.id || 'base'}`;
-
-                    return (
-                      <div key={itemKey} className="py-3.5 first:pt-1 last:pb-1 flex gap-3">
-                        <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-[#242c24] border border-[#3e4c3e] shrink-0">
-                          <Image src={itemImage} alt={product.title} fill className="object-cover" />
-                        </div>
-
-                        <div className="flex-1 flex flex-col justify-between">
-                          <div>
-                            <h4 className="font-bold text-xs text-[#f7f4ee] line-clamp-1">
-                              {isPersian ? product.title : product.titleEn || product.title}
-                            </h4>
-                            {(selectedVariant || selectedAttributes) && (
-                              <span className="text-[11px] font-bold text-[#bfa27a] block mt-0.5">
-                                {selectedVariant
-                                  ? getLocalizedVariantTitle(selectedVariant.title, isPersian)
-                                  : selectedAttributes}
-                              </span>
-                            )}
-                            <div className="text-xs font-black text-[#e6dcce] mt-1">
-                              {formatToman(itemPrice, isPersian)}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between mt-2">
-                            <div className="flex items-center gap-1 bg-[#242c24] border border-[#3e4c3e] rounded-xl p-0.5">
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                variant="flat"
-                                radius="md"
-                                onPress={() =>
-                                  dispatch(
-                                    updateQuantity({
-                                      productId: product._id,
-                                      variantId: selectedVariant?.id,
-                                      quantity: quantity - 1,
-                                    }),
-                                  )
-                                }
-                                className="w-7 h-7 min-w-7 bg-[#181f18] text-[#f7f4ee] text-xs font-black"
-                                aria-label="کاهش تعداد"
-                              >
-                                -
-                              </Button>
-                              <span className="w-6 text-center text-xs font-bold text-[#f7f4ee]">
-                                {isPersian ? toPersianDigits(quantity) : quantity}
-                              </span>
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                variant="solid"
-                                radius="md"
-                                onPress={() =>
-                                  dispatch(
-                                    updateQuantity({
-                                      productId: product._id,
-                                      variantId: selectedVariant?.id,
-                                      quantity: quantity + 1,
-                                    }),
-                                  )
-                                }
-                                className="w-7 h-7 min-w-7 bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] text-xs font-black"
-                                aria-label="افزایش تعداد"
-                              >
-                                +
-                              </Button>
-                            </div>
-
-                            <Button
-                              isIconOnly
-                              size="sm"
-                              variant="light"
-                              color="danger"
-                              onPress={() =>
-                                dispatch(
-                                  removeFromCart({
-                                    productId: product._id,
-                                    variantId: selectedVariant?.id,
-                                  }),
-                                )
-                              }
-                              className="w-7 h-7 min-w-7 text-danger hover:bg-danger-50/10 rounded-xl"
-                              aria-label={t.common.remove}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              {/* Cart Footer */}
-              {cartItems.length > 0 && (
-                <div className="pt-3 border-t border-[#2e3a2e] mt-auto">
-                  <div className="flex items-center justify-between text-xs font-bold text-[#a69c8e] mb-3">
-                    <span>{t.cart.subtotal}</span>
-                    <span className="text-sm font-black text-[#f7f4ee]">
-                      {formatToman(subtotal, isPersian)}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
                     <Button
                       as={Link}
-                      href={PATHS.CART}
+                      href={PATHS.VIP}
                       onPress={() => dispatch(toggleCartDrawer(false))}
+                      radius="full"
                       variant="bordered"
-                      radius="full"
-                      className="border-[#3e4c3e] text-[#f7f4ee] font-bold text-xs h-10 hover:bg-[#242c24] transition-colors"
+                      className="border-[#3e4c3e] text-[#f7f4ee] hover:border-[#bfa27a] font-bold text-xs sm:text-sm px-6 h-11 transition-all"
                     >
-                      <span>{t.cart.viewCart}</span>
-                    </Button>
-
-                    <Button
-                      as={Link}
-                      href={PATHS.CHECKOUT}
-                      onPress={() => dispatch(toggleCartDrawer(false))}
-                      radius="full"
-                      className="bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] font-black text-xs h-10 shadow-md flex items-center justify-center gap-1.5 transition-colors"
-                    >
-                      <span>{t.cart.proceedToCheckout}</span>
-                      <ArrowLeft className="w-3.5 h-3.5" />
+                      مشاهده کلکسیون VIP
                     </Button>
                   </div>
                 </div>
+              ) : (
+                /* Rich 2-Column Layout */
+                <div className="pt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+                  {/* Left Column (Items List) */}
+                  <div className="lg:col-span-7 xl:col-span-8 space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+                    {cartItems.map(({ product, quantity, selectedVariant, selectedAttributes }) => {
+                      const itemPrice = selectedVariant
+                        ? selectedVariant.discountPrice && selectedVariant.discountPrice > 0
+                          ? selectedVariant.discountPrice
+                          : selectedVariant.price
+                        : product.discountPrice && product.discountPrice > 0
+                        ? product.discountPrice
+                        : product.price;
+
+                      const itemImage =
+                        product.images && product.images.length > 0
+                          ? product.images[0].startsWith('http')
+                            ? product.images[0]
+                            : `http://127.0.0.1:7731${product.images[0]}`
+                          : 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop';
+
+                      const itemKey = `${product._id}-${selectedVariant?.id || 'base'}`;
+                      const lineTotal = itemPrice * quantity;
+
+                      return (
+                        <Card
+                          key={itemKey}
+                          shadow="none"
+                          className="group relative bg-[#242c24]/60 hover:bg-[#242c24] border border-[#3e4c3e]/80 hover:border-[#bfa27a]/50 transition-all rounded-2xl"
+                        >
+                          <CardBody className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 overflow-visible">
+                            <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-[#181f18] border border-[#3e4c3e] shrink-0">
+                                <Image
+                                  src={itemImage}
+                                  alt={product.title}
+                                  fill
+                                  sizes="80px"
+                                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <Link
+                                  href={`${PATHS.PRODUCTS}/${product.slug || product._id}`}
+                                  onClick={() => dispatch(toggleCartDrawer(false))}
+                                  className="font-bold text-xs sm:text-sm text-[#f7f4ee] hover:text-[#bfa27a] transition-colors line-clamp-1 block"
+                                >
+                                  {isPersian ? product.title : product.titleEn || product.title}
+                                </Link>
+
+                                {(selectedVariant || selectedAttributes) && (
+                                  <span className="inline-flex items-center text-[11px] font-medium text-[#bfa27a] bg-[#bfa27a]/10 px-2 py-0.5 rounded-md mt-1">
+                                    {selectedVariant
+                                      ? getLocalizedVariantTitle(selectedVariant.title, isPersian)
+                                      : selectedAttributes}
+                                  </span>
+                                )}
+
+                                <div className="text-xs font-medium text-[#a69c8e] mt-1.5 flex items-center gap-2">
+                                  <span>قیمت واحد:</span>
+                                  <span className="text-[#e6dcce] font-bold">
+                                    {formatToman(itemPrice, isPersian)}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Controls & Line Total */}
+                            <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#2e3a2e]/80">
+                              {/* Minimal Curved HeroUI Quantity Stepper */}
+                              <div className="inline-flex items-center bg-[#151c15]/90 hover:bg-[#1a231a] border border-[#3e4c3e] rounded-full p-1 h-8 shadow-xs transition-all">
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  radius="full"
+                                  variant="light"
+                                  onPress={() =>
+                                    dispatch(
+                                      updateQuantity({
+                                        productId: product._id,
+                                        variantId: selectedVariant?.id,
+                                        quantity: quantity - 1,
+                                      }),
+                                    )
+                                  }
+                                  className="w-6 h-6 min-w-6 max-w-6 min-h-6 max-h-6 rounded-full text-[#a69c8e] hover:text-[#f7f4ee] hover:bg-[#2e3a2e] transition-colors p-0"
+                                  aria-label="کاهش تعداد"
+                                >
+                                  <Minus className="w-3 h-3 stroke-[2.5]" />
+                                </Button>
+                                <span className="w-7 text-center text-xs font-bold text-[#f7f4ee] select-none">
+                                  {isPersian ? toPersianDigits(quantity) : quantity}
+                                </span>
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  radius="full"
+                                  variant="light"
+                                  onPress={() =>
+                                    dispatch(
+                                      updateQuantity({
+                                        productId: product._id,
+                                        variantId: selectedVariant?.id,
+                                        quantity: quantity + 1,
+                                      }),
+                                    )
+                                  }
+                                  className="w-6 h-6 min-w-6 max-w-6 min-h-6 max-h-6 rounded-full text-[#a69c8e] hover:text-[#bfa27a] hover:bg-[#bfa27a]/15 transition-colors p-0"
+                                  aria-label="افزایش تعداد"
+                                >
+                                  <Plus className="w-3 h-3 stroke-[2.5]" />
+                                </Button>
+                              </div>
+
+                              {/* Line Total */}
+                              <div className="text-left sm:text-right min-w-[90px]">
+                                <div className="text-[10px] text-[#a69c8e]">مجموع</div>
+                                <div className="text-xs sm:text-sm font-black text-[#f7f4ee]">
+                                  {formatToman(lineTotal, isPersian)}
+                                </div>
+                              </div>
+
+                              {/* Remove button */}
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                variant="light"
+                                color="danger"
+                                radius="full"
+                                onPress={() =>
+                                  dispatch(
+                                    removeFromCart({
+                                      productId: product._id,
+                                      variantId: selectedVariant?.id,
+                                    }),
+                                  )
+                                }
+                                className="w-8 h-8 min-w-8 text-[#a69c8e] hover:text-danger hover:bg-danger-50/10 rounded-xl transition-colors"
+                                aria-label={t.common.remove}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </CardBody>
+                        </Card>
+                      );
+                    })}
+                  </div>
+
+                  {/* Right Column (Summary & Checkout Card) */}
+                  <div className="lg:col-span-5 xl:col-span-4 flex flex-col gap-4">
+                    <Card shadow="none" className="bg-[#242c24] border border-[#3e4c3e] rounded-3xl p-0 shadow-xl overflow-hidden">
+                      <CardBody className="p-5 sm:p-6 flex flex-col gap-4">
+                        <div className="flex items-center justify-between pb-3.5 border-b border-[#3e4c3e]/80">
+                          <span className="font-black text-sm text-[#f7f4ee]">
+                            خلاصه پیش‌فاکتور
+                          </span>
+                          <span className="text-xs text-[#a69c8e]">
+                            {isPersian ? `${toPersianDigits(totalCartCount)} قلم` : `${totalCartCount} items`}
+                          </span>
+                        </div>
+
+                        <div className="space-y-3 text-xs">
+                          <div className="flex items-center justify-between text-[#a69c8e]">
+                            <span>جمع کل اقلام:</span>
+                            <span className="font-bold text-[#e6dcce]">
+                              {formatToman(subtotal, isPersian)}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-[#a69c8e]">
+                            <span>هزینه بسته‌بندی و ارسال:</span>
+                            <span className="font-medium text-[#bfa27a]">
+                              ارسال اختصاصی و بیمه رایگان
+                            </span>
+                          </div>
+                        </div>
+
+                        <Divider className="bg-[#3e4c3e]/80 my-1" />
+
+                        <div className="flex items-center justify-between">
+                          <span className="font-black text-sm text-[#f7f4ee]">مبلغ نهایی:</span>
+                          <span className="text-base sm:text-lg font-black text-[#bfa27a]">
+                            {formatToman(subtotal, isPersian)}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col gap-2.5 pt-2">
+                          <Button
+                            as={Link}
+                            href={PATHS.CHECKOUT}
+                            onPress={() => dispatch(toggleCartDrawer(false))}
+                            radius="full"
+                            className="w-full bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] font-black text-xs sm:text-sm h-12 shadow-lg shadow-[#bfa27a]/20 flex items-center justify-center gap-2 transition-all"
+                          >
+                            <span>{t.cart.proceedToCheckout}</span>
+                            <ArrowLeft className="w-4 h-4" />
+                          </Button>
+
+                          <Button
+                            as={Link}
+                            href={PATHS.CART}
+                            onPress={() => dispatch(toggleCartDrawer(false))}
+                            variant="bordered"
+                            radius="full"
+                            className="w-full border-[#3e4c3e] hover:border-[#bfa27a]/60 text-[#f7f4ee] font-bold text-xs h-11 hover:bg-[#2e3a2e] transition-colors"
+                          >
+                            <span>{t.cart.viewCart}</span>
+                          </Button>
+                        </div>
+
+                        <div className="pt-3 border-t border-[#3e4c3e]/80 space-y-2 text-[11px] text-[#a69c8e]">
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck className="w-3.5 h-3.5 text-[#bfa27a] shrink-0" />
+                            <span>ضمانت اصالت ۱۰۰٪ فیزیکی عطرها</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="w-3.5 h-3.5 text-[#bfa27a] shrink-0" />
+                            <span>پکیجینگ سلطنتی و هدیه اختصاصی</span>
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  </div>
+                </div>
               )}
+
+              {/* Cart Footer Bar */}
+              <div className="mt-8 pt-5 border-t border-[#2e3a2e] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-[#a69c8e]">
+                <div className="flex items-center gap-4 sm:gap-6">
+                  <span className="flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-[#bfa27a]" />
+                    <span>ضمانت بازگشت و تست اصالت</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-[#bfa27a]" />
+                    <span>ارسال ایمن در پکیج ضد ضربه</span>
+                  </span>
+                </div>
+
+                <Link
+                  href={PATHS.VIP}
+                  onClick={() => dispatch(toggleCartDrawer(false))}
+                  className="flex items-center gap-1.5 font-bold text-[#bfa27a] hover:text-[#d4be9b] transition-colors group"
+                >
+                  <Crown className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <span>تخفیف ویژه اعضای کلوب VIP</span>
+                  <ArrowLeft className="w-3.5 h-3.5 mr-1 group-hover:-translate-x-1 transition-transform" />
+                </Link>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
