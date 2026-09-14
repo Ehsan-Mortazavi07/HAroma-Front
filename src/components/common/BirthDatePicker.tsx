@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Calendar, RefreshCw, ChevronDown } from 'lucide-react';
+import { Calendar, RefreshCw, ChevronDown, Sparkles } from 'lucide-react';
+import { Select, SelectItem, Button, Chip } from '@heroui/react';
 import {
   gregorianToJalali,
   jalaliToGregorian,
@@ -143,133 +144,226 @@ export function BirthDatePicker({
   }, [value, calendarMode, isPersian]);
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`space-y-4 ${className}`}>
       {/* Label and Calendar Switch Button */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <label className="text-xs font-bold text-brand-text flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-brand-bronze shrink-0" />
-          <span>{label || (isPersian ? 'تاریخ تولد' : 'Date of Birth')}</span>
+        <div className="flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0" />
+          <span className="text-xs font-bold text-brand-text">
+            {label || (isPersian ? 'تاریخ تولد' : 'Date of Birth')}
+          </span>
           {required && <span className="text-rose-500 font-bold">*</span>}
-          <span className="text-[11px] font-semibold text-brand-text-muted">
-            ({calendarMode === 'jalali' ? (isPersian ? 'تقویم خورشیدی' : 'Solar Jalali') : (isPersian ? 'تقویم میلادی' : 'Gregorian')})
-          </span>
-        </label>
-
-        {/* Toggle Calendar Button */}
-        <button
-          type="button"
-          onClick={handleToggleMode}
-          disabled={disabled}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-surface-elevated hover:bg-brand-border/60 text-brand-bronze dark:text-brand-gold border border-brand-border text-[11px] font-bold transition-all active:scale-95 cursor-pointer disabled:opacity-50"
-        >
-          <RefreshCw className="w-3.5 h-3.5 text-brand-bronze shrink-0" />
-          <span>
+          <Chip
+            size="sm"
+            variant="flat"
+            classNames={{
+              base: "bg-brand-surface-elevated border border-brand-border h-6 px-2.5 text-[11px] font-bold text-brand-text-muted rounded-xl",
+              content: "px-0"
+            }}
+          >
             {calendarMode === 'jalali'
-              ? isPersian ? 'تغییر به میلادی' : 'Switch to Gregorian'
-              : isPersian ? 'تغییر به شمسی' : 'Switch to Solar (Jalali)'}
-          </span>
-        </button>
+              ? isPersian ? 'تقویم خورشیدی' : 'Solar Jalali'
+              : isPersian ? 'تقویم میلادی' : 'Gregorian'}
+          </Chip>
+        </div>
+
+        {/* HeroUI Toggle Calendar Button */}
+        <Button
+          type="button"
+          onPress={handleToggleMode}
+          isDisabled={disabled}
+          size="sm"
+          variant="flat"
+          radius="lg"
+          startContent={<RefreshCw className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />}
+          className="bg-brand-surface-elevated hover:bg-brand-border/60 text-brand-bronze dark:text-brand-gold border border-brand-border text-[11px] font-bold h-8.5 px-3.5 transition-all shadow-xs rounded-xl cursor-pointer"
+        >
+          {calendarMode === 'jalali'
+            ? isPersian ? 'تغییر به تقویم میلادی' : 'Switch to Gregorian'
+            : isPersian ? 'تغییر به تقویم شمسی' : 'Switch to Solar (Jalali)'}
+        </Button>
       </div>
 
-      {/* 3 Balanced, Elegant Inputs: Day, Month, Year */}
-      <div className="grid grid-cols-3 gap-3">
-        {/* Day Select */}
-        <div>
-          <label className="block text-[11px] font-bold mb-1 text-brand-text-muted">
+      {/* 3 Balanced Selects with Golden Ratio (3 cols Day, 5 cols Month, 4 cols Year) */}
+      <div className="grid grid-cols-12 gap-3">
+        {/* Day Select (3 cols) */}
+        <div className="col-span-12 sm:col-span-3 space-y-1.5">
+          <label className="block text-xs font-bold text-brand-text-muted px-1">
             {isPersian ? 'روز' : 'Day'}
           </label>
-          <div className="relative">
-            <select
-              disabled={disabled}
-              value={currentParts.day ? String(currentParts.day) : ''}
-              onChange={(e) => {
-                if (e.target.value) handlePartChange('day', Number(e.target.value));
-              }}
-              className="w-full h-11 px-3.5 pr-8 rtl:pr-3.5 rtl:pl-8 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text appearance-none cursor-pointer focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all disabled:opacity-50"
-            >
-              <option value="" disabled>
-                {isPersian ? 'انتخاب روز' : 'Day'}
-              </option>
-              {days.map((d) => (
-                <option key={`day-${d}`} value={String(d)} className="bg-brand-surface text-brand-text">
-                  {isPersian ? toPersianDigits(d) : String(d)}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-4 h-4 text-brand-bronze pointer-events-none absolute top-1/2 -translate-y-1/2 right-3 rtl:right-auto rtl:left-3 shrink-0" />
-          </div>
+          <Select
+            aria-label={isPersian ? 'روز تولد' : 'Birth Day'}
+            placeholder={isPersian ? 'روز' : 'Day'}
+            isDisabled={disabled}
+            selectedKeys={currentParts.day ? [String(currentParts.day)] : []}
+            onSelectionChange={(keys) => {
+              const selected = Array.from(keys)[0];
+              if (selected) handlePartChange('day', Number(selected));
+            }}
+            variant="bordered"
+            radius="lg"
+            size="md"
+            selectorIcon={<ChevronDown className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0 opacity-70" />}
+            classNames={{
+              base: "w-full",
+              trigger: "h-12 px-3.5 bg-brand-surface border border-brand-border hover:border-brand-gold/80 data-[focus=true]:border-brand-gold rounded-2xl shadow-xs transition-colors",
+              value: "text-xs font-bold text-brand-text text-start",
+              popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl p-1.5 max-h-56 overflow-y-auto",
+            }}
+            listboxProps={{
+              itemClasses: {
+                base: [
+                  "rounded-xl",
+                  "text-xs font-medium text-brand-text text-start",
+                  "py-2 px-3",
+                  "transition-colors",
+                  "data-[hover=true]:bg-brand-gold/15",
+                  "data-[hover=true]:text-brand-gold",
+                  "data-[selected=true]:bg-brand-gold/20",
+                  "data-[selected=true]:text-brand-gold",
+                  "data-[selected=true]:font-bold",
+                ],
+              },
+            }}
+          >
+            {days.map((d) => (
+              <SelectItem
+                key={String(d)}
+                textValue={isPersian ? toPersianDigits(d) : String(d)}
+              >
+                {isPersian ? toPersianDigits(d) : String(d)}
+              </SelectItem>
+            ))}
+          </Select>
         </div>
 
-        {/* Month Select */}
-        <div>
-          <label className="block text-[11px] font-bold mb-1 text-brand-text-muted">
+        {/* Month Select (5 cols) */}
+        <div className="col-span-12 sm:col-span-5 space-y-1.5">
+          <label className="block text-xs font-bold text-brand-text-muted px-1">
             {isPersian ? 'ماه' : 'Month'}
           </label>
-          <div className="relative">
-            <select
-              disabled={disabled}
-              value={currentParts.month ? String(currentParts.month) : ''}
-              onChange={(e) => {
-                if (e.target.value) handlePartChange('month', Number(e.target.value));
-              }}
-              className="w-full h-11 px-3.5 pr-8 rtl:pr-3.5 rtl:pl-8 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text appearance-none cursor-pointer focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all disabled:opacity-50"
-            >
-              <option value="" disabled>
-                {isPersian ? 'انتخاب ماه' : 'Month'}
-              </option>
-              {months.map((m) => (
-                <option key={`month-${m.index}`} value={String(m.index)} className="bg-brand-surface text-brand-text">
-                  {m.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-4 h-4 text-brand-bronze pointer-events-none absolute top-1/2 -translate-y-1/2 right-3 rtl:right-auto rtl:left-3 shrink-0" />
-          </div>
+          <Select
+            aria-label={isPersian ? 'ماه تولد' : 'Birth Month'}
+            placeholder={isPersian ? 'انتخاب ماه' : 'Month'}
+            isDisabled={disabled}
+            selectedKeys={currentParts.month ? [String(currentParts.month)] : []}
+            onSelectionChange={(keys) => {
+              const selected = Array.from(keys)[0];
+              if (selected) handlePartChange('month', Number(selected));
+            }}
+            variant="bordered"
+            radius="lg"
+            size="md"
+            selectorIcon={<ChevronDown className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0 opacity-70" />}
+            classNames={{
+              base: "w-full",
+              trigger: "h-12 px-3.5 bg-brand-surface border border-brand-border hover:border-brand-gold/80 data-[focus=true]:border-brand-gold rounded-2xl shadow-xs transition-colors",
+              value: "text-xs font-bold text-brand-text text-start",
+              popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl p-1.5 max-h-56 overflow-y-auto",
+            }}
+            listboxProps={{
+              itemClasses: {
+                base: [
+                  "rounded-xl",
+                  "text-xs font-medium text-brand-text text-start",
+                  "py-2 px-3",
+                  "transition-colors",
+                  "data-[hover=true]:bg-brand-gold/15",
+                  "data-[hover=true]:text-brand-gold",
+                  "data-[selected=true]:bg-brand-gold/20",
+                  "data-[selected=true]:text-brand-gold",
+                  "data-[selected=true]:font-bold",
+                ],
+              },
+            }}
+          >
+            {months.map((m) => (
+              <SelectItem
+                key={String(m.index)}
+                textValue={m.name}
+              >
+                {m.name}
+              </SelectItem>
+            ))}
+          </Select>
         </div>
 
-        {/* Year Select */}
-        <div>
-          <label className="block text-[11px] font-bold mb-1 text-brand-text-muted">
+        {/* Year Select (4 cols) */}
+        <div className="col-span-12 sm:col-span-4 space-y-1.5">
+          <label className="block text-xs font-bold text-brand-text-muted px-1">
             {isPersian ? 'سال' : 'Year'}
           </label>
-          <div className="relative">
-            <select
-              disabled={disabled}
-              value={currentParts.year ? String(currentParts.year) : ''}
-              onChange={(e) => {
-                if (e.target.value) handlePartChange('year', Number(e.target.value));
-              }}
-              className="w-full h-11 px-3.5 pr-8 rtl:pr-3.5 rtl:pl-8 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text appearance-none cursor-pointer focus:ring-2 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all disabled:opacity-50"
-            >
-              <option value="" disabled>
-                {isPersian ? 'انتخاب سال' : 'Year'}
-              </option>
-              {years.map((y) => (
-                <option key={`year-${y}`} value={String(y)} className="bg-brand-surface text-brand-text">
-                  {isPersian ? toPersianDigits(y) : String(y)}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-4 h-4 text-brand-bronze pointer-events-none absolute top-1/2 -translate-y-1/2 right-3 rtl:right-auto rtl:left-3 shrink-0" />
-          </div>
+          <Select
+            aria-label={isPersian ? 'سال تولد' : 'Birth Year'}
+            placeholder={isPersian ? 'سال' : 'Year'}
+            isDisabled={disabled}
+            selectedKeys={currentParts.year ? [String(currentParts.year)] : []}
+            onSelectionChange={(keys) => {
+              const selected = Array.from(keys)[0];
+              if (selected) handlePartChange('year', Number(selected));
+            }}
+            variant="bordered"
+            radius="lg"
+            size="md"
+            selectorIcon={<ChevronDown className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0 opacity-70" />}
+            classNames={{
+              base: "w-full",
+              trigger: "h-12 px-3.5 bg-brand-surface border border-brand-border hover:border-brand-gold/80 data-[focus=true]:border-brand-gold rounded-2xl shadow-xs transition-colors",
+              value: "text-xs font-bold text-brand-text text-start",
+              popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl p-1.5 max-h-56 overflow-y-auto",
+            }}
+            listboxProps={{
+              className: "max-h-56",
+              itemClasses: {
+                base: [
+                  "rounded-xl",
+                  "text-xs font-medium text-brand-text text-start",
+                  "py-2 px-3",
+                  "transition-colors",
+                  "data-[hover=true]:bg-brand-gold/15",
+                  "data-[hover=true]:text-brand-gold",
+                  "data-[selected=true]:bg-brand-gold/20",
+                  "data-[selected=true]:text-brand-gold",
+                  "data-[selected=true]:font-bold",
+                ],
+              },
+            }}
+          >
+            {years.map((y) => (
+              <SelectItem
+                key={String(y)}
+                textValue={isPersian ? toPersianDigits(y) : String(y)}
+              >
+                {isPersian ? toPersianDigits(y) : String(y)}
+              </SelectItem>
+            ))}
+          </Select>
         </div>
       </div>
 
       {/* Dual Date Badge Preview */}
       {value && formattedCurrent && (
-        <div className="flex items-center justify-between gap-2 text-xs px-4 py-2.5 rounded-2xl bg-brand-surface-elevated border border-brand-border text-brand-text-muted shadow-xs">
+        <div className="flex items-center justify-between gap-3 text-xs px-4.5 py-3 rounded-2xl bg-brand-surface-elevated/70 border border-brand-border text-brand-text-muted shadow-xs flex-wrap">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
             <span>
               {isPersian ? 'تاریخ انتخابی:' : 'Selected Date:'}{' '}
-              <strong className="text-brand-text font-bold">{formattedCurrent}</strong>
+              <strong className="text-brand-text font-black">{formattedCurrent}</strong>
             </span>
           </div>
           {formattedAlternative && (
-            <span className="text-[11px] font-medium text-brand-bronze dark:text-brand-gold">
-              ({calendarMode === 'jalali' ? (isPersian ? 'معادل میلادی: ' : 'Gregorian: ') : (isPersian ? 'معادل شمسی: ' : 'Solar: ')}
-              {formattedAlternative})
-            </span>
+            <Chip
+              size="sm"
+              variant="flat"
+              startContent={<Sparkles className="w-3 h-3 text-brand-gold" />}
+              classNames={{
+                base: "bg-brand-gold/10 border border-brand-gold/25 text-brand-bronze dark:text-brand-gold text-[11px] font-medium h-6 rounded-xl",
+                content: "font-semibold"
+              }}
+            >
+              {calendarMode === 'jalali' ? (isPersian ? 'معادل میلادی: ' : 'Gregorian: ') : (isPersian ? 'معادل شمسی: ' : 'Solar: ')}
+              {formattedAlternative}
+            </Chip>
           )}
         </div>
       )}
