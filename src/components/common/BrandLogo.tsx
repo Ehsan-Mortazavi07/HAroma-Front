@@ -28,10 +28,34 @@ export function BrandLogo({
   const { isPersian } = useTranslation();
 
   const sizeClasses = {
-    sm: { icon: 'w-11 h-11 sm:w-12 sm:h-12', img: 44, title: 'text-base sm:text-lg font-black', sub: 'text-[9.5px]' },
-    md: { icon: 'w-12 h-12 sm:w-13 sm:h-13', img: 52, title: 'text-lg sm:text-xl font-black', sub: 'text-[10.5px]' },
-    lg: { icon: 'w-16 h-16 sm:w-18 sm:h-18', img: 68, title: 'text-xl sm:text-2xl font-black', sub: 'text-xs' },
-    xl: { icon: 'w-20 h-20 sm:w-24 sm:h-24', img: 90, title: 'text-2xl sm:text-3xl font-black', sub: 'text-sm' },
+    sm: {
+      icon: 'w-14 h-10 sm:w-16 sm:h-11',
+      imgWidth: 64,
+      imgHeight: 44,
+      title: 'text-sm sm:text-base font-medium',
+      sub: 'text-[9.5px]',
+    },
+    md: {
+      icon: 'w-18 h-11 sm:w-22 sm:h-12',
+      imgWidth: 88,
+      imgHeight: 48,
+      title: 'text-sm sm:text-base font-medium',
+      sub: 'text-[10.5px]',
+    },
+    lg: {
+      icon: 'w-24 h-13 sm:w-28 sm:h-15',
+      imgWidth: 112,
+      imgHeight: 60,
+      title: 'text-lg sm:text-xl font-semibold',
+      sub: 'text-xs',
+    },
+    xl: {
+      icon: 'w-32 h-16 sm:w-38 sm:h-20',
+      imgWidth: 152,
+      imgHeight: 80,
+      title: 'text-xl sm:text-2xl font-bold',
+      sub: 'text-sm',
+    },
   }[size];
 
   const titleColor =
@@ -49,10 +73,10 @@ export function BrandLogo({
         : 'text-[#73695c] dark:text-[#a69c8e]';
 
   return (
-    <Link href={PATHS.HOME} className={`flex items-center gap-3.5 group ${className}`}>
-      {/* Official Brand Monogram Emblem (Enlarged & Prominent) */}
+    <Link href={PATHS.HOME} className={`flex items-center gap-3 sm:gap-3.5 group ${className}`}>
+      {/* Official Brand Monogram Emblem (Enlarged & Elongated/Stretched) */}
       <div
-        className={`${sizeClasses.icon} relative rounded-2xl bg-[#181f18] border-2 border-brand-gold/60 flex items-center justify-center shadow-xl shadow-black/30 group-hover:border-brand-gold group-hover:scale-105 transition-all duration-300 ease-out overflow-hidden flex-shrink-0 p-1.5`}
+        className={`${sizeClasses.icon} relative rounded-2xl bg-[#181f18]/85 dark:bg-[#121612]/90 border border-brand-gold/50 flex items-center justify-center shadow-lg shadow-black/25 group-hover:border-brand-gold group-hover:scale-102 transition-all duration-300 ease-out overflow-hidden flex-shrink-0 px-2 py-1`}
       >
         {/* Ambient Gold Halo Glow */}
         <div className="absolute inset-0 bg-brand-gold/10 pointer-events-none" />
@@ -61,9 +85,9 @@ export function BrandLogo({
           <Image
             src="/images/logo/hatef-aroma-logo-cropped.png"
             alt="Hatef Aroma Official Logo"
-            width={sizeClasses.img}
-            height={sizeClasses.img}
-            className="w-full h-full object-contain filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)] transition-transform duration-300 group-hover:scale-110"
+            width={sizeClasses.imgWidth}
+            height={sizeClasses.imgHeight}
+            className="w-full h-full object-contain filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)] transition-transform duration-300 group-hover:scale-105"
             priority
           />
         </div>
