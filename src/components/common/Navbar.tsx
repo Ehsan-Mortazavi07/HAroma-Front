@@ -329,7 +329,6 @@ export function Navbar() {
                 variant="dark"
                 simple={true}
                 hideTextOnMobile={true}
-                titleClassName="text-sm sm:text-base font-medium tracking-normal"
                 className="flex"
               />
             </NavbarBrand>

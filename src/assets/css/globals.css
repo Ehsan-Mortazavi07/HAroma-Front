@@ -1,11 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Great+Vibes&family=Allura&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: 'Vazirmatn', var(--font-vazir), 'Vazir', system-ui, -apple-system, sans-serif;
   --font-heading: 'Vazirmatn', var(--font-vazir), 'Vazir', system-ui, -apple-system, sans-serif;
   --font-latin: var(--font-inter), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-script: 'Alex Brush', 'Great Vibes', 'Allura', 'Brush Script MT', 'Segoe Script', cursive;
   --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --color-brand-bg: var(--brand-bg);

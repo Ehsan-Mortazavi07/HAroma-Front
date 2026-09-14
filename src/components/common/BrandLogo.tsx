@@ -29,31 +29,31 @@ export function BrandLogo({
 
   const sizeClasses = {
     sm: {
-      icon: 'w-14 h-10 sm:w-16 sm:h-11',
-      imgWidth: 64,
-      imgHeight: 44,
-      title: 'text-sm sm:text-base font-medium',
+      icon: 'w-16 h-10 sm:w-20 sm:h-11',
+      imgWidth: 80,
+      imgHeight: 46,
+      title: 'font-script text-xl sm:text-2xl font-normal',
       sub: 'text-[9.5px]',
     },
     md: {
-      icon: 'w-18 h-11 sm:w-22 sm:h-12',
-      imgWidth: 88,
-      imgHeight: 48,
-      title: 'text-sm sm:text-base font-medium',
+      icon: 'w-20 h-12 sm:w-28 sm:h-14',
+      imgWidth: 112,
+      imgHeight: 56,
+      title: 'font-script text-2xl sm:text-3xl font-normal',
       sub: 'text-[10.5px]',
     },
     lg: {
-      icon: 'w-24 h-13 sm:w-28 sm:h-15',
-      imgWidth: 112,
-      imgHeight: 60,
-      title: 'text-lg sm:text-xl font-semibold',
+      icon: 'w-28 h-15 sm:w-36 sm:h-18',
+      imgWidth: 144,
+      imgHeight: 72,
+      title: 'font-script text-3xl sm:text-4xl font-normal',
       sub: 'text-xs',
     },
     xl: {
-      icon: 'w-32 h-16 sm:w-38 sm:h-20',
-      imgWidth: 152,
-      imgHeight: 80,
-      title: 'text-xl sm:text-2xl font-bold',
+      icon: 'w-36 h-20 sm:w-48 sm:h-24',
+      imgWidth: 192,
+      imgHeight: 96,
+      title: 'font-script text-4xl sm:text-5xl font-normal',
       sub: 'text-sm',
     },
   }[size];
@@ -73,24 +73,19 @@ export function BrandLogo({
         : 'text-[#73695c] dark:text-[#a69c8e]';
 
   return (
-    <Link href={PATHS.HOME} className={`flex items-center gap-3 sm:gap-3.5 group ${className}`}>
-      {/* Official Brand Monogram Emblem (Enlarged & Elongated/Stretched) */}
+    <Link href={PATHS.HOME} className={`flex items-center gap-2 sm:gap-3 group ${className}`}>
+      {/* Official Brand Monogram Emblem (Frameless, Enlarged & Stretched) */}
       <div
-        className={`${sizeClasses.icon} relative rounded-2xl bg-[#181f18]/85 dark:bg-[#121612]/90 border border-brand-gold/50 flex items-center justify-center shadow-lg shadow-black/25 group-hover:border-brand-gold group-hover:scale-102 transition-all duration-300 ease-out overflow-hidden flex-shrink-0 px-2 py-1`}
+        className={`${sizeClasses.icon} relative flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105`}
       >
-        {/* Ambient Gold Halo Glow */}
-        <div className="absolute inset-0 bg-brand-gold/10 pointer-events-none" />
-
-        <div className="relative w-full h-full flex items-center justify-center">
-          <Image
-            src="/images/logo/hatef-aroma-logo-cropped.png"
-            alt="Hatef Aroma Official Logo"
-            width={sizeClasses.imgWidth}
-            height={sizeClasses.imgHeight}
-            className="w-full h-full object-contain filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)] transition-transform duration-300 group-hover:scale-105"
-            priority
-          />
-        </div>
+        <Image
+          src="/images/logo/hatef-aroma-logo-cropped.png"
+          alt="Hatef Aroma Official Logo"
+          width={sizeClasses.imgWidth}
+          height={sizeClasses.imgHeight}
+          className="w-full h-full object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)] group-hover:drop-shadow-[0_4px_14px_rgba(191,162,122,0.45)] transition-all duration-300"
+          priority
+        />
       </div>
 
       {/* Brand Typography */}
@@ -98,9 +93,9 @@ export function BrandLogo({
         <div className={`${hideTextOnMobile ? 'hidden sm:flex' : 'flex'} flex-col select-none justify-center`}>
           <div className="flex items-center gap-2">
             <span
-              className={`${titleClassName || sizeClasses.title} font-latin tracking-tight ${titleColor} transition-colors`}
+              className={`${titleClassName || sizeClasses.title} font-script tracking-wide ${titleColor} transition-colors leading-none`}
             >
-              HatefAroma
+              Hatef Aroma
             </span>
             {!simple && (
               <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#bfa27a]/25 text-[#d4be9b] border border-[#bfa27a]/40 shadow-xs">
