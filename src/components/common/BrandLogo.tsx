@@ -9,7 +9,9 @@ import { useTranslation } from '@/common/i18n';
 interface BrandLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showText?: boolean;
+  hideTextOnMobile?: boolean;
   className?: string;
+  titleClassName?: string;
   variant?: 'auto' | 'light' | 'dark';
   simple?: boolean;
 }
@@ -17,7 +19,9 @@ interface BrandLogoProps {
 export function BrandLogo({
   size = 'md',
   showText = true,
+  hideTextOnMobile = false,
   className = '',
+  titleClassName = '',
   variant = 'auto',
   simple = false,
 }: BrandLogoProps) {
@@ -67,10 +71,10 @@ export function BrandLogo({
 
       {/* Brand Typography */}
       {showText && (
-        <div className="flex flex-col select-none justify-center">
+        <div className={`${hideTextOnMobile ? 'hidden sm:flex' : 'flex'} flex-col select-none justify-center`}>
           <div className="flex items-center gap-2">
             <span
-              className={`${sizeClasses.title} font-latin tracking-tight ${titleColor} transition-colors`}
+              className={`${titleClassName || sizeClasses.title} font-latin tracking-tight ${titleColor} transition-colors`}
             >
               HatefAroma
             </span>

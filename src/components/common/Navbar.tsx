@@ -324,7 +324,14 @@ export function Navbar() {
 
             {/* Brand Logo (simple: emblem + store name only) */}
             <NavbarBrand className="shrink-0 grow-0">
-              <BrandLogo size="md" variant="dark" simple={true} className="flex" />
+              <BrandLogo
+                size="md"
+                variant="dark"
+                simple={true}
+                hideTextOnMobile={true}
+                titleClassName="text-sm sm:text-base font-medium tracking-normal"
+                className="flex"
+              />
             </NavbarBrand>
 
             {/* Nav Links (single line, no wrapping) */}
@@ -357,8 +364,8 @@ export function Navbar() {
             
             {/* The 3 Buttons Container - Strictly Level (هم‌سطح) */}
             <div className="flex items-center gap-2 sm:gap-2.5 h-10 shrink-0">
-              {/* 1. Theme Toggle */}
-              <div className="hidden sm:flex items-center justify-center w-10 h-10 shrink-0">
+              {/* 1. Theme Toggle (Visible on mobile and desktop) */}
+              <div className="flex items-center justify-center w-10 h-10 shrink-0">
                 <ThemeToggle className="w-10 h-10 min-w-10 max-w-10 h-10 min-h-10 max-h-10 rounded-full bg-[#242c24] hover:bg-[#2e3a2e] border border-[#3e4c3e] hover:border-[#bfa27a]/60 text-[#f7f4ee] transition-colors shadow-sm flex items-center justify-center p-0" />
               </div>
 
@@ -524,11 +531,11 @@ export function Navbar() {
                   if (isCartDrawerOpen) dispatch(toggleCartDrawer(false));
                   setIsSearchModalOpen(true);
                 }}
-                className="w-48 lg:w-60 xl:w-72 h-10 px-3.5 rounded-full bg-[#242c24]/90 border border-[#3e4c3e] hover:border-[#bfa27a]/60 flex items-center gap-2.5 text-[#a69c8e] hover:text-[#f7f4ee] transition-all shadow-inner group cursor-pointer"
+                className="w-36 lg:w-44 xl:w-52 h-9 px-3 rounded-full bg-[#242c24]/90 border border-[#3e4c3e] hover:border-[#bfa27a]/60 flex items-center gap-2 text-[#a69c8e] hover:text-[#f7f4ee] transition-all shadow-inner group cursor-pointer"
                 aria-label="جست‌وجوی محصول یا برند"
               >
-                <Search className="w-4 h-4 text-[#a69c8e] group-hover:text-[#bfa27a] shrink-0 transition-colors" />
-                <span className="text-xs font-normal text-[#a69c8e] truncate select-none">
+                <Search className="w-3.5 h-3.5 text-[#a69c8e] group-hover:text-[#bfa27a] shrink-0 transition-colors" />
+                <span className="text-[11px] font-normal text-[#a69c8e] truncate select-none">
                   جست‌وجوی محصول یا برند...
                 </span>
               </button>
