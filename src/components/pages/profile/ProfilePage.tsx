@@ -1205,7 +1205,10 @@ export function ProfilePage() {
           {activeTab === 'edit' && (
             <form onSubmit={handleProfileSubmit} className="space-y-6">
               {/* Personal Details Card */}
-              <Card className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs">
+              <Card
+                classNames={{ base: "!overflow-visible overflow-visible card-overflow-visible relative z-30" }}
+                className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs !overflow-visible overflow-visible card-overflow-visible relative z-30"
+              >
                 <div className="p-6 sm:p-8 space-y-6">
                   <div className="flex items-center justify-between pb-4 border-b border-brand-border">
                     <div className="flex items-center gap-3">
@@ -1340,7 +1343,10 @@ export function ProfilePage() {
               </Card>
 
               {/* Password & Security Card */}
-              <Card className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs">
+              <Card
+                classNames={{ base: "relative z-10" }}
+                className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs relative z-10"
+              >
                 <div className="p-6 sm:p-8 space-y-6">
                   <div className="flex items-center justify-between pb-4 border-b border-brand-border flex-wrap gap-2">
                     <div className="flex items-center gap-2.5">
@@ -1385,9 +1391,10 @@ export function ProfilePage() {
                         </label>
                       </div>
                       <Input
+                        key={`curr-pwd-${showCurrentPassword ? 'text' : 'password'}`}
                         type={showCurrentPassword ? 'text' : 'password'}
                         aria-label={isPersian ? 'کلمه عبور فعلی' : 'Current Password'}
-                        placeholder={isPersian ? 'رمز فعلی حساب' : 'Current Password'}
+                        placeholder={isPersian ? 'رمز عبور فعلی حساب' : 'Current password'}
                         value={currentPassword}
                         onValueChange={setCurrentPassword}
                         variant="bordered"
@@ -1395,11 +1402,19 @@ export function ProfilePage() {
                         endContent={
                           <button
                             type="button"
-                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                            className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowCurrentPassword((prev) => !prev);
+                            }}
+                            className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
                             aria-label="Toggle password visibility"
                           >
-                            {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            {showCurrentPassword ? (
+                              <EyeOff className="w-4 h-4 pointer-events-none" />
+                            ) : (
+                              <Eye className="w-4 h-4 pointer-events-none" />
+                            )}
                           </button>
                         }
                         classNames={{
@@ -1418,9 +1433,10 @@ export function ProfilePage() {
                         </label>
                       </div>
                       <Input
+                        key={`new-pwd-${showNewPassword ? 'text' : 'password'}`}
                         type={showNewPassword ? 'text' : 'password'}
                         aria-label={isPersian ? 'کلمه عبور جدید' : 'New Password'}
-                        placeholder="••••••••"
+                        placeholder={isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر)' : 'New password (min 6 chars)'}
                         value={newPassword}
                         onValueChange={setNewPassword}
                         variant="bordered"
@@ -1428,11 +1444,19 @@ export function ProfilePage() {
                         endContent={
                           <button
                             type="button"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                            className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowNewPassword((prev) => !prev);
+                            }}
+                            className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
                             aria-label="Toggle password visibility"
                           >
-                            {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            {showNewPassword ? (
+                              <EyeOff className="w-4 h-4 pointer-events-none" />
+                            ) : (
+                              <Eye className="w-4 h-4 pointer-events-none" />
+                            )}
                           </button>
                         }
                         classNames={{
@@ -1451,9 +1475,10 @@ export function ProfilePage() {
                         </label>
                       </div>
                       <Input
+                        key={`conf-pwd-${showConfirmPassword ? 'text' : 'password'}`}
                         type={showConfirmPassword ? 'text' : 'password'}
                         aria-label={isPersian ? 'تکرار کلمه عبور جدید' : 'Confirm New Password'}
-                        placeholder="••••••••"
+                        placeholder={isPersian ? 'تکرار رمز عبور جدید' : 'Confirm new password'}
                         value={confirmPassword}
                         onValueChange={setConfirmPassword}
                         variant="bordered"
@@ -1461,11 +1486,19 @@ export function ProfilePage() {
                         endContent={
                           <button
                             type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowConfirmPassword((prev) => !prev);
+                            }}
+                            className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
                             aria-label="Toggle password visibility"
                           >
-                            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            {showConfirmPassword ? (
+                              <EyeOff className="w-4 h-4 pointer-events-none" />
+                            ) : (
+                              <Eye className="w-4 h-4 pointer-events-none" />
+                            )}
                           </button>
                         }
                         classNames={{
@@ -1741,9 +1774,10 @@ export function ProfilePage() {
                         </label>
                       </div>
                       <Input
+                        key={`reset-pwd-${showResetNewPassword ? 'text' : 'password'}`}
                         type={showResetNewPassword ? 'text' : 'password'}
                         aria-label={isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر)' : 'New Password (min 6 chars)'}
-                        placeholder="••••••••"
+                        placeholder={isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر)' : 'New password (min 6 chars)'}
                         value={resetNewPassword}
                         onValueChange={setResetNewPassword}
                         variant="bordered"
@@ -1751,11 +1785,19 @@ export function ProfilePage() {
                         endContent={
                           <button
                             type="button"
-                            onClick={() => setShowResetNewPassword(!showResetNewPassword)}
-                            className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowResetNewPassword((prev) => !prev);
+                            }}
+                            className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
                             aria-label="Toggle password visibility"
                           >
-                            {showResetNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            {showResetNewPassword ? (
+                              <EyeOff className="w-4 h-4 pointer-events-none" />
+                            ) : (
+                              <Eye className="w-4 h-4 pointer-events-none" />
+                            )}
                           </button>
                         }
                         classNames={{

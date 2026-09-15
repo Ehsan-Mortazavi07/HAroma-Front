@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Calendar, RefreshCw, ChevronDown, Sparkles } from 'lucide-react';
-import { Select, SelectItem, Button, Chip } from '@heroui/react';
+import { Button, Chip } from '@heroui/react';
 import {
   gregorianToJalali,
   jalaliToGregorian,
@@ -48,6 +48,55 @@ export function BirthDatePicker({
       setCalendarMode(isPersian ? 'jalali' : 'gregorian');
     }
   }, [isPersian, userOverriddenMode]);
+
+  // Dropdown open state: 'day' | 'month' | 'year' | null
+  const [openDropdown, setOpenDropdown] = useState<'day' | 'month' | 'year' | null>(null);
+  const dayRef = useRef<HTMLDivElement>(null);
+  const monthRef = useRef<HTMLDivElement>(null);
+  const yearRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside (capture phase guarantees event interception)
+  useEffect(() => {
+    if (!openDropdown) return;
+
+    const handlePointerDown = (event: PointerEvent | MouseEvent | TouchEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+
+      if (openDropdown === 'day' && dayRef.current && !dayRef.current.contains(target)) {
+        setOpenDropdown(null);
+      } else if (openDropdown === 'month' && monthRef.current && !monthRef.current.contains(target)) {
+        setOpenDropdown(null);
+      } else if (openDropdown === 'year' && yearRef.current && !yearRef.current.contains(target)) {
+        setOpenDropdown(null);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown, true);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, true);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [openDropdown]);
+
+  // Auto-scroll selected item into view when dropdown opens
+  useEffect(() => {
+    if (openDropdown && listRef.current) {
+      const selectedEl = listRef.current.querySelector('[data-selected="true"]');
+      if (selectedEl) {
+        selectedEl.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [openDropdown]);
 
   // Parse current ISO value
   const parsedIso = useMemo(() => parseIsoDate(value), [value]);
@@ -125,11 +174,13 @@ export function BirthDatePicker({
     } else {
       onChange(formatIsoDate(y, m, d));
     }
+    setOpenDropdown(null);
   };
 
   const handleToggleMode = () => {
     setUserOverriddenMode(true);
     setCalendarMode((prev) => (prev === 'jalali' ? 'gregorian' : 'jalali'));
+    setOpenDropdown(null);
   };
 
   const formattedAlternative = useMemo(() => {
@@ -142,6 +193,12 @@ export function BirthDatePicker({
     if (!value) return '';
     return formatDisplayBirthDate(value, calendarMode, isPersian);
   }, [value, calendarMode, isPersian]);
+
+  const currentMonthName = useMemo(() => {
+    if (!currentParts.month) return '';
+    const m = months.find((item) => item.index === Number(currentParts.month));
+    return m ? m.name : '';
+  }, [currentParts.month, months]);
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -167,7 +224,7 @@ export function BirthDatePicker({
           </Chip>
         </div>
 
-        {/* HeroUI Toggle Calendar Button */}
+        {/* Toggle Calendar Button */}
         <Button
           type="button"
           onPress={handleToggleMode}
@@ -184,160 +241,174 @@ export function BirthDatePicker({
         </Button>
       </div>
 
-      {/* 3 Balanced Selects with Golden Ratio (3 cols Day, 5 cols Month, 4 cols Year) */}
-      <div className="grid grid-cols-12 gap-3">
+      {/* 3 Proportional In-Place RTL Dropdowns (3 cols Day, 5 cols Month, 4 cols Year) */}
+      <div className="grid grid-cols-12 gap-3 relative">
         {/* Day Select (3 cols) */}
-        <div className="col-span-12 sm:col-span-3 space-y-1.5">
+        <div ref={dayRef} className="col-span-12 sm:col-span-3 space-y-1.5 relative">
           <label className="block text-xs font-bold text-brand-text-muted px-1">
             {isPersian ? 'روز' : 'Day'}
           </label>
-          <Select
-            aria-label={isPersian ? 'روز تولد' : 'Birth Day'}
-            placeholder={isPersian ? 'روز' : 'Day'}
-            isDisabled={disabled}
-            selectedKeys={currentParts.day ? [String(currentParts.day)] : []}
-            onSelectionChange={(keys) => {
-              const selected = Array.from(keys)[0];
-              if (selected) handlePartChange('day', Number(selected));
-            }}
-            variant="bordered"
-            radius="lg"
-            size="md"
-            selectorIcon={<ChevronDown className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0 opacity-70" />}
-            classNames={{
-              base: "w-full",
-              trigger: "h-12 px-3.5 bg-brand-surface border border-brand-border hover:border-brand-gold/80 data-[focus=true]:border-brand-gold rounded-2xl shadow-xs transition-colors",
-              value: "text-xs font-bold text-brand-text text-start",
-              popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl p-1.5 max-h-56 overflow-y-auto",
-            }}
-            listboxProps={{
-              itemClasses: {
-                base: [
-                  "rounded-xl",
-                  "text-xs font-medium text-brand-text text-start",
-                  "py-2 px-3",
-                  "transition-colors",
-                  "data-[hover=true]:bg-brand-gold/15",
-                  "data-[hover=true]:text-brand-gold",
-                  "data-[selected=true]:bg-brand-gold/20",
-                  "data-[selected=true]:text-brand-gold",
-                  "data-[selected=true]:font-bold",
-                ],
-              },
-            }}
-          >
-            {days.map((d) => (
-              <SelectItem
-                key={String(d)}
-                textValue={isPersian ? toPersianDigits(d) : String(d)}
+          <div className="relative">
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => setOpenDropdown(openDropdown === 'day' ? null : 'day')}
+              className={`w-full h-12 px-4 rounded-2xl bg-brand-surface border transition-all flex items-center justify-between gap-2 text-right cursor-pointer select-none ${
+                openDropdown === 'day'
+                  ? 'border-brand-gold ring-2 ring-brand-gold/20 shadow-sm'
+                  : 'border-brand-border hover:border-brand-gold/70'
+              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <span className={`text-xs font-bold truncate ${currentParts.day ? 'text-brand-text' : 'text-brand-text-muted'}`}>
+                {currentParts.day ? (isPersian ? toPersianDigits(currentParts.day) : currentParts.day) : (isPersian ? 'روز' : 'Day')}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 transition-transform duration-200 ${
+                  openDropdown === 'day' ? 'rotate-180 text-brand-gold' : 'opacity-70'
+                }`}
+              />
+            </button>
+
+            {/* Custom Day Dropdown Menu */}
+            {openDropdown === 'day' && (
+              <div
+                ref={listRef}
+                className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 max-h-64 overflow-y-auto space-y-0.5 overscroll-contain"
               >
-                {isPersian ? toPersianDigits(d) : String(d)}
-              </SelectItem>
-            ))}
-          </Select>
+                {days.map((d) => {
+                  const isSelected = Number(currentParts.day) === d;
+                  return (
+                    <button
+                      key={`day-${d}`}
+                      data-selected={isSelected ? 'true' : 'false'}
+                      type="button"
+                      onClick={() => handlePartChange('day', d)}
+                      className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
+                        isSelected
+                          ? 'bg-brand-gold text-[#141914]'
+                          : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
+                      }`}
+                    >
+                      <span>{isPersian ? toPersianDigits(d) : d}</span>
+                      {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914]" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Month Select (5 cols) */}
-        <div className="col-span-12 sm:col-span-5 space-y-1.5">
+        <div ref={monthRef} className="col-span-12 sm:col-span-5 space-y-1.5 relative">
           <label className="block text-xs font-bold text-brand-text-muted px-1">
             {isPersian ? 'ماه' : 'Month'}
           </label>
-          <Select
-            aria-label={isPersian ? 'ماه تولد' : 'Birth Month'}
-            placeholder={isPersian ? 'انتخاب ماه' : 'Month'}
-            isDisabled={disabled}
-            selectedKeys={currentParts.month ? [String(currentParts.month)] : []}
-            onSelectionChange={(keys) => {
-              const selected = Array.from(keys)[0];
-              if (selected) handlePartChange('month', Number(selected));
-            }}
-            variant="bordered"
-            radius="lg"
-            size="md"
-            selectorIcon={<ChevronDown className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0 opacity-70" />}
-            classNames={{
-              base: "w-full",
-              trigger: "h-12 px-3.5 bg-brand-surface border border-brand-border hover:border-brand-gold/80 data-[focus=true]:border-brand-gold rounded-2xl shadow-xs transition-colors",
-              value: "text-xs font-bold text-brand-text text-start",
-              popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl p-1.5 max-h-56 overflow-y-auto",
-            }}
-            listboxProps={{
-              itemClasses: {
-                base: [
-                  "rounded-xl",
-                  "text-xs font-medium text-brand-text text-start",
-                  "py-2 px-3",
-                  "transition-colors",
-                  "data-[hover=true]:bg-brand-gold/15",
-                  "data-[hover=true]:text-brand-gold",
-                  "data-[selected=true]:bg-brand-gold/20",
-                  "data-[selected=true]:text-brand-gold",
-                  "data-[selected=true]:font-bold",
-                ],
-              },
-            }}
-          >
-            {months.map((m) => (
-              <SelectItem
-                key={String(m.index)}
-                textValue={m.name}
+          <div className="relative">
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => setOpenDropdown(openDropdown === 'month' ? null : 'month')}
+              className={`w-full h-12 px-4 rounded-2xl bg-brand-surface border transition-all flex items-center justify-between gap-2 text-right cursor-pointer select-none ${
+                openDropdown === 'month'
+                  ? 'border-brand-gold ring-2 ring-brand-gold/20 shadow-sm'
+                  : 'border-brand-border hover:border-brand-gold/70'
+              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <span className={`text-xs font-bold truncate ${currentParts.month ? 'text-brand-text' : 'text-brand-text-muted'}`}>
+                {currentMonthName || (isPersian ? 'انتخاب ماه' : 'Month')}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 transition-transform duration-200 ${
+                  openDropdown === 'month' ? 'rotate-180 text-brand-gold' : 'opacity-70'
+                }`}
+              />
+            </button>
+
+            {/* Custom Month Dropdown Menu */}
+            {openDropdown === 'month' && (
+              <div
+                ref={listRef}
+                className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 max-h-64 overflow-y-auto space-y-0.5 overscroll-contain"
               >
-                {m.name}
-              </SelectItem>
-            ))}
-          </Select>
+                {months.map((m) => {
+                  const isSelected = Number(currentParts.month) === m.index;
+                  return (
+                    <button
+                      key={`month-${m.index}`}
+                      data-selected={isSelected ? 'true' : 'false'}
+                      type="button"
+                      onClick={() => handlePartChange('month', m.index)}
+                      className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
+                        isSelected
+                          ? 'bg-brand-gold text-[#141914]'
+                          : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
+                      }`}
+                    >
+                      <span>{m.name}</span>
+                      {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914]" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Year Select (4 cols) */}
-        <div className="col-span-12 sm:col-span-4 space-y-1.5">
+        <div ref={yearRef} className="col-span-12 sm:col-span-4 space-y-1.5 relative">
           <label className="block text-xs font-bold text-brand-text-muted px-1">
             {isPersian ? 'سال' : 'Year'}
           </label>
-          <Select
-            aria-label={isPersian ? 'سال تولد' : 'Birth Year'}
-            placeholder={isPersian ? 'سال' : 'Year'}
-            isDisabled={disabled}
-            selectedKeys={currentParts.year ? [String(currentParts.year)] : []}
-            onSelectionChange={(keys) => {
-              const selected = Array.from(keys)[0];
-              if (selected) handlePartChange('year', Number(selected));
-            }}
-            variant="bordered"
-            radius="lg"
-            size="md"
-            selectorIcon={<ChevronDown className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0 opacity-70" />}
-            classNames={{
-              base: "w-full",
-              trigger: "h-12 px-3.5 bg-brand-surface border border-brand-border hover:border-brand-gold/80 data-[focus=true]:border-brand-gold rounded-2xl shadow-xs transition-colors",
-              value: "text-xs font-bold text-brand-text text-start",
-              popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl p-1.5 max-h-56 overflow-y-auto",
-            }}
-            listboxProps={{
-              className: "max-h-56",
-              itemClasses: {
-                base: [
-                  "rounded-xl",
-                  "text-xs font-medium text-brand-text text-start",
-                  "py-2 px-3",
-                  "transition-colors",
-                  "data-[hover=true]:bg-brand-gold/15",
-                  "data-[hover=true]:text-brand-gold",
-                  "data-[selected=true]:bg-brand-gold/20",
-                  "data-[selected=true]:text-brand-gold",
-                  "data-[selected=true]:font-bold",
-                ],
-              },
-            }}
-          >
-            {years.map((y) => (
-              <SelectItem
-                key={String(y)}
-                textValue={isPersian ? toPersianDigits(y) : String(y)}
+          <div className="relative">
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => setOpenDropdown(openDropdown === 'year' ? null : 'year')}
+              className={`w-full h-12 px-4 rounded-2xl bg-brand-surface border transition-all flex items-center justify-between gap-2 text-right cursor-pointer select-none ${
+                openDropdown === 'year'
+                  ? 'border-brand-gold ring-2 ring-brand-gold/20 shadow-sm'
+                  : 'border-brand-border hover:border-brand-gold/70'
+              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <span className={`text-xs font-bold truncate ${currentParts.year ? 'text-brand-text' : 'text-brand-text-muted'}`}>
+                {currentParts.year ? (isPersian ? toPersianDigits(currentParts.year) : currentParts.year) : (isPersian ? 'سال' : 'Year')}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 transition-transform duration-200 ${
+                  openDropdown === 'year' ? 'rotate-180 text-brand-gold' : 'opacity-70'
+                }`}
+              />
+            </button>
+
+            {/* Custom Year Dropdown Menu */}
+            {openDropdown === 'year' && (
+              <div
+                ref={listRef}
+                className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 max-h-64 overflow-y-auto space-y-0.5 overscroll-contain"
               >
-                {isPersian ? toPersianDigits(y) : String(y)}
-              </SelectItem>
-            ))}
-          </Select>
+                {years.map((y) => {
+                  const isSelected = Number(currentParts.year) === y;
+                  return (
+                    <button
+                      key={`year-${y}`}
+                      data-selected={isSelected ? 'true' : 'false'}
+                      type="button"
+                      onClick={() => handlePartChange('year', y)}
+                      className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
+                        isSelected
+                          ? 'bg-brand-gold text-[#141914]'
+                          : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
+                      }`}
+                    >
+                      <span>{isPersian ? toPersianDigits(y) : y}</span>
+                      {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914]" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
