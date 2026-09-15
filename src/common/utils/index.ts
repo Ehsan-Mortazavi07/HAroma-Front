@@ -37,6 +37,14 @@ export function toPersianDigits(n: number | string | undefined | null): string {
     .replace(/\d/g, (x) => farsiDigits[parseInt(x, 10)]);
 }
 
+export function toEnglishDigits(str: string | number | undefined | null): string {
+  if (str === undefined || str === null) return '';
+  return str
+    .toString()
+    .replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
+    .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+}
+
 export function formatToman(amount: number | undefined | null, isPersian: boolean = true): string {
   if (amount === undefined || amount === null) return isPersian ? '۰ تومان' : '0 Toman';
   if (!isPersian) {

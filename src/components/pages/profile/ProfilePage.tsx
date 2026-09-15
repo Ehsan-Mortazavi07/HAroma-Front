@@ -53,9 +53,10 @@ import {
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { logout, updateUser } from '@/stores/auth/authSlice';
 import { PATHS } from '@/common/constants/PATHS';
-import { formatToman, toPersianDigits, toast, getApiErrorMessage } from '@/common/utils';
+import { formatToman, toPersianDigits, toEnglishDigits, toast, getApiErrorMessage } from '@/common/utils';
 import { isoToJalali } from '@/common/utils/date';
 import { BirthDatePicker } from '@/components/common/BirthDatePicker';
+import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { IOrder } from '@/common/interfaces';
 import axiosInstance from '@/common/axiosInstance';
 import { useTranslation } from '@/common/i18n';
@@ -177,6 +178,39 @@ export function ProfilePage() {
       return;
     }
 
+    // Phone validation (11 digits starting with 09)
+    const normalizedPhone = toEnglishDigits(phone.trim());
+    if (normalizedPhone && !/^09\d{9}$/.test(normalizedPhone)) {
+      toast.error(
+        isPersian
+          ? 'شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثال: ۰۹۱۲۳۴۵۶۷۸۹).'
+          : 'Mobile number must be 11 digits starting with 09 (e.g. 09123456789).',
+      );
+      return;
+    }
+
+    // Recipient Phone validation (11 digits starting with 09)
+    const normalizedRecipientPhone = toEnglishDigits(recipientPhone.trim());
+    if (normalizedRecipientPhone && !/^09\d{9}$/.test(normalizedRecipientPhone)) {
+      toast.error(
+        isPersian
+          ? 'شماره تماس تحویل‌گیرنده باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثال: ۰۹۱۲۳۴۵۶۷۸۹).'
+          : 'Recipient phone must be 11 digits starting with 09 (e.g. 09123456789).',
+      );
+      return;
+    }
+
+    // Postal Code validation (exactly 10 digits)
+    const normalizedPostalCode = toEnglishDigits(postalCode.trim());
+    if (normalizedPostalCode && !/^\d{10}$/.test(normalizedPostalCode)) {
+      toast.error(
+        isPersian
+          ? 'کد پستی باید دقیقاً ۱۰ رقم عددی باشد.'
+          : 'Postal code must be exactly 10 digits.',
+      );
+      return;
+    }
+
     if (newPassword) {
       if (!currentPassword) {
         toast.error(
@@ -210,17 +244,16 @@ export function ProfilePage() {
         fullName: fullName.trim(),
         username: username.trim().toLowerCase(),
         email: email.trim().toLowerCase(),
-        phone: phone.trim() || undefined,
+        phone: normalizedPhone || undefined,
         birthDate: birthDate || null,
         birthDateShamsi: birthDateShamsi || null,
         province: province.trim() || undefined,
         city: city.trim() || undefined,
         address: address.trim() || undefined,
-        postalCode: postalCode.trim() || undefined,
+        postalCode: normalizedPostalCode || undefined,
         buildingNumber: buildingNumber.trim() || undefined,
-        unit: unit.trim() || undefined,
         recipientName: recipientName.trim() || undefined,
-        recipientPhone: recipientPhone.trim() || undefined,
+        recipientPhone: normalizedRecipientPhone || undefined,
       };
 
       if (newPassword) {
@@ -973,7 +1006,10 @@ export function ProfilePage() {
           {/* TAB 3: ADDRESSES TAB */}
           {activeTab === 'addresses' && (
             <form onSubmit={handleProfileSubmit} className="space-y-6">
-              <Card className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs">
+              <Card
+                classNames={{ base: "!overflow-visible overflow-visible card-overflow-visible relative z-30" }}
+                className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs !overflow-visible overflow-visible card-overflow-visible relative z-30"
+              >
                 <div className="p-6 sm:p-8 space-y-6">
                   <div className="flex items-center justify-between pb-4 border-b border-brand-border">
                     <div className="flex items-center gap-3">
@@ -1002,47 +1038,13 @@ export function ProfilePage() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {/* Province Input */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <MapPin className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'استان' : 'Province / State'}
-                        </label>
-                      </div>
-                      <Input
-                        aria-label={isPersian ? 'استان' : 'Province / State'}
-                        placeholder={isPersian ? 'مثال: تهران' : 'e.g. Tehran'}
-                        value={province}
-                        onValueChange={setProvince}
-                        variant="bordered"
-                        radius="lg"
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-semibold text-brand-text",
-                        }}
-                      />
-                    </div>
-
-                    {/* City Input */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <Building className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'شهر' : 'City'}
-                        </label>
-                      </div>
-                      <Input
-                        aria-label={isPersian ? 'شهر' : 'City'}
-                        placeholder={isPersian ? 'مثال: تهران' : 'e.g. Tehran'}
-                        value={city}
-                        onValueChange={setCity}
-                        variant="bordered"
-                        radius="lg"
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-semibold text-brand-text",
-                        }}
+                    {/* Province & City Selectors */}
+                    <div className="sm:col-span-2">
+                      <ProvinceCitySelect
+                        province={province}
+                        city={city}
+                        onChangeProvince={setProvince}
+                        onChangeCity={setCity}
                       />
                     </div>
 
@@ -1056,7 +1058,7 @@ export function ProfilePage() {
                       </div>
                       <Textarea
                         aria-label={isPersian ? 'نشانی پستی دقیق' : 'Full Street Address'}
-                        placeholder={isPersian ? 'خیابان، کوچه، پلاک، واحد...' : 'Street address, alley, details'}
+                        placeholder={isPersian ? 'خیابان، کوچه، پلاک...' : 'Street address, alley, details'}
                         minRows={3}
                         value={address}
                         onValueChange={setAddress}
@@ -1069,7 +1071,7 @@ export function ProfilePage() {
                       />
                     </div>
 
-                    {/* Postal Code */}
+                    {/* Postal Code (10 digits) */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-1.5 h-5">
                         <Hash className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
@@ -1082,7 +1084,7 @@ export function ProfilePage() {
                         placeholder="1234567890"
                         maxLength={10}
                         value={postalCode}
-                        onValueChange={setPostalCode}
+                        onValueChange={(val) => setPostalCode(toEnglishDigits(val))}
                         variant="bordered"
                         radius="lg"
                         classNames={{
@@ -1092,48 +1094,26 @@ export function ProfilePage() {
                       />
                     </div>
 
-                    {/* Building & Unit Grid */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-1.5 h-5">
-                          <Building className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                          <label className="text-xs font-bold text-brand-text">
-                            {isPersian ? 'پلاک' : 'Plaque'}
-                          </label>
-                        </div>
-                        <Input
-                          aria-label={isPersian ? 'پلاک' : 'Plaque'}
-                          placeholder="12"
-                          value={buildingNumber}
-                          onValueChange={setBuildingNumber}
-                          variant="bordered"
-                          radius="lg"
-                          classNames={{
-                            inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                            input: "text-xs font-bold text-brand-text text-start",
-                          }}
-                        />
+                    {/* Building Number (Plaque) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5 h-5">
+                        <Building className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                        <label className="text-xs font-bold text-brand-text">
+                          {isPersian ? 'پلاک' : 'Plaque / Building Number'}
+                        </label>
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-1.5 h-5">
-                          <Building className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                          <label className="text-xs font-bold text-brand-text">
-                            {isPersian ? 'واحد' : 'Unit'}
-                          </label>
-                        </div>
-                        <Input
-                          aria-label={isPersian ? 'واحد' : 'Unit'}
-                          placeholder="3"
-                          value={unit}
-                          onValueChange={setUnit}
-                          variant="bordered"
-                          radius="lg"
-                          classNames={{
-                            inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                            input: "text-xs font-bold text-brand-text text-start",
-                          }}
-                        />
-                      </div>
+                      <Input
+                        aria-label={isPersian ? 'پلاک' : 'Plaque'}
+                        placeholder={isPersian ? 'مثال: ۱۲' : 'e.g. 12'}
+                        value={buildingNumber}
+                        onValueChange={setBuildingNumber}
+                        variant="bordered"
+                        radius="lg"
+                        classNames={{
+                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                          input: "text-xs font-bold text-brand-text text-start",
+                        }}
+                      />
                     </div>
 
                     {/* Recipient Name */}
@@ -1168,10 +1148,11 @@ export function ProfilePage() {
                       </div>
                       <Input
                         aria-label={isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone'}
-                        placeholder="0912..."
+                        placeholder="09123456789"
                         type="tel"
+                        maxLength={11}
                         value={recipientPhone}
-                        onValueChange={setRecipientPhone}
+                        onValueChange={(val) => setRecipientPhone(toEnglishDigits(val))}
                         variant="bordered"
                         radius="lg"
                         classNames={{
@@ -1319,8 +1300,9 @@ export function ProfilePage() {
                         type="tel"
                         aria-label={isPersian ? 'شماره موبایل' : 'Phone Number'}
                         placeholder="09123456789"
+                        maxLength={11}
                         value={phone}
-                        onValueChange={setPhone}
+                        onValueChange={(val) => setPhone(toEnglishDigits(val))}
                         variant="bordered"
                         radius="lg"
                         classNames={{

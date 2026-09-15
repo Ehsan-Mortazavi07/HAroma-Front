@@ -22,9 +22,10 @@ import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { clearCart } from '@/stores/cart/cartSlice';
 import { updateUser } from '@/stores/auth/authSlice';
 import { PATHS } from '@/common/constants/PATHS';
-import { formatToman, toPersianDigits, getLocalizedVariantTitle, toast } from '@/common/utils';
+import { formatToman, toPersianDigits, toEnglishDigits, getLocalizedVariantTitle, toast } from '@/common/utils';
 import axiosInstance from '@/common/axiosInstance';
 import { useTranslation } from '@/common/i18n';
+import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 
 export function CheckoutPage() {
   const router = useRouter();
@@ -128,6 +129,26 @@ export function CheckoutPage() {
 
     if (items.length === 0) {
       toast.error(isPersian ? 'سبد خرید شما خالی است.' : 'Your cart is empty.');
+      return;
+    }
+
+    const cleanPhone = toEnglishDigits(deliveryAddress.phone).trim();
+    if (cleanPhone && !/^09\d{9}$/.test(cleanPhone)) {
+      toast.error(
+        isPersian
+          ? 'شماره تماس باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثلاً ۰۹۱۲۳۴۵۶۷۸۹).'
+          : 'Phone number must be 11 digits starting with 09.'
+      );
+      return;
+    }
+
+    const cleanPostal = toEnglishDigits(deliveryAddress.postalCode).trim();
+    if (cleanPostal && cleanPostal.length !== 10) {
+      toast.error(
+        isPersian
+          ? 'کد پستی باید دقیقاً ۱۰ رقم باشد.'
+          : 'Postal code must be exactly 10 digits.'
+      );
       return;
     }
 
@@ -321,42 +342,29 @@ export function CheckoutPage() {
                     {t.checkout.phone} (تحویل‌گیرنده)
                   </label>
                   <input
-                    type="text"
+                    type="tel"
+                    dir="ltr"
+                    maxLength={11}
                     value={deliveryAddress.phone}
                     onChange={(e) =>
-                      setDeliveryAddress({ ...deliveryAddress, phone: e.target.value })
+                      setDeliveryAddress({
+                        ...deliveryAddress,
+                        phone: toEnglishDigits(e.target.value).replace(/\D/g, ''),
+                      })
                     }
-                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold font-mono text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    placeholder="09123456789"
+                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold font-mono text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                    {t.checkout.province}
-                  </label>
-                  <input
-                    type="text"
-                    value={deliveryAddress.province}
-                    onChange={(e) =>
-                      setDeliveryAddress({ ...deliveryAddress, province: e.target.value })
-                    }
-                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                    {t.checkout.city}
-                  </label>
-                  <input
-                    type="text"
-                    value={deliveryAddress.city}
-                    onChange={(e) =>
-                      setDeliveryAddress({ ...deliveryAddress, city: e.target.value })
-                    }
-                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
-                  />
-                </div>
+                <ProvinceCitySelect
+                  province={deliveryAddress.province}
+                  city={deliveryAddress.city}
+                  onChange={({ province, city }) =>
+                    setDeliveryAddress((prev) => ({ ...prev, province, city }))
+                  }
+                  className="sm:col-span-2"
+                />
 
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-bold text-brand-text-muted mb-1">
@@ -378,41 +386,32 @@ export function CheckoutPage() {
                   </label>
                   <input
                     type="text"
+                    dir="ltr"
+                    maxLength={10}
                     value={deliveryAddress.postalCode}
                     onChange={(e) =>
-                      setDeliveryAddress({ ...deliveryAddress, postalCode: e.target.value })
+                      setDeliveryAddress({
+                        ...deliveryAddress,
+                        postalCode: toEnglishDigits(e.target.value).replace(/\D/g, ''),
+                      })
                     }
-                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-mono text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    placeholder="1234567890"
+                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-mono text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                      {isPersian ? 'پلاک' : 'Plaque'}
-                    </label>
-                    <input
-                      type="text"
-                      value={deliveryAddress.buildingNumber}
-                      onChange={(e) =>
-                        setDeliveryAddress({ ...deliveryAddress, buildingNumber: e.target.value })
-                      }
-                      className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                      {isPersian ? 'واحد' : 'Unit'}
-                    </label>
-                    <input
-                      type="text"
-                      value={deliveryAddress.unit}
-                      onChange={(e) =>
-                        setDeliveryAddress({ ...deliveryAddress, unit: e.target.value })
-                      }
-                      className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
+                    {isPersian ? 'پلاک' : 'Plaque'}
+                  </label>
+                  <input
+                    type="text"
+                    value={deliveryAddress.buildingNumber}
+                    onChange={(e) =>
+                      setDeliveryAddress({ ...deliveryAddress, buildingNumber: e.target.value })
+                    }
+                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
+                  />
                 </div>
 
                 <div className="sm:col-span-2 p-3 rounded-xl bg-brand-champagne/20 border border-brand-gold/30 text-[11px] text-brand-bronze-dark leading-relaxed">
@@ -422,7 +421,27 @@ export function CheckoutPage() {
                 </div>
 
                 <button
-                  onClick={() => setIsEditingAddress(false)}
+                  onClick={() => {
+                    const cleanPhone = toEnglishDigits(deliveryAddress.phone).trim();
+                    if (cleanPhone && !/^09\d{9}$/.test(cleanPhone)) {
+                      toast.error(
+                        isPersian
+                          ? 'شماره تماس باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثلاً ۰۹۱۲۳۴۵۶۷۸۹).'
+                          : 'Phone number must be 11 digits starting with 09.'
+                      );
+                      return;
+                    }
+                    const cleanPostal = toEnglishDigits(deliveryAddress.postalCode).trim();
+                    if (cleanPostal && cleanPostal.length !== 10) {
+                      toast.error(
+                        isPersian
+                          ? 'کد پستی باید دقیقاً ۱۰ رقم باشد.'
+                          : 'Postal code must be exactly 10 digits.'
+                      );
+                      return;
+                    }
+                    setIsEditingAddress(false);
+                  }}
                   className="sm:col-span-2 py-2.5 rounded-xl bg-brand-olive text-brand-champagne font-bold text-xs border border-brand-gold/40 shadow-xs hover:bg-brand-olive/90 transition-colors"
                 >
                   {t.checkout.saveAddress}
@@ -441,7 +460,6 @@ export function CheckoutPage() {
                 <div className="text-brand-text-muted leading-relaxed">
                   {[deliveryAddress.province, deliveryAddress.city, deliveryAddress.addressDetail].filter(Boolean).join('، ')}
                   {deliveryAddress.buildingNumber && ` - پلاک ${deliveryAddress.buildingNumber}`}
-                  {deliveryAddress.unit && ` - واحد ${deliveryAddress.unit}`}
                 </div>
                 {deliveryAddress.postalCode && (
                   <div className="text-[11px] font-mono text-brand-bronze">
