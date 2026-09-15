@@ -836,7 +836,7 @@ export function ProfilePage() {
                           {isPersian ? 'آدرس‌ها' : 'Addresses'}
                         </h4>
                         <p className="text-xs text-brand-text-muted leading-relaxed">
-                          {isPersian ? 'نشانی‌های تحویل، پلاک و گیرنده را مدیریت کنید' : 'Manage delivery addresses, postal codes and contacts'}
+                          {isPersian ? 'نشانی‌های تحویل، کد پستی و گیرنده را مدیریت کنید' : 'Manage delivery addresses, postal codes and contacts'}
                         </p>
                       </div>
                     </div>
@@ -1058,15 +1058,17 @@ export function ProfilePage() {
                       </div>
                       <Textarea
                         aria-label={isPersian ? 'نشانی پستی دقیق' : 'Full Street Address'}
-                        placeholder={isPersian ? 'خیابان، کوچه، پلاک...' : 'Street address, alley, details'}
-                        minRows={3}
+                        placeholder={isPersian ? 'نام خیابان، کوچه، پلاک، طبقه، واحد یا توضیحات تکمیلی نشانی...' : 'Street name, alley, building number, floor, details...'}
+                        disableAutosize
+                        rows={3}
+                        maxLength={500}
                         value={address}
                         onValueChange={setAddress}
                         variant="bordered"
                         radius="lg"
                         classNames={{
-                          inputWrapper: "p-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-semibold text-brand-text leading-relaxed",
+                          inputWrapper: "p-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors h-24 !resize-none",
+                          input: "text-xs font-semibold text-brand-text leading-relaxed !resize-none resize-none overflow-y-auto",
                         }}
                       />
                     </div>
@@ -1094,26 +1096,16 @@ export function ProfilePage() {
                       />
                     </div>
 
-                    {/* Building Number (Plaque) */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <Building className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'پلاک' : 'Plaque / Building Number'}
-                        </label>
+                    {/* Postal Helper Tip */}
+                    <div className="space-y-2 flex flex-col justify-end">
+                      <div className="h-12 px-4 rounded-2xl bg-brand-champagne/15 border border-brand-gold/25 flex items-center gap-2.5 text-[11px] text-brand-bronze dark:text-brand-gold font-medium">
+                        <span>💡</span>
+                        <span>
+                          {isPersian
+                            ? 'کد پستی ۱۰ رقمی بدون خط تیره جهت ارسال سریع و دقیق مرسولات'
+                            : '10-digit postal code without dashes for express shipping'}
+                        </span>
                       </div>
-                      <Input
-                        aria-label={isPersian ? 'پلاک' : 'Plaque'}
-                        placeholder={isPersian ? 'مثال: ۱۲' : 'e.g. 12'}
-                        value={buildingNumber}
-                        onValueChange={setBuildingNumber}
-                        variant="bordered"
-                        radius="lg"
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-bold text-brand-text text-start",
-                        }}
-                      />
                     </div>
 
                     {/* Recipient Name */}

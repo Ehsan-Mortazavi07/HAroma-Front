@@ -125,6 +125,7 @@
   select,
   textarea {
     font-family: inherit;
+    resize: none !important;
   }
 
   /* Reset browser native input styles so HeroUI inputs remain pristine */

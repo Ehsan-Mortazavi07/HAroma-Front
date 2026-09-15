@@ -371,12 +371,18 @@ export function CheckoutPage() {
                     {t.checkout.addressDetail}
                   </label>
                   <textarea
-                    rows={2}
+                    rows={3}
+                    maxLength={500}
                     value={deliveryAddress.addressDetail}
                     onChange={(e) =>
                       setDeliveryAddress({ ...deliveryAddress, addressDetail: e.target.value })
                     }
-                    className="w-full p-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    placeholder={
+                      isPersian
+                        ? 'نام خیابان، کوچه، پلاک، طبقه، واحد یا توضیحات تکمیلی...'
+                        : 'Street, alley, building number, floor, details...'
+                    }
+                    className="w-full p-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold resize-none h-24 overflow-y-auto"
                   />
                 </div>
 
@@ -400,18 +406,15 @@ export function CheckoutPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                    {isPersian ? 'پلاک' : 'Plaque'}
-                  </label>
-                  <input
-                    type="text"
-                    value={deliveryAddress.buildingNumber}
-                    onChange={(e) =>
-                      setDeliveryAddress({ ...deliveryAddress, buildingNumber: e.target.value })
-                    }
-                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
-                  />
+                <div className="flex flex-col justify-end">
+                  <div className="h-11 px-3 rounded-xl bg-brand-champagne/20 border border-brand-gold/30 flex items-center gap-2 text-[11px] text-brand-bronze-dark font-medium">
+                    <span>💡</span>
+                    <span>
+                      {isPersian
+                        ? 'کد پستی ۱۰ رقمی بدون خط تیره جهت ارسال سریع مرسولات'
+                        : '10-digit postal code for express shipping'}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="sm:col-span-2 p-3 rounded-xl bg-brand-champagne/20 border border-brand-gold/30 text-[11px] text-brand-bronze-dark leading-relaxed">
@@ -459,7 +462,6 @@ export function CheckoutPage() {
                 </div>
                 <div className="text-brand-text-muted leading-relaxed">
                   {[deliveryAddress.province, deliveryAddress.city, deliveryAddress.addressDetail].filter(Boolean).join('، ')}
-                  {deliveryAddress.buildingNumber && ` - پلاک ${deliveryAddress.buildingNumber}`}
                 </div>
                 {deliveryAddress.postalCode && (
                   <div className="text-[11px] font-mono text-brand-bronze">
