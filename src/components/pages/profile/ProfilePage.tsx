@@ -722,7 +722,7 @@ export function ProfilePage() {
                         variant="flat"
                         startContent={<Crown className="w-3.5 h-3.5 text-brand-gold shrink-0" />}
                         classNames={{
-                          base: "bg-[#181f18] text-brand-gold border border-brand-gold/30 text-xs font-black h-10 px-3.5 rounded-2xl shadow-xs",
+                          base: "bg-brand-gold/15 dark:bg-[#181f18] text-brand-bronze-dark dark:text-brand-gold border border-brand-gold/30 text-xs font-black h-10 px-3.5 rounded-2xl shadow-xs",
                           content: "px-1 font-black"
                         }}
                       >
@@ -1573,19 +1573,19 @@ export function ProfilePage() {
           {/* TAB 5: VIP CLUB LOUNGE TAB */}
           {activeTab === 'vip' && (
             <div className="space-y-6">
-              <Card className="bg-gradient-to-br from-[#1c241c] via-[#141914] to-[#0d120d] border-2 border-brand-gold/40 shadow-2xl rounded-3xl overflow-hidden relative">
-                <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-brand-gold/15 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+              <Card className="bg-gradient-to-br from-white via-[#fcf8f2] to-[#f5ead9] dark:from-[#1c241c] dark:via-[#141914] dark:to-[#0d120d] border-2 border-brand-gold/40 shadow-xl rounded-3xl overflow-hidden relative">
+                <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-brand-gold/20 dark:bg-brand-gold/15 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-amber-500/10 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
                 <div className="p-6 sm:p-10 space-y-8 relative z-10">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-gold to-[#997a4d] text-[#141914] flex items-center justify-center shadow-xl shadow-brand-gold/25 shrink-0">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-gold to-[#997a4d] text-white dark:text-[#141914] flex items-center justify-center shadow-xl shadow-brand-gold/25 shrink-0">
                         <Crown className="w-8 h-8" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h2 className="text-xl sm:text-2xl font-black text-brand-gold">
+                          <h2 className="text-xl sm:text-2xl font-black text-[#8a6839] dark:text-brand-gold">
                             {isPersian ? 'باشگاه مشتریان VIP هاتف آروما' : 'HatefAroma VIP Club'}
                           </h2>
                           <Chip
@@ -1619,9 +1619,9 @@ export function ProfilePage() {
 
                   {/* Privilege Cards Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                    <div className="p-5 rounded-2xl bg-[#182018]/80 border border-brand-gold/20 backdrop-blur-md space-y-2">
+                    <div className="p-5 rounded-2xl bg-white/85 dark:bg-[#182018]/80 border border-brand-gold/30 dark:border-brand-gold/20 backdrop-blur-md shadow-xs space-y-2 hover:border-brand-gold/50 transition-all">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-brand-gold/10 border border-brand-gold/30 text-brand-gold flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-brand-gold/15 dark:bg-brand-gold/10 border border-brand-gold/30 text-brand-bronze dark:text-brand-gold flex items-center justify-center shrink-0">
                           <Zap className="w-5 h-5" />
                         </div>
                         <h4 className="text-sm font-black text-brand-text">
@@ -1635,9 +1635,9 @@ export function ProfilePage() {
                       </p>
                     </div>
 
-                    <div className="p-5 rounded-2xl bg-[#182018]/80 border border-brand-gold/20 backdrop-blur-md space-y-2">
+                    <div className="p-5 rounded-2xl bg-white/85 dark:bg-[#182018]/80 border border-brand-gold/30 dark:border-brand-gold/20 backdrop-blur-md shadow-xs space-y-2 hover:border-brand-gold/50 transition-all">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-brand-gold/10 border border-brand-gold/30 text-brand-gold flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-brand-gold/15 dark:bg-brand-gold/10 border border-brand-gold/30 text-brand-bronze dark:text-brand-gold flex items-center justify-center shrink-0">
                           <Truck className="w-5 h-5" />
                         </div>
                         <h4 className="text-sm font-black text-brand-text">
@@ -1651,9 +1651,9 @@ export function ProfilePage() {
                       </p>
                     </div>
 
-                    <div className="p-5 rounded-2xl bg-[#182018]/80 border border-brand-gold/20 backdrop-blur-md space-y-2">
+                    <div className="p-5 rounded-2xl bg-white/85 dark:bg-[#182018]/80 border border-brand-gold/30 dark:border-brand-gold/20 backdrop-blur-md shadow-xs space-y-2 hover:border-brand-gold/50 transition-all">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-brand-gold/10 border border-brand-gold/30 text-brand-gold flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-brand-gold/15 dark:bg-brand-gold/10 border border-brand-gold/30 text-brand-bronze dark:text-brand-gold flex items-center justify-center shrink-0">
                           <Award className="w-5 h-5" />
                         </div>
                         <h4 className="text-sm font-black text-brand-text">
@@ -1667,9 +1667,9 @@ export function ProfilePage() {
                       </p>
                     </div>
 
-                    <div className="p-5 rounded-2xl bg-[#182018]/80 border border-brand-gold/20 backdrop-blur-md space-y-2">
+                    <div className="p-5 rounded-2xl bg-white/85 dark:bg-[#182018]/80 border border-brand-gold/30 dark:border-brand-gold/20 backdrop-blur-md shadow-xs space-y-2 hover:border-brand-gold/50 transition-all">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-brand-gold/10 border border-brand-gold/30 text-brand-gold flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-brand-gold/15 dark:bg-brand-gold/10 border border-brand-gold/30 text-brand-bronze dark:text-brand-gold flex items-center justify-center shrink-0">
                           <Sparkles className="w-5 h-5" />
                         </div>
                         <h4 className="text-sm font-black text-brand-text">
