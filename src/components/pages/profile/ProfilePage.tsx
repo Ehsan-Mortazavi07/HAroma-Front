@@ -35,6 +35,7 @@ import {
   Zap,
   Building,
   Hash,
+  FileText,
 } from 'lucide-react';
 import {
   Card,
@@ -85,8 +86,10 @@ export function ProfilePage() {
   const [postalCode, setPostalCode] = useState(user?.postalCode || '');
   const [buildingNumber, setBuildingNumber] = useState(user?.buildingNumber || '');
   const [unit, setUnit] = useState(user?.unit || '');
-  const [recipientName, setRecipientName] = useState(user?.recipientName || '');
-  const [recipientPhone, setRecipientPhone] = useState(user?.recipientPhone || '');
+  const [recipientName, setRecipientName] = useState(user?.recipientName || user?.fullName || '');
+  const [recipientPhone, setRecipientPhone] = useState(user?.recipientPhone || user?.phone || '');
+  const [recipientEmail, setRecipientEmail] = useState(user?.recipientEmail || user?.email || '');
+  const [addressNotes, setAddressNotes] = useState(user?.addressNotes || '');
 
   // Password Visibility & Form State
   const [currentPassword, setCurrentPassword] = useState('');
@@ -121,8 +124,10 @@ export function ProfilePage() {
       setPostalCode(user.postalCode || '');
       setBuildingNumber(user.buildingNumber || '');
       setUnit(user.unit || '');
-      setRecipientName(user.recipientName || '');
-      setRecipientPhone(user.recipientPhone || '');
+      setRecipientName(user.recipientName || user.fullName || '');
+      setRecipientPhone(user.recipientPhone || user.phone || '');
+      setRecipientEmail(user.recipientEmail || user.email || '');
+      setAddressNotes(user.addressNotes || '');
       setResetIdentifier(user.email || user.username || '');
     }
   }, [user]);
@@ -200,13 +205,24 @@ export function ProfilePage() {
       return;
     }
 
-    // Postal Code validation (exactly 10 digits)
+    // Postal Code validation (optional, exactly 10 digits if provided)
     const normalizedPostalCode = toEnglishDigits(postalCode.trim());
     if (normalizedPostalCode && !/^\d{10}$/.test(normalizedPostalCode)) {
       toast.error(
         isPersian
           ? 'کد پستی باید دقیقاً ۱۰ رقم عددی باشد.'
           : 'Postal code must be exactly 10 digits.',
+      );
+      return;
+    }
+
+    // Recipient Email validation (optional, valid format if provided)
+    const trimmedRecipientEmail = recipientEmail.trim().toLowerCase();
+    if (trimmedRecipientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedRecipientEmail)) {
+      toast.error(
+        isPersian
+          ? 'فرمت ایمیل تحویل‌گیرنده نامعتبر است.'
+          : 'Invalid recipient email format.',
       );
       return;
     }
@@ -254,6 +270,8 @@ export function ProfilePage() {
         buildingNumber: buildingNumber.trim() || undefined,
         recipientName: recipientName.trim() || undefined,
         recipientPhone: normalizedRecipientPhone || undefined,
+        recipientEmail: trimmedRecipientEmail || undefined,
+        addressNotes: addressNotes.trim() || undefined,
       };
 
       if (newPassword) {
@@ -1073,41 +1091,6 @@ export function ProfilePage() {
                       />
                     </div>
 
-                    {/* Postal Code (10 digits) */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <Hash className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'کد پستی (۱۰ رقمی)' : 'Postal / Zip Code (10 digits)'}
-                        </label>
-                      </div>
-                      <Input
-                        aria-label={isPersian ? 'کد پستی (۱۰ رقمی)' : 'Postal / Zip Code (10 digits)'}
-                        placeholder="1234567890"
-                        maxLength={10}
-                        value={postalCode}
-                        onValueChange={(val) => setPostalCode(toEnglishDigits(val))}
-                        variant="bordered"
-                        radius="lg"
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-bold text-brand-text tracking-widest text-start",
-                        }}
-                      />
-                    </div>
-
-                    {/* Postal Helper Tip */}
-                    <div className="space-y-2 flex flex-col justify-end">
-                      <div className="h-12 px-4 rounded-2xl bg-brand-champagne/15 border border-brand-gold/25 flex items-center gap-2.5 text-[11px] text-brand-bronze dark:text-brand-gold font-medium">
-                        <span>💡</span>
-                        <span>
-                          {isPersian
-                            ? 'کد پستی ۱۰ رقمی بدون خط تیره جهت ارسال سریع و دقیق مرسولات'
-                            : '10-digit postal code without dashes for express shipping'}
-                        </span>
-                      </div>
-                    </div>
-
                     {/* Recipient Name */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-1.5 h-5">
@@ -1150,6 +1133,81 @@ export function ProfilePage() {
                         classNames={{
                           inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
                           input: "text-xs font-bold text-brand-text text-start",
+                        }}
+                      />
+                    </div>
+
+                    {/* Postal Code (10 digits - Optional) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5 h-5">
+                        <Hash className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                        <label className="text-xs font-bold text-brand-text">
+                          {isPersian ? 'کد پستی (۱۰ رقمی - اختیاری)' : 'Postal / Zip Code (10 digits - Optional)'}
+                        </label>
+                      </div>
+                      <Input
+                        aria-label={isPersian ? 'کد پستی (۱۰ رقمی - اختیاری)' : 'Postal / Zip Code (10 digits - Optional)'}
+                        placeholder="1234567890"
+                        maxLength={10}
+                        value={postalCode}
+                        onValueChange={(val) => setPostalCode(toEnglishDigits(val))}
+                        variant="bordered"
+                        radius="lg"
+                        classNames={{
+                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                          input: "text-xs font-bold text-brand-text tracking-widest text-start",
+                        }}
+                      />
+                    </div>
+
+                    {/* Recipient Email (Optional) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5 h-5">
+                        <Mail className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                        <label className="text-xs font-bold text-brand-text">
+                          {isPersian ? 'ایمیل تحویل‌گیرنده (اختیاری)' : 'Recipient Email (Optional)'}
+                        </label>
+                      </div>
+                      <Input
+                        type="email"
+                        aria-label={isPersian ? 'ایمیل تحویل‌گیرنده (اختیاری)' : 'Recipient Email (Optional)'}
+                        placeholder="user@example.com"
+                        value={recipientEmail}
+                        onValueChange={setRecipientEmail}
+                        variant="bordered"
+                        radius="lg"
+                        classNames={{
+                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                          input: "text-xs font-semibold text-brand-text text-start",
+                        }}
+                      />
+                    </div>
+
+                    {/* Delivery Notes / Instructions (Optional) */}
+                    <div className="space-y-2 sm:col-span-2">
+                      <div className="flex items-center gap-1.5 h-5">
+                        <FileText className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                        <label className="text-xs font-bold text-brand-text">
+                          {isPersian ? 'توضیحات و یادداشت تحویل (اختیاری)' : 'Delivery Notes & Instructions (Optional)'}
+                        </label>
+                      </div>
+                      <Textarea
+                        aria-label={isPersian ? 'توضیحات و یادداشت تحویل (اختیاری)' : 'Delivery Notes & Instructions (Optional)'}
+                        placeholder={
+                          isPersian
+                            ? 'توضیحات تکمیلی تحویل سفارش، شماره زنگ، طبقه، هماهنگی قبل از ارسال و... (اختیاری)'
+                            : 'Special instructions, apartment/bell number, delivery coordination... (optional)'
+                        }
+                        disableAutosize
+                        rows={2}
+                        maxLength={300}
+                        value={addressNotes}
+                        onValueChange={setAddressNotes}
+                        variant="bordered"
+                        radius="lg"
+                        classNames={{
+                          inputWrapper: "p-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors h-20 !resize-none",
+                          input: "text-xs font-semibold text-brand-text leading-relaxed !resize-none resize-none overflow-y-auto",
                         }}
                       />
                     </div>

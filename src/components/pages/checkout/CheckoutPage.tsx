@@ -38,14 +38,14 @@ export function CheckoutPage() {
 
   // Address State (pre-filled from user profile or initial defaults)
   const [deliveryAddress, setDeliveryAddress] = useState({
-    fullName: user?.recipientName || user?.fullName || (isPersian ? 'کاربر هاورما' : 'HAroma User'),
+    fullName: user?.recipientName || user?.fullName || (isPersian ? 'کاربر هاتف آروما' : 'HAroma User'),
     phone: user?.recipientPhone || user?.phone || '',
+    email: user?.recipientEmail || user?.email || '',
     province: user?.province || (isPersian ? 'تهران' : 'Tehran'),
     city: user?.city || (isPersian ? 'تهران' : 'Tehran'),
     postalCode: user?.postalCode || '',
     addressDetail: user?.address || '',
-    buildingNumber: user?.buildingNumber || '',
-    unit: user?.unit || '',
+    description: user?.addressNotes || '',
   });
 
   // Sync address when user profile loads/changes
@@ -54,12 +54,12 @@ export function CheckoutPage() {
       setDeliveryAddress((prev) => ({
         fullName: user.recipientName || user.fullName || prev.fullName,
         phone: user.recipientPhone || user.phone || prev.phone,
+        email: user.recipientEmail || user.email || prev.email || '',
         province: user.province || prev.province,
         city: user.city || prev.city,
         postalCode: user.postalCode || prev.postalCode,
         addressDetail: user.address || prev.addressDetail,
-        buildingNumber: user.buildingNumber || prev.buildingNumber || '',
-        unit: user.unit || prev.unit || '',
+        description: user.addressNotes || prev.description || '',
       }));
     }
   }, [user]);
@@ -133,7 +133,7 @@ export function CheckoutPage() {
     }
 
     const cleanPhone = toEnglishDigits(deliveryAddress.phone).trim();
-    if (cleanPhone && !/^09\d{9}$/.test(cleanPhone)) {
+    if (!cleanPhone || !/^09\d{9}$/.test(cleanPhone)) {
       toast.error(
         isPersian
           ? 'شماره تماس باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثلاً ۰۹۱۲۳۴۵۶۷۸۹).'
@@ -148,6 +148,16 @@ export function CheckoutPage() {
         isPersian
           ? 'کد پستی باید دقیقاً ۱۰ رقم باشد.'
           : 'Postal code must be exactly 10 digits.'
+      );
+      return;
+    }
+
+    const cleanEmail = deliveryAddress.email?.trim().toLowerCase();
+    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      toast.error(
+        isPersian
+          ? 'فرمت ایمیل تحویل‌گیرنده معتبر نیست.'
+          : 'Invalid recipient email format.'
       );
       return;
     }
@@ -406,15 +416,40 @@ export function CheckoutPage() {
                   />
                 </div>
 
-                <div className="flex flex-col justify-end">
-                  <div className="h-11 px-3 rounded-xl bg-brand-champagne/20 border border-brand-gold/30 flex items-center gap-2 text-[11px] text-brand-bronze-dark font-medium">
-                    <span>💡</span>
-                    <span>
-                      {isPersian
-                        ? 'کد پستی ۱۰ رقمی بدون خط تیره جهت ارسال سریع مرسولات'
-                        : '10-digit postal code for express shipping'}
-                    </span>
-                  </div>
+                <div>
+                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
+                    {t.checkout.email}
+                  </label>
+                  <input
+                    type="email"
+                    dir="ltr"
+                    value={deliveryAddress.email || ''}
+                    onChange={(e) =>
+                      setDeliveryAddress({ ...deliveryAddress, email: e.target.value })
+                    }
+                    placeholder="user@example.com"
+                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold text-start"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
+                    {t.checkout.notes}
+                  </label>
+                  <textarea
+                    rows={2}
+                    maxLength={300}
+                    value={deliveryAddress.description || ''}
+                    onChange={(e) =>
+                      setDeliveryAddress({ ...deliveryAddress, description: e.target.value })
+                    }
+                    placeholder={
+                      isPersian
+                        ? 'توضیحات تکمیلی تحویل سفارش، شماره زنگ، طبقه، هماهنگی قبل از ارسال و... (اختیاری)'
+                        : 'Special delivery instructions, apartment/bell number, coordination... (optional)'
+                    }
+                    className="w-full p-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold resize-none h-20 overflow-y-auto"
+                  />
                 </div>
 
                 <div className="sm:col-span-2 p-3 rounded-xl bg-brand-champagne/20 border border-brand-gold/30 text-[11px] text-brand-bronze-dark leading-relaxed">
@@ -426,7 +461,7 @@ export function CheckoutPage() {
                 <button
                   onClick={() => {
                     const cleanPhone = toEnglishDigits(deliveryAddress.phone).trim();
-                    if (cleanPhone && !/^09\d{9}$/.test(cleanPhone)) {
+                    if (!cleanPhone || !/^09\d{9}$/.test(cleanPhone)) {
                       toast.error(
                         isPersian
                           ? 'شماره تماس باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثلاً ۰۹۱۲۳۴۵۶۷۸۹).'
@@ -443,6 +478,15 @@ export function CheckoutPage() {
                       );
                       return;
                     }
+                    const cleanEmail = deliveryAddress.email?.trim().toLowerCase();
+                    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+                      toast.error(
+                        isPersian
+                          ? 'فرمت ایمیل تحویل‌گیرنده معتبر نیست.'
+                          : 'Invalid recipient email format.'
+                      );
+                      return;
+                    }
                     setIsEditingAddress(false);
                   }}
                   className="sm:col-span-2 py-2.5 rounded-xl bg-brand-olive text-brand-champagne font-bold text-xs border border-brand-gold/40 shadow-xs hover:bg-brand-olive/90 transition-colors"
@@ -456,18 +500,26 @@ export function CheckoutPage() {
                   <span className="font-bold text-brand-text">
                     {deliveryAddress.fullName || (isPersian ? 'کاربر بدون نام' : 'Unnamed User')}
                   </span>
-                  {deliveryAddress.phone && (
-                    <span className="font-mono text-brand-text-muted">{deliveryAddress.phone}</span>
-                  )}
+                  <div className="flex items-center gap-3 font-mono text-brand-text-muted text-[11px]">
+                    {deliveryAddress.phone && <span>{deliveryAddress.phone}</span>}
+                    {deliveryAddress.email && <span>{deliveryAddress.email}</span>}
+                  </div>
                 </div>
                 <div className="text-brand-text-muted leading-relaxed">
                   {[deliveryAddress.province, deliveryAddress.city, deliveryAddress.addressDetail].filter(Boolean).join('، ')}
                 </div>
-                {deliveryAddress.postalCode && (
-                  <div className="text-[11px] font-mono text-brand-bronze">
-                    {isPersian ? 'کد پستی: ' : 'Postal Code: '} {deliveryAddress.postalCode}
-                  </div>
-                )}
+                <div className="flex items-center justify-between text-[11px]">
+                  {deliveryAddress.postalCode ? (
+                    <div className="font-mono text-brand-bronze">
+                      {isPersian ? 'کد پستی: ' : 'Postal Code: '} {deliveryAddress.postalCode}
+                    </div>
+                  ) : <div />}
+                  {deliveryAddress.description && (
+                    <div className="text-brand-text-muted italic truncate max-w-xs">
+                      {isPersian ? 'یادداشت: ' : 'Note: '} {deliveryAddress.description}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

@@ -20,6 +20,8 @@ export interface IUser {
   unit?: string;
   recipientName?: string;
   recipientPhone?: string;
+  recipientEmail?: string;
+  addressNotes?: string;
   createdAt?: string;
 }
 
@@ -163,10 +165,12 @@ export interface IOrderItem {
 export interface IDeliveryAddress {
   fullName: string;
   phone: string;
+  email?: string;
   province: string;
   city: string;
   postalCode?: string;
   addressDetail: string;
+  description?: string;
 }
 
 export interface IOrder {
