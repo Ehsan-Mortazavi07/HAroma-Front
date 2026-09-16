@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Formik, Form, Field } from 'formik';
-import { Lock, User, Mail, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Formik, Form } from 'formik';
+import { Card, CardBody, Input, Button } from '@heroui/react';
+import { Lock, User, Mail, Eye, EyeOff, ArrowLeft, ArrowRight } from 'lucide-react';
 import { useAppDispatch } from '@/stores/hooks';
 import { setAuth } from '@/stores/auth/authSlice';
 import { getSignUpSchema } from '@/common/validators';
@@ -19,6 +20,8 @@ export function SignUpPage() {
   const dispatch = useAppDispatch();
   const { t, isPersian, isRTL } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     document.title = isPersian
@@ -63,162 +66,203 @@ export function SignUpPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
-      <div className="w-full max-w-md bg-brand-surface rounded-3xl p-8 border border-brand-border shadow-2xl space-y-6">
-        {/* Header with Brand Logo */}
-        <div className="flex flex-col items-center text-center space-y-3">
-          <BrandLogo size="md" showText={false} />
-          <div>
-            <h1 className="text-2xl font-black text-brand-text">
-              {t.auth.signUpTitle}
-            </h1>
-            <p className="text-xs text-brand-text-muted mt-1">
-              {t.auth.signUpSub}
-            </p>
+      <Card className="w-full max-w-md bg-brand-surface rounded-3xl p-8 border border-brand-border shadow-2xl">
+        <CardBody className="p-0 space-y-6">
+          {/* Header with Brand Logo */}
+          <div className="flex flex-col items-center text-center space-y-3">
+            <BrandLogo size="md" showText={false} />
+            <div>
+              <h1 className="text-2xl font-black text-brand-text">
+                {t.auth.signUpTitle}
+              </h1>
+              <p className="text-xs text-brand-text-muted mt-1">
+                {t.auth.signUpSub}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <Formik
-          initialValues={{
-            fullName: '',
-            username: '',
-            email: '',
-            password: '',
-            confirmPassword: '',
-          }}
-          validationSchema={getSignUpSchema(isPersian)}
-          onSubmit={handleSubmit}
-          enableReinitialize
-        >
-          {({ errors, touched }) => (
-            <Form className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-brand-text mb-1.5">
-                  {t.auth.fullName}
-                </label>
-                <div className="relative">
-                  <Field
+          <Formik
+            initialValues={{
+              fullName: '',
+              username: '',
+              email: '',
+              password: '',
+              confirmPassword: '',
+            }}
+            validationSchema={getSignUpSchema(isPersian)}
+            onSubmit={handleSubmit}
+            enableReinitialize
+          >
+            {({ values, errors, touched, handleChange, handleBlur }) => (
+              <Form className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-brand-text mb-1.5">
+                    {t.auth.fullName}
+                  </label>
+                  <Input
                     name="fullName"
                     type="text"
+                    aria-label={t.auth.fullName}
                     placeholder={isPersian ? 'مثال: احسان مرتضوی' : 'e.g. Ehsan Mortazavi'}
-                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    value={values.fullName}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    variant="bordered"
+                    radius="lg"
+                    startContent={<User className="w-4 h-4 text-brand-bronze shrink-0" />}
+                    isInvalid={Boolean(errors.fullName && touched.fullName)}
+                    errorMessage={errors.fullName && touched.fullName ? (errors.fullName as string) : undefined}
+                    classNames={{
+                      inputWrapper: "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      input: "text-xs font-semibold text-brand-text",
+                    }}
                   />
-                  <User className="w-4 h-4 absolute right-4 top-4 text-brand-text-muted" />
                 </div>
-                {errors.fullName && touched.fullName && (
-                  <div className="text-[11px] text-rose-500 mt-1 font-bold">
-                    {errors.fullName as string}
-                  </div>
-                )}
-              </div>
 
-              <div>
-                <label className="block text-xs font-bold text-brand-text mb-1.5">
-                  {t.auth.username}
-                </label>
-                <div className="relative">
-                  <Field
+                <div>
+                  <label className="block text-xs font-bold text-brand-text mb-1.5">
+                    {t.auth.username}
+                  </label>
+                  <Input
                     name="username"
                     type="text"
+                    aria-label={t.auth.username}
                     placeholder={isPersian ? 'نام کاربری لاتین' : 'username'}
-                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    value={values.username}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    variant="bordered"
+                    radius="lg"
+                    startContent={<User className="w-4 h-4 text-brand-bronze shrink-0" />}
+                    isInvalid={Boolean(errors.username && touched.username)}
+                    errorMessage={errors.username && touched.username ? (errors.username as string) : undefined}
+                    classNames={{
+                      inputWrapper: "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      input: "text-xs font-mono text-brand-text",
+                    }}
                   />
-                  <User className="w-4 h-4 absolute right-4 top-4 text-brand-text-muted" />
                 </div>
-                {errors.username && touched.username && (
-                  <div className="text-[11px] text-rose-500 mt-1 font-bold">
-                    {errors.username as string}
-                  </div>
-                )}
-              </div>
 
-              <div>
-                <label className="block text-xs font-bold text-brand-text mb-1.5">
-                  {t.auth.email}
-                </label>
-                <div className="relative">
-                  <Field
+                <div>
+                  <label className="block text-xs font-bold text-brand-text mb-1.5">
+                    {t.auth.email}
+                  </label>
+                  <Input
                     name="email"
                     type="email"
+                    aria-label={t.auth.email}
                     placeholder="email@example.com"
-                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    value={values.email}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    variant="bordered"
+                    radius="lg"
+                    startContent={<Mail className="w-4 h-4 text-brand-bronze shrink-0" />}
+                    isInvalid={Boolean(errors.email && touched.email)}
+                    errorMessage={errors.email && touched.email ? (errors.email as string) : undefined}
+                    classNames={{
+                      inputWrapper: "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      input: "text-xs font-mono text-brand-text",
+                    }}
                   />
-                  <Mail className="w-4 h-4 absolute right-4 top-4 text-brand-text-muted" />
                 </div>
-                {errors.email && touched.email && (
-                  <div className="text-[11px] text-rose-500 mt-1 font-bold">
-                    {errors.email as string}
-                  </div>
-                )}
-              </div>
 
-              <div>
-                <label className="block text-xs font-bold text-brand-text mb-1.5">
-                  {t.auth.password}
-                </label>
-                <div className="relative">
-                  <Field
+                <div>
+                  <label className="block text-xs font-bold text-brand-text mb-1.5">
+                    {t.auth.password}
+                  </label>
+                  <Input
                     name="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
+                    aria-label={t.auth.password}
                     placeholder="••••••••"
-                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    value={values.password}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    variant="bordered"
+                    radius="lg"
+                    startContent={<Lock className="w-4 h-4 text-brand-bronze shrink-0" />}
+                    endContent={
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="focus:outline-none text-brand-text-muted hover:text-brand-text transition-colors cursor-pointer"
+                        aria-label="toggle password visibility"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    }
+                    isInvalid={Boolean(errors.password && touched.password)}
+                    errorMessage={errors.password && touched.password ? (errors.password as string) : undefined}
+                    classNames={{
+                      inputWrapper: "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      input: "text-xs font-mono font-semibold text-brand-text",
+                    }}
                   />
-                  <Lock className="w-4 h-4 absolute right-4 top-4 text-brand-text-muted" />
                 </div>
-                {errors.password && touched.password && (
-                  <div className="text-[11px] text-rose-500 mt-1 font-bold">
-                    {errors.password as string}
-                  </div>
-                )}
-              </div>
 
-              <div>
-                <label className="block text-xs font-bold text-brand-text mb-1.5">
-                  {t.auth.confirmPassword}
-                </label>
-                <div className="relative">
-                  <Field
+                <div>
+                  <label className="block text-xs font-bold text-brand-text mb-1.5">
+                    {t.auth.confirmPassword}
+                  </label>
+                  <Input
                     name="confirmPassword"
-                    type="password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    aria-label={t.auth.confirmPassword}
                     placeholder="••••••••"
-                    className="w-full h-12 pr-11 pl-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs font-mono font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    value={values.confirmPassword}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    variant="bordered"
+                    radius="lg"
+                    startContent={<Lock className="w-4 h-4 text-brand-bronze shrink-0" />}
+                    endContent={
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="focus:outline-none text-brand-text-muted hover:text-brand-text transition-colors cursor-pointer"
+                        aria-label="toggle confirm password visibility"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    }
+                    isInvalid={Boolean(errors.confirmPassword && touched.confirmPassword)}
+                    errorMessage={errors.confirmPassword && touched.confirmPassword ? (errors.confirmPassword as string) : undefined}
+                    classNames={{
+                      inputWrapper: "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      input: "text-xs font-mono font-semibold text-brand-text",
+                    }}
                   />
-                  <Lock className="w-4 h-4 absolute right-4 top-4 text-brand-text-muted" />
                 </div>
-                {errors.confirmPassword && touched.confirmPassword && (
-                  <div className="text-[11px] text-rose-500 mt-1 font-bold">
-                    {errors.confirmPassword as string}
-                  </div>
-                )}
-              </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98"
-              >
-                {loading ? (
-                  <span>{t.common.loading}</span>
-                ) : (
-                  <>
-                    <span>{t.auth.signUpBtn}</span>
-                    {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-                  </>
-                )}
-              </button>
-            </Form>
-          )}
-        </Formik>
+                <Button
+                  type="submit"
+                  isLoading={loading}
+                  radius="lg"
+                  className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98 cursor-pointer mt-2"
+                >
+                  {!loading && (
+                    <>
+                      <span>{t.auth.signUpBtn}</span>
+                      {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                    </>
+                  )}
+                </Button>
+              </Form>
+            )}
+          </Formik>
 
-        <div className="text-center text-xs text-brand-text-muted pt-2">
-          <span>{t.auth.haveAccount} </span>
-          <Link
-            href={PATHS.SIGN_IN}
-            className="font-bold text-brand-bronze dark:text-brand-gold hover:underline"
-          >
-            {t.auth.goToSignIn}
-          </Link>
-        </div>
-      </div>
+          <div className="text-center text-xs text-brand-text-muted pt-2">
+            <span>{t.auth.haveAccount} </span>
+            <Link
+              href={PATHS.SIGN_IN}
+              className="font-bold text-brand-bronze dark:text-brand-gold hover:underline"
+            >
+              {t.auth.goToSignIn}
+            </Link>
+          </div>
+        </CardBody>
+      </Card>
     </div>
   );
 }

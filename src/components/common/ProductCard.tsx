@@ -71,16 +71,17 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <motion.div
-      whileHover={{ y: -6 }}
-      transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+      whileHover={{ y: -7 }}
+      whileTap={{ scale: 0.99 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 20 }}
       className="h-full"
     >
-      <Card className="h-full group relative flex flex-col justify-between bg-brand-surface rounded-3xl p-4 border border-brand-border shadow-sm hover:shadow-xl hover:border-brand-gold transition-colors duration-300">
+      <Card className="h-full group relative flex flex-col justify-between bg-brand-surface rounded-3xl p-4 border border-brand-border/60 shadow-xs hover:shadow-2xl hover:border-brand-gold/80 transition-all duration-300 ease-out">
         {/* Badges */}
         <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 items-start">
           {product.isVipOnly && <VipBadge size="sm" text={t.common.vipOnly} />}
           {hasDiscount && (
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-brand-bronze text-[#f7f4ee] shadow-sm border border-brand-gold/40">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-brand-bronze text-[#f7f4ee] shadow-sm border border-brand-gold/40">
               {isPersian
                 ? `${toPersianDigits(discountPercent)}٪ تخفیف`
                 : `${discountPercent}% OFF`}
@@ -98,11 +99,11 @@ export function ProductCard({ product }: ProductCardProps) {
             alt={isPersian ? product.title : product.titleEn || product.title}
             fill
             sizes="(max-width: 768px) 100vw, 300px"
-            className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            className="object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out"
             onError={() => setImgSrc(fallbackImage)}
           />
           {/* Soft Gold Shimmer on hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-brand-olive/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-gradient-to-t from-brand-olive/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out" />
         </Link>
 
         {/* Content */}

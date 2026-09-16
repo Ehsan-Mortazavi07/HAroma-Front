@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Button, Chip } from '@heroui/react';
 import {
   LayoutDashboard,
   Package,
@@ -57,13 +58,17 @@ export function AdminSidebar() {
       <div>
         <div className="p-4 border-b border-[#2e3a2e]">
           <BrandLogo size="sm" variant="dark" />
-          <div className="mt-2.5 px-2 py-1 rounded-lg bg-[#202620] border border-[#2e3a2e] flex items-center justify-between text-[11px]">
+          <div className="mt-2.5 px-2 py-1.5 rounded-xl bg-[#202620] border border-[#2e3a2e] flex items-center justify-between text-[11px]">
             <span className="text-[#a69c8e]">{isPersian ? 'نقش شما:' : 'Your Role:'}</span>
-            <span className="font-extrabold text-[#d4be9b]">
+            <Chip
+              variant="flat"
+              size="sm"
+              className="bg-brand-gold/15 text-brand-gold border border-brand-gold/30 text-[10px] font-black h-6 px-2"
+            >
               {user?.role === 'admin'
                 ? isPersian ? 'مدیر کل (Admin)' : 'Admin'
                 : isPersian ? 'ویراستار (Editor)' : 'Editor'}
-            </span>
+            </Chip>
           </div>
         </div>
 
@@ -94,21 +99,28 @@ export function AdminSidebar() {
 
       {/* Footer Exit Options */}
       <div className="p-4 border-t border-[#2e3a2e] space-y-2">
-        <Link
+        <Button
+          as={Link}
           href={PATHS.HOME}
-          className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#d4be9b] hover:bg-[#202620] transition-colors"
+          variant="light"
+          radius="lg"
+          size="sm"
+          className="w-full flex items-center justify-start gap-2 h-9 px-3 rounded-xl text-xs font-bold text-[#d4be9b] hover:bg-[#202620] transition-colors cursor-pointer"
         >
           <ExternalLink className="w-4 h-4" />
           <span>{isPersian ? 'مشاهده وب‌سایت فروشگاه' : 'View Storefront'}</span>
-        </Link>
+        </Button>
 
-        <button
-          onClick={() => dispatch(logout())}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-950/40 transition-colors"
+        <Button
+          onPress={() => dispatch(logout())}
+          variant="light"
+          radius="lg"
+          size="sm"
+          className="w-full flex items-center justify-start gap-2 h-9 px-3 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-950/40 transition-colors cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
           <span>{isPersian ? 'خروج از حساب' : 'Log Out'}</span>
-        </button>
+        </Button>
       </div>
     </aside>
   );

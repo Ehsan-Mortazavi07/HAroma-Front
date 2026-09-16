@@ -2,6 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Sparkles, X, Check, Tag } from 'lucide-react';
+import {
+  Card,
+  CardBody,
+  Button,
+  Input,
+  Textarea,
+  Select,
+  SelectItem,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Chip,
+  Skeleton,
+} from '@heroui/react';
 import { IAttribute, IProductAttribute } from '@/common/interfaces';
 import { adminApi } from '@/common/api/admin';
 import { toast } from '@/common/utils';
@@ -176,8 +192,8 @@ export function DynamicAttributeBuilder({
     setAddingToAttrIndex(null);
   };
 
-  const handleQuickCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleQuickCreate = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!newAttrName.trim()) {
       toast.error(isPersian ? 'نام ویژگی الزامی است.' : 'Attribute name is required.');
       return;
@@ -236,13 +252,16 @@ export function DynamicAttributeBuilder({
           </h3>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsQuickCreateOpen(true)}
-          className="text-xs font-bold text-[#9f815b] dark:text-[#d4be9b] hover:underline self-start sm:self-auto cursor-pointer"
+        <Button
+          size="sm"
+          variant="light"
+          color="warning"
+          onPress={() => setIsQuickCreateOpen(true)}
+          startContent={<Plus className="w-3.5 h-3.5" />}
+          className="text-xs font-bold text-[#9f815b] dark:text-[#d4be9b] self-start sm:self-auto cursor-pointer"
         >
           {isPersian ? '+ ایجاد ویژگی سیستمی جدید' : '+ Create Brand New Attribute'}
-        </button>
+        </Button>
       </div>
 
       <p className="text-xs text-[#73695c] dark:text-[#a69c8e]">
@@ -251,122 +270,141 @@ export function DynamicAttributeBuilder({
           : 'Attach multiple olfactory families (e.g. Woody, Oriental, Floral), notes or seasons to this perfume.'}
       </p>
 
-      {/* Attribute Picker and Multi-Value Selector Box */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3 items-center">
-          <select
-            value={selectedAttrId}
-            onChange={(e) => {
-              setSelectedAttrId(e.target.value);
-              setSelectedValues([]);
-              setCustomValueInput('');
-            }}
-            className="w-full sm:w-1/2 h-11 px-3 rounded-xl bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a] cursor-pointer"
-          >
-            <option value="">{isPersian ? '-- انتخاب ویژگی (گروه بویایی، نت، طبع، فصل و ...) --' : '-- Select Attribute --'}</option>
-            {availableAttributes.map((a) => (
-              <option key={a._id} value={a._id}>
-                {a.name} {a.unit ? `(${a.unit})` : ''}
-              </option>
-            ))}
-          </select>
+      {/* Attribute Picker Box */}
+      <Card className="bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] shadow-none rounded-2xl">
+        <CardBody className="p-4 sm:p-5 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3 items-center">
+            <Select
+              aria-label={isPersian ? 'انتخاب ویژگی' : 'Select Attribute'}
+              placeholder={isPersian ? '-- انتخاب ویژگی (گروه بویایی، نت، طبع، فصل و ...) --' : '-- Select Attribute --'}
+              selectedKeys={selectedAttrId ? new Set([selectedAttrId]) : new Set([])}
+              onSelectionChange={(keys) => {
+                const selected = Array.from(keys)[0] as string;
+                setSelectedAttrId(selected || '');
+                setSelectedValues([]);
+                setCustomValueInput('');
+              }}
+              variant="bordered"
+              radius="lg"
+              className="w-full sm:w-2/3"
+              classNames={{
+                trigger: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-11 text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                value: 'text-xs font-bold',
+                popoverContent: 'bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] rounded-2xl shadow-xl',
+              }}
+            >
+              {availableAttributes.map((a) => (
+                <SelectItem key={a._id} textValue={`${a.name} ${a.unit ? `(${a.unit})` : ''}`}>
+                  {a.name} {a.unit ? `(${a.unit})` : ''}
+                </SelectItem>
+              ))}
+            </Select>
 
-          <button
-            type="button"
-            onClick={handleAddSelectedAttribute}
-            disabled={!selectedAttrId || (selectedValues.length === 0 && !customValueInput.trim())}
-            className="w-full sm:w-auto px-6 h-11 rounded-xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-xs flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-98"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{isPersian ? 'افزودن این ویژگی با مقادیر انتخابی' : 'Attach Attribute to Perfume'}</span>
-          </button>
-        </div>
-
-        {/* Multi-Value Selection Area */}
-        {selectedAttrObj && (
-          <div className="pt-3 border-t border-[#e6dcce] dark:border-[#2e3a2e] space-y-3">
-            {selectedAttrObj.possibleValues && selectedAttrObj.possibleValues.length > 0 && (
-              <div>
-                <span className="block text-xs font-bold text-[#73695c] dark:text-[#a69c8e] mb-2">
-                  {isPersian
-                    ? 'انتخاب مقادیر از لیست پیشنهادی (روی موارد دلخواه کلیک کنید):'
-                    : 'Select suggested values (click to toggle):'}
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {selectedAttrObj.possibleValues.map((val, i) => {
-                    const isSelected = selectedValues.includes(val);
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => togglePredefinedValue(val)}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer flex items-center gap-1.5 ${
-                          isSelected
-                            ? 'bg-brand-gold text-[#141914] shadow-sm font-black ring-2 ring-[#bfa27a]/40'
-                            : 'bg-[#ffffff] dark:bg-[#1c231c] text-[#73695c] dark:text-[#a69c8e] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-[#bfa27a]'
-                        }`}
-                      >
-                        {isSelected && <Check className="w-3.5 h-3.5" />}
-                        <span>{val}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Custom Value Adder Input */}
-            <div className="flex flex-col sm:flex-row gap-2 items-center">
-              <input
-                type="text"
-                value={customValueInput}
-                onChange={(e) => setCustomValueInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddCustomValue();
-                  }
-                }}
-                placeholder={isPersian ? 'افزودن مقدار دلخواه دیگر (تایپ کنید و اینتر بزنید)...' : 'Add custom value and hit Enter...'}
-                className="w-full sm:w-2/3 h-10 px-3 rounded-xl bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
-              />
-              <button
-                type="button"
-                onClick={handleAddCustomValue}
-                disabled={!customValueInput.trim()}
-                className="w-full sm:w-auto px-4 h-10 rounded-xl bg-[#202620] hover:bg-[#2e382e] text-[#d4be9b] font-bold text-xs border border-[#bfa27a]/40 shadow-xs flex items-center justify-center gap-1 transition-all disabled:opacity-50 cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{isPersian ? 'افزودن به این ویژگی' : 'Add Tag'}</span>
-              </button>
-            </div>
-
-            {/* Selected values preview tags */}
-            {selectedValues.length > 0 && (
-              <div className="p-3 rounded-xl bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] flex flex-wrap items-center gap-2">
-                <span className="text-[11px] font-bold text-[#73695c] dark:text-[#a69c8e]">
-                  {isPersian ? 'مقادیر در حال ثبت:' : 'Queued values:'}
-                </span>
-                {selectedValues.map((val, idx) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand-gold/15 text-[#9f815b] dark:text-[#d4be9b] border border-[#bfa27a]/30 text-xs font-bold"
-                  >
-                    <span>{val}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveSelectedValue(val)}
-                      className="hover:text-rose-500 cursor-pointer"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
+            <Button
+              size="md"
+              radius="lg"
+              color="warning"
+              isDisabled={!selectedAttrId || (selectedValues.length === 0 && !customValueInput.trim())}
+              onPress={handleAddSelectedAttribute}
+              startContent={<Plus className="w-4 h-4" />}
+              className="w-full sm:w-auto h-11 px-6 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-xs"
+            >
+              {isPersian ? 'افزودن این ویژگی با مقادیر انتخابی' : 'Attach Attribute to Perfume'}
+            </Button>
           </div>
-        )}
-      </div>
+
+          {/* Multi-Value Selection Area */}
+          {selectedAttrObj && (
+            <div className="pt-3 border-t border-[#e6dcce] dark:border-[#2e3a2e] space-y-3">
+              {selectedAttrObj.possibleValues && selectedAttrObj.possibleValues.length > 0 && (
+                <div>
+                  <span className="block text-xs font-bold text-[#73695c] dark:text-[#a69c8e] mb-2">
+                    {isPersian
+                      ? 'انتخاب مقادیر از لیست پیشنهادی (روی موارد دلخواه کلیک کنید):'
+                      : 'Select suggested values (click to toggle):'}
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedAttrObj.possibleValues.map((val, i) => {
+                      const isSelected = selectedValues.includes(val);
+                      return (
+                        <Button
+                          key={i}
+                          size="sm"
+                          radius="lg"
+                          variant={isSelected ? 'solid' : 'bordered'}
+                          onPress={() => togglePredefinedValue(val)}
+                          startContent={isSelected ? <Check className="w-3.5 h-3.5" /> : undefined}
+                          className={`text-xs font-bold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-brand-gold text-[#141914] shadow-sm font-black'
+                              : 'bg-[#ffffff] dark:bg-[#1c231c] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-[#bfa27a]'
+                          }`}
+                        >
+                          {val}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Custom Value Adder Input */}
+              <div className="flex flex-col sm:flex-row gap-2 items-center">
+                <Input
+                  value={customValueInput}
+                  onValueChange={setCustomValueInput}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddCustomValue();
+                    }
+                  }}
+                  placeholder={isPersian ? 'افزودن مقدار دلخواه دیگر (تایپ کنید و اینتر بزنید)...' : 'Add custom value and hit Enter...'}
+                  variant="bordered"
+                  radius="lg"
+                  className="w-full sm:w-2/3"
+                  classNames={{
+                    inputWrapper: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-10',
+                    input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                  }}
+                />
+                <Button
+                  size="sm"
+                  radius="lg"
+                  variant="bordered"
+                  isDisabled={!customValueInput.trim()}
+                  onPress={handleAddCustomValue}
+                  startContent={<Plus className="w-3.5 h-3.5" />}
+                  className="w-full sm:w-auto h-10 px-4 font-bold text-xs border-[#bfa27a]/40 text-[#9f815b] dark:text-[#d4be9b]"
+                >
+                  {isPersian ? 'افزودن به این ویژگی' : 'Add Tag'}
+                </Button>
+              </div>
+
+              {/* Selected values preview tags */}
+              {selectedValues.length > 0 && (
+                <div className="p-3 rounded-xl bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-bold text-[#73695c] dark:text-[#a69c8e]">
+                    {isPersian ? 'مقادیر در حال ثبت:' : 'Queued values:'}
+                  </span>
+                  {selectedValues.map((val, idx) => (
+                    <Chip
+                      key={idx}
+                      size="sm"
+                      variant="flat"
+                      color="warning"
+                      onClose={() => handleRemoveSelectedValue(val)}
+                      className="font-bold text-xs"
+                    >
+                      {val}
+                    </Chip>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </CardBody>
+      </Card>
 
       {/* Added Attributes Cards / Grid */}
       {currentAttributes.length > 0 ? (
@@ -380,101 +418,117 @@ export function DynamicAttributeBuilder({
                 : [];
 
             return (
-              <div
+              <Card
                 key={idx}
-                className="p-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] flex flex-col justify-between gap-3 shadow-xs"
+                className="bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs rounded-2xl"
               >
-                <div>
-                  <div className="flex items-center justify-between pb-2 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-                    <div className="flex items-center gap-1.5 text-xs font-black text-[#1d241d] dark:text-[#f7f4ee]">
-                      <Tag className="w-3.5 h-3.5 text-[#9f815b]" />
-                      <span>{attr.name}</span>
-                      {attr.unit && <span className="font-mono text-[11px] text-[#73695c] dark:text-[#a69c8e]">({attr.unit})</span>}
+                <CardBody className="p-4 flex flex-col justify-between gap-3">
+                  <div>
+                    <div className="flex items-center justify-between pb-2 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
+                      <div className="flex items-center gap-1.5 text-xs font-black text-[#1d241d] dark:text-[#f7f4ee]">
+                        <Tag className="w-3.5 h-3.5 text-[#9f815b]" />
+                        <span>{attr.name}</span>
+                        {attr.unit && <span className="font-mono text-[11px] text-[#73695c] dark:text-[#a69c8e]">({attr.unit})</span>}
+                      </div>
+
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        radius="lg"
+                        variant="light"
+                        color="danger"
+                        onPress={() => handleRemoveAttribute(idx)}
+                        className="text-rose-500 hover:text-rose-700 h-7 w-7 min-w-7"
+                        aria-label={isPersian ? 'حذف کل این ویژگی' : 'Remove attribute'}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveAttribute(idx)}
-                      className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
-                      title={isPersian ? 'حذف کل این ویژگی' : 'Remove attribute'}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  {/* Multi-value tags list */}
-                  <div className="flex flex-wrap gap-1.5 pt-2.5">
-                    {rawVals.map((val, vIdx) => (
-                      <span
-                        key={vIdx}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold shadow-2xs"
-                      >
-                        <span>{val}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTagFromAttached(idx, val)}
-                          className="text-[#73695c] dark:text-[#a69c8e] hover:text-rose-500 cursor-pointer"
+                    {/* Multi-value tags list */}
+                    <div className="flex flex-wrap gap-1.5 pt-2.5">
+                      {rawVals.map((val, vIdx) => (
+                        <Chip
+                          key={vIdx}
+                          size="sm"
+                          variant="bordered"
+                          onClose={() => handleRemoveTagFromAttached(idx, val)}
+                          className="bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold"
                         >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
+                          {val}
+                        </Chip>
+                      ))}
 
-                    {/* Button / input to add more tags to this attribute */}
-                    {addingToAttrIndex === idx ? (
-                      <div className="inline-flex items-center gap-1">
-                        <input
-                          type="text"
-                          autoFocus
-                          value={newTagInput}
-                          onChange={(e) => setNewTagInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleAddTagToAttached(idx);
-                            }
-                          }}
-                          placeholder={isPersian ? 'مقدار جدید...' : 'New tag...'}
-                          className="w-28 h-7 px-2 rounded-lg bg-[#ffffff] dark:bg-[#1c231c] border border-[#bfa27a] text-xs font-semibold"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleAddTagToAttached(idx)}
-                          className="p-1 rounded-md bg-brand-gold text-[#141914] cursor-pointer"
-                        >
-                          <Check className="w-3 h-3" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAddingToAttrIndex(null);
+                      {/* Button / input to add more tags to this attribute */}
+                      {addingToAttrIndex === idx ? (
+                        <div className="inline-flex items-center gap-1">
+                          <Input
+                            autoFocus
+                            size="sm"
+                            value={newTagInput}
+                            onValueChange={setNewTagInput}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddTagToAttached(idx);
+                              }
+                            }}
+                            placeholder={isPersian ? 'مقدار جدید...' : 'New tag...'}
+                            variant="bordered"
+                            radius="lg"
+                            className="w-28"
+                            classNames={{
+                              inputWrapper: 'h-7 bg-[#ffffff] dark:bg-[#1c231c] border-brand-gold',
+                              input: 'text-xs font-semibold',
+                            }}
+                          />
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            radius="lg"
+                            color="warning"
+                            onPress={() => handleAddTagToAttached(idx)}
+                            className="h-7 w-7 min-w-7 bg-brand-gold text-[#141914]"
+                          >
+                            <Check className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            radius="lg"
+                            variant="light"
+                            onPress={() => {
+                              setAddingToAttrIndex(null);
+                              setNewTagInput('');
+                            }}
+                            className="h-7 w-7 min-w-7 text-[#73695c]"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          size="sm"
+                          radius="lg"
+                          variant="light"
+                          onPress={() => {
+                            setAddingToAttrIndex(idx);
                             setNewTagInput('');
                           }}
-                          className="p-1 rounded-md text-[#73695c] cursor-pointer"
+                          startContent={<Plus className="w-3 h-3" />}
+                          className="h-7 px-2 text-xs font-bold border border-dashed border-[#e6dcce] dark:border-[#2e3a2e] text-[#73695c] dark:text-[#d4be9b]"
                         >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAddingToAttrIndex(idx);
-                          setNewTagInput('');
-                        }}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-xl bg-[#f0eae0] dark:bg-[#202620] text-[#73695c] dark:text-[#d4be9b] hover:border-[#bfa27a] border border-dashed border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold transition-colors cursor-pointer"
-                      >
-                        <Plus className="w-3 h-3" />
-                        <span>{isPersian ? 'افزودن مقدار' : 'Add Value'}</span>
-                      </button>
-                    )}
+                          {isPersian ? 'افزودن مقدار' : 'Add Value'}
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                <div className="text-[11px] text-[#73695c] dark:text-[#a69c8e] font-mono border-t border-[#e6dcce]/50 dark:border-[#2e3a2e]/50 pt-1.5">
-                  key: {attr.key}
-                </div>
-              </div>
+                  <div className="text-[11px] text-[#73695c] dark:text-[#a69c8e] font-mono border-t border-[#e6dcce]/50 dark:border-[#2e3a2e]/50 pt-1.5">
+                    key: {attr.key}
+                  </div>
+                </CardBody>
+              </Card>
             );
           })}
         </div>
@@ -485,86 +539,98 @@ export function DynamicAttributeBuilder({
       )}
 
       {/* Quick Create Attribute Modal */}
-      {isQuickCreateOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl p-6 sm:p-8 max-w-md w-full border border-[#e6dcce] dark:border-[#2e3a2e] shadow-2xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-              <h3 className="font-black text-base">
-                {isPersian ? 'ایجاد ویژگی جدید در سیستم' : 'Create New System Attribute'}
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsQuickCreateOpen(false)}
-                className="p-1.5 rounded-xl text-[#73695c] hover:bg-[#f0eae0] dark:hover:bg-[#283228]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      <Modal
+        isOpen={isQuickCreateOpen}
+        onOpenChange={setIsQuickCreateOpen}
+        backdrop="blur"
+        placement="center"
+        classNames={{
+          base: 'bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-2xl mx-4',
+          header: 'border-b border-[#e6dcce] dark:border-[#2e3a2e] pb-3',
+          body: 'py-4',
+          footer: 'border-t border-[#e6dcce] dark:border-[#2e3a2e] pt-3',
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-[#9f815b]" />
+                <h3 className="font-black text-base">
+                  {isPersian ? 'ایجاد ویژگی جدید در سیستم' : 'Create New System Attribute'}
+                </h3>
+              </ModalHeader>
 
-            <form onSubmit={handleQuickCreate} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold mb-1">
-                  {isPersian ? 'عنوان ویژگی *' : 'Attribute Title *'}
-                </label>
-                <input
-                  type="text"
-                  required
+              <ModalBody className="space-y-4 text-xs">
+                <Input
+                  label={isPersian ? 'عنوان ویژگی *' : 'Attribute Title *'}
+                  isRequired
                   value={newAttrName}
-                  onChange={(e) => setNewAttrName(e.target.value)}
+                  onValueChange={setNewAttrName}
                   placeholder={isPersian ? 'مثال: گروه بویایی، غلظت اسانس، طبع رایحه' : 'e.g. Olfactory Family, Concentration'}
-                  className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
+                  variant="bordered"
+                  radius="lg"
+                  classNames={{
+                    inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                    input: 'text-xs font-semibold',
+                    label: 'text-xs font-bold',
+                  }}
                 />
-              </div>
 
-              <div>
-                <label className="block font-bold mb-1">
-                  {isPersian ? 'مقادیر اولیه (با کاما یا اینتر جدا کنید) *' : 'Values (separated by comma or newline) *'}
-                </label>
-                <textarea
+                <Textarea
+                  label={isPersian ? 'مقادیر اولیه (با کاما یا اینتر جدا کنید) *' : 'Values (separated by comma or newline) *'}
                   rows={3}
-                  required
+                  isRequired
                   value={newAttrValues}
-                  onChange={(e) => setNewAttrValues(e.target.value)}
+                  onValueChange={setNewAttrValues}
                   placeholder={isPersian ? 'مثال: چوبی، شرقی، گلی، مرکباتی، چرمی' : 'e.g. Woody, Oriental, Floral, Citrus'}
-                  className="w-full p-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
+                  variant="bordered"
+                  radius="lg"
+                  classNames={{
+                    inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                    input: 'text-xs font-semibold',
+                    label: 'text-xs font-bold',
+                  }}
                 />
-              </div>
 
-              <div>
-                <label className="block font-bold mb-1">
-                  {isPersian ? 'واحد اندازه‌گیری (اختیاری)' : 'Unit (Optional)'}
-                </label>
-                <input
-                  type="text"
+                <Input
+                  label={isPersian ? 'واحد اندازه‌گیری (اختیاری)' : 'Unit (Optional)'}
                   value={newAttrUnit}
-                  onChange={(e) => setNewAttrUnit(e.target.value)}
+                  onValueChange={setNewAttrUnit}
                   placeholder={isPersian ? 'میل، درصد، گرم' : 'ml, %, gr'}
-                  className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
+                  variant="bordered"
+                  radius="lg"
+                  classNames={{
+                    inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                    input: 'text-xs font-semibold',
+                    label: 'text-xs font-bold',
+                  }}
                 />
-              </div>
+              </ModalBody>
 
-              <div className="pt-3 flex gap-2">
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="flex-1 py-3 rounded-xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-md transition-all duration-200 ease-out active:scale-98"
-                >
-                  {creating
-                    ? isPersian ? 'در حال ایجاد...' : 'Creating...'
-                    : isPersian ? 'ثبت و افزودن به محصول' : 'Create & Attach'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsQuickCreateOpen(false)}
-                  className="px-5 py-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] font-bold border border-[#e6dcce] dark:border-[#2e3a2e]"
+              <ModalFooter>
+                <Button
+                  variant="flat"
+                  radius="lg"
+                  onPress={onClose}
+                  className="font-bold text-xs"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                </Button>
+                <Button
+                  color="warning"
+                  radius="lg"
+                  isLoading={creating}
+                  onPress={() => handleQuickCreate()}
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
+                >
+                  {isPersian ? 'ثبت و افزودن به محصول' : 'Create & Attach'}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

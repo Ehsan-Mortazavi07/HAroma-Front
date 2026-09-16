@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Crown, Sparkles, CheckCircle2, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Button, Chip } from '@heroui/react';
 import { PATHS } from '@/common/constants/PATHS';
 import { useTranslation } from '@/common/i18n';
 
@@ -53,10 +54,13 @@ export function VipClubBanner() {
 
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         <div className="lg:col-span-8 space-y-5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#202820] border border-brand-gold/40 text-[#d4be9b] text-xs font-black">
-            <Crown className="w-4 h-4 fill-current text-[#d4be9b]" />
-            <span>{t.vip.title}</span>
-          </div>
+          <Chip
+            startContent={<Crown className="w-4 h-4 fill-current text-[#d4be9b]" />}
+            variant="bordered"
+            className="bg-[#202820] border-brand-gold/40 text-[#d4be9b] text-xs font-black h-8 px-3"
+          >
+            {t.vip.title}
+          </Chip>
 
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black leading-snug text-[#f7f4ee]">
             {t.home.vipBannerTitle}
@@ -75,14 +79,16 @@ export function VipClubBanner() {
           </div>
 
           <div className="pt-4 flex flex-wrap items-center gap-4">
-            <Link
+            <Button
+              as={Link}
               href={PATHS.VIP}
-              className="px-7 py-3.5 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-sm shadow-xl shadow-brand-gold/20 hover:scale-105 active:scale-95 transition-all duration-300 ease-out flex items-center gap-2 border border-[#d4be9b]/30"
+              radius="full"
+              className="px-7 py-3.5 h-12 font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-sm shadow-xl shadow-brand-gold/20 hover:scale-105 active:scale-95 transition-all duration-300 ease-out flex items-center gap-2 border border-[#d4be9b]/30"
             >
               <Crown className="w-4 h-4 fill-current text-[#141914]" />
               <span>{t.home.vipBannerBtn}</span>
               {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-            </Link>
+            </Button>
           </div>
         </div>
 

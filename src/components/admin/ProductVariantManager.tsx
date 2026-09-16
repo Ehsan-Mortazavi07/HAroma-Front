@@ -13,6 +13,14 @@ import {
   BookmarkPlus,
   RefreshCw,
 } from 'lucide-react';
+import {
+  Card,
+  CardBody,
+  Button,
+  Input,
+  Chip,
+  Skeleton,
+} from '@heroui/react';
 import { IProductVariant, IVariantTemplate } from '@/common/interfaces';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { adminApi } from '@/common/api/admin';
@@ -171,214 +179,244 @@ export function ProductVariantManager({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleAddNewEmpty}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#202620] hover:bg-[#2e382e] text-[#d4be9b] text-xs font-bold border border-[#bfa27a]/30 transition-all self-start sm:self-auto shadow-xs"
+        <Button
+          size="sm"
+          radius="lg"
+          variant="solid"
+          onPress={handleAddNewEmpty}
+          startContent={<Plus className="w-4 h-4" />}
+          className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-xs self-start sm:self-auto cursor-pointer"
         >
-          <Plus className="w-4 h-4" />
-          <span>{isPersian ? 'ایجاد حجم سفارشی جدید' : 'Add Custom Variant'}</span>
-        </button>
+          {isPersian ? 'ایجاد حجم سفارشی جدید' : 'Add Custom Variant'}
+        </Button>
       </div>
 
-      {/* Quick Volume Preset Badges (Loaded from standalone templates API) */}
-      <div className="p-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] space-y-2.5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-[#9f815b]" />
-            <span>{isPersian ? 'افزودن سریع از الگوهای آماده (۱ کلیک):' : '1-Click Add From Saved Presets:'}</span>
-          </span>
-          <button
-            type="button"
-            onClick={loadTemplates}
-            className="text-[11px] text-[#9f815b] dark:text-[#d4be9b] hover:underline flex items-center gap-1 font-semibold"
-          >
-            <RefreshCw className="w-3 h-3" />
-            <span>{isPersian ? 'بروزرسانی الگوها' : 'Refresh'}</span>
-          </button>
-        </div>
+      {/* Quick Volume Preset Badges */}
+      <Card className="bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] shadow-none rounded-2xl">
+        <CardBody className="p-4 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[#9f815b]" />
+              <span>{isPersian ? 'افزودن سریع از الگوهای آماده (۱ کلیک):' : '1-Click Add From Saved Presets:'}</span>
+            </span>
+            <Button
+              size="sm"
+              variant="light"
+              color="warning"
+              onPress={loadTemplates}
+              startContent={<RefreshCw className="w-3 h-3" />}
+              className="text-[11px] font-semibold h-7 px-2"
+            >
+              {isPersian ? 'بروزرسانی الگوها' : 'Refresh'}
+            </Button>
+          </div>
 
-        <div className="flex flex-wrap gap-2">
-          {loadingTemplates ? (
-            <div className="text-xs text-[#73695c] dark:text-[#a69c8e]">
-              {isPersian ? 'در حال بارگذاری الگوها...' : 'Loading presets...'}
-            </div>
-          ) : templates.length === 0 ? (
-            <div className="text-xs text-[#73695c] dark:text-[#a69c8e]">
-              {isPersian
-                ? 'هنوز الگوی آماده‌ای ثبت نشده است. می‌توانید حجم‌های سفارشی بسازید یا از بخش تنوع‌ها الگو تعریف کنید.'
-                : 'No presets defined yet. You can add custom sizes or create templates in Attributes menu.'}
-            </div>
-          ) : (
-            templates.map((tpl) => {
-              const isAdded = variants.some(
-                (v) => v.title === tpl.title || (tpl.titleEn && v.title === tpl.titleEn),
-              );
-              return (
-                <button
-                  key={tpl._id}
-                  type="button"
-                  onClick={() => handleAddTemplate(tpl)}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
-                    isAdded
-                      ? 'bg-[#e6dcce] dark:bg-[#2e3a2e] text-[#73695c] dark:text-[#a69c8e] opacity-60 cursor-default'
-                      : 'bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] border border-[#e6dcce] dark:border-[#3e4c3e] hover:border-[#bfa27a] hover:bg-[#f0eae0] dark:hover:bg-[#283228] shadow-xs hover:scale-102'
-                  }`}
-                >
-                  <Plus className={`w-3.5 h-3.5 ${isAdded ? 'text-gray-400' : 'text-[#9f815b]'}`} />
-                  <span>{isPersian ? tpl.title : tpl.titleEn || tpl.title}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 font-normal">
-                    {formatToman(tpl.defaultPrice, isPersian)}
-                  </span>
-                </button>
-              );
-            })
-          )}
-        </div>
-      </div>
+          <div className="flex flex-wrap gap-2">
+            {loadingTemplates ? (
+              <div className="flex items-center gap-2 py-2">
+                <Skeleton className="h-8 w-28 rounded-xl" />
+                <Skeleton className="h-8 w-28 rounded-xl" />
+                <Skeleton className="h-8 w-28 rounded-xl" />
+              </div>
+            ) : templates.length === 0 ? (
+              <div className="text-xs text-[#73695c] dark:text-[#a69c8e] py-1">
+                {isPersian
+                  ? 'هنوز الگوی آماده‌ای ثبت نشده است. می‌توانید حجم‌های سفارشی بسازید یا از بخش تنوع‌ها الگو تعریف کنید.'
+                  : 'No presets defined yet. You can add custom sizes or create templates in Attributes menu.'}
+              </div>
+            ) : (
+              templates.map((tpl) => {
+                const isAdded = variants.some(
+                  (v) => v.title === tpl.title || (tpl.titleEn && v.title === tpl.titleEn),
+                );
+                return (
+                  <Button
+                    key={tpl._id}
+                    size="sm"
+                    radius="lg"
+                    variant={isAdded ? 'flat' : 'bordered'}
+                    isDisabled={isAdded}
+                    onPress={() => handleAddTemplate(tpl)}
+                    startContent={<Plus className={`w-3.5 h-3.5 ${isAdded ? 'text-gray-400' : 'text-[#9f815b]'}`} />}
+                    className={`text-xs font-bold transition-all ${
+                      isAdded
+                        ? 'opacity-50'
+                        : 'bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] border-[#e6dcce] dark:border-[#3e4c3e] hover:border-brand-gold shadow-xs'
+                    }`}
+                  >
+                    <span>{isPersian ? tpl.title : tpl.titleEn || tpl.title}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 font-normal">
+                      {formatToman(tpl.defaultPrice, isPersian)}
+                    </span>
+                  </Button>
+                );
+              })
+            )}
+          </div>
+        </CardBody>
+      </Card>
 
       {/* Variants List / Cards */}
       {variants.length > 0 ? (
         <div className="space-y-3 pt-2">
           {variants.map((variant, idx) => (
-            <div
+            <Card
               key={variant.id || idx}
-              className={`p-4 sm:p-5 rounded-3xl border transition-all ${
+              className={`rounded-3xl transition-all shadow-xs ${
                 variant.isDefault
-                  ? 'bg-[#ffffff] dark:bg-[#1c231c] border-2 border-[#bfa27a] shadow-md'
-                  : 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e]'
+                  ? 'bg-[#ffffff] dark:bg-[#1c231c] border-2 border-brand-gold shadow-md'
+                  : 'bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e]'
               }`}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center text-xs">
-                {/* Title Input */}
-                <div className="sm:col-span-3">
-                  <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? 'عنوان حجم / مدل *' : 'Variant Title *'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={variant.title}
-                    onChange={(e) => handleUpdateVariant(idx, 'title', e.target.value)}
-                    placeholder={isPersian ? 'مثال: حجم ۱۰۰ میلی‌لیتر' : 'e.g. 100 ml'}
-                    className="w-full h-10 px-3 rounded-xl bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] font-bold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
-                  />
+              <CardBody className="p-4 sm:p-5">
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center text-xs">
+                  {/* Title Input */}
+                  <div className="sm:col-span-3">
+                    <Input
+                      label={isPersian ? 'عنوان حجم / مدل *' : 'Variant Title *'}
+                      isRequired
+                      value={variant.title}
+                      onValueChange={(val) => handleUpdateVariant(idx, 'title', val)}
+                      placeholder={isPersian ? 'مثال: حجم ۱۰۰ میلی‌لیتر' : 'e.g. 100 ml'}
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-10',
+                        input: 'font-bold text-xs text-[#1d241d] dark:text-[#f7f4ee]',
+                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      }}
+                    />
+                  </div>
+
+                  {/* Price Input */}
+                  <div className="sm:col-span-3">
+                    <Input
+                      label={isPersian ? 'قیمت اصلی (تومان) *' : 'Price (Toman) *'}
+                      type="number"
+                      isRequired
+                      value={String(variant.price)}
+                      onValueChange={(val) => handleUpdateVariant(idx, 'price', Number(val))}
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-10',
+                        input: 'font-bold text-xs text-[#1d241d] dark:text-[#f7f4ee]',
+                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      }}
+                    />
+                  </div>
+
+                  {/* Discount Price Input */}
+                  <div className="sm:col-span-2">
+                    <Input
+                      label={isPersian ? 'قیمت تخفیف (اختیاری)' : 'Discount Price'}
+                      type="number"
+                      value={String(variant.discountPrice || '')}
+                      onValueChange={(val) =>
+                        handleUpdateVariant(idx, 'discountPrice', val ? Number(val) : null)
+                      }
+                      placeholder={isPersian ? 'بدون تخفیف' : 'No discount'}
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-10',
+                        input: 'font-bold text-xs text-[#1d241d] dark:text-[#f7f4ee]',
+                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      }}
+                    />
+                  </div>
+
+                  {/* Stock Count Input */}
+                  <div className="sm:col-span-2">
+                    <Input
+                      label={isPersian ? 'موجودی انبار' : 'Stock'}
+                      type="number"
+                      value={String(variant.stockCount)}
+                      onValueChange={(val) => handleUpdateVariant(idx, 'stockCount', Number(val))}
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-10',
+                        input: 'font-bold text-xs text-[#1d241d] dark:text-[#f7f4ee]',
+                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      }}
+                    />
+                  </div>
+
+                  {/* Actions: Default Selector, Save as Preset & Remove */}
+                  <div className="sm:col-span-2 flex items-center justify-end gap-1.5 pt-2 sm:pt-4">
+                    <Button
+                      size="sm"
+                      radius="lg"
+                      variant={variant.isDefault ? 'solid' : 'bordered'}
+                      onPress={() => handleSetDefault(idx)}
+                      className={`text-[11px] font-bold h-9 ${
+                        variant.isDefault
+                          ? 'bg-brand-gold text-[#141914] font-black'
+                          : 'bg-[#ffffff] dark:bg-[#1c231c] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e]'
+                      }`}
+                    >
+                      {variant.isDefault
+                        ? isPersian ? '✓ پیش‌فرض' : '✓ Default'
+                        : isPersian ? 'پیش‌فرض' : 'Default'}
+                    </Button>
+
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      radius="lg"
+                      variant="light"
+                      isLoading={savingTemplateIdx === idx}
+                      onPress={() => handleSaveAsReusableTemplate(variant, idx)}
+                      className="text-[#9f815b] hover:text-[#7a5d3e] hover:bg-[#f0eae0] dark:hover:bg-[#283228] h-9 w-9 min-w-9 shrink-0"
+                      aria-label={isPersian ? 'ذخیره به عنوان الگوی آماده' : 'Save as reusable template'}
+                    >
+                      <BookmarkPlus className="w-4 h-4" />
+                    </Button>
+
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      radius="lg"
+                      variant="light"
+                      color="danger"
+                      onPress={() => handleRemoveVariant(idx)}
+                      className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 h-9 w-9 min-w-9 shrink-0"
+                      aria-label={isPersian ? 'حذف این حجم' : 'Delete variant'}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
 
-                {/* Price Input */}
-                <div className="sm:col-span-3">
-                  <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? 'قیمت اصلی (تومان) *' : 'Price (Toman) *'}
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={variant.price}
-                    onChange={(e) => handleUpdateVariant(idx, 'price', Number(e.target.value))}
-                    className="w-full h-10 px-3 rounded-xl bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] font-bold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-
-                {/* Discount Price Input */}
-                <div className="sm:col-span-2">
-                  <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? 'قیمت تخفیف (اختیاری)' : 'Discount Price'}
-                  </label>
-                  <input
-                    type="number"
-                    value={variant.discountPrice || ''}
-                    onChange={(e) =>
-                      handleUpdateVariant(
-                        idx,
-                        'discountPrice',
-                        e.target.value ? Number(e.target.value) : null,
-                      )
-                    }
-                    placeholder={isPersian ? 'بدون تخفیف' : 'No discount'}
-                    className="w-full h-10 px-3 rounded-xl bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] font-bold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-
-                {/* Stock Count Input */}
-                <div className="sm:col-span-2">
-                  <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? 'موجودی انبار' : 'Stock'}
-                  </label>
-                  <input
-                    type="number"
-                    value={variant.stockCount}
-                    onChange={(e) =>
-                      handleUpdateVariant(idx, 'stockCount', Number(e.target.value))
-                    }
-                    className="w-full h-10 px-3 rounded-xl bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] font-bold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-
-                {/* Actions: Default Selector, Save as Preset & Remove */}
-                <div className="sm:col-span-2 flex items-center justify-end gap-1.5 pt-2 sm:pt-4">
-                  <button
-                    type="button"
-                    onClick={() => handleSetDefault(idx)}
-                    className={`px-2 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
-                      variant.isDefault
-                        ? 'bg-[#bfa27a] text-[#1d241d] font-black'
-                        : 'bg-[#ffffff] dark:bg-[#1c231c] text-[#73695c] dark:text-[#a69c8e] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-[#bfa27a]'
-                    }`}
-                    title={isPersian ? 'تنظیم به عنوان حجم پیش‌فرض انتخاب‌شده' : 'Set as default size'}
-                  >
-                    {variant.isDefault
-                      ? isPersian ? '✓ پیش‌فرض' : '✓ Default'
-                      : isPersian ? 'پیش‌فرض' : 'Default'}
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={savingTemplateIdx === idx}
-                    onClick={() => handleSaveAsReusableTemplate(variant, idx)}
-                    className="p-2 text-[#9f815b] hover:text-[#7a5d3e] hover:bg-[#f0eae0] dark:hover:bg-[#283228] rounded-xl transition-colors shrink-0"
-                    title={isPersian ? 'ذخیره این واریانت به عنوان الگوی آماده دائمی در سیستم' : 'Save as reusable template'}
-                  >
-                    <BookmarkPlus className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveVariant(idx)}
-                    className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors shrink-0"
-                    title={isPersian ? 'حذف این حجم' : 'Delete variant'}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Price Preview Footer */}
-              <div className="mt-2 pt-2 border-t border-[#e6dcce]/60 dark:border-[#2e3a2e]/60 flex items-center justify-between text-[11px] text-[#73695c] dark:text-[#a69c8e]">
-                <div className="flex items-center gap-2">
-                  <span>
-                    {isPersian ? 'قیمت نهایی قابل نمایش:' : 'Effective display price:'}{' '}
-                    <strong className="text-[#9f815b] dark:text-[#d4be9b]">
-                      {formatToman(variant.discountPrice || variant.price, isPersian)}
-                    </strong>
-                  </span>
-                  {variant.discountPrice && variant.discountPrice > 0 && (
-                    <span className="px-2 py-0.5 rounded-md bg-[#9f815b] text-white text-[10px] font-bold">
-                      {isPersian
-                        ? `${toPersianDigits(Math.round(((variant.price - variant.discountPrice) / variant.price) * 100))}٪ تخفیف`
-                        : `${Math.round(((variant.price - variant.discountPrice) / variant.price) * 100)}% OFF`}
+                {/* Price Preview Footer */}
+                <div className="mt-2 pt-2 border-t border-[#e6dcce]/60 dark:border-[#2e3a2e]/60 flex items-center justify-between text-[11px] text-[#73695c] dark:text-[#a69c8e]">
+                  <div className="flex items-center gap-2">
+                    <span>
+                      {isPersian ? 'قیمت نهایی قابل نمایش:' : 'Effective display price:'}{' '}
+                      <strong className="text-[#9f815b] dark:text-[#d4be9b]">
+                        {formatToman(variant.discountPrice || variant.price, isPersian)}
+                      </strong>
                     </span>
-                  )}
-                </div>
+                    {variant.discountPrice && variant.discountPrice > 0 && (
+                      <Chip size="sm" variant="solid" className="bg-brand-gold text-[#141914] text-[10px] font-bold h-5">
+                        {isPersian
+                          ? `${toPersianDigits(Math.round(((variant.price - variant.discountPrice) / variant.price) * 100))}٪ تخفیف`
+                          : `${Math.round(((variant.price - variant.discountPrice) / variant.price) * 100)}% OFF`}
+                      </Chip>
+                    )}
+                  </div>
 
-                <span>
-                  {variant.stockCount > 0
-                    ? isPersian
-                      ? `${toPersianDigits(variant.stockCount)} عدد موجود در انبار`
-                      : `${variant.stockCount} in stock`
-                    : isPersian ? 'ناموجود' : 'Out of stock'}
-                </span>
-              </div>
-            </div>
+                  <span>
+                    {variant.stockCount > 0
+                      ? isPersian
+                        ? `${toPersianDigits(variant.stockCount)} عدد موجود در انبار`
+                        : `${variant.stockCount} in stock`
+                      : isPersian ? 'ناموجود' : 'Out of stock'}
+                  </span>
+                </div>
+              </CardBody>
+            </Card>
           ))}
         </div>
       ) : (

@@ -4,22 +4,31 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
+  Card,
+  CardBody,
+  Button,
+  Input,
+  Select,
+  SelectItem,
+  Chip,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Skeleton,
+} from '@heroui/react';
+import {
   Package,
   Plus,
   Search,
   Edit2,
   Trash2,
-  Crown,
-  Sparkles,
-  Layers,
   Filter,
   Eye,
   EyeOff,
-  CheckSquare,
-  Square,
-  AlertCircle,
   Loader2,
-  Tag,
 } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { IProduct, ICategory } from '@/common/interfaces';
@@ -36,9 +45,9 @@ function AdminThumbnail({ src, title }: { src: string; title: string }) {
   const [hasError, setHasError] = useState(false);
 
   return (
-    <div className="relative w-12 h-12 rounded-2xl overflow-hidden bg-[#f0eae0] dark:bg-[#2e3a2e] border border-[#e6dcce] dark:border-[#2e3a2e] shrink-0 flex items-center justify-center shadow-xs">
+    <div className="relative w-12 h-12 rounded-2xl overflow-hidden bg-brand-surface-elevated border border-brand-border shrink-0 flex items-center justify-center shadow-xs">
       {hasError ? (
-        <div className="w-full h-full flex items-center justify-center bg-[#f0eae0] dark:bg-[#283228] text-[#9f815b]">
+        <div className="w-full h-full flex items-center justify-center bg-brand-surface-elevated text-brand-bronze">
           <Package className="w-5 h-5 opacity-60" />
         </div>
       ) : (
@@ -65,7 +74,6 @@ export default function AdminProductsPage() {
   const { isPersian } = useTranslation();
   const currentUser = useAppSelector((state) => state.auth.user);
   const isAdmin = currentUser?.role === 'admin';
-  const isEditor = currentUser?.role === 'editor';
 
   const [products, setProducts] = useState<IProduct[]>([]);
   const [categories, setCategories] = useState<ICategory[]>([]);
@@ -113,8 +121,8 @@ export default function AdminProductsPage() {
   }, [searchQuery, selectedCategory]);
 
   // Selection handlers
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
       setSelectedIds(products.map((p) => p._id));
     } else {
       setSelectedIds([]);
@@ -270,157 +278,186 @@ export default function AdminProductsPage() {
       {/* Page Title & Add Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#1d241d] dark:text-[#f7f4ee]">
+          <h1 className="text-2xl font-black text-brand-text">
             {isPersian ? 'مدیریت محصولات و عطرها' : 'Products & Fragrance Management'}
           </h1>
-          <p className="text-xs text-[#73695c] dark:text-[#a69c8e] mt-1">
+          <p className="text-xs text-brand-text-muted mt-1">
             {isPersian
               ? `مجموعاً ${toPersianDigits(products.length)} محصول در پایگاه داده ثبت شده است`
               : `Total ${products.length} products found in database`}
           </p>
         </div>
 
-        <Link
+        <Button
+          as={Link}
           href={PATHS.ADMIN_PRODUCT_NEW}
-          className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 active:scale-98 transition-all duration-200 ease-out self-start sm:self-auto"
+          radius="lg"
+          className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 flex items-center gap-2 cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>{isPersian ? 'افزودن محصول جدید' : 'Add New Product'}</span>
-        </Link>
+        </Button>
       </div>
 
       {/* Floating Sticky Bulk Actions Toolbar */}
       {selectedIds.length > 0 && (
-        <div className="sticky top-4 z-30 flex flex-wrap items-center justify-between gap-3 p-4 rounded-3xl bg-[#1c231c] text-[#f7f4ee] border border-[#bfa27a]/60 shadow-2xl shadow-black/50 backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-xs font-black bg-[#bfa27a] text-[#141914] shadow-xs">
-              {isPersian
-                ? `${toPersianDigits(selectedIds.length)} محصول انتخاب شده`
-                : `${selectedIds.length} products selected`}
-            </span>
-            <span className="text-xs text-[#d4be9b] font-semibold hidden md:inline">
-              {isPersian ? 'عملیات گروهی سریع:' : 'Bulk actions:'}
-            </span>
-          </div>
+        <Card className="sticky top-4 z-30 bg-[#1c231c] text-[#f7f4ee] border border-brand-gold/60 shadow-2xl backdrop-blur-md rounded-3xl">
+          <CardBody className="p-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Chip className="bg-brand-gold text-[#141914] font-black text-xs shadow-xs" size="sm">
+                {isPersian
+                  ? `${toPersianDigits(selectedIds.length)} محصول انتخاب شده`
+                  : `${selectedIds.length} products selected`}
+              </Chip>
+              <span className="text-xs text-brand-gold font-semibold hidden md:inline">
+                {isPersian ? 'عملیات گروهی سریع:' : 'Bulk actions:'}
+              </span>
+            </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Bulk Publish */}
-            <button
-              type="button"
-              disabled={bulkActionLoading}
-              onClick={() => handleBulkStatusChange(true)}
-              className="px-4 py-2 rounded-2xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 active:scale-98"
-            >
-              {bulkActionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Eye className="w-3.5 h-3.5" />}
-              <span>{isPersian ? 'انتشار همگانی' : 'Bulk Publish'}</span>
-            </button>
-
-            {/* Bulk Unpublish */}
-            <button
-              type="button"
-              disabled={bulkActionLoading}
-              onClick={() => handleBulkStatusChange(false)}
-              className="px-4 py-2 rounded-2xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow-sm flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 active:scale-98"
-            >
-              {bulkActionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <EyeOff className="w-3.5 h-3.5" />}
-              <span>{isPersian ? 'عدم انتشار همگانی' : 'Bulk Unpublish'}</span>
-            </button>
-
-            {/* Bulk Delete (Admin only) */}
-            {isAdmin && (
-              <button
-                type="button"
-                disabled={bulkActionLoading}
-                onClick={handleBulkDelete}
-                className="px-4 py-2 rounded-2xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-sm flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 active:scale-98"
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                size="sm"
+                radius="lg"
+                isLoading={bulkActionLoading}
+                onPress={() => handleBulkStatusChange(true)}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer"
               >
-                {bulkActionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                <span>{isPersian ? 'حذف همگانی' : 'Bulk Delete'}</span>
-              </button>
-            )}
+                {!bulkActionLoading && <Eye className="w-3.5 h-3.5" />}
+                <span>{isPersian ? 'انتشار همگانی' : 'Bulk Publish'}</span>
+              </Button>
 
-            {/* Deselect All */}
-            <button
-              type="button"
-              onClick={() => setSelectedIds([])}
-              className="px-3.5 py-2 rounded-2xl text-xs font-bold bg-white/10 hover:bg-white/20 text-[#f7f4ee] transition-colors cursor-pointer"
-            >
-              {isPersian ? 'لغو انتخاب‌ها' : 'Deselect All'}
-            </button>
-          </div>
-        </div>
+              <Button
+                size="sm"
+                radius="lg"
+                isLoading={bulkActionLoading}
+                onPress={() => handleBulkStatusChange(false)}
+                className="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs cursor-pointer"
+              >
+                {!bulkActionLoading && <EyeOff className="w-3.5 h-3.5" />}
+                <span>{isPersian ? 'عدم انتشار همگانی' : 'Bulk Unpublish'}</span>
+              </Button>
+
+              {isAdmin && (
+                <Button
+                  size="sm"
+                  radius="lg"
+                  isLoading={bulkActionLoading}
+                  onPress={handleBulkDelete}
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs cursor-pointer"
+                >
+                  {!bulkActionLoading && <Trash2 className="w-3.5 h-3.5" />}
+                  <span>{isPersian ? 'حذف همگانی' : 'Bulk Delete'}</span>
+                </Button>
+              )}
+
+              <Button
+                size="sm"
+                radius="lg"
+                variant="flat"
+                onPress={() => setSelectedIds([])}
+                className="bg-white/10 hover:bg-white/20 text-[#f7f4ee] font-bold text-xs cursor-pointer"
+              >
+                {isPersian ? 'لغو انتخاب‌ها' : 'Deselect All'}
+              </Button>
+            </div>
+          </CardBody>
+        </Card>
       )}
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-3 bg-[#ffffff] dark:bg-[#1c231c] p-4 rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
-        <div className="relative flex-1 w-full">
-          <input
-            type="text"
+      <Card className="p-4 bg-brand-surface border border-brand-border rounded-3xl shadow-xs">
+        <CardBody className="p-0 flex flex-col sm:flex-row items-center gap-3">
+          <Input
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onValueChange={setSearchQuery}
             placeholder={isPersian ? 'جستجو در عنوان یا برند عطر...' : 'Search by title, brand, or slug...'}
-            className="w-full h-11 pr-10 pl-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+            startContent={<Search className="w-4 h-4 text-brand-text-muted shrink-0" />}
+            variant="bordered"
+            radius="lg"
+            className="flex-1 w-full"
+            classNames={{
+              inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-2xl shadow-xs transition-colors",
+              input: "text-xs font-semibold text-brand-text",
+            }}
           />
-          <Search className="w-4 h-4 absolute right-3.5 top-3.5 text-[#73695c] dark:text-[#a69c8e]" />
-        </div>
 
-        <div className="w-full sm:w-auto flex items-center gap-2">
-          <Filter className="w-4 h-4 text-[#9f815b]" />
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full sm:w-auto h-11 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a] cursor-pointer"
-          >
-            <option value="">{isPersian ? 'همه دسته‌بندی‌ها' : 'All Categories'}</option>
-            {categories.map((c) => (
-              <option key={c._id} value={c.slug}>
-                {isPersian ? c.name : c.nameEn || c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+          <div className="w-full sm:w-auto flex items-center gap-2">
+            <Filter className="w-4 h-4 text-brand-bronze shrink-0" />
+            <Select
+              aria-label={isPersian ? 'دسته‌بندی' : 'Category'}
+              selectedKeys={new Set([selectedCategory])}
+              onSelectionChange={(keys) => {
+                const selected = Array.from(keys)[0] as string;
+                setSelectedCategory(selected ?? '');
+              }}
+              variant="bordered"
+              radius="lg"
+              className="w-full sm:w-56"
+              classNames={{
+                trigger: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-2xl shadow-xs text-xs font-bold text-brand-text",
+                value: "text-xs font-bold text-brand-text",
+                popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl",
+              }}
+            >
+              {[
+                { slug: '', name: isPersian ? 'همه دسته‌بندی‌ها' : 'All Categories' },
+                ...categories.map((c) => ({ slug: c.slug, name: isPersian ? c.name : c.nameEn || c.name })),
+              ].map((c) => (
+                <SelectItem key={c.slug} textValue={c.name}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </Select>
+          </div>
+        </CardBody>
+      </Card>
 
       {/* Products Table */}
-      <div className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs overflow-hidden">
-        {loading ? (
-          <div className="p-12 text-center text-xs text-[#73695c] dark:text-[#a69c8e] flex items-center justify-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin text-[#9f815b]" />
-            <span>{isPersian ? 'در حال بارگذاری لیست محصولات...' : 'Loading products list...'}</span>
-          </div>
-        ) : products.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
-            <Package className="w-12 h-12 text-[#9f815b] mx-auto opacity-40" />
-            <h3 className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
-              {isPersian ? 'هیچ محصولی یافت نشد' : 'No products found'}
-            </h3>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-start">
-              <thead>
-                <tr className="bg-[#f8f5f0] dark:bg-[#242c24] border-b border-[#e6dcce] dark:border-[#2e3a2e] text-[#73695c] dark:text-[#a69c8e] font-bold">
-                  {/* Select All Checkbox */}
-                  <th className="py-4 px-4 text-center w-10">
-                    <input
-                      type="checkbox"
-                      checked={isAllSelected}
-                      onChange={handleSelectAll}
-                      className="w-4 h-4 rounded-md accent-[#bfa27a] cursor-pointer"
-                      title={isPersian ? 'انتخاب همه' : 'Select all'}
-                    />
-                  </th>
-                  <th className="py-4 px-4 text-start">{isPersian ? 'تصویر و عنوان محصول' : 'Product & Media'}</th>
-                  <th className="py-4 px-4 text-start whitespace-nowrap">{isPersian ? 'برند / خانه عطر' : 'Brand(s)'}</th>
-                  <th className="py-4 px-4 text-start whitespace-nowrap">{isPersian ? 'دسته‌بندی' : 'Category'}</th>
-                  <th className="py-4 px-4 text-start whitespace-nowrap">{isPersian ? 'قیمت فروش' : 'Price'}</th>
-                  <th className="py-4 px-4 text-center whitespace-nowrap">{isPersian ? 'موجودی انبار' : 'Stock'}</th>
-                  <th className="py-4 px-4 text-center whitespace-nowrap">{isPersian ? 'وضعیت انتشار' : 'Status'}</th>
-                  <th className="py-4 px-4 text-center whitespace-nowrap">{isPersian ? 'وضعیت VIP' : 'VIP Status'}</th>
-                  <th className="py-4 px-6 text-center whitespace-nowrap">{isPersian ? 'عملیات' : 'Actions'}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e6dcce] dark:divide-[#2e3a2e]">
+      <Card className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs overflow-hidden">
+        <CardBody className="p-0">
+          {loading ? (
+            <div className="p-8 space-y-4">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-2xl bg-brand-surface-elevated" />
+              ))}
+            </div>
+          ) : products.length === 0 ? (
+            <div className="p-12 text-center space-y-3">
+              <Package className="w-12 h-12 text-brand-bronze mx-auto opacity-40" />
+              <h3 className="font-bold text-sm text-brand-text">
+                {isPersian ? 'هیچ محصولی یافت نشد' : 'No products found'}
+              </h3>
+            </div>
+          ) : (
+            <Table
+              aria-label="Products Table"
+              classNames={{
+                wrapper: "p-0 bg-transparent shadow-none border-none overflow-x-auto",
+                th: "bg-brand-surface-elevated text-brand-text-muted font-bold text-xs py-4 px-4",
+                td: "py-4 px-4 text-xs font-semibold",
+                tr: "border-b border-brand-border hover:bg-brand-surface-elevated/60 transition-colors",
+              }}
+            >
+              <TableHeader>
+                <TableColumn className="w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    className="w-4 h-4 rounded-md accent-[#bfa27a] cursor-pointer"
+                    title={isPersian ? 'انتخاب همه' : 'Select all'}
+                  />
+                </TableColumn>
+                <TableColumn>{isPersian ? 'تصویر و عنوان محصول' : 'Product & Media'}</TableColumn>
+                <TableColumn>{isPersian ? 'برند / خانه عطر' : 'Brand(s)'}</TableColumn>
+                <TableColumn>{isPersian ? 'دسته‌بندی' : 'Category'}</TableColumn>
+                <TableColumn>{isPersian ? 'قیمت فروش' : 'Price'}</TableColumn>
+                <TableColumn className="text-center">{isPersian ? 'موجودی انبار' : 'Stock'}</TableColumn>
+                <TableColumn className="text-center">{isPersian ? 'وضعیت انتشار' : 'Status'}</TableColumn>
+                <TableColumn className="text-center">{isPersian ? 'وضعیت VIP' : 'VIP Status'}</TableColumn>
+                <TableColumn className="text-center">{isPersian ? 'عملیات' : 'Actions'}</TableColumn>
+              </TableHeader>
+              <TableBody>
                 {products.map((product) => {
                   const isSelected = selectedIds.includes(product._id);
                   const isPublished = product.isPublished !== false;
@@ -433,7 +470,6 @@ export default function AdminProductsPage() {
                         : `http://127.0.0.1:7731${product.images[0]}`
                       : '';
 
-                  // Extract all brand names
                   const allBrands =
                     product.brands && product.brands.length > 0
                       ? product.brands
@@ -442,180 +478,163 @@ export default function AdminProductsPage() {
                       : [];
 
                   return (
-                    <tr
+                    <TableRow
                       key={product._id}
-                      className={`transition-colors ${
-                        isSelected
-                          ? 'bg-[#bfa27a]/10 dark:bg-[#bfa27a]/15'
-                          : 'hover:bg-[#f8f5f0] dark:hover:bg-[#242c24]'
-                      }`}
+                      className={isSelected ? 'bg-brand-gold/10' : ''}
                     >
-                      {/* Checkbox */}
-                      <td className="py-4 px-4 text-center">
+                      <TableCell className="text-center">
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleSelectRow(product._id)}
                           className="w-4 h-4 rounded-md accent-[#bfa27a] cursor-pointer"
                         />
-                      </td>
+                      </TableCell>
 
-                      {/* Product Title & media */}
-                      <td className="py-4 px-4 text-start">
+                      <TableCell>
                         <div className="flex items-center gap-3">
                           <AdminThumbnail src={imageSrc} title={product.title} />
                           <div>
-                            <div className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
+                            <div className="font-bold text-sm text-brand-text">
                               {isPersian ? product.title : product.titleEn || product.title}
                             </div>
-                            <div className="text-[11px] text-[#73695c] dark:text-[#a69c8e] font-sans">
+                            <div className="text-[11px] text-brand-text-muted font-sans">
                               {product.slug}
                             </div>
                           </div>
                         </div>
-                      </td>
+                      </TableCell>
 
-                      {/* Brands */}
-                      <td className="py-4 px-4 text-start whitespace-nowrap">
+                      <TableCell className="whitespace-nowrap">
                         {allBrands.length > 0 ? (
                           <div className="flex items-center gap-1.5 flex-wrap max-w-xs">
                             {allBrands.map((b: any, idx: number) => {
                               const bName = typeof b === 'object' && b ? (isPersian ? b.name : b.nameEn || b.name) : b;
                               return (
-                                <span
+                                <Chip
                                   key={idx}
-                                  className="inline-flex items-center px-2.5 py-1 rounded-xl bg-[#f0eae0] dark:bg-[#283228] text-[#9f815b] dark:text-[#d4be9b] font-bold text-[11px] border border-[#bfa27a]/30"
+                                  size="sm"
+                                  variant="flat"
+                                  className="bg-brand-surface-elevated text-brand-bronze dark:text-brand-gold border border-brand-gold/30 font-bold text-[11px] h-6 px-2"
                                 >
                                   {bName}
-                                </span>
+                                </Chip>
                               );
                             })}
                           </div>
                         ) : (
-                          <span className="text-[#73695c] dark:text-[#a69c8e] font-sans">—</span>
+                          <span className="text-brand-text-muted font-sans">—</span>
                         )}
-                      </td>
+                      </TableCell>
 
-                      {/* Category */}
-                      <td className="py-4 px-4 text-start text-[#73695c] dark:text-[#a69c8e] font-semibold whitespace-nowrap">
+                      <TableCell className="text-brand-text-muted font-semibold whitespace-nowrap">
                         {product.categories && product.categories.length > 0
                           ? isPersian
                             ? product.categories[0].name
                             : product.categories[0].nameEn || product.categories[0].name
                           : '—'}
-                      </td>
+                      </TableCell>
 
-                      {/* Price */}
-                      <td className="py-4 px-4 text-start font-black text-[#1d241d] dark:text-[#d4be9b] whitespace-nowrap">
+                      <TableCell className="font-black text-brand-text whitespace-nowrap">
                         {formatToman(product.discountPrice || product.price, isPersian)}
-                      </td>
+                      </TableCell>
 
-                      {/* Stock Count */}
-                      <td className="py-4 px-4 text-center whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap leading-none ${
-                            product.inStock
-                              ? 'bg-[#f0eae0] text-[#9f815b] dark:bg-[#283228] dark:text-[#d4be9b] border border-[#bfa27a]/30'
-                              : 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
-                          }`}
+                      <TableCell className="text-center whitespace-nowrap">
+                        <Chip
+                          size="sm"
+                          variant="flat"
+                          color={product.inStock ? "warning" : "danger"}
+                          className="font-bold text-xs"
                         >
                           {product.inStock
                             ? isPersian
-                              ? `${toPersianDigits(product.stockCount || 10)} عدد موجود`
+                              ? `${toPersianDigits(product.stockCount || 10)} موجود`
                               : `${product.stockCount || 10} in stock`
                             : isPersian
                             ? 'ناموجود'
                             : 'Out of stock'}
-                        </span>
-                      </td>
+                        </Chip>
+                      </TableCell>
 
-                      {/* Quick Publish / Unpublish Toggle Chip */}
-                      <td className="py-4 px-4 text-center whitespace-nowrap">
-                        <button
-                          type="button"
-                          disabled={isToggling}
+                      <TableCell className="text-center whitespace-nowrap">
+                        <Chip
+                          as="button"
+                          variant="flat"
+                          size="sm"
+                          color={isPublished ? "success" : "warning"}
                           onClick={() => handleTogglePublish(product)}
-                          className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 cursor-pointer shadow-xs active:scale-95 disabled:opacity-50 ${
-                            isPublished
-                              ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25'
-                              : 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/25'
-                          }`}
-                          title={
-                            isPersian
-                              ? isPublished
-                                ? 'کلیک کنید تا غیرفعال شود'
-                                : 'کلیک کنید تا منتشر شود'
-                              : isPublished
-                              ? 'Click to unpublish'
-                              : 'Click to publish'
+                          startContent={
+                            isToggling ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin ml-1" />
+                            ) : isPublished ? (
+                              <Eye className="w-3.5 h-3.5 ml-1" />
+                            ) : (
+                              <EyeOff className="w-3.5 h-3.5 ml-1" />
+                            )
                           }
+                          className="font-bold text-xs cursor-pointer"
                         >
-                          {isToggling ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : isPublished ? (
-                            <Eye className="w-3.5 h-3.5" />
-                          ) : (
-                            <EyeOff className="w-3.5 h-3.5" />
-                          )}
-                          <span>
-                            {isPublished
-                              ? isPersian ? 'منتشر شده' : 'Published'
-                              : isPersian ? 'غیرفعال / پیش‌نویس' : 'Inactive'}
-                          </span>
-                        </button>
-                      </td>
+                          {isPublished
+                            ? isPersian ? 'منتشر شده' : 'Published'
+                            : isPersian ? 'پیش‌نویس' : 'Inactive'}
+                        </Chip>
+                      </TableCell>
 
-                      {/* VIP Status */}
-                      <td className="py-4 px-4 text-center whitespace-nowrap">
+                      <TableCell className="text-center whitespace-nowrap">
                         {product.isVipOnly ? (
                           <VipBadge size="sm" text="VIP" />
                         ) : (
-                          <span className="text-[#73695c] dark:text-[#a69c8e] text-xs font-sans">—</span>
+                          <span className="text-brand-text-muted text-xs font-sans">—</span>
                         )}
-                      </td>
+                      </TableCell>
 
-                      {/* Actions */}
-                      <td className="py-4 px-6 text-center whitespace-nowrap">
+                      <TableCell className="text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
-                          <Link
+                          <Button
+                            as={Link}
                             href={PATHS.ADMIN_PRODUCT_EDIT(product._id)}
-                            className="p-2 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] text-[#1d241d] dark:text-[#f7f4ee] hover:bg-[#e6dcce] dark:hover:bg-[#2e382e] border border-[#e6dcce] dark:border-[#2e3a2e] transition-colors"
+                            isIconOnly
+                            size="sm"
+                            variant="flat"
+                            radius="lg"
+                            className="bg-brand-surface-elevated text-brand-text hover:bg-brand-border/60 border border-brand-border cursor-pointer"
                             title={isPersian ? 'ویرایش کامل محصول' : 'Edit'}
                           >
-                            <Edit2 className="w-4 h-4" />
-                          </Link>
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </Button>
 
                           {isAdmin ? (
-                            <button
-                              onClick={() => handleDelete(product._id, product.title)}
-                              disabled={deletingId === product._id}
-                              className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors cursor-pointer disabled:opacity-50"
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              variant="flat"
+                              color="danger"
+                              radius="lg"
+                              onPress={() => handleDelete(product._id, product.title)}
+                              isLoading={deletingId === product._id}
+                              className="cursor-pointer"
                               title={isPersian ? 'حذف محصول' : 'Delete'}
                             >
-                              {deletingId === product._id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Trash2 className="w-4 h-4" />
-                              )}
-                            </button>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
                           ) : (
                             <span
-                              className="p-2 rounded-xl bg-[#f0eae0] dark:bg-[#283228] text-[#73695c] dark:text-[#a69c8e] text-[11px] font-bold border border-[#e6dcce] dark:border-[#2e3a2e]"
-                              title={isPersian ? 'ادیتور دسترسی حذف ندارد (می‌توانید محصول را غیرفعال کنید)' : 'Delete restricted to admin'}
+                              className="px-2 py-1 rounded-xl bg-brand-surface-elevated text-brand-text-muted text-[11px] font-bold border border-brand-border"
+                              title={isPersian ? 'ادیتور دسترسی حذف ندارد' : 'Delete restricted to admin'}
                             >
-                              {isPersian ? 'غیرقابل حذف' : 'No Delete'}
+                              {isPersian ? 'بدون حذف' : 'No Delete'}
                             </span>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              </TableBody>
+            </Table>
+          )}
+        </CardBody>
+      </Card>
     </div>
   );
 }

@@ -39,3 +39,52 @@
 [dir="rtl"] .heroui-select-popover {
   text-align: right;
 }
+
+/* HeroUI Switch & Curve Enforcement */
+[data-slot="wrapper"],
+.heroui-switch-wrapper {
+  border-radius: 9999px !important;
+  transition: background-color 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+[data-slot="thumb"],
+.heroui-switch-thumb {
+  border-radius: 9999px !important;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              width 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform;
+}
+
+/* Ensure unselected switch wrapper has a clear, visible background */
+.heroui-switch-wrapper,
+[data-slot="wrapper"]:not([data-selected="true"]):not([data-state="checked"]) {
+  background-color: #ded6c8;
+}
+
+.dark .heroui-switch-wrapper,
+.dark [data-slot="wrapper"]:not([data-selected="true"]):not([data-state="checked"]) {
+  background-color: #2e3a2e;
+}
+
+/* Selected switch background */
+[data-selected="true"] [data-slot="wrapper"],
+[data-state="checked"] [data-slot="wrapper"],
+[data-selected="true"].heroui-switch-wrapper {
+  background-color: #bfa27a !important;
+}
+
+/* Thumb sliding in LTR */
+[data-selected="true"] [data-slot="thumb"],
+[data-state="checked"] [data-slot="thumb"] {
+  transform: translateX(1.25rem);
+}
+
+/* Thumb sliding in RTL */
+[dir="rtl"] [data-selected="true"] [data-slot="thumb"],
+[dir="rtl"] [data-state="checked"] [data-slot="thumb"],
+html[dir="rtl"] [data-selected="true"] [data-slot="thumb"],
+html[dir="rtl"] [data-state="checked"] [data-slot="thumb"] {
+  transform: translateX(-1.25rem) !important;
+}

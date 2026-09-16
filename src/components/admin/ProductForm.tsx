@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Formik, Form, Field } from 'formik';
+import { Formik, Form } from 'formik';
 import {
   Package,
   Crown,
@@ -15,9 +15,24 @@ import {
   FileText,
   Award,
   Plus,
-  X,
   Tag,
 } from 'lucide-react';
+import {
+  Card,
+  CardBody,
+  Button,
+  Input,
+  Textarea,
+  Switch,
+  Select,
+  SelectItem,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Chip,
+} from '@heroui/react';
 import { IProduct, ICategory, IBrand, IProductAttribute, IProductVariant } from '@/common/interfaces';
 import { getProductFormSchema } from '@/common/validators';
 import { PATHS } from '@/common/constants/PATHS';
@@ -108,8 +123,8 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
     );
   };
 
-  const handleQuickCreateCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleQuickCreateCategory = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!newCatName.trim()) {
       toast.error(isPersian ? 'نام دسته‌بندی الزامی است.' : 'Category name is required.');
       return;
@@ -146,8 +161,8 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
     }
   };
 
-  const handleQuickCreateBrand = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleQuickCreateBrand = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!newBrandName.trim()) {
       toast.error(isPersian ? 'نام برند الزامی است.' : 'Brand name is required.');
       return;
@@ -262,13 +277,15 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
           </p>
         </div>
 
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] hover:bg-[#f8f5f0] transition-colors"
+        <Button
+          variant="bordered"
+          radius="lg"
+          onPress={() => router.back()}
+          startContent={isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+          className="bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]"
         >
-          {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-          <span>{isPersian ? 'بازگشت' : 'Back'}</span>
-        </button>
+          {isPersian ? 'بازگشت' : 'Back'}
+        </Button>
       </div>
 
       <Formik
@@ -277,639 +294,720 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
         onSubmit={handleSubmit}
         enableReinitialize
       >
-        {({ values, errors, touched, setFieldValue }) => (
-          <Form className="space-y-8">
+        {({ values, errors, touched, setFieldValue, handleSubmit: formikSubmit }) => (
+          <Form onSubmit={formikSubmit} className="space-y-8">
             {/* 1. Basic Info Section */}
-            <div className="bg-[#ffffff] dark:bg-[#1c231c] p-6 sm:p-8 rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-5">
-              <div className="flex items-center gap-2 pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-                <Package className="w-5 h-5 text-[#9f815b]" />
-                <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee]">
-                  {isPersian ? '۱. مشخصات و عناوین اصلی محصول' : '1. Product Names & Identifiers'}
-                </h3>
-              </div>
+            <Card className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
+              <CardBody className="p-6 sm:p-8 space-y-5">
+                <div className="flex items-center gap-2 pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
+                  <Package className="w-5 h-5 text-[#9f815b]" />
+                  <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee]">
+                    {isPersian ? '۱. مشخصات و عناوین اصلی محصول' : '1. Product Names & Identifiers'}
+                  </h3>
+                </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div>
-                  <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? 'عنوان فارسی محصول *' : 'Product Title (Persian) *'}
-                  </label>
-                  <Field
-                    name="title"
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <Input
+                    label={isPersian ? 'عنوان فارسی محصول *' : 'Product Title (Persian) *'}
+                    isRequired
+                    value={values.title}
+                    onValueChange={(val) => setFieldValue('title', val)}
                     placeholder={isPersian ? 'مثال: ادکلن کرید اونتوس مردانه' : 'e.g. Creed Aventus For Men'}
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                    isInvalid={Boolean(errors.title && touched.title)}
+                    errorMessage={errors.title && touched.title ? String(errors.title) : undefined}
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                      input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                      label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                    }}
                   />
-                  {errors.title && touched.title && (
-                    <div className="text-[11px] text-rose-500 mt-1 font-bold">
-                      {errors.title as string}
-                    </div>
-                  )}
-                </div>
 
-                <div>
-                  <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? 'عنوان انگلیسی محصول' : 'Product Title (English)'}
-                  </label>
-                  <Field
-                    name="titleEn"
+                  <Input
+                    label={isPersian ? 'عنوان انگلیسی محصول' : 'Product Title (English)'}
+                    value={values.titleEn}
+                    onValueChange={(val) => setFieldValue('titleEn', val)}
                     placeholder="e.g. Creed Aventus Eau de Parfum"
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                      input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                      label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                    }}
                   />
-                </div>
 
-                <div className="sm:col-span-2">
-                  <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? 'نامک آدرس (Slug یکتا)' : 'URL Slug (Unique)'}
-                  </label>
-                  <Field
-                    name="slug"
-                    placeholder="creed-aventus-edp"
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-mono text-xs text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                  {errors.slug && touched.slug && (
-                    <div className="text-[11px] text-rose-500 mt-1 font-bold">
-                      {errors.slug as string}
-                    </div>
-                  )}
+                  <div className="sm:col-span-2">
+                    <Input
+                      label={isPersian ? 'نامک آدرس (Slug یکتا)' : 'URL Slug (Unique)'}
+                      value={values.slug}
+                      onValueChange={(val) => setFieldValue('slug', val)}
+                      placeholder="creed-aventus-edp"
+                      isInvalid={Boolean(errors.slug && touched.slug)}
+                      errorMessage={errors.slug && touched.slug ? String(errors.slug) : undefined}
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                        input: 'font-mono text-xs text-[#1d241d] dark:text-[#f7f4ee]',
+                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardBody>
+            </Card>
 
             {/* 2. Image Gallery Section */}
-            <div className="bg-[#ffffff] dark:bg-[#1c231c] p-6 sm:p-8 rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-4">
-              <ImageUploader images={images} onChange={setImages} maxImages={6} />
-            </div>
+            <Card className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
+              <CardBody className="p-6 sm:p-8 space-y-4">
+                <ImageUploader images={images} onChange={setImages} maxImages={6} />
+              </CardBody>
+            </Card>
 
             {/* 3. Base Pricing & Stock */}
-            <div className="bg-[#ffffff] dark:bg-[#1c231c] p-6 sm:p-8 rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-5">
-              <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee] pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-                {isPersian ? '۲. قیمت پایه و موجودی انبار' : '2. Base Pricing & Inventory'}
-              </h3>
+            <Card className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
+              <CardBody className="p-6 sm:p-8 space-y-5">
+                <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee] pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
+                  {isPersian ? '۲. قیمت پایه و موجودی انبار' : '2. Base Pricing & Inventory'}
+                </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div>
-                  <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? 'قیمت پایه (تومان) *' : 'Base Retail Price (Toman) *'}
-                  </label>
-                  <Field
-                    name="price"
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  <Input
+                    label={isPersian ? 'قیمت پایه (تومان) *' : 'Base Retail Price (Toman) *'}
                     type="number"
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-bold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                    isRequired
+                    value={String(values.price)}
+                    onValueChange={(val) => setFieldValue('price', val)}
+                    isInvalid={Boolean(errors.price && touched.price)}
+                    errorMessage={errors.price && touched.price ? String(errors.price) : undefined}
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                      input: 'font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                    }}
                   />
-                  {errors.price && touched.price && (
-                    <div className="text-[11px] text-rose-500 mt-1 font-bold">
-                      {errors.price as string}
-                    </div>
-                  )}
-                </div>
 
-                <div>
-                  <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? 'قیمت تخفیف‌خورده (اختیاری)' : 'Discount Price (Optional)'}
-                  </label>
-                  <Field
-                    name="discountPrice"
+                  <Input
+                    label={isPersian ? 'قیمت تخفیف‌خورده (اختیاری)' : 'Discount Price (Optional)'}
                     type="number"
+                    value={String(values.discountPrice || '')}
+                    onValueChange={(val) => setFieldValue('discountPrice', val)}
                     placeholder={isPersian ? 'در صورت وجود تخفیف' : 'Leave empty if regular price'}
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-bold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                      input: 'font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                    }}
                   />
-                </div>
 
-                <div>
-                  <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? 'تعداد موجودی کل انبار' : 'Total Stock Count'}
-                  </label>
-                  <Field
-                    name="stockCount"
+                  <Input
+                    label={isPersian ? 'تعداد موجودی کل انبار' : 'Total Stock Count'}
                     type="number"
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-bold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                    value={String(values.stockCount)}
+                    onValueChange={(val) => setFieldValue('stockCount', val)}
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                      input: 'font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                    }}
                   />
                 </div>
-              </div>
-            </div>
+              </CardBody>
+            </Card>
 
             {/* 4. Multi-Volume & Size Variants Section */}
-            <div className="bg-[#ffffff] dark:bg-[#1c231c] p-6 sm:p-8 rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-5">
-              <ProductVariantManager
-                variants={variants}
-                onChange={setVariants}
-                basePrice={Number(values.price) || 0}
-              />
-            </div>
+            <Card className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
+              <CardBody className="p-6 sm:p-8 space-y-5">
+                <ProductVariantManager
+                  variants={variants}
+                  onChange={setVariants}
+                  basePrice={Number(values.price) || 0}
+                />
+              </CardBody>
+            </Card>
 
-            {/* 4. Brand & Perfume House Section */}
-            <div className="bg-[#ffffff] dark:bg-[#1c231c] p-6 sm:p-8 rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-                <div className="flex items-center gap-2">
-                  <Award className="w-5 h-5 text-[#9f815b]" />
-                  <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? '۴. برندها و خانه‌های عطر (Fragrance Brands)' : '4. Brand & Perfume House'}
-                  </h3>
+            {/* 5. Brand & Perfume House Section */}
+            <Card className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
+              <CardBody className="p-6 sm:p-8 space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-[#9f815b]" />
+                    <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee]">
+                      {isPersian ? '۴. برندها و خانه‌های عطر (Fragrance Brands)' : '4. Brand & Perfume House'}
+                    </h3>
+                  </div>
+
+                  <Button
+                    size="sm"
+                    variant="light"
+                    color="warning"
+                    onPress={() => setIsBrandModalOpen(true)}
+                    startContent={<Plus className="w-3.5 h-3.5" />}
+                    className="text-xs font-bold text-[#9f815b] dark:text-[#d4be9b] self-start sm:self-auto cursor-pointer"
+                  >
+                    {isPersian ? '+ ساخت برند جدید' : '+ Create New Brand'}
+                  </Button>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setIsBrandModalOpen(true)}
-                  className="text-xs font-bold text-[#9f815b] dark:text-[#d4be9b] hover:underline flex items-center gap-1 self-start sm:self-auto cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{isPersian ? '+ ساخت برند جدید' : '+ Create New Brand'}</span>
-                </button>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block font-bold text-xs text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian
-                      ? 'خانه‌های عطر / برندهای مرتبط (می‌توانید چند برند انتخاب کنید):'
-                      : 'Assigned Fragrance Brands (Multi-brand supported):'}
-                  </label>
-                  {selectedBrands.length > 0 && (
-                    <span className="text-[11px] font-bold text-[#9f815b] dark:text-[#d4be9b]">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block font-bold text-xs text-[#1d241d] dark:text-[#f7f4ee]">
                       {isPersian
-                        ? `${toPersianDigits(selectedBrands.length)} برند متصل شده`
-                        : `${selectedBrands.length} brands selected`}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {brands.map((b) => {
-                    const isSelected = selectedBrands.includes(b._id);
-                    return (
-                      <button
-                        key={b._id}
-                        type="button"
-                        onClick={() => handleBrandToggle(b._id)}
-                        className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all duration-200 ease-out flex items-center gap-1.5 cursor-pointer ${
-                          isSelected
-                            ? 'bg-brand-gold text-[#141914] shadow-sm font-black ring-2 ring-[#bfa27a]/40'
-                            : 'bg-[#f8f5f0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-[#bfa27a]'
-                        }`}
-                      >
-                        <Tag className="w-3.5 h-3.5 opacity-60" />
-                        <span>{isPersian ? b.name : b.nameEn || b.name}</span>
-                        {b.nameEn && isPersian && (
-                          <span className="text-[10px] font-sans opacity-70">({b.nameEn})</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* 5. Categories & VIP Badges */}
-            <div className="bg-[#ffffff] dark:bg-[#1c231c] p-6 sm:p-8 rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-                <div className="flex items-center gap-2">
-                  <Layers className="w-5 h-5 text-[#9f815b]" />
-                  <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? '۵. دسته‌بندی‌ها و وضعیت انتشار و VIP' : '5. Categories, Publication & VIP'}
-                  </h3>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsCategoryModalOpen(true)}
-                  className="text-xs font-bold text-[#9f815b] dark:text-[#d4be9b] hover:underline flex items-center gap-1 self-start sm:self-auto cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>{isPersian ? '+ ساخت دسته جدید' : '+ Create New Category'}</span>
-                </button>
-              </div>
-
-              <div>
-                <label className="block font-bold text-xs mb-2 text-[#1d241d] dark:text-[#f7f4ee]">
-                  {isPersian ? 'دسته‌بندی‌های مرتبط (می‌توانید چند مورد را انتخاب کنید):' : 'Assigned Categories:'}
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {categories.map((cat) => {
-                    const isSelected = selectedCategories.includes(cat._id);
-                    const isSub = Boolean(cat.parentId);
-                    const parentName = isSub
-                      ? typeof cat.parentId === 'object' && cat.parentId
-                        ? isPersian ? cat.parentId.name : cat.parentId.nameEn || cat.parentId.name
-                        : categories.find((c) => c._id === cat.parentId)?.name
-                      : null;
-
-                    return (
-                      <button
-                        key={cat._id}
-                        type="button"
-                        onClick={() => handleCategoryToggle(cat._id)}
-                        className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all duration-200 ease-out flex items-center gap-1.5 ${
-                          isSelected
-                            ? 'bg-brand-gold text-[#141914] shadow-sm font-black ring-2 ring-[#bfa27a]/40'
-                            : 'bg-[#f8f5f0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-[#bfa27a]'
-                        }`}
-                      >
-                        {isSub && (
-                          <span className="opacity-60 text-[10px] font-sans">
-                            {parentName ? `${parentName} › ` : '↳ '}
-                          </span>
-                        )}
-                        <span>{isPersian ? cat.name : cat.nameEn || cat.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold">
-                <label className="flex items-center gap-2 cursor-pointer text-emerald-600 dark:text-emerald-400 p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
-                  <Field
-                    name="isPublished"
-                    type="checkbox"
-                    className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
-                  />
-                  <span>{isPersian ? 'انتشار عمومی در سایت (فعال)' : 'Published & Visible'}</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer text-[#9f815b] dark:text-[#d4be9b] p-2.5 rounded-2xl bg-[#9f815b]/10 border border-[#9f815b]/30">
-                  <Field
-                    name="isVipOnly"
-                    type="checkbox"
-                    className="w-4 h-4 accent-[#9f815b] rounded cursor-pointer"
-                  />
-                  <span>{isPersian ? 'فقط مخصوص اعضای باشگاه VIP' : 'VIP Members Exclusive'}</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer text-[#1d241d] dark:text-[#f7f4ee] p-2.5 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e]">
-                  <Field
-                    name="isFeatured"
-                    type="checkbox"
-                    className="w-4 h-4 accent-[#9f815b] rounded cursor-pointer"
-                  />
-                  <span>{isPersian ? 'نمایش در منتخب‌های صفحه اصلی' : 'Featured on Homepage'}</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer text-[#1d241d] dark:text-[#f7f4ee] p-2.5 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e]">
-                  <Field
-                    name="inStock"
-                    type="checkbox"
-                    className="w-4 h-4 accent-[#9f815b] rounded cursor-pointer"
-                  />
-                  <span>{isPersian ? 'کالا موجود و قابل سفارش است' : 'In-Stock & Purchasable'}</span>
-                </label>
-              </div>
-            </div>
-
-            {/* 6. Dynamic Attributes Builder */}
-            <div className="bg-[#ffffff] dark:bg-[#1c231c] p-6 sm:p-8 rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-5">
-              <DynamicAttributeBuilder attributes={attributes} onChange={setAttributes} />
-            </div>
-
-            {/* 7. Bilingual Descriptions (Persian & English) */}
-            <div className="bg-[#ffffff] dark:bg-[#1c231c] p-6 sm:p-8 rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-[#9f815b]" />
-                  <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee]">
-                    {isPersian ? '۶. توضیحات و نقد تخصصی محصول (دوزبانه)' : '6. Product Descriptions (Bilingual)'}
-                  </h3>
-                </div>
-
-                {/* Language Switch Tabs */}
-                <div className="flex items-center gap-1 bg-[#f8f5f0] dark:bg-[#242c24] p-1 rounded-2xl border border-[#e6dcce] dark:border-[#2e3a2e]">
-                  <button
-                    type="button"
-                    onClick={() => setActiveDescTab('fa')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                      activeDescTab === 'fa'
-                        ? 'bg-[#9f815b] text-[#f7f4ee] shadow-sm font-black'
-                        : 'text-[#73695c] dark:text-[#a69c8e] hover:text-[#1d241d]'
-                    }`}
-                  >
-                    <span>🇮🇷</span>
-                    <span>{isPersian ? 'توضیحات فارسی' : 'Persian (FA)'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveDescTab('en')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                      activeDescTab === 'en'
-                        ? 'bg-[#9f815b] text-[#f7f4ee] shadow-sm font-black'
-                        : 'text-[#73695c] dark:text-[#a69c8e] hover:text-[#1d241d]'
-                    }`}
-                  >
-                    <span>🇬🇧</span>
-                    <span>{isPersian ? 'توضیحات انگلیسی' : 'English (EN)'}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Persian Description Tab */}
-              {activeDescTab === 'fa' && (
-                <div className="space-y-5 text-xs">
-                  <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 text-[11px] font-bold">
-                    {isPersian
-                      ? '🌿 این بخش برای کاربرانی که با زبان فارسی سایت را مشاهده می‌کنند نمایش داده می‌شود.'
-                      : '🌿 This section is displayed when viewing the store in Persian.'}
-                  </div>
-
-                  <div>
-                    <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                      {isPersian ? 'خلاصه مشخصات فارسی' : 'Persian Short Summary'}
+                        ? 'خانه‌های عطر / برندهای مرتبط (می‌توانید چند برند انتخاب کنید):'
+                        : 'Assigned Fragrance Brands (Multi-brand supported):'}
                     </label>
-                    <Field
-                      name="shortDescription"
-                      as="textarea"
-                      rows={2}
-                      dir="rtl"
-                      placeholder="توضیح کوتاه ۱-۲ خطی برای نمایش سریع..."
-                      className="w-full p-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                      {isPersian ? 'توضیحات کامل و هرم بویایی فارسی *' : 'Persian Full Description & Olfactory Pyramid *'}
-                    </label>
-                    <Field
-                      name="description"
-                      as="textarea"
-                      rows={7}
-                      dir="rtl"
-                      placeholder="شرح کامل نت‌های ابتدایی، میانی، پایه، داستان عطر، هرم بویایی و راهنمای استفاده..."
-                      className="w-full p-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
-                    />
-                    {errors.description && touched.description && (
-                      <div className="text-[11px] text-rose-500 mt-1 font-bold">
-                        {errors.description as string}
-                      </div>
+                    {selectedBrands.length > 0 && (
+                      <Chip size="sm" variant="flat" color="warning" className="font-bold text-[11px]">
+                        {isPersian
+                          ? `${toPersianDigits(selectedBrands.length)} برند متصل شده`
+                          : `${selectedBrands.length} brands selected`}
+                      </Chip>
                     )}
                   </div>
-                </div>
-              )}
 
-              {/* English Description Tab */}
-              {activeDescTab === 'en' && (
-                <div className="space-y-5 text-xs">
-                  <div className="p-3.5 rounded-2xl bg-[#9f815b]/10 border border-[#9f815b]/30 text-[#1d241d] dark:text-[#d4be9b] text-[11px] font-bold">
-                    {isPersian
-                      ? '🇬🇧 این بخش برای کاربرانی که با زبان انگلیسی سایت را مشاهده می‌کنند نمایش داده می‌شود.'
-                      : '🇬🇧 This section is displayed when viewing the store in English.'}
+                  <div className="flex flex-wrap gap-2">
+                    {brands.map((b) => {
+                      const isSelected = selectedBrands.includes(b._id);
+                      return (
+                        <Button
+                          key={b._id}
+                          size="sm"
+                          radius="lg"
+                          variant={isSelected ? 'solid' : 'bordered'}
+                          onPress={() => handleBrandToggle(b._id)}
+                          startContent={<Tag className="w-3.5 h-3.5 opacity-60" />}
+                          className={`text-xs font-bold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-brand-gold text-[#141914] shadow-sm font-black'
+                              : 'bg-[#f8f5f0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-[#bfa27a]'
+                          }`}
+                        >
+                          <span>{isPersian ? b.name : b.nameEn || b.name}</span>
+                          {b.nameEn && isPersian && (
+                            <span className="text-[10px] font-sans opacity-70">({b.nameEn})</span>
+                          )}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* 6. Categories & VIP Badges */}
+            <Card className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
+              <CardBody className="p-6 sm:p-8 space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-5 h-5 text-[#9f815b]" />
+                    <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee]">
+                      {isPersian ? '۵. دسته‌بندی‌ها و وضعیت انتشار و VIP' : '5. Categories, Publication & VIP'}
+                    </h3>
                   </div>
 
-                  <div>
-                    <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                      {isPersian ? 'خلاصه مشخصات انگلیسی' : 'English Short Summary'}
-                    </label>
-                    <Field
-                      name="shortDescriptionEn"
-                      as="textarea"
+                  <Button
+                    size="sm"
+                    variant="light"
+                    color="warning"
+                    onPress={() => setIsCategoryModalOpen(true)}
+                    startContent={<Plus className="w-3.5 h-3.5" />}
+                    className="text-xs font-bold text-[#9f815b] dark:text-[#d4be9b] self-start sm:self-auto cursor-pointer"
+                  >
+                    {isPersian ? '+ ساخت دسته جدید' : '+ Create New Category'}
+                  </Button>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-xs mb-2 text-[#1d241d] dark:text-[#f7f4ee]">
+                    {isPersian ? 'دسته‌بندی‌های مرتبط (می‌توانید چند مورد را انتخاب کنید):' : 'Assigned Categories:'}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map((cat) => {
+                      const isSelected = selectedCategories.includes(cat._id);
+                      const isSub = Boolean(cat.parentId);
+                      const parentName = isSub
+                        ? typeof cat.parentId === 'object' && cat.parentId
+                          ? isPersian ? cat.parentId.name : cat.parentId.nameEn || cat.parentId.name
+                          : categories.find((c) => c._id === cat.parentId)?.name
+                        : null;
+
+                      return (
+                        <Button
+                          key={cat._id}
+                          size="sm"
+                          radius="lg"
+                          variant={isSelected ? 'solid' : 'bordered'}
+                          onPress={() => handleCategoryToggle(cat._id)}
+                          className={`text-xs font-bold transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-brand-gold text-[#141914] shadow-sm font-black'
+                              : 'bg-[#f8f5f0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-[#bfa27a]'
+                          }`}
+                        >
+                          {isSub && (
+                            <span className="opacity-60 text-[10px] font-sans">
+                              {parentName ? `${parentName} › ` : '↳ '}
+                            </span>
+                          )}
+                          <span>{isPersian ? cat.name : cat.nameEn || cat.name}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold">
+                  <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
+                    <span className="text-emerald-700 dark:text-emerald-300 font-bold">
+                      {isPersian ? 'انتشار عمومی در سایت' : 'Published & Visible'}
+                    </span>
+                    <Switch
+                      isSelected={values.isPublished}
+                      onValueChange={(val) => setFieldValue('isPublished', val)}
+                      color="success"
+                      size="sm"
+                    />
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-[#9f815b]/10 border border-[#9f815b]/30 flex items-center justify-between">
+                    <span className="text-[#9f815b] dark:text-[#d4be9b] font-bold">
+                      {isPersian ? 'فقط اعضای باشگاه VIP' : 'VIP Exclusive'}
+                    </span>
+                    <Switch
+                      isSelected={values.isVipOnly}
+                      onValueChange={(val) => setFieldValue('isVipOnly', val)}
+                      color="warning"
+                      size="sm"
+                    />
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] flex items-center justify-between">
+                    <span className="text-[#1d241d] dark:text-[#f7f4ee] font-bold">
+                      {isPersian ? 'منتخب در صفحه اصلی' : 'Featured Product'}
+                    </span>
+                    <Switch
+                      isSelected={values.isFeatured}
+                      onValueChange={(val) => setFieldValue('isFeatured', val)}
+                      color="warning"
+                      size="sm"
+                    />
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] flex items-center justify-between">
+                    <span className="text-[#1d241d] dark:text-[#f7f4ee] font-bold">
+                      {isPersian ? 'کالا موجود است' : 'In-Stock & Purchasable'}
+                    </span>
+                    <Switch
+                      isSelected={values.inStock}
+                      onValueChange={(val) => setFieldValue('inStock', val)}
+                      color="warning"
+                      size="sm"
+                    />
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* 7. Dynamic Attributes Builder */}
+            <Card className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
+              <CardBody className="p-6 sm:p-8 space-y-5">
+                <DynamicAttributeBuilder attributes={attributes} onChange={setAttributes} />
+              </CardBody>
+            </Card>
+
+            {/* 8. Bilingual Descriptions (Persian & English) */}
+            <Card className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
+              <CardBody className="p-6 sm:p-8 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-[#9f815b]" />
+                    <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee]">
+                      {isPersian ? '۶. توضیحات و نقد تخصصی محصول (دوزبانه)' : '6. Product Descriptions (Bilingual)'}
+                    </h3>
+                  </div>
+
+                  {/* Language Switch Tabs */}
+                  <div className="flex items-center gap-1 bg-[#f8f5f0] dark:bg-[#242c24] p-1 rounded-2xl border border-[#e6dcce] dark:border-[#2e3a2e]">
+                    <Button
+                      size="sm"
+                      radius="lg"
+                      variant={activeDescTab === 'fa' ? 'solid' : 'light'}
+                      onPress={() => setActiveDescTab('fa')}
+                      className={`text-xs font-bold ${
+                        activeDescTab === 'fa' ? 'bg-[#9f815b] text-[#f7f4ee] font-black shadow-sm' : 'text-[#73695c] dark:text-[#a69c8e]'
+                      }`}
+                    >
+                      <span>🇮🇷</span>
+                      <span>{isPersian ? 'توضیحات فارسی' : 'Persian (FA)'}</span>
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      radius="lg"
+                      variant={activeDescTab === 'en' ? 'solid' : 'light'}
+                      onPress={() => setActiveDescTab('en')}
+                      className={`text-xs font-bold ${
+                        activeDescTab === 'en' ? 'bg-[#9f815b] text-[#f7f4ee] font-black shadow-sm' : 'text-[#73695c] dark:text-[#a69c8e]'
+                      }`}
+                    >
+                      <span>🇬🇧</span>
+                      <span>{isPersian ? 'توضیحات انگلیسی' : 'English (EN)'}</span>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Persian Description Tab */}
+                {activeDescTab === 'fa' && (
+                  <div className="space-y-5 text-xs">
+                    <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 text-[11px] font-bold">
+                      {isPersian
+                        ? '🌿 این بخش برای کاربرانی که با زبان فارسی سایت را مشاهده می‌کنند نمایش داده می‌شود.'
+                        : '🌿 This section is displayed when viewing the store in Persian.'}
+                    </div>
+
+                    <Textarea
+                      label={isPersian ? 'خلاصه مشخصات فارسی' : 'Persian Short Summary'}
+                      rows={2}
+                      dir="rtl"
+                      value={values.shortDescription}
+                      onValueChange={(val) => setFieldValue('shortDescription', val)}
+                      placeholder="توضیح کوتاه ۱-۲ خطی برای نمایش سریع..."
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                        input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      }}
+                    />
+
+                    <Textarea
+                      label={isPersian ? 'توضیحات کامل و هرم بویایی فارسی *' : 'Persian Full Description & Olfactory Pyramid *'}
+                      rows={7}
+                      dir="rtl"
+                      value={values.description}
+                      onValueChange={(val) => setFieldValue('description', val)}
+                      placeholder="شرح کامل نت‌های ابتدایی، میانی، پایه، داستان عطر، هرم بویایی و راهنمای استفاده..."
+                      isInvalid={Boolean(errors.description && touched.description)}
+                      errorMessage={errors.description && touched.description ? String(errors.description) : undefined}
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                        input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* English Description Tab */}
+                {activeDescTab === 'en' && (
+                  <div className="space-y-5 text-xs">
+                    <div className="p-3.5 rounded-2xl bg-[#9f815b]/10 border border-[#9f815b]/30 text-[#1d241d] dark:text-[#d4be9b] text-[11px] font-bold">
+                      {isPersian
+                        ? '🇬🇧 این بخش برای کاربرانی که با زبان انگلیسی سایت را مشاهده می‌کنند نمایش داده می‌شود.'
+                        : '🇬🇧 This section is displayed when viewing the store in English.'}
+                    </div>
+
+                    <Textarea
+                      label={isPersian ? 'خلاصه مشخصات انگلیسی' : 'English Short Summary'}
                       rows={2}
                       dir="ltr"
+                      value={values.shortDescriptionEn}
+                      onValueChange={(val) => setFieldValue('shortDescriptionEn', val)}
                       placeholder="e.g. Legendary niche masterpiece for men, radiating confidence and success..."
-                      className="w-full p-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                        input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      }}
                     />
-                  </div>
 
-                  <div>
-                    <label className="block font-bold mb-1 text-[#1d241d] dark:text-[#f7f4ee]">
-                      {isPersian ? 'توضیحات کامل و هرم بویایی انگلیسی' : 'English Full Description & Olfactory Pyramid'}
-                    </label>
-                    <Field
-                      name="descriptionEn"
-                      as="textarea"
+                    <Textarea
+                      label={isPersian ? 'توضیحات کامل و هرم بویایی انگلیسی' : 'English Full Description & Olfactory Pyramid'}
                       rows={7}
                       dir="ltr"
+                      value={values.descriptionEn}
+                      onValueChange={(val) => setFieldValue('descriptionEn', val)}
                       placeholder="e.g. The undisputed king of modern niche fragrances. An exquisite blend of smoky pineapple, birch and oakmoss..."
-                      className="w-full p-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                        input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      }}
                     />
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </CardBody>
+            </Card>
 
             {/* Submit Action */}
             <div className="flex gap-4">
-              <button
+              <Button
                 type="submit"
-                disabled={loading}
-                className="flex-1 py-4 rounded-2xl font-black bg-[#bfa27a] hover:bg-[#d4be9b] text-[#141914] shadow-xl shadow-[#9f815b]/20 flex items-center justify-center gap-2 text-sm transition-all active:scale-98"
+                isLoading={loading}
+                radius="lg"
+                color="warning"
+                startContent={!loading && <Save className="w-5 h-5" />}
+                className="flex-1 py-6 font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-xl shadow-brand-gold/20 text-sm"
               >
-                <Save className="w-5 h-5" />
-                <span>
-                  {loading
-                    ? isPersian ? 'در حال ذخیره‌سازی محصول...' : 'Saving Product...'
-                    : isEditing
-                    ? isPersian ? 'به‌روزرسانی و ثبت تغییرات محصول' : 'Update Product'
-                    : isPersian ? 'ثبت و انتشار محصول جدید' : 'Save & Publish Product'}
-                </span>
-              </button>
+                {loading
+                  ? isPersian ? 'در حال ذخیره‌سازی محصول...' : 'Saving Product...'
+                  : isEditing
+                  ? isPersian ? 'به‌روزرسانی و ثبت تغییرات محصول' : 'Update Product'
+                  : isPersian ? 'ثبت و انتشار محصول جدید' : 'Save & Publish Product'}
+              </Button>
 
-              <button
+              <Button
                 type="button"
-                onClick={() => router.back()}
-                className="px-8 py-4 rounded-2xl bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] hover:bg-[#f8f5f0] transition-colors"
+                variant="bordered"
+                radius="lg"
+                onPress={() => router.back()}
+                className="px-8 py-6 bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]"
               >
                 {isPersian ? 'انصراف' : 'Cancel'}
-              </button>
+              </Button>
             </div>
           </Form>
         )}
       </Formik>
 
       {/* Quick Create Category Modal */}
-      {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl p-6 sm:p-8 max-w-md w-full border border-[#e6dcce] dark:border-[#2e3a2e] shadow-2xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-              <div className="flex items-center gap-2">
+      <Modal
+        isOpen={isCategoryModalOpen}
+        onOpenChange={setIsCategoryModalOpen}
+        backdrop="blur"
+        placement="center"
+        classNames={{
+          base: 'bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-2xl mx-4',
+          header: 'border-b border-[#e6dcce] dark:border-[#2e3a2e] pb-3',
+          body: 'py-4',
+          footer: 'border-t border-[#e6dcce] dark:border-[#2e3a2e] pt-3',
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex items-center gap-2">
                 <Layers className="w-5 h-5 text-[#9f815b]" />
                 <h3 className="font-black text-base">
                   {isPersian ? 'ساخت سریع دسته‌بندی جدید' : 'Quick Create Category'}
                 </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsCategoryModalOpen(false)}
-                className="p-1.5 rounded-xl text-[#73695c] hover:bg-[#f0eae0] dark:hover:bg-[#283228]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+              </ModalHeader>
 
-            <form onSubmit={handleQuickCreateCategory} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold mb-1">
-                  {isPersian ? 'نام فارسی دسته‌بندی *' : 'Category Name (Persian) *'}
-                </label>
-                <input
-                  type="text"
-                  required
+              <ModalBody className="space-y-4 text-xs">
+                <Input
+                  label={isPersian ? 'نام فارسی دسته‌بندی *' : 'Category Name (Persian) *'}
+                  isRequired
                   value={newCatName}
-                  onChange={(e) => setNewCatName(e.target.value)}
+                  onValueChange={setNewCatName}
                   placeholder={isPersian ? 'مثال: عطر خنک تابستانه' : 'e.g. Fresh Summer Scents'}
-                  className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
+                  variant="bordered"
+                  radius="lg"
+                  classNames={{
+                    inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                    input: 'text-xs font-semibold',
+                    label: 'text-xs font-bold',
+                  }}
                 />
-              </div>
 
-              <div>
-                <label className="block font-bold mb-1">
-                  {isPersian ? 'نام انگلیسی دسته‌بندی' : 'Category Name (English)'}
-                </label>
-                <input
-                  type="text"
+                <Input
+                  label={isPersian ? 'نام انگلیسی دسته‌بندی' : 'Category Name (English)'}
                   value={newCatNameEn}
-                  onChange={(e) => setNewCatNameEn(e.target.value)}
+                  onValueChange={setNewCatNameEn}
                   placeholder="e.g. Fresh Summer Scents"
-                  className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
+                  variant="bordered"
+                  radius="lg"
+                  classNames={{
+                    inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                    input: 'text-xs font-semibold',
+                    label: 'text-xs font-bold',
+                  }}
                 />
-              </div>
 
-              <div>
-                <label className="block font-bold mb-1">
-                  {isPersian ? 'دسته والد (اختیاری - برای زیردسته)' : 'Parent Category (Optional - Subcategory)'}
-                </label>
-                <select
-                  value={newCatParentId}
-                  onChange={(e) => setNewCatParentId(e.target.value)}
-                  className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold text-xs focus:ring-2 focus:ring-[#bfa27a] cursor-pointer"
+                <Select
+                  label={isPersian ? 'دسته والد (اختیاری برای ساب‌کتگوری)' : 'Parent Category (Optional)'}
+                  selectedKeys={newCatParentId ? new Set([newCatParentId]) : new Set([])}
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0] as string;
+                    setNewCatParentId(selected || '');
+                  }}
+                  variant="bordered"
+                  radius="lg"
+                  classNames={{
+                    trigger: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold text-xs font-semibold',
+                    value: 'text-xs font-semibold',
+                    label: 'text-xs font-bold',
+                    popoverContent: 'bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] rounded-2xl shadow-xl',
+                  }}
                 >
-                  <option value="">{isPersian ? '— دسته‌بندی سطح اصلی (بدون والد) —' : '— Main Category (No Parent) —'}</option>
-                  {categories.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {isPersian ? c.name : c.nameEn || c.name}
-                    </option>
+                  {[
+                    { _id: '', name: isPersian ? '— دسته‌بندی سطح اصلی (بدون والد) —' : '— Main Category (No Parent) —' },
+                    ...categories.map((c) => ({ _id: c._id, name: isPersian ? c.name : c.nameEn || c.name })),
+                  ].map((c) => (
+                    <SelectItem key={c._id} textValue={c.name}>
+                      {c.name}
+                    </SelectItem>
                   ))}
-                </select>
-              </div>
+                </Select>
 
-              <div>
-                <label className="block font-bold mb-1">
-                  {isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
-                </label>
-                <input
-                  type="text"
+                <Input
+                  label={isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
                   value={newCatSlug}
-                  onChange={(e) => setNewCatSlug(e.target.value)}
+                  onValueChange={setNewCatSlug}
                   placeholder="e.g. fresh-summer-scents"
-                  className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-mono focus:ring-2 focus:ring-[#bfa27a]"
+                  variant="bordered"
+                  radius="lg"
+                  classNames={{
+                    inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                    input: 'text-xs font-mono',
+                    label: 'text-xs font-bold',
+                  }}
                 />
-              </div>
+              </ModalBody>
 
-              <div className="pt-2 flex gap-2">
-                <button
-                  type="submit"
-                  disabled={creatingCategory}
-                  className="flex-1 py-3 rounded-xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-md transition-all duration-200 ease-out active:scale-98"
-                >
-                  {creatingCategory
-                    ? isPersian ? 'در حال ایجاد...' : 'Creating...'
-                    : isPersian ? 'ایجاد و انتخاب دسته' : 'Create & Select'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsCategoryModalOpen(false)}
-                  className="px-5 py-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] font-bold border border-[#e6dcce] dark:border-[#2e3a2e]"
+              <ModalFooter>
+                <Button
+                  variant="flat"
+                  radius="lg"
+                  onPress={onClose}
+                  className="font-bold text-xs"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                </Button>
+                <Button
+                  color="warning"
+                  radius="lg"
+                  isLoading={creatingCategory}
+                  onPress={() => handleQuickCreateCategory()}
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
+                >
+                  {isPersian ? 'ایجاد و انتخاب دسته' : 'Create & Select'}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
 
       {/* Quick Create Brand Modal */}
-      {isBrandModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl p-6 sm:p-8 max-w-md w-full border border-[#e6dcce] dark:border-[#2e3a2e] shadow-2xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-              <div className="flex items-center gap-2">
+      <Modal
+        isOpen={isBrandModalOpen}
+        onOpenChange={setIsBrandModalOpen}
+        backdrop="blur"
+        placement="center"
+        classNames={{
+          base: 'bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-2xl mx-4',
+          header: 'border-b border-[#e6dcce] dark:border-[#2e3a2e] pb-3',
+          body: 'py-4',
+          footer: 'border-t border-[#e6dcce] dark:border-[#2e3a2e] pt-3',
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-[#9f815b]" />
                 <h3 className="font-black text-base">
                   {isPersian ? 'ساخت سریع خانه عطر / برند جدید' : 'Quick Create Brand'}
                 </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsBrandModalOpen(false)}
-                className="p-1.5 rounded-xl text-[#73695c] hover:bg-[#f0eae0] dark:hover:bg-[#283228]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+              </ModalHeader>
 
-            <form onSubmit={handleQuickCreateBrand} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold mb-1">
-                  {isPersian ? 'نام برند به فارسی *' : 'Brand Name (Persian) *'}
-                </label>
-                <input
-                  type="text"
-                  required
+              <ModalBody className="space-y-4 text-xs">
+                <Input
+                  label={isPersian ? 'نام برند به فارسی *' : 'Brand Name (Persian) *'}
+                  isRequired
                   value={newBrandName}
-                  onChange={(e) => setNewBrandName(e.target.value)}
+                  onValueChange={setNewBrandName}
                   placeholder={isPersian ? 'مثال: تام فورد، کرید، زرجوف' : 'e.g. Tom Ford, Creed'}
-                  className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
+                  variant="bordered"
+                  radius="lg"
+                  classNames={{
+                    inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                    input: 'text-xs font-semibold',
+                    label: 'text-xs font-bold',
+                  }}
                 />
-              </div>
 
-              <div>
-                <label className="block font-bold mb-1">
-                  {isPersian ? 'نام برند به انگلیسی' : 'Brand Name (English)'}
-                </label>
-                <input
-                  type="text"
+                <Input
+                  label={isPersian ? 'نام برند به انگلیسی' : 'Brand Name (English)'}
                   value={newBrandNameEn}
-                  onChange={(e) => setNewBrandNameEn(e.target.value)}
+                  onValueChange={setNewBrandNameEn}
                   placeholder="e.g. Tom Ford, Creed, Xerjoff"
-                  className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
+                  variant="bordered"
+                  radius="lg"
+                  classNames={{
+                    inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                    input: 'text-xs font-semibold',
+                    label: 'text-xs font-bold',
+                  }}
                 />
-              </div>
 
-              <div>
-                <label className="block font-bold mb-1">
-                  {isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
-                </label>
-                <input
-                  type="text"
+                <Input
+                  label={isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
                   value={newBrandSlug}
-                  onChange={(e) => setNewBrandSlug(e.target.value)}
+                  onValueChange={setNewBrandSlug}
                   placeholder="e.g. tom-ford, creed"
-                  className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-mono focus:ring-2 focus:ring-[#bfa27a]"
+                  variant="bordered"
+                  radius="lg"
+                  classNames={{
+                    inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                    input: 'text-xs font-mono',
+                    label: 'text-xs font-bold',
+                  }}
                 />
-              </div>
 
-              <div>
-                <label className="block font-bold mb-1">
-                  {isPersian ? 'آدرس اینترنتی لوگو (اختیاری)' : 'Logo URL (Optional)'}
-                </label>
-                <input
-                  type="text"
+                <Input
+                  label={isPersian ? 'آدرس اینترنتی لوگو (اختیاری)' : 'Logo URL (Optional)'}
                   value={newBrandLogo}
-                  onChange={(e) => setNewBrandLogo(e.target.value)}
+                  onValueChange={setNewBrandLogo}
                   placeholder="https://..."
-                  className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-mono text-[11px] focus:ring-2 focus:ring-[#bfa27a]"
+                  variant="bordered"
+                  radius="lg"
+                  classNames={{
+                    inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
+                    input: 'text-xs font-mono',
+                    label: 'text-xs font-bold',
+                  }}
                 />
-              </div>
+              </ModalBody>
 
-              <div className="pt-2 flex gap-2">
-                <button
-                  type="submit"
-                  disabled={creatingBrand}
-                  className="flex-1 py-3 rounded-xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-md transition-all duration-200 ease-out active:scale-98"
-                >
-                  {creatingBrand
-                    ? isPersian ? 'در حال ایجاد...' : 'Creating...'
-                    : isPersian ? 'ایجاد و انتخاب برند' : 'Create & Select'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsBrandModalOpen(false)}
-                  className="px-5 py-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] font-bold border border-[#e6dcce] dark:border-[#2e3a2e]"
+              <ModalFooter>
+                <Button
+                  variant="flat"
+                  radius="lg"
+                  onPress={onClose}
+                  className="font-bold text-xs"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                </Button>
+                <Button
+                  color="warning"
+                  radius="lg"
+                  isLoading={creatingBrand}
+                  onPress={() => handleQuickCreateBrand()}
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
+                >
+                  {isPersian ? 'ایجاد و انتخاب برند' : 'Create & Select'}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

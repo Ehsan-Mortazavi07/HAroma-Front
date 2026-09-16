@@ -1,7 +1,28 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Search, Eye, Edit2, X, CheckCircle2, Truck, Clock } from 'lucide-react';
+import {
+  Card,
+  CardBody,
+  Button,
+  Input,
+  Select,
+  SelectItem,
+  Chip,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Skeleton,
+} from '@heroui/react';
+import { ShoppingBag, Search, Eye, Truck, CheckCircle2, X } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { IOrder } from '@/common/interfaces';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
@@ -73,47 +94,66 @@ export default function AdminOrdersPage() {
     switch (status) {
       case 'processing':
         return (
-          <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-bold bg-[#f0eae0] text-[#9f815b] dark:bg-[#283228] dark:text-[#d4be9b] border border-[#bfa27a]/30 whitespace-nowrap leading-none">
+          <Chip size="sm" variant="flat" color="warning" className="font-bold text-[11px]">
             {isPersian ? 'در حال پردازش' : 'Processing'}
-          </span>
+          </Chip>
         );
       case 'shipped':
         return (
-          <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-bold bg-[#f8f5f0] text-[#7a5d3e] dark:bg-[#242c24] dark:text-[#d4be9b] border border-[#e6dcce] dark:border-[#2e3a2e] gap-1.5 whitespace-nowrap leading-none">
-            <Truck className="w-3.5 h-3.5" />
-            <span>{isPersian ? 'تحویل پست شده' : 'Shipped'}</span>
-          </span>
+          <Chip
+            size="sm"
+            variant="flat"
+            color="primary"
+            startContent={<Truck className="w-3.5 h-3.5 ml-1" />}
+            className="font-bold text-[11px]"
+          >
+            {isPersian ? 'تحویل پست شده' : 'Shipped'}
+          </Chip>
         );
       case 'delivered':
         return (
-          <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-bold bg-[#e6dcce] text-[#1d241d] dark:bg-[#2e3a2e] dark:text-[#f7f4ee] gap-1.5 whitespace-nowrap leading-none">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#9f815b]" />
-            <span>{isPersian ? 'تحویل داده شده' : 'Delivered'}</span>
-          </span>
+          <Chip
+            size="sm"
+            variant="flat"
+            color="success"
+            startContent={<CheckCircle2 className="w-3.5 h-3.5 ml-1" />}
+            className="font-bold text-[11px]"
+          >
+            {isPersian ? 'تحویل داده شده' : 'Delivered'}
+          </Chip>
         );
       case 'cancelled':
         return (
-          <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 whitespace-nowrap leading-none">
+          <Chip size="sm" variant="flat" color="danger" className="font-bold text-[11px]">
             {isPersian ? 'لغو شده' : 'Cancelled'}
-          </span>
+          </Chip>
         );
       default:
         return (
-          <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-bold bg-[#f8f5f0] text-[#73695c] dark:bg-[#242c24] dark:text-[#a69c8e] whitespace-nowrap leading-none">
+          <Chip size="sm" variant="flat" className="font-bold text-[11px] bg-brand-surface-elevated text-brand-text-muted">
             {isPersian ? 'در انتظار' : 'Pending'}
-          </span>
+          </Chip>
         );
     }
   };
+
+  const statusOptions = [
+    { id: '', label: isPersian ? 'همه وضعیت‌ها' : 'All Statuses' },
+    { id: 'pending', label: isPersian ? 'در انتظار پرداخت' : 'Pending' },
+    { id: 'processing', label: isPersian ? 'در حال پردازش' : 'Processing' },
+    { id: 'shipped', label: isPersian ? 'تحویل پست شده' : 'Shipped' },
+    { id: 'delivered', label: isPersian ? 'تحویل داده شده' : 'Delivered' },
+    { id: 'cancelled', label: isPersian ? 'لغو شده' : 'Cancelled' },
+  ];
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-black text-[#1d241d] dark:text-[#f7f4ee]">
+        <h1 className="text-2xl font-black text-brand-text">
           {isPersian ? 'مدیریت و پیگیری سفارشات مشتریان' : 'Orders Management'}
         </h1>
-        <p className="text-xs text-[#73695c] dark:text-[#a69c8e] mt-1">
+        <p className="text-xs text-brand-text-muted mt-1">
           {isPersian
             ? `مجموعاً ${toPersianDigits(total)} سفارش در سیستم ثبت گردیده است`
             : `Total of ${total} orders recorded in system`}
@@ -121,232 +161,295 @@ export default function AdminOrdersPage() {
       </div>
 
       {/* Toolbar: Search & Filter */}
-      <div className="bg-[#ffffff] dark:bg-[#1c231c] p-4 rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs flex flex-col sm:flex-row gap-3 items-center justify-between">
-        <div className="relative w-full sm:w-80">
-          <input
-            type="text"
+      <Card className="bg-brand-surface p-4 rounded-3xl border border-brand-border shadow-xs">
+        <CardBody className="p-0 flex flex-col sm:flex-row gap-3 items-center justify-between">
+          <Input
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onValueChange={setSearch}
             placeholder={isPersian ? 'جستجو بر اساس شماره سفارش یا نام مشتری...' : 'Search by order number or customer...'}
-            className="w-full h-11 pr-10 pl-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a]"
+            startContent={<Search className="w-4 h-4 text-brand-text-muted shrink-0" />}
+            variant="bordered"
+            radius="lg"
+            className="w-full sm:w-80"
+            classNames={{
+              inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-2xl shadow-xs transition-colors",
+              input: "text-xs font-semibold text-brand-text",
+            }}
           />
-          <Search className="w-4 h-4 absolute right-3.5 top-3.5 text-[#73695c] dark:text-[#a69c8e]" />
-        </div>
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full sm:w-auto h-11 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] focus:ring-2 focus:ring-[#bfa27a] cursor-pointer"
-        >
-          <option value="">{isPersian ? 'همه وضعیت‌ها' : 'All Statuses'}</option>
-          <option value="pending">{isPersian ? 'در انتظار پرداخت' : 'Pending'}</option>
-          <option value="processing">{isPersian ? 'در حال پردازش' : 'Processing'}</option>
-          <option value="shipped">{isPersian ? 'تحویل پست شده' : 'Shipped'}</option>
-          <option value="delivered">{isPersian ? 'تحویل داده شده' : 'Delivered'}</option>
-          <option value="cancelled">{isPersian ? 'لغو شده' : 'Cancelled'}</option>
-        </select>
-      </div>
+          <Select
+            aria-label={isPersian ? 'فیلتر وضعیت' : 'Status Filter'}
+            selectedKeys={new Set([statusFilter])}
+            onSelectionChange={(keys) => {
+              const selected = Array.from(keys)[0] as string;
+              setStatusFilter(selected ?? '');
+            }}
+            variant="bordered"
+            radius="lg"
+            className="w-full sm:w-48"
+            classNames={{
+              trigger: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-2xl shadow-xs text-xs font-bold text-brand-text",
+              value: "text-xs font-bold text-brand-text",
+              popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl",
+            }}
+          >
+            {statusOptions.map((opt) => (
+              <SelectItem key={opt.id} textValue={opt.label}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </Select>
+        </CardBody>
+      </Card>
 
       {/* Orders Table */}
-      <div className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs overflow-hidden">
-        {loading ? (
-          <div className="p-12 text-center text-xs text-[#73695c] dark:text-[#a69c8e]">
-            {isPersian ? 'در حال بارگذاری لیست سفارشات...' : 'Loading orders list...'}
-          </div>
-        ) : orders.length === 0 ? (
-          <div className="p-12 text-center space-y-3">
-            <ShoppingBag className="w-12 h-12 text-[#9f815b] mx-auto opacity-40" />
-            <h3 className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
-              {isPersian ? 'سفارشی یافت نشد' : 'No orders found'}
-            </h3>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-right">
-              <thead>
-                <tr className="bg-[#f8f5f0] dark:bg-[#242c24] border-b border-[#e6dcce] dark:border-[#2e3a2e] text-[#73695c] dark:text-[#a69c8e] font-bold">
-                  <th className="py-4 px-6">{isPersian ? 'شماره سفارش' : 'Order ID'}</th>
-                  <th className="py-4 px-4">{isPersian ? 'نام تحویل‌گیرنده' : 'Customer'}</th>
-                  <th className="py-4 px-4">{isPersian ? 'اقلام' : 'Items'}</th>
-                  <th className="py-4 px-4">{isPersian ? 'مبلغ کل' : 'Total Amount'}</th>
-                  <th className="py-4 px-4">{isPersian ? 'روش پرداخت' : 'Payment'}</th>
-                  <th className="py-4 px-4">{isPersian ? 'وضعیت' : 'Status'}</th>
-                  <th className="py-4 px-4">{isPersian ? 'کد رهگیری' : 'Tracking Code'}</th>
-                  <th className="py-4 px-6 text-center">{isPersian ? 'عملیات' : 'Actions'}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e6dcce] dark:divide-[#2e3a2e]">
+      <Card className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs overflow-hidden">
+        <CardBody className="p-0">
+          {loading ? (
+            <div className="p-8 space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-2xl bg-brand-surface-elevated" />
+              ))}
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="p-12 text-center space-y-3">
+              <ShoppingBag className="w-12 h-12 text-brand-bronze mx-auto opacity-40" />
+              <h3 className="font-bold text-sm text-brand-text">
+                {isPersian ? 'سفارشی یافت نشد' : 'No orders found'}
+              </h3>
+            </div>
+          ) : (
+            <Table
+              aria-label="Orders Table"
+              classNames={{
+                wrapper: "p-0 bg-transparent shadow-none border-none overflow-x-auto",
+                th: "bg-brand-surface-elevated text-brand-text-muted font-bold text-xs py-4 px-4 first:pr-6 last:pl-6",
+                td: "py-4 px-4 text-xs font-semibold first:pr-6 last:pl-6",
+                tr: "border-b border-brand-border hover:bg-brand-surface-elevated/60 transition-colors",
+              }}
+            >
+              <TableHeader>
+                <TableColumn>{isPersian ? 'شماره سفارش' : 'Order ID'}</TableColumn>
+                <TableColumn>{isPersian ? 'نام تحویل‌گیرنده' : 'Customer'}</TableColumn>
+                <TableColumn>{isPersian ? 'اقلام' : 'Items'}</TableColumn>
+                <TableColumn>{isPersian ? 'مبلغ کل' : 'Total Amount'}</TableColumn>
+                <TableColumn>{isPersian ? 'روش پرداخت' : 'Payment'}</TableColumn>
+                <TableColumn>{isPersian ? 'وضعیت' : 'Status'}</TableColumn>
+                <TableColumn>{isPersian ? 'کد رهگیری' : 'Tracking Code'}</TableColumn>
+                <TableColumn className="text-center">{isPersian ? 'عملیات' : 'Actions'}</TableColumn>
+              </TableHeader>
+              <TableBody>
                 {orders.map((order) => (
-                  <tr key={order._id} className="hover:bg-[#f8f5f0] dark:hover:bg-[#242c24] transition-colors">
-                    <td className="py-4 px-6 font-bold text-[#9f815b] dark:text-[#d4be9b]">
+                  <TableRow key={order._id}>
+                    <TableCell className="font-bold text-brand-bronze dark:text-brand-gold">
                       {isPersian ? toPersianDigits(order.orderNumber) : order.orderNumber}
-                    </td>
+                    </TableCell>
 
-                    <td className="py-4 px-4">
-                      <div className="font-bold text-[#1d241d] dark:text-[#f7f4ee]">
+                    <TableCell>
+                      <div className="font-bold text-brand-text">
                         {order.deliveryAddress?.fullName || 'کاربر مهمان'}
                       </div>
-                      <div className="text-[11px] text-[#73695c] dark:text-[#a69c8e]">
+                      <div className="text-[11px] text-brand-text-muted">
                         {order.deliveryAddress?.phone || '—'}
                       </div>
-                    </td>
+                    </TableCell>
 
-                    <td className="py-4 px-4 text-[#73695c] dark:text-[#a69c8e]">
+                    <TableCell className="text-brand-text-muted">
                       {isPersian
                         ? `${toPersianDigits(order.items?.length || 0)} قلم کالا`
                         : `${order.items?.length || 0} items`}
-                    </td>
+                    </TableCell>
 
-                    <td className="py-4 px-4 font-black text-[#1d241d] dark:text-[#d4be9b]">
+                    <TableCell className="font-black text-brand-text">
                       {formatToman(order.total, isPersian)}
-                    </td>
+                    </TableCell>
 
-                    <td className="py-4 px-4 text-[#73695c] dark:text-[#a69c8e]">
+                    <TableCell className="text-brand-text-muted">
                       {order.paymentMethod === 'online'
                         ? isPersian ? 'آنلاین شتاب' : 'Online'
                         : order.paymentMethod === 'installment'
                         ? isPersian ? 'اقساطی' : 'Installment'
                         : isPersian ? 'در محل' : 'COD'}
-                    </td>
+                    </TableCell>
 
-                    <td className="py-4 px-4">{getStatusBadge(order.status)}</td>
+                    <TableCell>{getStatusBadge(order.status)}</TableCell>
 
-                    <td className="py-4 px-4 font-mono text-[11px] text-[#73695c] dark:text-[#a69c8e]">
+                    <TableCell className="font-mono text-[11px] text-brand-text-muted">
                       {order.trackingCode || '—'}
-                    </td>
+                    </TableCell>
 
-                    <td className="py-4 px-6 text-center">
-                      <button
-                        onClick={() => openOrderModal(order)}
-                        className="px-3 py-1.5 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] text-[#1d241d] dark:text-[#f7f4ee] hover:bg-[#e6dcce] dark:hover:bg-[#2e382e] border border-[#e6dcce] dark:border-[#2e3a2e] font-bold text-[11px] flex items-center gap-1.5 mx-auto transition-colors"
+                    <TableCell className="text-center">
+                      <Button
+                        size="sm"
+                        variant="flat"
+                        radius="lg"
+                        onPress={() => openOrderModal(order)}
+                        className="h-8 px-3 rounded-xl bg-brand-surface-elevated text-brand-text hover:bg-brand-border/60 border border-brand-border font-bold text-[11px] cursor-pointer"
                       >
-                        <Eye className="w-3.5 h-3.5 text-[#9f815b]" />
-                        <span>{isPersian ? 'بررسی / تغییر وضعیت' : 'Inspect'}</span>
-                      </button>
-                    </td>
-                  </tr>
+                        <Eye className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold" />
+                        <span>{isPersian ? 'بررسی' : 'Inspect'}</span>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+              </TableBody>
+            </Table>
+          )}
+        </CardBody>
+      </Card>
 
       {/* Order Details & Status Modal */}
-      {modalOpen && selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl p-6 sm:p-8 max-w-xl w-full border border-[#e6dcce] dark:border-[#2e3a2e] shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-              <div>
-                <h3 className="font-black text-base">
-                  {isPersian
+      <Modal
+        isOpen={modalOpen}
+        onOpenChange={setModalOpen}
+        backdrop="blur"
+        placement="center"
+        classNames={{
+          base: "bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl max-w-xl mx-4",
+          header: "border-b border-brand-border pb-3",
+          body: "py-5",
+          footer: "border-t border-brand-border pt-3",
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                <h3 className="font-black text-base text-brand-text">
+                  {selectedOrder && (isPersian
                     ? `جزئیات سفارش #${toPersianDigits(selectedOrder.orderNumber)}`
-                    : `Order Details #${selectedOrder.orderNumber}`}
+                    : `Order Details #${selectedOrder.orderNumber}`)}
                 </h3>
-                <span className="text-[11px] text-[#73695c] dark:text-[#a69c8e]">
-                  {new Date(selectedOrder.createdAt).toLocaleDateString(isPersian ? 'fa-IR' : 'en-US')}
-                </span>
-              </div>
-              <button
-                onClick={() => setModalOpen(false)}
-                className="p-1.5 rounded-xl text-[#73695c] hover:bg-[#f0eae0] dark:hover:bg-[#283228]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+                {selectedOrder && (
+                  <span className="text-[11px] text-brand-text-muted font-normal">
+                    {new Date(selectedOrder.createdAt).toLocaleDateString(isPersian ? 'fa-IR' : 'en-US')}
+                  </span>
+                )}
+              </ModalHeader>
 
-            {/* Order Items List */}
-            <div className="space-y-2">
-              <h4 className="font-bold text-xs text-[#73695c] dark:text-[#a69c8e]">
-                {isPersian ? 'اقلام سفارش داده شده:' : 'Ordered Items:'}
-              </h4>
-              <div className="p-3 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] divide-y divide-[#e6dcce] dark:divide-[#2e3a2e]">
-                {selectedOrder.items?.map((item: any, idx: number) => (
-                  <div key={idx} className="py-2 first:pt-0 last:pb-0 flex items-center justify-between text-xs">
-                    <div>
-                      <div className="font-bold text-[#1d241d] dark:text-[#f7f4ee]">{item.title}</div>
-                      {item.selectedAttributes && (
-                        <div className="text-[10px] text-[#73695c] dark:text-[#a69c8e]">{item.selectedAttributes}</div>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-[#9f815b] dark:text-[#d4be9b]">
-                        {isPersian ? `${toPersianDigits(item.quantity)} × ${formatToman(item.price, isPersian)}` : `${item.quantity} × ${formatToman(item.price, isPersian)}`}
+              <ModalBody className="space-y-4">
+                {selectedOrder && (
+                  <>
+                    {/* Order Items List */}
+                    <div className="space-y-2">
+                      <h4 className="font-bold text-xs text-brand-text-muted">
+                        {isPersian ? 'اقلام سفارش داده شده:' : 'Ordered Items:'}
+                      </h4>
+                      <div className="p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border divide-y divide-brand-border">
+                        {selectedOrder.items?.map((item: any, idx: number) => (
+                          <div key={idx} className="py-2 first:pt-0 last:pb-0 flex items-center justify-between text-xs">
+                            <div>
+                              <div className="font-bold text-brand-text">{item.title}</div>
+                              {item.selectedAttributes && (
+                                <div className="text-[10px] text-brand-text-muted">{item.selectedAttributes}</div>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <div className="font-bold text-brand-bronze dark:text-brand-gold">
+                                {isPersian
+                                  ? `${toPersianDigits(item.quantity)} × ${formatToman(item.price, isPersian)}`
+                                  : `${item.quantity} × ${formatToman(item.price, isPersian)}`}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Delivery Address Details */}
-            {selectedOrder.deliveryAddress && (
-              <div className="p-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] text-xs space-y-1">
-                <div className="font-bold text-[#1d241d] dark:text-[#f7f4ee]">
-                  {isPersian ? 'تحویل‌گیرنده:' : 'Recipient:'} {selectedOrder.deliveryAddress.fullName} ({selectedOrder.deliveryAddress.phone})
-                </div>
-                <div className="text-[#73695c] dark:text-[#a69c8e]">
-                  {selectedOrder.deliveryAddress.province}، {selectedOrder.deliveryAddress.city} — {selectedOrder.deliveryAddress.addressDetail}
-                </div>
-              </div>
-            )}
+                    {/* Delivery Address Details */}
+                    {selectedOrder.deliveryAddress && (
+                      <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs space-y-1">
+                        <div className="font-bold text-brand-text">
+                          {isPersian ? 'تحویل‌گیرنده:' : 'Recipient:'} {selectedOrder.deliveryAddress.fullName} ({selectedOrder.deliveryAddress.phone})
+                        </div>
+                        <div className="text-brand-text-muted">
+                          {selectedOrder.deliveryAddress.province}، {selectedOrder.deliveryAddress.city} — {selectedOrder.deliveryAddress.addressDetail}
+                        </div>
+                      </div>
+                    )}
 
-            {/* Status Update Form */}
-            <form onSubmit={handleUpdateStatus} className="space-y-4 pt-2 border-t border-[#e6dcce] dark:border-[#2e3a2e] text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold mb-1">
-                    {isPersian ? 'تغییر وضعیت سفارش' : 'Update Status'}
-                  </label>
-                  <select
-                    value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value)}
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-bold focus:ring-2 focus:ring-[#bfa27a]"
-                  >
-                    <option value="pending">{isPersian ? 'در انتظار پرداخت' : 'Pending'}</option>
-                    <option value="processing">{isPersian ? 'در حال پردازش' : 'Processing'}</option>
-                    <option value="shipped">{isPersian ? 'تحویل پست شده' : 'Shipped'}</option>
-                    <option value="delivered">{isPersian ? 'تحویل داده شده' : 'Delivered'}</option>
-                    <option value="cancelled">{isPersian ? 'لغو شده' : 'Cancelled'}</option>
-                  </select>
-                </div>
+                    {/* Status Update Form Elements */}
+                    <div className="space-y-3 pt-2 border-t border-brand-border">
+                      <div>
+                        <label className="block text-xs font-bold text-brand-text mb-1">
+                          {isPersian ? 'تغییر وضعیت سفارش' : 'Update Status'}
+                        </label>
+                        <Select
+                          aria-label={isPersian ? 'تغییر وضعیت' : 'Update Status'}
+                          selectedKeys={new Set([newStatus])}
+                          onSelectionChange={(keys) => {
+                            const selected = Array.from(keys)[0] as string;
+                            if (selected) setNewStatus(selected);
+                          }}
+                          variant="bordered"
+                          radius="lg"
+                          disallowEmptySelection
+                          classNames={{
+                            trigger: "h-11 px-3 bg-brand-surface border border-brand-border rounded-xl text-xs font-bold text-brand-text",
+                            value: "text-xs font-bold text-brand-text",
+                          }}
+                        >
+                          <SelectItem key="pending" textValue={isPersian ? 'در انتظار پرداخت' : 'Pending'}>
+                            {isPersian ? 'در انتظار پرداخت' : 'Pending'}
+                          </SelectItem>
+                          <SelectItem key="processing" textValue={isPersian ? 'در حال پردازش' : 'Processing'}>
+                            {isPersian ? 'در حال پردازش' : 'Processing'}
+                          </SelectItem>
+                          <SelectItem key="shipped" textValue={isPersian ? 'تحویل پست شده' : 'Shipped'}>
+                            {isPersian ? 'تحویل پست شده' : 'Shipped'}
+                          </SelectItem>
+                          <SelectItem key="delivered" textValue={isPersian ? 'تحویل داده شده' : 'Delivered'}>
+                            {isPersian ? 'تحویل داده شده' : 'Delivered'}
+                          </SelectItem>
+                          <SelectItem key="cancelled" textValue={isPersian ? 'لغو شده' : 'Cancelled'}>
+                            {isPersian ? 'لغو شده' : 'Cancelled'}
+                          </SelectItem>
+                        </Select>
+                      </div>
 
-                <div>
-                  <label className="block font-bold mb-1">
-                    {isPersian ? 'کد رهگیری پستی (۲۴ رقمی)' : 'Postal Tracking Code'}
-                  </label>
-                  <input
-                    type="text"
-                    value={trackingCode}
-                    onChange={(e) => setTrackingCode(e.target.value)}
-                    placeholder="مثال: ۱۲۳۴۵۶۷۸۹۰۱۲۳۴"
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-mono focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-              </div>
+                      <div>
+                        <label className="block text-xs font-bold text-brand-text mb-1">
+                          {isPersian ? 'کد رهگیری پستی (۲۴ رقمی)' : 'Postal Tracking Code'}
+                        </label>
+                        <Input
+                          value={trackingCode}
+                          onValueChange={setTrackingCode}
+                          placeholder="مثال: ۱۲۳۴۵۶۷۸۹۰۱۲۳۴"
+                          variant="bordered"
+                          radius="lg"
+                          classNames={{
+                            inputWrapper: "h-11 px-3 bg-brand-surface border border-brand-border rounded-xl",
+                            input: "text-xs font-mono font-semibold text-brand-text",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </ModalBody>
 
-              <div className="pt-2 flex gap-2">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 py-3 rounded-xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-md transition-all duration-200 ease-out active:scale-98"
+              <ModalFooter>
+                <Button
+                  variant="flat"
+                  radius="lg"
+                  onPress={onClose}
+                  className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-xl cursor-pointer"
                 >
-                  {submitting
-                    ? isPersian ? 'در حال ثبت...' : 'Saving...'
-                    : isPersian ? 'ثبت و ارسال پیامک به مشتری' : 'Update & Notify Customer'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="px-5 py-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] font-bold border border-[#e6dcce] dark:border-[#2e3a2e]"
+                  {isPersian ? 'انصراف' : 'Cancel'}
+                </Button>
+                <Button
+                  onPress={handleUpdateStatus as any}
+                  isLoading={submitting}
+                  radius="lg"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-xl cursor-pointer"
                 >
-                  {isPersian ? 'بستن' : 'Close'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                  {isPersian ? 'ثبت و ارسال پیامک به مشتری' : 'Update & Notify Customer'}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

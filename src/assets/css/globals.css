@@ -246,3 +246,69 @@
   overflow: visible !important;
 }
 
+/* ==========================================================================
+   Global Minimal Curved & Fluid Animation System
+   ========================================================================== */
+
+/* Fluid active press response for all interactive buttons and triggers */
+button:not(:disabled),
+[data-slot="button"]:not([data-disabled="true"]),
+.heroui-button:not([data-disabled="true"]) {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+button:active:not(:disabled),
+[data-slot="button"]:active:not([data-disabled="true"]),
+.heroui-button:active:not([data-disabled="true"]) {
+  transform: scale(0.98);
+}
+
+/* Curved inputs & triggers by default */
+[data-slot="input-wrapper"]:not(.rounded-2xl):not(.rounded-3xl):not(:has(textarea)),
+[data-slot="trigger"]:not(.rounded-2xl):not(.rounded-3xl) {
+  border-radius: 9999px !important;
+  transition: border-color 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Curved textarea */
+textarea,
+[data-slot="input-wrapper"]:has(textarea) {
+  border-radius: 1.5rem !important;
+  transition: border-color 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Curved chips & badges */
+[data-slot="chip"],
+.heroui-chip {
+  border-radius: 9999px !important;
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Smooth modal & popover animations */
+[data-slot="modal"],
+.heroui-modal-content,
+[data-slot="popover"],
+.heroui-popover-content {
+  border-radius: 1.75rem !important;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Smooth card transitions */
+[data-slot="card"],
+.heroui-card {
+  border-radius: 1.75rem !important;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Award, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Button, Card, CardBody } from '@heroui/react';
 import { IProduct } from '@/common/interfaces';
 import { ProductCard } from '@/components/common/ProductCard';
 import { PATHS } from '@/common/constants/PATHS';
@@ -60,29 +61,35 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none" role="tablist" aria-label={t.home.bestSellers}>
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all duration-200 ease-out ${
-              activeTab === tab.id
-                ? 'bg-brand-gold text-[#141914] shadow-sm font-black'
-                : 'bg-brand-surface text-brand-text-muted hover:bg-brand-surface-elevated border border-brand-border'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <Button
+              key={tab.id}
+              size="sm"
+              radius="full"
+              role="tab"
+              aria-selected={isActive}
+              onPress={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 text-xs font-bold whitespace-nowrap transition-all duration-200 ease-out h-9 ${
+                isActive
+                  ? 'bg-brand-gold text-[#141914] shadow-sm font-black'
+                  : 'bg-brand-surface text-brand-text-muted hover:bg-brand-surface-elevated border border-brand-border'
+              }`}
+            >
+              {tab.label}
+            </Button>
+          );
+        })}
       </div>
 
       {/* Products Grid */}
       {filteredProducts.length === 0 ? (
-        <div className="p-10 text-center bg-brand-surface rounded-3xl border border-brand-border text-brand-text-muted text-xs">
-          {t.home.noProducts}
-        </div>
+        <Card className="p-8 text-center bg-brand-surface rounded-3xl border border-brand-border text-brand-text-muted text-xs">
+          <CardBody className="p-0">
+            {t.home.noProducts}
+          </CardBody>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {filteredProducts.map((product) => (

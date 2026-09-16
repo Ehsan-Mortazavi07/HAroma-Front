@@ -17,7 +17,15 @@ import {
   Edit2,
   ChevronDown,
   ShoppingBag,
+  User,
+  Phone,
+  Mail,
+  Building,
+  Hash,
+  FileText,
+  Sparkles,
 } from 'lucide-react';
+import { Card, CardBody, Button, Input, Textarea, Chip } from '@heroui/react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { clearCart } from '@/stores/cart/cartSlice';
 import { updateUser } from '@/stores/auth/authSlice';
@@ -224,70 +232,78 @@ export function CheckoutPage() {
 
   if (completedOrder) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center p-8 bg-brand-surface rounded-3xl my-8 border border-brand-border shadow-xs max-w-2xl mx-auto">
-        <div className="w-20 h-20 rounded-full bg-brand-surface-elevated border border-brand-gold/40 flex items-center justify-center mb-6 text-brand-bronze">
-          <CheckCircle2 className="w-12 h-12" />
-        </div>
-
-        <h2 className="text-2xl font-black text-brand-text mb-2">
-          {t.checkout.orderSuccessTitle}
-        </h2>
-        <p className="text-xs text-brand-text-muted mb-6">
-          {isPersian
-            ? 'سفارش شما با موفقیت در سیستم ثبت گردید و جهت آماده‌سازی به واحد انبار ارسال شد.'
-            : 'Your order has been recorded and transferred to inventory for preparation.'}
-        </p>
-
-        <div className="w-full bg-brand-surface-elevated rounded-2xl p-4 mb-6 border border-brand-border space-y-2 text-xs">
-          <div className="flex justify-between">
-            <span className="text-brand-text-muted">{t.checkout.orderNumber}</span>
-            <span className="font-mono font-bold text-brand-bronze">
-              {completedOrder.orderNumber}
-            </span>
+      <Card className="max-w-xl mx-auto my-12 p-6 sm:p-10 bg-brand-surface rounded-3xl border border-brand-border shadow-xs text-center">
+        <CardBody className="flex flex-col items-center p-0">
+          <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-6">
+            <CheckCircle2 className="w-8 h-8" />
           </div>
-          <div className="flex justify-between">
-            <span className="text-brand-text-muted">{t.cart.total}</span>
-            <span className="font-bold text-brand-text">
-              {formatToman(completedOrder.total, isPersian)}
-            </span>
-          </div>
-        </div>
+          <h2 className="text-2xl font-black text-brand-text mb-2">
+            {t.checkout.orderSuccessTitle}
+          </h2>
+          <p className="text-xs text-brand-text-muted mb-6 leading-relaxed">
+            {t.checkout.orderSuccessSub}
+          </p>
 
-        <div className="flex gap-4">
-          <Link
-            href={PATHS.PROFILE}
-            className="px-6 py-3 rounded-2xl bg-brand-olive hover:bg-brand-olive/90 text-brand-champagne font-bold text-xs border border-brand-gold/40 shadow-sm"
-          >
-            {t.checkout.viewProfile}
-          </Link>
-          <Link
-            href={PATHS.HOME}
-            className="px-6 py-3 rounded-2xl bg-brand-surface border border-brand-border text-xs font-bold text-brand-text"
-          >
-            {t.checkout.backToHome}
-          </Link>
-        </div>
-      </div>
+          <div className="w-full bg-brand-surface-elevated p-4 rounded-2xl border border-brand-border space-y-2 mb-6 text-xs">
+            <div className="flex justify-between">
+              <span className="text-brand-text-muted">{t.checkout.orderNumber}</span>
+              <span className="font-mono font-bold text-brand-bronze dark:text-brand-gold">
+                {completedOrder.orderNumber}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-brand-text-muted">{t.cart.total}</span>
+              <span className="font-bold text-brand-text">
+                {formatToman(completedOrder.total, isPersian)}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button
+              as={Link}
+              href={PATHS.PROFILE}
+              radius="lg"
+              className="h-11 px-6 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 rounded-2xl"
+            >
+              {t.checkout.viewProfile}
+            </Button>
+            <Button
+              as={Link}
+              href={PATHS.HOME}
+              radius="lg"
+              variant="flat"
+              className="h-11 px-6 bg-brand-surface-elevated border border-brand-border text-xs font-bold text-brand-text rounded-2xl"
+            >
+              {t.checkout.backToHome}
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-brand-surface rounded-3xl my-8 border border-brand-border shadow-xs">
-        <ShoppingBag className="w-16 h-16 mb-4 text-brand-bronze opacity-40" />
-        <h2 className="text-xl font-black text-brand-text mb-2">
-          {t.cart.emptyTitle}
-        </h2>
-        <p className="text-xs text-brand-text-muted mb-6">
-          {t.cart.emptySub}
-        </p>
-        <Link
-          href={PATHS.PRODUCTS}
-          className="px-8 py-3.5 rounded-2xl bg-brand-olive text-brand-champagne font-bold text-xs border border-brand-gold/40 shadow-sm"
-        >
-          {t.cart.browseProducts}
-        </Link>
-      </div>
+      <Card className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 bg-brand-surface rounded-3xl my-8 border border-brand-border shadow-xs">
+        <CardBody className="flex flex-col items-center justify-center p-0">
+          <ShoppingBag className="w-16 h-16 mb-4 text-brand-bronze opacity-40" />
+          <h2 className="text-xl font-black text-brand-text mb-2">
+            {t.cart.emptyTitle}
+          </h2>
+          <p className="text-xs text-brand-text-muted mb-6">
+            {t.cart.emptySub}
+          </p>
+          <Button
+            as={Link}
+            href={PATHS.PRODUCTS}
+            radius="lg"
+            className="h-11 px-8 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 rounded-2xl"
+          >
+            {t.cart.browseProducts}
+          </Button>
+        </CardBody>
+      </Card>
     );
   }
 
@@ -314,56 +330,75 @@ export function CheckoutPage() {
         {/* Main Form Flow */}
         <div className="lg:col-span-8 space-y-6">
           {/* Step 1: Delivery Address */}
-          <div className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs space-y-4">
+          <Card className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-brand-bronze" />
-                <h3 className="font-bold text-base text-brand-text">
+                <MapPin className="w-5 h-5 text-brand-bronze dark:text-brand-gold" />
+                <h3 className="font-black text-base text-brand-text">
                   {t.checkout.deliveryAddress}
                 </h3>
               </div>
-              <button
-                onClick={() => setIsEditingAddress(!isEditingAddress)}
-                className="flex items-center gap-1 text-xs font-bold text-brand-bronze hover:underline"
+              <Button
+                size="sm"
+                variant="light"
+                onPress={() => setIsEditingAddress(!isEditingAddress)}
+                startContent={<Edit2 className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold" />}
+                className="h-8 px-3 rounded-xl text-xs font-bold text-brand-bronze dark:text-brand-gold hover:bg-brand-surface-elevated cursor-pointer"
               >
-                <Edit2 className="w-3.5 h-3.5" />
                 <span>{isEditingAddress ? t.common.cancel : t.checkout.editAddress}</span>
-              </button>
+              </Button>
             </div>
 
             {isEditingAddress ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div>
-                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                    {t.checkout.fullName} (تحویل‌گیرنده)
-                  </label>
-                  <input
-                    type="text"
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 h-5">
+                    <User className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                    <label className="text-xs font-bold text-brand-text">
+                      {t.checkout.fullName} (تحویل‌گیرنده)
+                    </label>
+                  </div>
+                  <Input
+                    aria-label={t.checkout.fullName}
+                    placeholder={isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
                     value={deliveryAddress.fullName}
-                    onChange={(e) =>
-                      setDeliveryAddress({ ...deliveryAddress, fullName: e.target.value })
+                    onValueChange={(val) =>
+                      setDeliveryAddress({ ...deliveryAddress, fullName: val })
                     }
-                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      input: "text-xs font-semibold text-brand-text",
+                    }}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                    {t.checkout.phone} (تحویل‌گیرنده)
-                  </label>
-                  <input
-                    type="tel"
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 h-5">
+                    <Phone className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                    <label className="text-xs font-bold text-brand-text">
+                      {t.checkout.phone} (تحویل‌گیرنده)
+                    </label>
+                  </div>
+                  <Input
+                    aria-label={t.checkout.phone}
+                    placeholder="09123456789"
                     dir="ltr"
                     maxLength={11}
                     value={deliveryAddress.phone}
-                    onChange={(e) =>
+                    onValueChange={(val) =>
                       setDeliveryAddress({
                         ...deliveryAddress,
-                        phone: toEnglishDigits(e.target.value).replace(/\D/g, ''),
+                        phone: toEnglishDigits(val).replace(/\D/g, ''),
                       })
                     }
-                    placeholder="09123456789"
-                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold font-mono text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      input: "text-xs font-semibold font-mono text-brand-text text-center",
+                    }}
                   />
                 </div>
 
@@ -376,90 +411,130 @@ export function CheckoutPage() {
                   className="sm:col-span-2"
                 />
 
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                    {t.checkout.addressDetail}
-                  </label>
-                  <textarea
-                    rows={3}
+                <div className="sm:col-span-2 space-y-1.5">
+                  <div className="flex items-center gap-1.5 h-5">
+                    <Building className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                    <label className="text-xs font-bold text-brand-text">
+                      {t.checkout.addressDetail}
+                    </label>
+                  </div>
+                  <Textarea
+                    aria-label={t.checkout.addressDetail}
+                    minRows={3}
                     maxLength={500}
                     value={deliveryAddress.addressDetail}
-                    onChange={(e) =>
-                      setDeliveryAddress({ ...deliveryAddress, addressDetail: e.target.value })
+                    onValueChange={(val) =>
+                      setDeliveryAddress({ ...deliveryAddress, addressDetail: val })
                     }
                     placeholder={
                       isPersian
                         ? 'نام خیابان، کوچه، پلاک، طبقه، واحد یا توضیحات تکمیلی...'
                         : 'Street, alley, building number, floor, details...'
                     }
-                    className="w-full p-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold resize-none h-24 overflow-y-auto"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "px-4 py-3 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      input: "text-xs font-semibold text-brand-text leading-relaxed",
+                    }}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                    {t.checkout.postalCode}
-                  </label>
-                  <input
-                    type="text"
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 h-5">
+                    <Hash className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                    <label className="text-xs font-bold text-brand-text">
+                      {t.checkout.postalCode}
+                    </label>
+                  </div>
+                  <Input
+                    aria-label={t.checkout.postalCode}
+                    placeholder="1234567890"
                     dir="ltr"
                     maxLength={10}
                     value={deliveryAddress.postalCode}
-                    onChange={(e) =>
+                    onValueChange={(val) =>
                       setDeliveryAddress({
                         ...deliveryAddress,
-                        postalCode: toEnglishDigits(e.target.value).replace(/\D/g, ''),
+                        postalCode: toEnglishDigits(val).replace(/\D/g, ''),
                       })
                     }
-                    placeholder="1234567890"
-                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-mono text-brand-text focus:ring-2 focus:ring-brand-gold text-center"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      input: "text-xs font-semibold font-mono text-brand-text text-center",
+                    }}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                    {t.checkout.email}
-                  </label>
-                  <input
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 h-5">
+                    <Mail className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                    <label className="text-xs font-bold text-brand-text">
+                      {t.checkout.email}
+                    </label>
+                  </div>
+                  <Input
                     type="email"
+                    aria-label={t.checkout.email}
+                    placeholder="user@example.com"
                     dir="ltr"
                     value={deliveryAddress.email || ''}
-                    onChange={(e) =>
-                      setDeliveryAddress({ ...deliveryAddress, email: e.target.value })
+                    onValueChange={(val) =>
+                      setDeliveryAddress({ ...deliveryAddress, email: val })
                     }
-                    placeholder="user@example.com"
-                    className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold text-start"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      input: "text-xs font-semibold text-brand-text text-start",
+                    }}
                   />
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-brand-text-muted mb-1">
-                    {t.checkout.notes}
-                  </label>
-                  <textarea
-                    rows={2}
+                <div className="sm:col-span-2 space-y-1.5">
+                  <div className="flex items-center gap-1.5 h-5">
+                    <FileText className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                    <label className="text-xs font-bold text-brand-text">
+                      {t.checkout.notes}
+                    </label>
+                  </div>
+                  <Textarea
+                    aria-label={t.checkout.notes}
+                    minRows={2}
                     maxLength={300}
                     value={deliveryAddress.description || ''}
-                    onChange={(e) =>
-                      setDeliveryAddress({ ...deliveryAddress, description: e.target.value })
+                    onValueChange={(val) =>
+                      setDeliveryAddress({ ...deliveryAddress, description: val })
                     }
                     placeholder={
                       isPersian
                         ? 'توضیحات تکمیلی تحویل سفارش، شماره زنگ، طبقه، هماهنگی قبل از ارسال و... (اختیاری)'
                         : 'Special delivery instructions, apartment/bell number, coordination... (optional)'
                     }
-                    className="w-full p-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-semibold text-brand-text focus:ring-2 focus:ring-brand-gold resize-none h-20 overflow-y-auto"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "px-4 py-3 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      input: "text-xs font-semibold text-brand-text leading-relaxed",
+                    }}
                   />
                 </div>
 
-                <div className="sm:col-span-2 p-3 rounded-xl bg-brand-champagne/20 border border-brand-gold/30 text-[11px] text-brand-bronze-dark leading-relaxed">
-                  💡 {isPersian
-                    ? 'در صورتی که اولین خرید شما باشد و قبلاً نشانی خود را در پروفایل ثبت نکرده باشید، این مشخصات به صورت خودکار به عنوان آدرس دائم در حساب شما ذخیره خواهد شد.'
-                    : 'If this is your first purchase, this delivery address will be automatically saved to your profile.'}
+                <div className="sm:col-span-2 p-3.5 rounded-2xl bg-brand-champagne/20 border border-brand-gold/30 text-[11px] text-brand-bronze-dark leading-relaxed flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-brand-gold shrink-0" />
+                  <span>
+                    {isPersian
+                      ? 'در صورتی که اولین خرید شما باشد و قبلاً نشانی خود را در پروفایل ثبت نکرده باشید، این مشخصات به صورت خودکار به عنوان آدرس دائم در حساب شما ذخیره خواهد شد.'
+                      : 'If this is your first purchase, this delivery address will be automatically saved to your profile.'}
+                  </span>
                 </div>
 
-                <button
-                  onClick={() => {
+                <Button
+                  type="button"
+                  radius="lg"
+                  onPress={() => {
                     const cleanPhone = toEnglishDigits(deliveryAddress.phone).trim();
                     if (!cleanPhone || !/^09\d{9}$/.test(cleanPhone)) {
                       toast.error(
@@ -489,10 +564,10 @@ export function CheckoutPage() {
                     }
                     setIsEditingAddress(false);
                   }}
-                  className="sm:col-span-2 py-2.5 rounded-xl bg-brand-olive text-brand-champagne font-bold text-xs border border-brand-gold/40 shadow-xs hover:bg-brand-olive/90 transition-colors"
+                  className="sm:col-span-2 h-11 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 transition-all rounded-2xl cursor-pointer"
                 >
                   {t.checkout.saveAddress}
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs space-y-2">
@@ -510,7 +585,7 @@ export function CheckoutPage() {
                 </div>
                 <div className="flex items-center justify-between text-[11px]">
                   {deliveryAddress.postalCode ? (
-                    <div className="font-mono text-brand-bronze">
+                    <div className="font-mono text-brand-bronze dark:text-brand-gold font-bold">
                       {isPersian ? 'کد پستی: ' : 'Postal Code: '} {deliveryAddress.postalCode}
                     </div>
                   ) : <div />}
@@ -522,16 +597,16 @@ export function CheckoutPage() {
                 </div>
               </div>
             )}
-          </div>
+          </Card>
 
           {/* Step 2: Payment Method */}
-          <div className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs space-y-4">
-            <h3 className="font-bold text-base text-brand-text">
+          <Card className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs space-y-4">
+            <h3 className="font-black text-base text-brand-text">
               {t.checkout.paymentMethod}
             </h3>
 
             <div className="space-y-2.5">
-              <label
+              <div
                 onClick={() => setPaymentMethod('online')}
                 className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
                   paymentMethod === 'online'
@@ -544,7 +619,7 @@ export function CheckoutPage() {
                     type="radio"
                     checked={paymentMethod === 'online'}
                     onChange={() => setPaymentMethod('online')}
-                    className="w-4 h-4 accent-brand-bronze"
+                    className="w-4 h-4 accent-brand-gold cursor-pointer"
                   />
                   <div>
                     <span className="font-bold text-xs text-brand-text block">
@@ -555,9 +630,10 @@ export function CheckoutPage() {
                     </span>
                   </div>
                 </div>
-              </label>
+                <CreditCard className="w-5 h-5 text-brand-bronze dark:text-brand-gold" />
+              </div>
 
-              <label
+              <div
                 onClick={() => setPaymentMethod('installment')}
                 className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
                   paymentMethod === 'installment'
@@ -570,7 +646,7 @@ export function CheckoutPage() {
                     type="radio"
                     checked={paymentMethod === 'installment'}
                     onChange={() => setPaymentMethod('installment')}
-                    className="w-4 h-4 accent-brand-bronze"
+                    className="w-4 h-4 accent-brand-gold cursor-pointer"
                   />
                   <div>
                     <span className="font-bold text-xs text-brand-text block">
@@ -581,9 +657,10 @@ export function CheckoutPage() {
                     </span>
                   </div>
                 </div>
-              </label>
+                <Zap className="w-5 h-5 text-brand-bronze dark:text-brand-gold" />
+              </div>
 
-              <label
+              <div
                 onClick={() => setPaymentMethod('cod')}
                 className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
                   paymentMethod === 'cod'
@@ -596,7 +673,7 @@ export function CheckoutPage() {
                     type="radio"
                     checked={paymentMethod === 'cod'}
                     onChange={() => setPaymentMethod('cod')}
-                    className="w-4 h-4 accent-brand-bronze"
+                    className="w-4 h-4 accent-brand-gold cursor-pointer"
                   />
                   <div>
                     <span className="font-bold text-xs text-brand-text block">
@@ -607,36 +684,43 @@ export function CheckoutPage() {
                     </span>
                   </div>
                 </div>
-              </label>
+                <Truck className="w-5 h-5 text-brand-bronze dark:text-brand-gold" />
+              </div>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Order Summary & Coupon Column */}
         <div className="lg:col-span-4 space-y-6">
           {/* Coupon Box */}
-          <div className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs space-y-3">
-            <h4 className="font-bold text-xs text-brand-text">
+          <Card className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs space-y-3">
+            <h4 className="font-black text-xs text-brand-text">
               {t.checkout.couponCode}
             </h4>
             <form onSubmit={handleApplyCoupon} className="flex gap-2">
-              <input
-                type="text"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
+              <Input
+                aria-label={t.checkout.couponCode}
                 placeholder={isPersian ? 'مثال: VIP20' : 'e.g. VIP20'}
-                className="flex-1 h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs uppercase font-bold text-brand-text focus:ring-2 focus:ring-brand-gold"
+                value={promoCode}
+                onValueChange={setPromoCode}
+                variant="bordered"
+                radius="lg"
+                classNames={{
+                  inputWrapper: "h-11 px-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-xl shadow-xs uppercase font-bold text-xs",
+                  input: "text-xs font-bold text-brand-text uppercase",
+                }}
               />
-              <button
+              <Button
                 type="submit"
-                disabled={couponLoading}
-                className="px-4 h-11 rounded-xl bg-brand-olive hover:bg-brand-olive/90 text-brand-champagne font-bold text-xs border border-brand-gold/40 shadow-xs"
+                radius="lg"
+                isLoading={couponLoading}
+                className="h-11 px-5 rounded-xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 transition-all shrink-0 cursor-pointer"
               >
-                {couponLoading ? '...' : t.checkout.applyCoupon}
-              </button>
+                {t.checkout.applyCoupon}
+              </Button>
             </form>
             {appliedCoupon && (
-              <div className="text-[11px] font-bold text-brand-bronze flex items-center gap-1">
+              <div className="text-[11px] font-bold text-brand-bronze dark:text-brand-gold flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>
                   {isPersian
@@ -645,10 +729,10 @@ export function CheckoutPage() {
                 </span>
               </div>
             )}
-          </div>
+          </Card>
 
           {/* Pricing Breakdown Card */}
-          <div className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs space-y-6">
+          <Card className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs space-y-6">
             <h3 className="font-black text-base text-brand-text pb-4 border-b border-brand-border">
               {isPersian ? 'فاکتور نهایی' : 'Final Invoice'}
             </h3>
@@ -662,16 +746,16 @@ export function CheckoutPage() {
               </div>
 
               {couponDiscount > 0 && (
-                <div className="flex justify-between text-brand-bronze">
+                <div className="flex justify-between text-brand-bronze dark:text-brand-gold font-bold">
                   <span>{isPersian ? 'تخفیف کوپن:' : 'Coupon Discount:'}</span>
-                  <span className="font-bold">- {formatToman(couponDiscount, isPersian)}</span>
+                  <span>- {formatToman(couponDiscount, isPersian)}</span>
                 </div>
               )}
 
               {vipDiscount > 0 && (
-                <div className="flex justify-between text-brand-bronze">
+                <div className="flex justify-between text-brand-bronze dark:text-brand-gold font-bold">
                   <span>{isPersian ? 'تخفیف ۵٪ اشتراک VIP:' : '5% VIP Member Discount:'}</span>
-                  <span className="font-bold">- {formatToman(vipDiscount, isPersian)}</span>
+                  <span>- {formatToman(vipDiscount, isPersian)}</span>
                 </div>
               )}
 
@@ -684,27 +768,24 @@ export function CheckoutPage() {
 
               <div className="pt-3 border-t border-brand-border flex justify-between text-base font-black text-brand-text">
                 <span>{t.cart.total}</span>
-                <span className="text-brand-bronze">
+                <span className="text-brand-bronze dark:text-brand-gold">
                   {formatToman(total, isPersian)}
                 </span>
               </div>
             </div>
 
-            <button
-              onClick={handleConfirmOrder}
-              disabled={orderSubmitting}
-              className="w-full py-4 rounded-2xl bg-brand-gold hover:bg-brand-champagne text-brand-olive font-black text-sm shadow-md shadow-brand-bronze/20 flex items-center justify-center gap-2 transition-all active:scale-98"
+            <Button
+              type="button"
+              size="lg"
+              radius="lg"
+              isLoading={orderSubmitting}
+              onPress={handleConfirmOrder}
+              endContent={!orderSubmitting && (isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />)}
+              className="w-full h-13 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-sm shadow-md shadow-brand-gold/20 flex items-center justify-center gap-2 transition-all active:scale-98 cursor-pointer"
             >
-              {orderSubmitting ? (
-                <span>{t.common.loading}</span>
-              ) : (
-                <>
-                  <span>{t.checkout.submitOrder}</span>
-                  {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-                </>
-              )}
-            </button>
-          </div>
+              {t.checkout.submitOrder}
+            </Button>
+          </Card>
         </div>
       </div>
     </div>

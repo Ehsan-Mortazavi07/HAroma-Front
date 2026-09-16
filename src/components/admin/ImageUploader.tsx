@@ -3,6 +3,16 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Upload, X, Image as ImageIcon, Link as LinkIcon, Plus } from 'lucide-react';
+import {
+  Button,
+  Input,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Chip,
+} from '@heroui/react';
 import { adminApi } from '@/common/api/admin';
 import { toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
@@ -64,14 +74,16 @@ export function ImageUploader({ images = [], onChange, maxImages = 8 }: ImageUpl
           </h3>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsUrlModalOpen(true)}
-          className="flex items-center gap-1.5 text-xs font-bold text-brand-bronze dark:text-brand-gold hover:underline"
+        <Button
+          size="sm"
+          variant="light"
+          color="warning"
+          onPress={() => setIsUrlModalOpen(true)}
+          startContent={<LinkIcon className="w-3.5 h-3.5" />}
+          className="text-xs font-bold text-brand-bronze dark:text-brand-gold"
         >
-          <LinkIcon className="w-3.5 h-3.5" />
-          <span>{isPersian ? '+ افزودن لینک اینترنتی تصویر' : '+ Add Image URL'}</span>
-        </button>
+          {isPersian ? '+ افزودن لینک اینترنتی تصویر' : '+ Add Image URL'}
+        </Button>
       </div>
 
       {/* Thumbnails Grid */}
@@ -85,17 +97,23 @@ export function ImageUploader({ images = [], onChange, maxImages = 8 }: ImageUpl
             >
               <Image src={displayUrl} alt={`Product ${idx}`} fill className="object-cover" />
               {idx === 0 && (
-                <div className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded-md bg-brand-gold text-[#141914] text-[10px] font-black shadow-xs">
-                  {isPersian ? 'تصویر کاور' : 'Cover'}
+                <div className="absolute top-1.5 right-1.5 z-10">
+                  <Chip size="sm" variant="solid" className="bg-brand-gold text-[#141914] text-[10px] font-black h-5">
+                    {isPersian ? 'تصویر کاور' : 'Cover'}
+                  </Chip>
                 </div>
               )}
-              <button
-                type="button"
-                onClick={() => handleRemoveImage(idx)}
-                className="absolute top-1.5 left-1.5 p-1 rounded-lg bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+              <Button
+                isIconOnly
+                size="sm"
+                radius="lg"
+                color="danger"
+                onPress={() => handleRemoveImage(idx)}
+                className="absolute top-1.5 left-1.5 w-7 h-7 min-w-7 opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
+                aria-label={isPersian ? 'حذف تصویر' : 'Delete image'}
               >
                 <X className="w-3.5 h-3.5" />
-              </button>
+              </Button>
             </div>
           );
         })}
@@ -120,45 +138,64 @@ export function ImageUploader({ images = [], onChange, maxImages = 8 }: ImageUpl
       </div>
 
       {/* URL Input Modal */}
-      {isUrlModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-brand-surface text-brand-text rounded-3xl p-6 max-w-md w-full border border-brand-border shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-brand-border">
-              <h4 className="font-black text-sm">
-                {isPersian ? 'افزودن مستقیم تصویر با لینک URL' : 'Add Image by Direct URL'}
-              </h4>
-              <button onClick={() => setIsUrlModalOpen(false)}>
-                <X className="w-4 h-4 text-brand-text-muted" />
-              </button>
-            </div>
+      <Modal
+        isOpen={isUrlModalOpen}
+        onOpenChange={setIsUrlModalOpen}
+        backdrop="blur"
+        placement="center"
+        classNames={{
+          base: 'bg-brand-surface text-brand-text rounded-3xl border border-brand-border shadow-2xl mx-4',
+          header: 'border-b border-brand-border pb-2',
+          body: 'py-4',
+          footer: 'border-t border-brand-border pt-3',
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>
+                <h4 className="font-black text-sm">
+                  {isPersian ? 'افزودن مستقیم تصویر با لینک URL' : 'Add Image by Direct URL'}
+                </h4>
+              </ModalHeader>
 
-            <input
-              type="url"
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              placeholder="https://images.unsplash.com/photo-..."
-              className="w-full h-11 px-3 rounded-xl bg-brand-surface-elevated border border-brand-border text-xs font-mono focus:ring-2 focus:ring-brand-gold"
-            />
+              <ModalBody>
+                <Input
+                  type="url"
+                  value={urlInput}
+                  onValueChange={setUrlInput}
+                  placeholder="https://images.unsplash.com/photo-..."
+                  variant="bordered"
+                  radius="lg"
+                  classNames={{
+                    inputWrapper: 'bg-brand-surface-elevated border-brand-border hover:border-brand-gold',
+                    input: 'text-xs font-mono',
+                  }}
+                />
+              </ModalBody>
 
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleAddUrl}
-                className="flex-1 py-2.5 rounded-xl font-bold bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs shadow-sm transition-colors"
-              >
-                {isPersian ? 'افزودن تصویر' : 'Add Image'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsUrlModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl bg-brand-surface-elevated text-xs font-bold border border-brand-border hover:bg-brand-champagne/30 transition-colors"
-              >
-                {isPersian ? 'انصراف' : 'Cancel'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              <ModalFooter>
+                <Button
+                  variant="flat"
+                  radius="lg"
+                  onPress={onClose}
+                  className="font-bold text-xs"
+                >
+                  {isPersian ? 'انصراف' : 'Cancel'}
+                </Button>
+                <Button
+                  color="warning"
+                  radius="lg"
+                  onPress={handleAddUrl}
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-bold text-xs shadow-sm"
+                >
+                  {isPersian ? 'افزودن تصویر' : 'Add Image'}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

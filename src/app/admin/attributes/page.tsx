@@ -2,18 +2,26 @@
 
 import React, { useState, useEffect } from 'react';
 import {
+  Card,
+  CardBody,
+  Button,
+  Input,
+  Switch,
+  Chip,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Skeleton,
+} from '@heroui/react';
+import {
   Sparkles,
   Plus,
   Edit2,
   Trash2,
   X,
-  Check,
-  Tag,
   Layers,
-  ShoppingBag,
-  Sliders,
-  DollarSign,
-  Package,
 } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { IAttribute, IVariantTemplate } from '@/common/interfaces';
@@ -118,8 +126,8 @@ export default function AdminAttributesPage() {
     setAttrPossibleValues(attrPossibleValues.filter((v) => v !== val));
   };
 
-  const handleAttrSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAttrSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!attrName.trim()) {
       toast.error(isPersian ? 'نام ویژگی الزامی است.' : 'Attribute name is required.');
       return;
@@ -130,23 +138,32 @@ export default function AdminAttributesPage() {
       const payload = {
         name: attrName.trim(),
         nameEn: attrNameEn.trim() || undefined,
-        key: attrKey.trim() || attrName.trim().toLowerCase().replace(/\s+/g, '_'),
+        key:
+          attrKey.trim() ||
+          (attrNameEn || attrName)
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9_]+/g, '_'),
         unit: attrUnit.trim() || undefined,
         possibleValues: attrPossibleValues,
+        isRequired: false,
+        isActive: true,
       };
 
       if (editingAttr) {
         await adminApi.updateAttribute(editingAttr._id, payload);
-        toast.success(isPersian ? 'ویژگی با موفقیت به‌روزرسانی شد.' : 'Attribute updated successfully.');
+        toast.success(isPersian ? 'ویژگی با موفقیت به‌روزرسانی شد.' : 'Attribute updated.');
       } else {
         await adminApi.createAttribute(payload);
-        toast.success(isPersian ? 'ویژگی جدید با موفقیت اضافه شد.' : 'Attribute created successfully.');
+        toast.success(isPersian ? 'ویژگی جدید با موفقیت ایجاد شد.' : 'Attribute created.');
       }
 
       setAttrModalOpen(false);
       loadAttributes();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || (isPersian ? 'خطا در ذخیره ویژگی.' : 'Failed to save attribute.'));
+      toast.error(
+        err?.response?.data?.message || (isPersian ? 'خطا در ذخیره ویژگی.' : 'Failed to save attribute.'),
+      );
     } finally {
       setSubmittingAttr(false);
     }
@@ -164,7 +181,7 @@ export default function AdminAttributesPage() {
 
     try {
       await adminApi.deleteAttribute(id);
-      toast.success(isPersian ? 'ویژگی با موفقیت حذف شد.' : 'Attribute deleted successfully.');
+      toast.success(isPersian ? 'ویژگی حذف شد.' : 'Attribute deleted.');
       loadAttributes();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || (isPersian ? 'خطا در حذف ویژگی.' : 'Failed to delete attribute.'));
@@ -176,7 +193,7 @@ export default function AdminAttributesPage() {
     setEditingTemplate(null);
     setTplTitle('');
     setTplTitleEn('');
-    setTplPrice('');
+    setTplPrice(1200000);
     setTplDiscountPrice('');
     setTplStock(10);
     setTplUnit('میل');
@@ -191,15 +208,15 @@ export default function AdminAttributesPage() {
     setTplTitleEn(tpl.titleEn || '');
     setTplPrice(tpl.defaultPrice);
     setTplDiscountPrice(tpl.defaultDiscountPrice || '');
-    setTplStock(tpl.defaultStock !== undefined ? tpl.defaultStock : 10);
+    setTplStock(tpl.defaultStock ?? 10);
     setTplUnit(tpl.unit || 'میل');
-    setTplIsPopular(tpl.isPopular !== undefined ? tpl.isPopular : true);
-    setTplOrder(tpl.order || 1);
+    setTplIsPopular(tpl.isPopular ?? true);
+    setTplOrder(tpl.order ?? 1);
     setTemplateModalOpen(true);
   };
 
-  const handleTplSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleTplSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!tplTitle.trim()) {
       toast.error(isPersian ? 'عنوان حجم/تنوع الزامی است.' : 'Variant title is required.');
       return;
@@ -269,10 +286,10 @@ export default function AdminAttributesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#1d241d] dark:text-[#f7f4ee]">
+          <h1 className="text-2xl font-black text-brand-text">
             {isPersian ? 'مدیریت تنوع‌ها، حجم‌ها و ویژگی‌های داینامیک' : 'Variant Templates & Dynamic Attributes'}
           </h1>
-          <p className="text-xs text-[#73695c] dark:text-[#a69c8e] mt-1">
+          <p className="text-xs text-brand-text-muted mt-1">
             {isPersian
               ? 'تعریف الگوهای آماده تنوع حجم عطر (۳۰، ۵۰، ۱۰۰ میل و...) و ویژگی‌های تخصصی بویایی خارج از محصول'
               : 'Create standalone volume & size variant templates and specialized olfactory attributes'}
@@ -280,56 +297,68 @@ export default function AdminAttributesPage() {
         </div>
 
         {activeTab === 'variants' ? (
-          <button
-            onClick={openCreateTplModal}
-            className="px-5 py-3 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 flex items-center justify-center gap-2 transition-all duration-200 ease-out active:scale-98"
+          <Button
+            onPress={openCreateTplModal}
+            startContent={<Plus className="w-4 h-4" />}
+            radius="lg"
+            className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            <span>{isPersian ? 'افزودن الگوی تنوع / حجم جدید' : 'Add New Variant Template'}</span>
-          </button>
+            {isPersian ? 'افزودن الگوی تنوع / حجم جدید' : 'Add New Variant Template'}
+          </Button>
         ) : (
-          <button
-            onClick={openCreateAttrModal}
-            className="px-5 py-3 rounded-2xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 flex items-center justify-center gap-2 transition-all duration-200 ease-out active:scale-98"
+          <Button
+            onPress={openCreateAttrModal}
+            startContent={<Plus className="w-4 h-4" />}
+            radius="lg"
+            className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            <span>{isPersian ? 'افزودن ویژگی جدید' : 'Add New Attribute'}</span>
-          </button>
+            {isPersian ? 'افزودن ویژگی جدید' : 'Add New Attribute'}
+          </Button>
         )}
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex items-center gap-2 bg-[#ffffff] dark:bg-[#1c231c] p-2 rounded-2xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
-        <button
-          onClick={() => setActiveTab('variants')}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-200 ease-out flex items-center justify-center gap-2 ${
-            activeTab === 'variants'
-              ? 'bg-brand-gold text-[#141914] shadow-sm'
-              : 'text-[#73695c] dark:text-[#a69c8e] hover:text-[#1d241d] dark:hover:text-[#f7f4ee]'
-          }`}
-        >
-          <Layers className="w-4 h-4" />
-          <span>{isPersian ? 'تنوع‌ها و الگوهای حجم محصول (واریانت‌ها)' : 'Variant & Size Templates'}</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] bg-black/10">
-            {isPersian ? toPersianDigits(variantTemplates.length) : variantTemplates.length}
-          </span>
-        </button>
+      <Card className="bg-brand-surface p-2 rounded-2xl border border-brand-border shadow-xs">
+        <CardBody className="p-0 flex flex-row items-center gap-2">
+          <Button
+            variant={activeTab === 'variants' ? 'solid' : 'light'}
+            radius="lg"
+            onPress={() => setActiveTab('variants')}
+            className={`flex-1 h-11 text-xs font-black cursor-pointer ${
+              activeTab === 'variants'
+                ? 'bg-brand-gold text-[#141914] shadow-sm'
+                : 'text-brand-text-muted hover:text-brand-text'
+            }`}
+            startContent={<Layers className="w-4 h-4" />}
+            endContent={
+              <Chip size="sm" variant="flat" className="text-[10px] h-5 min-w-5 px-1 bg-black/10">
+                {isPersian ? toPersianDigits(variantTemplates.length) : variantTemplates.length}
+              </Chip>
+            }
+          >
+            {isPersian ? 'تنوع‌ها و الگوهای حجم محصول (واریانت‌ها)' : 'Variant & Size Templates'}
+          </Button>
 
-        <button
-          onClick={() => setActiveTab('attributes')}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-200 ease-out flex items-center justify-center gap-2 ${
-            activeTab === 'attributes'
-              ? 'bg-brand-gold text-[#141914] shadow-sm'
-              : 'text-[#73695c] dark:text-[#a69c8e] hover:text-[#1d241d] dark:hover:text-[#f7f4ee]'
-          }`}
-        >
-          <Sparkles className="w-4 h-4" />
-          <span>{isPersian ? 'ویژگی‌های تخصصی و داینامیک عطر' : 'Dynamic Scent Attributes'}</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] bg-black/10">
-            {isPersian ? toPersianDigits(attributes.length) : attributes.length}
-          </span>
-        </button>
-      </div>
+          <Button
+            variant={activeTab === 'attributes' ? 'solid' : 'light'}
+            radius="lg"
+            onPress={() => setActiveTab('attributes')}
+            className={`flex-1 h-11 text-xs font-black cursor-pointer ${
+              activeTab === 'attributes'
+                ? 'bg-brand-gold text-[#141914] shadow-sm'
+                : 'text-brand-text-muted hover:text-brand-text'
+            }`}
+            startContent={<Sparkles className="w-4 h-4" />}
+            endContent={
+              <Chip size="sm" variant="flat" className="text-[10px] h-5 min-w-5 px-1 bg-black/10">
+                {isPersian ? toPersianDigits(attributes.length) : attributes.length}
+              </Chip>
+            }
+          >
+            {isPersian ? 'ویژگی‌های تخصصی و داینامیک عطر' : 'Dynamic Scent Attributes'}
+          </Button>
+        </CardBody>
+      </Card>
 
       {/* TAB 1: VARIANT TEMPLATES GRID */}
       {activeTab === 'variants' && (
@@ -337,114 +366,127 @@ export default function AdminAttributesPage() {
           {loadingTemplates ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <div
+                <Skeleton
                   key={i}
-                  className="h-44 rounded-3xl bg-[#ffffff] dark:bg-[#1c231c] animate-pulse border border-[#e6dcce] dark:border-[#2e3a2e]"
+                  className="h-44 rounded-3xl bg-brand-surface-elevated"
                 />
               ))}
             </div>
           ) : variantTemplates.length === 0 ? (
-            <div className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl p-12 text-center border border-[#e6dcce] dark:border-[#2e3a2e] space-y-3">
-              <Layers className="w-12 h-12 text-[#9f815b] mx-auto opacity-40" />
-              <h3 className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
-                {isPersian ? 'هیچ الگوی تنوع یا حجمی ثبت نشده است.' : 'No variant templates found.'}
-              </h3>
-              <p className="text-xs text-[#73695c] dark:text-[#a69c8e]">
-                {isPersian
-                  ? 'الگوهایی مانند «۵۰ میل»، «۱۰۰ میل» یا «دستریز» بسازید تا هنگام ثبت محصول با ۱ کلیک اعمال شوند.'
-                  : 'Create preset sizes like 50ml, 100ml, or Decants to apply in 1-click when adding products.'}
-              </p>
-              <button
-                onClick={openCreateTplModal}
-                className="px-5 py-2.5 rounded-xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-bold text-xs shadow-sm inline-flex items-center gap-1.5 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{isPersian ? 'ساخت اولین الگوی تنوع' : 'Create First Template'}</span>
-              </button>
-            </div>
+            <Card className="bg-brand-surface rounded-3xl p-12 text-center border border-brand-border space-y-3">
+              <CardBody className="flex flex-col items-center">
+                <Layers className="w-12 h-12 text-brand-bronze mx-auto opacity-40 mb-3" />
+                <h3 className="font-bold text-sm text-brand-text mb-1">
+                  {isPersian ? 'هیچ الگوی تنوع یا حجمی ثبت نشده است.' : 'No variant templates found.'}
+                </h3>
+                <p className="text-xs text-brand-text-muted mb-4">
+                  {isPersian
+                    ? 'الگوهایی مانند «۵۰ میل»، «۱۰۰ میل» یا «دستریز» بسازید تا هنگام ثبت محصول با ۱ کلیک اعمال شوند.'
+                    : 'Create preset sizes like 50ml, 100ml, or Decants to apply in 1-click when adding products.'}
+                </p>
+                <Button
+                  onPress={openCreateTplModal}
+                  startContent={<Plus className="w-4 h-4" />}
+                  radius="lg"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-bold text-xs shadow-sm cursor-pointer"
+                >
+                  {isPersian ? 'ساخت اولین الگوی تنوع' : 'Create First Template'}
+                </Button>
+              </CardBody>
+            </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {variantTemplates.map((tpl) => (
-                <div
+                <Card
                   key={tpl._id}
-                  className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl p-6 border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs flex flex-col justify-between space-y-4 hover:border-[#bfa27a] transition-all group"
+                  className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-colors group"
                 >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee]">
-                          {isPersian ? tpl.title : tpl.titleEn || tpl.title}
-                        </h3>
-                        {tpl.titleEn && (
-                          <span className="text-xs text-[#73695c] dark:text-[#a69c8e] font-sans">
-                            {tpl.titleEn}
-                          </span>
-                        )}
+                  <CardBody className="p-0 space-y-4 flex flex-col justify-between h-full">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="font-black text-base text-brand-text">
+                            {isPersian ? tpl.title : tpl.titleEn || tpl.title}
+                          </h3>
+                          {tpl.titleEn && (
+                            <span className="text-xs text-brand-text-muted font-sans">
+                              {tpl.titleEn}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            radius="lg"
+                            variant="light"
+                            onPress={() => openEditTplModal(tpl)}
+                            className="text-brand-text hover:bg-brand-surface-elevated cursor-pointer"
+                            aria-label={isPersian ? 'ویرایش الگو' : 'Edit template'}
+                          >
+                            <Edit2 className="w-4 h-4 text-brand-bronze" />
+                          </Button>
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            radius="lg"
+                            variant="light"
+                            onPress={() => handleDeleteTpl(tpl._id, tpl.title)}
+                            className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
+                            aria-label={isPersian ? 'حذف الگو' : 'Delete template'}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => openEditTplModal(tpl)}
-                          className="p-1.5 rounded-xl text-[#73695c] dark:text-[#a69c8e] hover:bg-[#f0eae0] dark:hover:bg-[#283228] transition-colors"
-                          title={isPersian ? 'ویرایش الگو' : 'Edit template'}
-                        >
-                          <Edit2 className="w-4 h-4 text-[#9f815b]" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTpl(tpl._id, tpl.title)}
-                          className="p-1.5 rounded-xl text-[#73695c] dark:text-[#a69c8e] hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 transition-colors"
-                          title={isPersian ? 'حذف الگو' : 'Delete template'}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Price & Stock info pills */}
-                    <div className="p-3.5 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] space-y-2 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[#73695c] dark:text-[#a69c8e] font-medium">
-                          {isPersian ? 'قیمت پیشنهادی:' : 'Default Price:'}
-                        </span>
-                        <span className="font-black text-[#1d241d] dark:text-[#d4be9b]">
-                          {formatToman(tpl.defaultPrice, isPersian)}
-                        </span>
-                      </div>
-
-                      {tpl.defaultDiscountPrice && tpl.defaultDiscountPrice > 0 && (
+                      {/* Price & Stock info pills */}
+                      <div className="p-3.5 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 text-xs">
                         <div className="flex items-center justify-between">
-                          <span className="text-[#73695c] dark:text-[#a69c8e] font-medium">
-                            {isPersian ? 'قیمت تخفیف‌دار:' : 'Discount Price:'}
+                          <span className="text-brand-text-muted font-medium">
+                            {isPersian ? 'قیمت پیشنهادی:' : 'Default Price:'}
                           </span>
-                          <span className="font-bold text-[#9f815b] dark:text-[#d4be9b]">
-                            {formatToman(tpl.defaultDiscountPrice, isPersian)}
+                          <span className="font-black text-brand-text dark:text-brand-gold">
+                            {formatToman(tpl.defaultPrice, isPersian)}
                           </span>
                         </div>
-                      )}
 
-                      <div className="flex items-center justify-between pt-1 border-t border-[#e6dcce]/60 dark:border-[#2e3a2e]/60">
-                        <span className="text-[#73695c] dark:text-[#a69c8e]">
-                          {isPersian ? 'موجودی پیش‌فرض:' : 'Default Stock:'}
-                        </span>
-                        <span className="font-bold">
-                          {isPersian ? toPersianDigits(tpl.defaultStock) : tpl.defaultStock}{' '}
-                          {tpl.unit || 'عدد'}
-                        </span>
+                        {tpl.defaultDiscountPrice && tpl.defaultDiscountPrice > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-brand-text-muted font-medium">
+                              {isPersian ? 'قیمت تخفیف‌دار:' : 'Discount Price:'}
+                            </span>
+                            <span className="font-bold text-brand-bronze dark:text-brand-gold">
+                              {formatToman(tpl.defaultDiscountPrice, isPersian)}
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between pt-1 border-t border-brand-border/60">
+                          <span className="text-brand-text-muted">
+                            {isPersian ? 'موجودی پیش‌فرض:' : 'Default Stock:'}
+                          </span>
+                          <span className="font-bold text-brand-text">
+                            {isPersian ? toPersianDigits(tpl.defaultStock) : tpl.defaultStock}{' '}
+                            {tpl.unit || 'عدد'}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center justify-between text-[11px] text-[#73695c] dark:text-[#a69c8e] pt-1">
-                    <span className="px-2 py-0.5 rounded-md bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e]">
-                      {isPersian ? 'واحد:' : 'Unit:'} {tpl.unit || 'میل'}
-                    </span>
-                    {tpl.isPopular && (
-                      <span className="px-2 py-0.5 rounded-md bg-[#f0eae0] dark:bg-[#283228] text-[#9f815b] dark:text-[#d4be9b] font-bold border border-[#bfa27a]/30">
-                        {isPersian ? '★ پرکاربرد در محصولات' : '★ Popular'}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                    <div className="flex items-center justify-between text-[11px] text-brand-text-muted pt-1">
+                      <Chip size="sm" variant="flat" className="bg-brand-surface-elevated text-brand-text border border-brand-border text-[10px]">
+                        {isPersian ? 'واحد:' : 'Unit:'} {tpl.unit || 'میل'}
+                      </Chip>
+                      {tpl.isPopular && (
+                        <Chip size="sm" variant="flat" className="bg-brand-gold/20 text-brand-bronze dark:text-brand-gold font-bold border border-brand-gold/40 text-[10px]">
+                          {isPersian ? '★ پرکاربرد در محصولات' : '★ Popular'}
+                        </Chip>
+                      )}
+                    </div>
+                  </CardBody>
+                </Card>
               ))}
             </div>
           )}
@@ -457,102 +499,118 @@ export default function AdminAttributesPage() {
           {loadingAttrs ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <div
+                <Skeleton
                   key={i}
-                  className="h-48 rounded-3xl bg-[#ffffff] dark:bg-[#1c231c] animate-pulse border border-[#e6dcce] dark:border-[#2e3a2e]"
+                  className="h-48 rounded-3xl bg-brand-surface-elevated"
                 />
               ))}
             </div>
           ) : attributes.length === 0 ? (
-            <div className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl p-12 text-center border border-[#e6dcce] dark:border-[#2e3a2e] space-y-3">
-              <Sparkles className="w-12 h-12 text-[#9f815b] mx-auto opacity-40" />
-              <h3 className="font-bold text-sm text-[#1d241d] dark:text-[#f7f4ee]">
-                {isPersian ? 'هیچ ویژگی ثبت نشده است.' : 'No attributes found.'}
-              </h3>
-              <button
-                onClick={openCreateAttrModal}
-                className="px-5 py-2.5 rounded-xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-bold text-xs shadow-sm transition-colors"
-              >
-                {isPersian ? 'افزودن ویژگی جدید' : 'Add Attribute'}
-              </button>
-            </div>
+            <Card className="bg-brand-surface rounded-3xl p-12 text-center border border-brand-border space-y-3">
+              <CardBody className="flex flex-col items-center">
+                <Sparkles className="w-12 h-12 text-brand-bronze mx-auto opacity-40 mb-3" />
+                <h3 className="font-bold text-sm text-brand-text mb-4">
+                  {isPersian ? 'هیچ ویژگی ثبت نشده است.' : 'No attributes found.'}
+                </h3>
+                <Button
+                  onPress={openCreateAttrModal}
+                  startContent={<Plus className="w-4 h-4" />}
+                  radius="lg"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-bold text-xs shadow-sm cursor-pointer"
+                >
+                  {isPersian ? 'افزودن ویژگی جدید' : 'Add Attribute'}
+                </Button>
+              </CardBody>
+            </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {attributes.map((attr) => (
-                <div
+                <Card
                   key={attr._id}
-                  className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl p-6 border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs flex flex-col justify-between space-y-4 hover:border-[#bfa27a] transition-all group"
+                  className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-colors group"
                 >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className="font-black text-base text-[#1d241d] dark:text-[#f7f4ee]">
-                          {isPersian ? attr.name : attr.nameEn || attr.name}
-                        </h3>
-                        <span className="text-xs font-mono font-bold text-[#9f815b] dark:text-[#d4be9b]">
-                          {attr.key}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => openEditAttrModal(attr)}
-                          className="p-1.5 rounded-xl text-[#73695c] dark:text-[#a69c8e] hover:bg-[#f0eae0] dark:hover:bg-[#283228] transition-colors"
-                          title={isPersian ? 'ویرایش ویژگی' : 'Edit attribute'}
-                        >
-                          <Edit2 className="w-4 h-4 text-[#9f815b]" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAttr(attr._id, attr.name)}
-                          className="p-1.5 rounded-xl text-[#73695c] dark:text-[#a69c8e] hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 transition-colors"
-                          title={isPersian ? 'حذف ویژگی' : 'Delete attribute'}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {attr.unit && (
-                      <div className="text-[11px] text-[#73695c] dark:text-[#a69c8e]">
-                        {isPersian ? 'واحد سنجش:' : 'Unit:'}{' '}
-                        <span className="font-bold text-[#1d241d] dark:text-[#f7f4ee]">
-                          {attr.unit}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Possible Values Chips */}
-                    <div className="space-y-1.5">
-                      <span className="text-[11px] font-bold text-[#73695c] dark:text-[#a69c8e]">
-                        {isPersian ? 'گزینه‌ها و مقادیر مجاز:' : 'Allowed Values:'}
-                      </span>
-                      <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
-                        {attr.possibleValues && attr.possibleValues.length > 0 ? (
-                          attr.possibleValues.map((val, idx) => (
-                            <span
-                              key={idx}
-                              className="px-2 py-0.5 rounded-lg bg-[#f8f5f0] dark:bg-[#242c24] text-[11px] font-medium text-[#1d241d] dark:text-[#f7f4ee] border border-[#e6dcce] dark:border-[#2e3a2e]"
-                            >
-                              {translateAttributeValue(val, isPersian)}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-[11px] text-[#73695c] dark:text-[#a69c8e] italic">
-                            {isPersian ? 'مقدار متنی آزاد' : 'Free text'}
+                  <CardBody className="p-0 space-y-4 flex flex-col justify-between h-full">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="font-black text-base text-brand-text">
+                            {isPersian ? attr.name : attr.nameEn || attr.name}
+                          </h3>
+                          <span className="text-xs font-mono font-bold text-brand-bronze dark:text-brand-gold">
+                            {attr.key}
                           </span>
-                        )}
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            radius="lg"
+                            variant="light"
+                            onPress={() => openEditAttrModal(attr)}
+                            className="text-brand-text hover:bg-brand-surface-elevated cursor-pointer"
+                            aria-label={isPersian ? 'ویرایش ویژگی' : 'Edit attribute'}
+                          >
+                            <Edit2 className="w-4 h-4 text-brand-bronze" />
+                          </Button>
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            radius="lg"
+                            variant="light"
+                            onPress={() => handleDeleteAttr(attr._id, attr.name)}
+                            className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
+                            aria-label={isPersian ? 'حذف ویژگی' : 'Delete attribute'}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {attr.unit && (
+                        <div className="text-[11px] text-brand-text-muted">
+                          {isPersian ? 'واحد سنجش:' : 'Unit:'}{' '}
+                          <span className="font-bold text-brand-text">
+                            {attr.unit}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Possible Values Chips */}
+                      <div className="space-y-1.5">
+                        <span className="text-[11px] font-bold text-brand-text-muted">
+                          {isPersian ? 'گزینه‌ها و مقادیر مجاز:' : 'Allowed Values:'}
+                        </span>
+                        <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
+                          {attr.possibleValues && attr.possibleValues.length > 0 ? (
+                            attr.possibleValues.map((val, idx) => (
+                              <Chip
+                                key={idx}
+                                size="sm"
+                                variant="flat"
+                                className="bg-brand-surface-elevated text-brand-text border border-brand-border text-[11px] font-medium"
+                              >
+                                {translateAttributeValue(val, isPersian)}
+                              </Chip>
+                            ))
+                          ) : (
+                            <span className="text-[11px] text-brand-text-muted italic">
+                              {isPersian ? 'مقدار متنی آزاد' : 'Free text'}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="pt-2 border-t border-[#e6dcce] dark:border-[#2e3a2e] text-[11px] text-[#73695c] dark:text-[#a69c8e] flex items-center justify-between">
-                    <span>
-                      {isPersian
-                        ? `${toPersianDigits(attr.possibleValues?.length || 0)} مقدار از پیش تعریف‌شده`
-                        : `${attr.possibleValues?.length || 0} predefined values`}
-                    </span>
-                  </div>
-                </div>
+                    <div className="pt-2 border-t border-brand-border text-[11px] text-brand-text-muted flex items-center justify-between">
+                      <span>
+                        {isPersian
+                          ? `${toPersianDigits(attr.possibleValues?.length || 0)} مقدار از پیش تعریف‌شده`
+                          : `${attr.possibleValues?.length || 0} predefined values`}
+                      </span>
+                    </div>
+                  </CardBody>
+                </Card>
               ))}
             </div>
           )}
@@ -560,317 +618,339 @@ export default function AdminAttributesPage() {
       )}
 
       {/* VARIANT TEMPLATE MODAL */}
-      {templateModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-[#e6dcce] dark:border-[#2e3a2e] shadow-2xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-              <div className="flex items-center gap-2">
-                <Layers className="w-5 h-5 text-[#9f815b]" />
-                <h3 className="font-black text-base">
+      <Modal
+        isOpen={templateModalOpen}
+        onOpenChange={setTemplateModalOpen}
+        backdrop="blur"
+        placement="center"
+        scrollBehavior="inside"
+        classNames={{
+          base: "bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl max-w-lg mx-4",
+          header: "border-b border-brand-border pb-3",
+          body: "py-4",
+          footer: "border-t border-brand-border pt-3",
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex items-center gap-2 font-black text-base">
+                <Layers className="w-5 h-5 text-brand-bronze" />
+                <span>
                   {editingTemplate
                     ? isPersian ? 'ویرایش الگوی تنوع / حجم' : 'Edit Variant Template'
                     : isPersian ? 'تعریف الگوی تنوع / حجم جدید' : 'Create Variant Template'}
-                </h3>
-              </div>
-              <button
-                onClick={() => setTemplateModalOpen(false)}
-                className="p-1.5 rounded-xl text-[#73695c] hover:bg-[#f0eae0] dark:hover:bg-[#283228]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleTplSubmit} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold mb-1">
-                    {isPersian ? 'عنوان تنوع (فارسی) *' : 'Variant Title (Persian) *'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={tplTitle}
-                    onChange={(e) => setTplTitle(e.target.value)}
-                    placeholder={isPersian ? 'مثال: حجم ۵۰ میلی‌لیتر' : 'e.g. 50 ml'}
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold mb-1">
-                    {isPersian ? 'عنوان تنوع (انگلیسی)' : 'Variant Title (English)'}
-                  </label>
-                  <input
-                    type="text"
-                    value={tplTitleEn}
-                    onChange={(e) => setTplTitleEn(e.target.value)}
-                    placeholder="e.g. 50 ml Standard"
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold mb-1">
-                    {isPersian ? 'قیمت پیشنهادی پیش‌فرض (تومان) *' : 'Default Price (Toman) *'}
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    value={tplPrice}
-                    onChange={(e) => setTplPrice(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="1500000"
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-bold focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold mb-1">
-                    {isPersian ? 'قیمت تخفیف پیش‌فرض (اختیاری)' : 'Default Discount Price'}
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={tplDiscountPrice}
-                    onChange={(e) =>
-                      setTplDiscountPrice(e.target.value === '' ? '' : Number(e.target.value))
-                    }
-                    placeholder="1290000"
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-bold focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block font-bold mb-1">
-                    {isPersian ? 'موجودی پیش‌فرض' : 'Default Stock'}
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={tplStock}
-                    onChange={(e) => setTplStock(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-bold focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold mb-1">
-                    {isPersian ? 'واحد سنجش' : 'Unit'}
-                  </label>
-                  <input
-                    type="text"
-                    value={tplUnit}
-                    onChange={(e) => setTplUnit(e.target.value)}
-                    placeholder="میل / ml"
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold mb-1">
-                    {isPersian ? 'اولویت ترتیب' : 'Order'}
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={tplOrder}
-                    onChange={(e) => setTplOrder(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-bold focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-              </div>
-
-              <label className="flex items-center gap-2 cursor-pointer pt-2">
-                <input
-                  type="checkbox"
-                  checked={tplIsPopular}
-                  onChange={(e) => setTplIsPopular(e.target.checked)}
-                  className="w-4 h-4 accent-[#9f815b] rounded"
-                />
-                <span className="font-bold">
-                  {isPersian
-                    ? 'نمایش به عنوان الگوی پرکاربرد در فرم ساخت محصول'
-                    : 'Show as quick preset in Product Form'}
                 </span>
-              </label>
+              </ModalHeader>
 
-              <div className="pt-4 flex justify-end gap-3 border-t border-[#e6dcce] dark:border-[#2e3a2e]">
-                <button
-                  type="button"
-                  onClick={() => setTemplateModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] font-bold border border-[#e6dcce] dark:border-[#2e3a2e]"
+              <ModalBody className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label={isPersian ? 'عنوان تنوع (فارسی)' : 'Variant Title (Persian)'}
+                    isRequired
+                    value={tplTitle}
+                    onValueChange={setTplTitle}
+                    placeholder={isPersian ? 'مثال: حجم ۵۰ میلی‌لیتر' : 'e.g. 50 ml'}
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      input: "text-xs font-semibold text-brand-text",
+                      label: "text-xs font-bold text-brand-text",
+                    }}
+                  />
+
+                  <Input
+                    label={isPersian ? 'عنوان تنوع (انگلیسی)' : 'Variant Title (English)'}
+                    value={tplTitleEn}
+                    onValueChange={setTplTitleEn}
+                    placeholder="e.g. 50 ml Standard"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      input: "text-xs font-semibold text-brand-text",
+                      label: "text-xs font-bold text-brand-text",
+                    }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label={isPersian ? 'قیمت پیشنهادی پیش‌فرض (تومان)' : 'Default Price (Toman)'}
+                    isRequired
+                    type="number"
+                    value={String(tplPrice)}
+                    onValueChange={(v) => setTplPrice(v === '' ? '' : Number(v))}
+                    placeholder="1500000"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      input: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text",
+                    }}
+                  />
+
+                  <Input
+                    label={isPersian ? 'قیمت تخفیف پیش‌فرض (اختیاری)' : 'Default Discount Price'}
+                    type="number"
+                    value={String(tplDiscountPrice)}
+                    onValueChange={(v) => setTplDiscountPrice(v === '' ? '' : Number(v))}
+                    placeholder="1290000"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      input: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text",
+                    }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <Input
+                    label={isPersian ? 'موجودی پیش‌فرض' : 'Default Stock'}
+                    type="number"
+                    value={String(tplStock)}
+                    onValueChange={(v) => setTplStock(v === '' ? '' : Number(v))}
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      input: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text",
+                    }}
+                  />
+
+                  <Input
+                    label={isPersian ? 'واحد سنجش' : 'Unit'}
+                    value={tplUnit}
+                    onValueChange={setTplUnit}
+                    placeholder="میل / ml"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      input: "text-xs font-semibold text-brand-text",
+                      label: "text-xs font-bold text-brand-text",
+                    }}
+                  />
+
+                  <Input
+                    label={isPersian ? 'اولویت ترتیب' : 'Order'}
+                    type="number"
+                    value={String(tplOrder)}
+                    onValueChange={(v) => setTplOrder(v === '' ? '' : Number(v))}
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      input: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text",
+                    }}
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <Switch
+                    isSelected={tplIsPopular}
+                    onValueChange={setTplIsPopular}
+                    size="sm"
+                    classNames={{
+                      label: "text-xs font-bold text-brand-text",
+                    }}
+                  >
+                    {isPersian
+                      ? 'نمایش به عنوان الگوی پرکاربرد در فرم ساخت محصول'
+                      : 'Show as quick preset in Product Form'}
+                  </Switch>
+                </div>
+              </ModalBody>
+
+              <ModalFooter>
+                <Button
+                  variant="flat"
+                  radius="lg"
+                  onPress={onClose}
+                  className="font-bold text-xs"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={submittingTpl}
-                  className="px-6 py-2.5 rounded-xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black shadow-md transition-all duration-200 ease-out active:scale-98"
+                </Button>
+                <Button
+                  isLoading={submittingTpl}
+                  radius="lg"
+                  onPress={() => handleTplSubmit()}
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
                 >
-                  {submittingTpl
-                    ? isPersian ? 'در حال ثبت...' : 'Saving...'
-                    : isPersian ? 'ذخیره الگو' : 'Save Template'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                  {isPersian ? 'ذخیره الگو' : 'Save Template'}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
 
       {/* DYNAMIC ATTRIBUTE MODAL */}
-      {attrModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-[#e6dcce] dark:border-[#2e3a2e] shadow-2xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#e6dcce] dark:border-[#2e3a2e]">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[#9f815b]" />
-                <h3 className="font-black text-base">
+      <Modal
+        isOpen={attrModalOpen}
+        onOpenChange={setAttrModalOpen}
+        backdrop="blur"
+        placement="center"
+        scrollBehavior="inside"
+        classNames={{
+          base: "bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl max-w-lg mx-4",
+          header: "border-b border-brand-border pb-3",
+          body: "py-4",
+          footer: "border-t border-brand-border pt-3",
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex items-center gap-2 font-black text-base">
+                <Sparkles className="w-5 h-5 text-brand-bronze" />
+                <span>
                   {editingAttr
                     ? isPersian ? 'ویرایش ویژگی داینامیک' : 'Edit Dynamic Attribute'
                     : isPersian ? 'تعریف ویژگی داینامیک جدید' : 'Create Dynamic Attribute'}
-                </h3>
-              </div>
-              <button
-                onClick={() => setAttrModalOpen(false)}
-                className="p-1.5 rounded-xl text-[#73695c] hover:bg-[#f0eae0] dark:hover:bg-[#283228]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+                </span>
+              </ModalHeader>
 
-            <form onSubmit={handleAttrSubmit} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold mb-1">
-                    {isPersian ? 'نام ویژگی (فارسی) *' : 'Attribute Name (Persian) *'}
-                  </label>
-                  <input
-                    type="text"
-                    required
+              <ModalBody className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label={isPersian ? 'نام ویژگی (فارسی)' : 'Attribute Name (Persian)'}
+                    isRequired
                     value={attrName}
-                    onChange={(e) => setAttrName(e.target.value)}
+                    onValueChange={setAttrName}
                     placeholder={isPersian ? 'مثال: طبع عطر' : 'e.g. Scent Nature'}
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold mb-1">
-                    {isPersian ? 'نام ویژگی (انگلیسی)' : 'Attribute Name (English)'}
-                  </label>
-                  <input
-                    type="text"
-                    value={attrNameEn}
-                    onChange={(e) => setAttrNameEn(e.target.value)}
-                    placeholder="e.g. Scent Nature"
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold mb-1">
-                    {isPersian ? 'کلید سیستمی (انگلیسی/یکتا)' : 'System Key (Unique)'}
-                  </label>
-                  <input
-                    type="text"
-                    value={attrKey}
-                    onChange={(e) => setAttrKey(e.target.value)}
-                    placeholder="e.g. scent_nature"
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-mono font-bold focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold mb-1">
-                    {isPersian ? 'واحد سنجش (اختیاری)' : 'Unit (Optional)'}
-                  </label>
-                  <input
-                    type="text"
-                    value={attrUnit}
-                    onChange={(e) => setAttrUnit(e.target.value)}
-                    placeholder="میل / گرم / ساعت"
-                    className="w-full h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
-                  />
-                </div>
-              </div>
-
-              {/* Allowed Possible Values */}
-              <div className="space-y-2 pt-2 border-t border-[#e6dcce] dark:border-[#2e3a2e]">
-                <label className="block font-bold">
-                  {isPersian ? 'تعریف مقادیر پیش‌فرض / گزینه‌ها' : 'Define Allowed Values'}
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={attrValueInput}
-                    onChange={(e) => setAttrValueInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addPossibleValue();
-                      }
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      input: "text-xs font-semibold text-brand-text",
+                      label: "text-xs font-bold text-brand-text",
                     }}
-                    placeholder={isPersian ? 'یک مقدار وارد کرده و افزودن را بزنید (مثال: خنک)' : 'Enter value and click Add'}
-                    className="flex-1 h-11 px-3 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] font-semibold focus:ring-2 focus:ring-[#bfa27a]"
                   />
-                  <button
-                    type="button"
-                    onClick={addPossibleValue}
-                    className="px-4 py-2.5 rounded-xl bg-[#202620] hover:bg-[#2e382e] text-[#d4be9b] font-bold text-xs border border-[#bfa27a]/30"
-                  >
-                    {isPersian ? 'افزودن' : 'Add'}
-                  </button>
+
+                  <Input
+                    label={isPersian ? 'نام ویژگی (انگلیسی)' : 'Attribute Name (English)'}
+                    value={attrNameEn}
+                    onValueChange={setAttrNameEn}
+                    placeholder="e.g. Scent Nature"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      input: "text-xs font-semibold text-brand-text",
+                      label: "text-xs font-bold text-brand-text",
+                    }}
+                  />
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 pt-2 max-h-32 overflow-y-auto">
-                  {attrPossibleValues.map((val, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-[#f0eae0] dark:bg-[#283228] text-[#1d241d] dark:text-[#d4be9b] font-bold text-xs border border-[#bfa27a]/30"
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label={isPersian ? 'کلید سیستمی (انگلیسی/یکتا)' : 'System Key (Unique)'}
+                    value={attrKey}
+                    onValueChange={setAttrKey}
+                    placeholder="e.g. scent_nature"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold font-mono font-bold",
+                      input: "text-xs font-semibold text-brand-text",
+                      label: "text-xs font-bold text-brand-text",
+                    }}
+                  />
+
+                  <Input
+                    label={isPersian ? 'واحد سنجش (اختیاری)' : 'Unit (Optional)'}
+                    value={attrUnit}
+                    onValueChange={setAttrUnit}
+                    placeholder="میل / گرم / ساعت"
+                    variant="bordered"
+                    radius="lg"
+                    classNames={{
+                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      input: "text-xs font-semibold text-brand-text",
+                      label: "text-xs font-bold text-brand-text",
+                    }}
+                  />
+                </div>
+
+                {/* Allowed Possible Values */}
+                <div className="space-y-2 pt-2 border-t border-brand-border">
+                  <label className="block font-bold text-xs text-brand-text">
+                    {isPersian ? 'تعریف مقادیر پیش‌فرض / گزینه‌ها' : 'Define Allowed Values'}
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={attrValueInput}
+                      onValueChange={setAttrValueInput}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addPossibleValue();
+                        }
+                      }}
+                      placeholder={isPersian ? 'یک مقدار وارد کرده و افزودن را بزنید (مثال: خنک)' : 'Enter value and click Add'}
+                      variant="bordered"
+                      radius="lg"
+                      className="flex-1"
+                      classNames={{
+                        inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                        input: "text-xs font-semibold text-brand-text",
+                      }}
+                    />
+                    <Button
+                      onPress={addPossibleValue}
+                      radius="lg"
+                      variant="flat"
+                      className="bg-brand-surface-elevated text-brand-bronze dark:text-brand-gold border border-brand-border font-bold text-xs"
                     >
-                      <span>{val}</span>
-                      <button
-                        type="button"
-                        onClick={() => removePossibleValue(val)}
-                        className="hover:text-rose-500"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
+                      {isPersian ? 'افزودن' : 'Add'}
+                    </Button>
+                  </div>
 
-              <div className="pt-4 flex justify-end gap-3 border-t border-[#e6dcce] dark:border-[#2e3a2e]">
-                <button
-                  type="button"
-                  onClick={() => setAttrModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl bg-[#f8f5f0] dark:bg-[#242c24] font-bold border border-[#e6dcce] dark:border-[#2e3a2e]"
+                  <div className="flex flex-wrap gap-1.5 pt-2 max-h-32 overflow-y-auto">
+                    {attrPossibleValues.map((val, idx) => (
+                      <Chip
+                        key={idx}
+                        size="sm"
+                        variant="flat"
+                        onClose={() => removePossibleValue(val)}
+                        className="bg-brand-gold/20 text-brand-bronze dark:text-brand-gold border border-brand-gold/40 font-bold text-xs"
+                      >
+                        {val}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+              </ModalBody>
+
+              <ModalFooter>
+                <Button
+                  variant="flat"
+                  radius="lg"
+                  onPress={onClose}
+                  className="font-bold text-xs"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={submittingAttr}
-                  className="px-6 py-2.5 rounded-xl bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black shadow-md transition-all duration-200 ease-out active:scale-98"
+                </Button>
+                <Button
+                  isLoading={submittingAttr}
+                  radius="lg"
+                  onPress={() => handleAttrSubmit()}
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
                 >
-                  {submittingAttr
-                    ? isPersian ? 'در حال ثبت...' : 'Saving...'
-                    : isPersian ? 'ذخیره ویژگی' : 'Save Attribute'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                  {isPersian ? 'ذخیره ویژگی' : 'Save Attribute'}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

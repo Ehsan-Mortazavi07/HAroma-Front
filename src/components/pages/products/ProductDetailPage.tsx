@@ -20,6 +20,7 @@ import {
   Check,
   ChevronLeft,
 } from 'lucide-react';
+import { Button, Chip } from '@heroui/react';
 import { IProduct, IProductVariant } from '@/common/interfaces';
 import { PATHS } from '@/common/constants/PATHS';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
@@ -301,36 +302,36 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
   return (
     <div className="min-h-screen py-6 sm:py-10">
       {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-xs text-brand-text-muted mb-8 overflow-x-auto">
-        <Link href={PATHS.HOME} className="hover:text-brand-gold">
+      <nav className="flex flex-wrap items-center gap-2 text-xs text-brand-text-muted mb-6">
+        <Link href={PATHS.HOME} className="hover:text-brand-gold transition-colors">
           {t.nav.home}
         </Link>
-        <span>/</span>
-        <Link href={PATHS.PRODUCTS} className="hover:text-brand-gold">
+        <span className="text-brand-border">/</span>
+        <Link href={PATHS.PRODUCTS} className="hover:text-brand-gold transition-colors">
           {t.nav.products}
         </Link>
         {mainCategory && (
           <>
-            <span>/</span>
+            <span className="text-brand-border">/</span>
             <Link
               href={`/products?category=${mainCategory.slug}`}
-              className="hover:text-brand-gold"
+              className="hover:text-brand-gold transition-colors"
             >
               {isPersian ? mainCategory.name : mainCategory.nameEn || mainCategory.name}
             </Link>
           </>
         )}
-        <span>/</span>
+        <span className="text-brand-border">/</span>
         <span className="font-bold text-brand-text truncate max-w-xs">
           {isPersian ? product.title : product.titleEn || product.title}
         </span>
       </nav>
 
       {/* Main Product Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 bg-brand-surface p-6 sm:p-10 rounded-3xl border border-brand-border shadow-xs mb-12 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 bg-brand-surface p-6 sm:p-10 rounded-3xl border border-brand-border/60 shadow-xs mb-12 items-start">
         {/* Left Column: Image Gallery & Thumbnails */}
         <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-24">
-          <div className="relative w-full h-80 sm:h-96 md:h-[450px] rounded-3xl overflow-hidden bg-brand-surface-elevated border border-brand-border">
+          <div className="relative w-full h-80 sm:h-96 md:h-[450px] rounded-3xl overflow-hidden bg-brand-surface-elevated border border-brand-border/60">
             <Image
               src={images[selectedImageIndex]}
               alt={product.title}
@@ -339,11 +340,18 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
               className="object-cover object-center"
             />
             {/* Free Delivery Ribbon */}
-            <div className="absolute top-4 right-4 z-10 px-3.5 py-1.5 rounded-xl bg-brand-olive text-brand-champagne text-xs font-bold shadow-md flex items-center gap-1.5 border border-brand-gold/30">
-              <Zap className="w-3.5 h-3.5 fill-current text-brand-gold" />
-              <span>{t.common.fastDelivery}</span>
+            <div className="absolute top-4 right-4 z-10">
+              <Chip
+                size="sm"
+                variant="solid"
+                startContent={<Zap className="w-3.5 h-3.5 fill-current text-brand-gold" />}
+                className="bg-brand-olive text-brand-champagne text-xs font-bold shadow-md border border-brand-gold/30"
+              >
+                {t.common.fastDelivery}
+              </Chip>
             </div>
 
+            {/* VIP Only Badge */}
             {product.isVipOnly && (
               <div className="absolute top-4 left-4 z-10">
                 <VipBadge size="md" text={t.productDetail.vipExclusive} />
@@ -353,19 +361,22 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
 
           {/* Thumbnails */}
           {images.length > 1 && (
-            <div className="flex items-center gap-3 overflow-x-auto pb-2">
+            <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
               {images.map((img, idx) => (
-                <button
+                <Button
                   key={idx}
-                  onClick={() => setSelectedImageIndex(idx)}
-                  className={`relative w-18 h-18 rounded-2xl overflow-hidden bg-brand-surface-elevated shrink-0 border-2 transition-all ${
+                  isIconOnly
+                  onPress={() => setSelectedImageIndex(idx)}
+                  radius="lg"
+                  aria-label={`Thumbnail ${idx + 1}`}
+                  className={`relative w-18 h-18 min-w-18 p-0 rounded-2xl overflow-hidden bg-brand-surface-elevated shrink-0 border-2 transition-all ${
                     selectedImageIndex === idx
                       ? 'border-brand-gold shadow-md scale-105'
                       : 'border-transparent opacity-70 hover:opacity-100'
                   }`}
                 >
                   <Image src={img} alt={`Thumbnail ${idx}`} fill className="object-cover" />
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -398,13 +409,16 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                     <span className="text-brand-border">•</span>
                     <div className="inline-flex flex-wrap items-center gap-1.5">
                       {brandsList.map((b) => (
-                        <Link
+                        <Chip
                           key={b._id || b.slug}
+                          as={Link}
                           href={`/products?brand=${b.slug}`}
-                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-[#f0eae0] text-[#9f815b] dark:bg-[#242c24] dark:text-[#d4be9b] border border-[#bfa27a]/30 hover:border-[#bfa27a] hover:scale-105 transition-all"
+                          size="sm"
+                          variant="flat"
+                          className="cursor-pointer bg-[#f0eae0] text-[#9f815b] dark:bg-[#242c24] dark:text-[#d4be9b] border border-[#bfa27a]/30 hover:border-[#bfa27a] font-bold text-xs"
                         >
-                          <span>{isPersian ? b.name : b.nameEn || b.name}</span>
-                        </Link>
+                          {isPersian ? b.name : b.nameEn || b.name}
+                        </Chip>
                       ))}
                     </div>
                   </>
@@ -451,7 +465,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
 
           {/* Multi-Volume / Variant Selector */}
           {product.variants && product.variants.length > 0 && (
-            <div className="space-y-3 p-4 sm:p-5 rounded-2xl bg-brand-surface-elevated/80 border border-brand-border">
+            <div className="space-y-3 p-4 sm:p-5 rounded-3xl bg-brand-surface-elevated/80 border border-brand-border/60">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-black text-brand-text flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-brand-bronze" />
@@ -472,24 +486,25 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                   const localizedTitle = getLocalizedVariantTitle(v.title, isPersian);
 
                   return (
-                    <button
+                    <Button
                       key={v.id}
-                      type="button"
-                      disabled={isOutOfStock}
-                      onClick={() => setSelectedVariant(v)}
-                      className={`px-4 py-3 rounded-2xl text-xs transition-all relative flex flex-col items-center justify-between text-center gap-1.5 border min-w-[130px] sm:min-w-[145px] ${
+                      isDisabled={isOutOfStock}
+                      onPress={() => setSelectedVariant(v)}
+                      radius="lg"
+                      variant={isSelected ? 'solid' : 'bordered'}
+                      className={`h-auto py-3 px-4 flex flex-col items-center justify-between text-center gap-1 min-w-[130px] sm:min-w-[145px] cursor-pointer rounded-2xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
                         isSelected
-                          ? 'bg-brand-gold text-[#141914] border-brand-gold shadow-lg scale-105 ring-2 ring-brand-gold/40'
+                          ? 'bg-brand-gold text-[#141914] border-brand-gold shadow-md font-black ring-2 ring-brand-gold/40'
                           : isOutOfStock
-                          ? 'opacity-40 line-through bg-[#f0eae0] dark:bg-[#181f18] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e] cursor-not-allowed'
-                          : 'bg-white dark:bg-[#202620] text-[#1d241d] dark:text-[#f7f4ee] border-[#e6dcce] dark:border-[#344034] hover:border-brand-gold hover:bg-[#f8f5f0] dark:hover:bg-[#283228] shadow-xs'
+                          ? 'opacity-40 line-through bg-[#f0eae0] dark:bg-[#181f18] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e]'
+                          : 'bg-white dark:bg-[#202620] text-[#1d241d] dark:text-[#f7f4ee] border-[#e6dcce] dark:border-[#344034] hover:border-brand-gold'
                       }`}
                     >
                       <span
-                        className={`leading-snug font-bold ${
+                        className={`leading-snug text-xs ${
                           isSelected
                             ? 'text-[#141914] font-black'
-                            : 'text-[#1d241d] dark:text-[#f7f4ee]'
+                            : 'text-[#1d241d] dark:text-[#f7f4ee] font-bold'
                         }`}
                       >
                         {localizedTitle}
@@ -503,7 +518,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                       >
                         {formatToman(vPrice, isPersian)}
                       </span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -511,7 +526,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
           )}
 
           {/* Pricing Box */}
-          <div className="p-5 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-baseline justify-between">
+          <div className="p-5 rounded-3xl bg-brand-surface-elevated border border-brand-border/60 flex items-baseline justify-between">
             <div>
               <span className="text-xs text-brand-text-muted block mb-1">
                 {isPersian ? 'قیمت برای مصرف‌کننده:' : 'Retail Price:'}
@@ -567,7 +582,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                   return (
                     <div
                       key={idx}
-                      className="p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs flex flex-col justify-between"
+                      className="p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border/60 text-xs flex flex-col justify-between transition-colors hover:border-brand-gold/50"
                     >
                       <div className="text-[11px] text-brand-text-muted mb-1 font-medium">
                         {formatted.name}
@@ -596,29 +611,35 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
           )}
 
           {/* Action Buttons */}
-          <div className="pt-4 border-t border-brand-border">
+          <div className="pt-4 border-t border-brand-border/60">
             {cartQuantity > 0 ? (
-              <div className="w-full flex items-center justify-between gap-4 px-5 py-3 rounded-2xl bg-brand-surface-elevated border border-brand-border shadow-xs">
+              <div className="w-full flex items-center justify-between gap-4 px-5 py-3 rounded-full bg-brand-surface-elevated border border-brand-border/60 shadow-xs">
                 {/* Stepper Controller */}
-                <div className="flex items-center gap-1.5 bg-brand-surface border border-brand-border rounded-xl p-1 shadow-2xs">
-                  <button
-                    type="button"
-                    onClick={handleIncrement}
-                    disabled={activeStockCount !== undefined && cartQuantity >= activeStockCount}
-                    className="w-9 h-9 rounded-lg flex items-center justify-center text-brand-bronze dark:text-brand-gold hover:bg-brand-surface-elevated active:scale-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                <div className="flex items-center gap-1.5 bg-brand-surface border border-brand-border/60 rounded-full p-1 shadow-2xs">
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    radius="full"
+                    variant="light"
+                    onPress={handleIncrement}
+                    isDisabled={activeStockCount !== undefined && cartQuantity >= activeStockCount}
+                    className="w-9 h-9 min-w-9 rounded-full text-brand-bronze dark:text-brand-gold active:scale-90 transition-transform"
                     aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
                   >
                     <Plus className="w-4 h-4 stroke-[2.5]" />
-                  </button>
+                  </Button>
 
                   <span className="min-w-[32px] text-center font-black text-base text-brand-text select-none">
                     {isPersian ? toPersianDigits(cartQuantity) : cartQuantity}
                   </span>
 
-                  <button
-                    type="button"
-                    onClick={handleDecrement}
-                    className="w-9 h-9 rounded-lg flex items-center justify-center text-brand-text-muted hover:text-brand-text hover:bg-brand-surface-elevated active:scale-90 transition-all cursor-pointer"
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    radius="full"
+                    variant="light"
+                    onPress={handleDecrement}
+                    className="w-9 h-9 min-w-9 rounded-full text-brand-text-muted hover:text-brand-text active:scale-90 transition-transform"
                     aria-label={
                       cartQuantity === 1
                         ? (isPersian ? 'حذف از سبد خرید' : 'Remove from cart')
@@ -630,7 +651,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                     ) : (
                       <Minus className="w-4 h-4 stroke-[2.5]" />
                     )}
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Cart Status & View Cart Link */}
@@ -649,14 +670,17 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                 </div>
               </div>
             ) : (
-              <button
-                onClick={handleAddToCart}
-                disabled={!isAvailable}
-                className="w-full py-4 rounded-2xl font-black bg-brand-gold hover:bg-brand-champagne text-brand-olive shadow-lg shadow-brand-bronze/20 active:scale-98 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed border border-brand-champagne/30 cursor-pointer"
+              <Button
+                size="lg"
+                radius="full"
+                color="warning"
+                onPress={handleAddToCart}
+                isDisabled={!isAvailable}
+                startContent={<Sparkles className="w-5 h-5" />}
+                className="w-full h-14 font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 text-sm cursor-pointer rounded-full transition-all duration-300 hover:scale-[1.01] active:scale-[0.98]"
               >
-                <Sparkles className="w-5 h-5" />
-                <span>{t.productDetail.addToCart}</span>
-              </button>
+                {t.productDetail.addToCart}
+              </Button>
             )}
           </div>
 

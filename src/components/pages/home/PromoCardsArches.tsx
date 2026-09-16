@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Gift, Crown, Sparkles, Truck, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Card, CardBody, Chip } from '@heroui/react';
 import { PATHS } from '@/common/constants/PATHS';
 import { useTranslation } from '@/common/i18n';
 
@@ -71,44 +72,52 @@ export function PromoCardsArches() {
         {promoCards.map((card) => {
           const Icon = card.icon;
           return (
-            <Link
+            <Card
               key={card.id}
+              as={Link}
               href={card.href}
-              className={`group flex flex-col justify-between rounded-3xl p-6 border shadow-xs hover:shadow-xl hover:border-brand-gold hover:-translate-y-1 transition-all duration-300 ease-out ${card.bgClass}`}
+              isPressable
+              className={`group flex flex-col justify-between rounded-3xl p-0 border shadow-xs hover:shadow-xl hover:border-brand-gold hover:-translate-y-1 transition-all duration-300 ease-out ${card.bgClass}`}
             >
-              {/* Header */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="px-3 py-1 rounded-full text-xs font-black bg-brand-surface-elevated text-brand-bronze dark:text-brand-gold border border-brand-gold/30">
-                    {card.tag}
-                  </span>
-                  <div className={`w-9 h-9 rounded-2xl flex items-center justify-center shadow-xs ${card.iconBg}`}>
-                    <Icon className="w-4 h-4" />
+              <CardBody className="p-6 flex flex-col justify-between h-full">
+                {/* Header */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <Chip
+                      variant="bordered"
+                      size="sm"
+                      className="bg-brand-surface-elevated text-brand-bronze dark:text-brand-gold border-brand-gold/30 font-black text-xs"
+                    >
+                      {card.tag}
+                    </Chip>
+                    <div className={`w-9 h-9 rounded-2xl flex items-center justify-center shadow-xs ${card.iconBg}`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                  </div>
+
+                  <h3 className="font-black text-base mb-1.5 line-clamp-1">{card.title}</h3>
+                  <p className="text-xs text-brand-text-muted line-clamp-2 leading-relaxed">
+                    {card.subtitle}
+                  </p>
+                </div>
+
+                {/* Arch Media Container */}
+                <div className="mt-5 relative w-full h-36 rounded-2xl overflow-hidden bg-brand-surface-elevated border border-brand-border">
+                  <Image
+                    src={card.image}
+                    alt={card.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent flex items-end p-3">
+                    <span className="text-xs font-bold text-white flex items-center gap-1 group-hover:underline">
+                      <span>{t.common.seeMore}</span>
+                      {isRTL ? <ArrowLeft className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
+                    </span>
                   </div>
                 </div>
-
-                <h3 className="font-black text-base mb-1.5 line-clamp-1">{card.title}</h3>
-                <p className="text-xs text-brand-text-muted line-clamp-2 leading-relaxed">
-                  {card.subtitle}
-                </p>
-              </div>
-
-              {/* Arch Media Container */}
-              <div className="mt-5 relative w-full h-36 rounded-2xl overflow-hidden bg-brand-surface-elevated border border-brand-border">
-                <Image
-                  src={card.image}
-                  alt={card.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent flex items-end p-3">
-                  <span className="text-xs font-bold text-white flex items-center gap-1 group-hover:underline">
-                    <span>{t.common.seeMore}</span>
-                    {isRTL ? <ArrowLeft className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
-                  </span>
-                </div>
-              </div>
-            </Link>
+              </CardBody>
+            </Card>
           );
         })}
       </div>
