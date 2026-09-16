@@ -25,7 +25,6 @@ import { PATHS } from '@/common/constants/PATHS';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { addToCart, updateQuantity, removeFromCart } from '@/stores/cart/cartSlice';
-import { toggleCartDrawer } from '@/stores/ui/uiSlice';
 import { VipBadge } from '@/components/common/VipBadge';
 import { ProductCard } from '@/components/common/ProductCard';
 import { useTranslation } from '@/common/i18n';
@@ -274,20 +273,6 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
         isPersian ? 'محصول از سبد خرید حذف شد.' : 'Item removed from your cart.',
       );
     }
-  };
-
-  const handleBuyNow = () => {
-    if (cartQuantity === 0) {
-      dispatch(
-        addToCart({
-          product,
-          quantity: 1,
-          selectedVariant: selectedVariant || undefined,
-          selectedAttributes: selectedVariant ? selectedVariant.title : undefined,
-        }),
-      );
-    }
-    dispatch(toggleCartDrawer(true));
   };
 
   const formatAttributeDisplay = (attr: { key?: string; name?: string; value: string; unit?: string }) => {
@@ -611,16 +596,16 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-brand-border">
+          <div className="pt-4 border-t border-brand-border">
             {cartQuantity > 0 ? (
-              <div className="flex-1 flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-brand-surface-elevated/70 border border-brand-gold/40 shadow-xs">
+              <div className="w-full flex items-center justify-between gap-4 px-5 py-3 rounded-2xl bg-brand-surface-elevated border border-brand-border shadow-xs">
                 {/* Stepper Controller */}
                 <div className="flex items-center gap-1.5 bg-brand-surface border border-brand-border rounded-xl p-1 shadow-2xs">
                   <button
                     type="button"
                     onClick={handleIncrement}
                     disabled={activeStockCount !== undefined && cartQuantity >= activeStockCount}
-                    className="w-9 h-9 rounded-lg flex items-center justify-center text-rose-500 hover:bg-rose-500/10 active:scale-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-brand-bronze dark:text-brand-gold hover:bg-brand-surface-elevated active:scale-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                     aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
                   >
                     <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -633,11 +618,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                   <button
                     type="button"
                     onClick={handleDecrement}
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center active:scale-90 transition-all cursor-pointer ${
-                      cartQuantity === 1
-                        ? 'text-rose-500 hover:bg-rose-500/10'
-                        : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-surface-elevated'
-                    }`}
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-brand-text-muted hover:text-brand-text hover:bg-brand-surface-elevated active:scale-90 transition-all cursor-pointer"
                     aria-label={
                       cartQuantity === 1
                         ? (isPersian ? 'حذف از سبد خرید' : 'Remove from cart')
@@ -645,7 +626,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                     }
                   >
                     {cartQuantity === 1 ? (
-                      <Trash2 className="w-4 h-4 text-rose-500" />
+                      <Trash2 className="w-4 h-4" />
                     ) : (
                       <Minus className="w-4 h-4 stroke-[2.5]" />
                     )}
@@ -654,13 +635,13 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
 
                 {/* Cart Status & View Cart Link */}
                 <div className="flex flex-col items-start leading-tight">
-                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span className="text-[11px] font-bold text-brand-bronze dark:text-brand-gold flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>{t.productDetail.inYourCart || (isPersian ? 'در سبد شما' : 'In your cart')}</span>
                   </span>
                   <Link
                     href={PATHS.CART}
-                    className="text-xs font-black text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 mt-1"
+                    className="text-xs font-black text-brand-text hover:text-brand-gold flex items-center gap-0.5 mt-1 transition-colors hover:underline"
                   >
                     <span>{t.cart.viewCart || (isPersian ? 'مشاهده سبد خرید' : 'View Cart')}</span>
                     <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-0 ltr:rotate-180" />
@@ -671,20 +652,12 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
               <button
                 onClick={handleAddToCart}
                 disabled={!isAvailable}
-                className="flex-1 py-4 rounded-2xl font-black bg-brand-gold hover:bg-brand-champagne text-brand-olive shadow-lg shadow-brand-bronze/20 active:scale-98 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed border border-brand-champagne/30 cursor-pointer"
+                className="w-full py-4 rounded-2xl font-black bg-brand-gold hover:bg-brand-champagne text-brand-olive shadow-lg shadow-brand-bronze/20 active:scale-98 transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed border border-brand-champagne/30 cursor-pointer"
               >
                 <Sparkles className="w-5 h-5" />
                 <span>{t.productDetail.addToCart}</span>
               </button>
             )}
-
-            <button
-              onClick={handleBuyNow}
-              disabled={!isAvailable}
-              className="px-6 py-4 rounded-2xl font-bold bg-brand-olive hover:bg-brand-olive/90 text-brand-champagne border border-brand-gold/40 text-sm transition-all shadow-sm active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            >
-              {isPersian ? 'خرید فوری' : 'Buy Now'}
-            </button>
           </div>
 
           {/* Trust Highlights */}
