@@ -106,7 +106,7 @@ export function ImageUploader({ images = [], onChange, maxImages = 8 }: ImageUpl
               <Button
                 isIconOnly
                 size="sm"
-                radius="lg"
+                radius="full"
                 color="danger"
                 onPress={() => handleRemoveImage(idx)}
                 className="absolute top-1.5 left-1.5 w-7 h-7 min-w-7 opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
@@ -166,7 +166,7 @@ export function ImageUploader({ images = [], onChange, maxImages = 8 }: ImageUpl
                   onValueChange={setUrlInput}
                   placeholder="https://images.unsplash.com/photo-..."
                   variant="bordered"
-                  radius="lg"
+                  radius="full"
                   classNames={{
                     inputWrapper: 'bg-brand-surface-elevated border-brand-border hover:border-brand-gold',
                     input: 'text-xs font-mono',
@@ -177,7 +177,7 @@ export function ImageUploader({ images = [], onChange, maxImages = 8 }: ImageUpl
               <ModalFooter>
                 <Button
                   variant="flat"
-                  radius="lg"
+                  radius="full"
                   onPress={onClose}
                   className="font-bold text-xs"
                 >
@@ -185,7 +185,7 @@ export function ImageUploader({ images = [], onChange, maxImages = 8 }: ImageUpl
                 </Button>
                 <Button
                   color="warning"
-                  radius="lg"
+                  radius="full"
                   onPress={handleAddUrl}
                   className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-bold text-xs shadow-sm"
                 >

@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import {
   Card,
   CardBody,
   Button,
   Input,
-  Switch,
   Chip,
   Table,
   TableHeader,
@@ -26,6 +26,7 @@ import { adminApi } from '@/common/api/admin';
 import { ICoupon } from '@/common/interfaces';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
+import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 
 export default function AdminCouponsPage() {
   const { isPersian } = useTranslation();
@@ -135,7 +136,12 @@ export default function AdminCouponsPage() {
   return (
     <div className="space-y-6">
       {/* Header & CTA */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
         <div>
           <h1 className="text-2xl font-black text-brand-text">
             {isPersian ? 'مدیریت کدهای تخفیف و پروموشن‌ها' : 'Discount Coupons Management'}
@@ -150,14 +156,19 @@ export default function AdminCouponsPage() {
         <Button
           onPress={openCreateModal}
           startContent={<Plus className="w-4 h-4" />}
-          radius="lg"
-          className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 cursor-pointer"
+          radius="full"
+          className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 cursor-pointer rounded-full transition-all active:scale-95"
         >
           {isPersian ? 'تعریف کد تخفیف جدید' : 'Add New Coupon'}
         </Button>
-      </div>
+      </motion.div>
 
       {/* Coupons Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+      >
       <Card className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs overflow-hidden">
         <CardBody className="p-0">
           {loading ? (
@@ -238,7 +249,7 @@ export default function AdminCouponsPage() {
                         <Button
                           isIconOnly
                           size="sm"
-                          radius="lg"
+                          radius="full"
                           variant="light"
                           onPress={() => openEditModal(coupon)}
                           className="text-brand-text hover:bg-brand-surface-elevated cursor-pointer"
@@ -250,7 +261,7 @@ export default function AdminCouponsPage() {
                         <Button
                           isIconOnly
                           size="sm"
-                          radius="lg"
+                          radius="full"
                           variant="light"
                           onPress={() => handleDelete(coupon._id, coupon.code)}
                           className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
@@ -267,6 +278,7 @@ export default function AdminCouponsPage() {
           )}
         </CardBody>
       </Card>
+      </motion.div>
 
       {/* Modal Dialog */}
       <Modal
@@ -293,45 +305,48 @@ export default function AdminCouponsPage() {
               <ModalBody className="space-y-4">
                 <Input
                   label={isPersian ? 'کد تخفیف (لاتین و بدون فاصله)' : 'Coupon Code (Latin)'}
+                  labelPlacement="outside"
                   isRequired
                   value={code}
                   onValueChange={(v) => setCode(v.toUpperCase())}
                   placeholder="مثال: NOURUZ1405"
                   variant="bordered"
-                  radius="lg"
+                  radius="full"
                   classNames={{
-                    inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold font-mono font-bold uppercase",
+                    inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold font-mono font-bold uppercase rounded-full shadow-xs",
                     input: "text-xs font-semibold text-brand-text",
-                    label: "text-xs font-bold text-brand-text",
+                    label: "text-xs font-bold text-brand-text mb-1",
                   }}
                 />
 
                 <div className="grid grid-cols-2 gap-3">
                   <Input
                     label={isPersian ? 'درصد تخفیف (۱ تا ۱۰۰)' : 'Discount %'}
+                    labelPlacement="outside"
                     type="number"
                     value={String(discountPercent)}
                     onValueChange={(v) => setDiscountPercent(Number(v) || 0)}
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
                     label={isPersian ? 'یا مبلغ ثابت (تومان)' : 'Or Fixed Amount (Toman)'}
+                    labelPlacement="outside"
                     type="number"
                     value={String(discountAmount)}
                     onValueChange={(v) => setDiscountAmount(Number(v) || 0)}
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
                 </div>
@@ -339,29 +354,31 @@ export default function AdminCouponsPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <Input
                     label={isPersian ? 'حداقل خرید (تومان)' : 'Min Purchase'}
+                    labelPlacement="outside"
                     type="number"
                     value={String(minPurchase)}
                     onValueChange={(v) => setMinPurchase(Number(v) || 0)}
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
                     label={isPersian ? 'سقف تخفیف (تومان)' : 'Max Discount'}
+                    labelPlacement="outside"
                     type="number"
                     value={String(maxDiscount)}
                     onValueChange={(v) => setMaxDiscount(Number(v) || 0)}
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
                 </div>
@@ -369,29 +386,23 @@ export default function AdminCouponsPage() {
                 <div className="grid grid-cols-2 gap-3 items-center">
                   <Input
                     label={isPersian ? 'حداکثر دفعات استفاده' : 'Usage Limit'}
+                    labelPlacement="outside"
                     type="number"
                     value={String(usageLimit)}
                     onValueChange={(v) => setUsageLimit(Number(v) || 0)}
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs transition-colors",
                       input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <div className="pt-2">
-                    <Switch
-                      isSelected={isActive}
-                      onValueChange={setIsActive}
-                      size="sm"
-                      classNames={{
-                        label: "text-xs font-bold text-brand-text",
-                      }}
-                    >
+                    <SmoothSwitch isSelected={isActive} onValueChange={setIsActive}>
                       {isPersian ? 'کد تخفیف فعال باشد' : 'Coupon is Active'}
-                    </Switch>
+                    </SmoothSwitch>
                   </div>
                 </div>
               </ModalBody>
@@ -399,17 +410,17 @@ export default function AdminCouponsPage() {
               <ModalFooter>
                 <Button
                   variant="flat"
-                  radius="lg"
+                  radius="full"
                   onPress={onClose}
-                  className="font-bold text-xs"
+                  className="font-bold text-xs rounded-full cursor-pointer"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
                 <Button
                   isLoading={submitting}
-                  radius="lg"
+                  radius="full"
                   onPress={() => handleSubmit()}
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'ذخیره کد تخفیف' : 'Save Coupon'}
                 </Button>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import {
   Card,
   CardBody,
@@ -149,7 +150,11 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+      >
         <h1 className="text-2xl font-black text-brand-text">
           {isPersian ? 'مدیریت و پیگیری سفارشات مشتریان' : 'Orders Management'}
         </h1>
@@ -158,21 +163,26 @@ export default function AdminOrdersPage() {
             ? `مجموعاً ${toPersianDigits(total)} سفارش در سیستم ثبت گردیده است`
             : `Total of ${total} orders recorded in system`}
         </p>
-      </div>
+      </motion.div>
 
       {/* Toolbar: Search & Filter */}
-      <Card className="bg-brand-surface p-4 rounded-3xl border border-brand-border shadow-xs">
-        <CardBody className="p-0 flex flex-col sm:flex-row gap-3 items-center justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+      >
+      <Card className="bg-brand-surface p-4 rounded-3xl border border-brand-border shadow-xs overflow-visible">
+        <CardBody className="p-0 flex flex-col sm:flex-row gap-3 items-center justify-between overflow-visible">
           <Input
             value={search}
             onValueChange={setSearch}
             placeholder={isPersian ? 'جستجو بر اساس شماره سفارش یا نام مشتری...' : 'Search by order number or customer...'}
             startContent={<Search className="w-4 h-4 text-brand-text-muted shrink-0" />}
             variant="bordered"
-            radius="lg"
+            radius="full"
             className="w-full sm:w-80"
             classNames={{
-              inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-2xl shadow-xs transition-colors",
+              inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs transition-colors",
               input: "text-xs font-semibold text-brand-text",
             }}
           />
@@ -185,11 +195,11 @@ export default function AdminOrdersPage() {
               setStatusFilter(selected ?? '');
             }}
             variant="bordered"
-            radius="lg"
+            radius="full"
             className="w-full sm:w-48"
             classNames={{
-              trigger: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-2xl shadow-xs text-xs font-bold text-brand-text",
-              value: "text-xs font-bold text-brand-text",
+              trigger: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs text-xs font-bold text-brand-text text-start",
+              value: "text-xs font-bold text-brand-text text-start",
               popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl",
             }}
           >
@@ -201,8 +211,14 @@ export default function AdminOrdersPage() {
           </Select>
         </CardBody>
       </Card>
+      </motion.div>
 
       {/* Orders Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+      >
       <Card className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs overflow-hidden">
         <CardBody className="p-0">
           {loading ? (
@@ -282,7 +298,7 @@ export default function AdminOrdersPage() {
                       <Button
                         size="sm"
                         variant="flat"
-                        radius="lg"
+                        radius="full"
                         onPress={() => openOrderModal(order)}
                         className="h-8 px-3 rounded-xl bg-brand-surface-elevated text-brand-text hover:bg-brand-border/60 border border-brand-border font-bold text-[11px] cursor-pointer"
                       >
@@ -297,6 +313,7 @@ export default function AdminOrdersPage() {
           )}
         </CardBody>
       </Card>
+      </motion.div>
 
       {/* Order Details & Status Modal */}
       <Modal
@@ -369,60 +386,57 @@ export default function AdminOrdersPage() {
                     )}
 
                     {/* Status Update Form Elements */}
-                    <div className="space-y-3 pt-2 border-t border-brand-border">
-                      <div>
-                        <label className="block text-xs font-bold text-brand-text mb-1">
-                          {isPersian ? 'تغییر وضعیت سفارش' : 'Update Status'}
-                        </label>
-                        <Select
-                          aria-label={isPersian ? 'تغییر وضعیت' : 'Update Status'}
-                          selectedKeys={new Set([newStatus])}
-                          onSelectionChange={(keys) => {
-                            const selected = Array.from(keys)[0] as string;
-                            if (selected) setNewStatus(selected);
-                          }}
-                          variant="bordered"
-                          radius="lg"
-                          disallowEmptySelection
-                          classNames={{
-                            trigger: "h-11 px-3 bg-brand-surface border border-brand-border rounded-xl text-xs font-bold text-brand-text",
-                            value: "text-xs font-bold text-brand-text",
-                          }}
-                        >
-                          <SelectItem key="pending" textValue={isPersian ? 'در انتظار پرداخت' : 'Pending'}>
-                            {isPersian ? 'در انتظار پرداخت' : 'Pending'}
-                          </SelectItem>
-                          <SelectItem key="processing" textValue={isPersian ? 'در حال پردازش' : 'Processing'}>
-                            {isPersian ? 'در حال پردازش' : 'Processing'}
-                          </SelectItem>
-                          <SelectItem key="shipped" textValue={isPersian ? 'تحویل پست شده' : 'Shipped'}>
-                            {isPersian ? 'تحویل پست شده' : 'Shipped'}
-                          </SelectItem>
-                          <SelectItem key="delivered" textValue={isPersian ? 'تحویل داده شده' : 'Delivered'}>
-                            {isPersian ? 'تحویل داده شده' : 'Delivered'}
-                          </SelectItem>
-                          <SelectItem key="cancelled" textValue={isPersian ? 'لغو شده' : 'Cancelled'}>
-                            {isPersian ? 'لغو شده' : 'Cancelled'}
-                          </SelectItem>
-                        </Select>
-                      </div>
+                    <div className="space-y-4 pt-2 border-t border-brand-border">
+                      <Select
+                        label={isPersian ? 'تغییر وضعیت سفارش' : 'Update Status'}
+                        labelPlacement="outside"
+                        aria-label={isPersian ? 'تغییر وضعیت' : 'Update Status'}
+                        selectedKeys={new Set([newStatus])}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0] as string;
+                          if (selected) setNewStatus(selected);
+                        }}
+                        variant="bordered"
+                        radius="full"
+                        disallowEmptySelection
+                        classNames={{
+                          trigger: "h-11 px-4 bg-brand-surface-elevated border border-brand-border rounded-full text-xs font-bold text-brand-text text-start shadow-xs",
+                          value: "text-xs font-bold text-brand-text text-start",
+                          label: "text-xs font-bold text-brand-text mb-1",
+                          popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl",
+                        }}
+                      >
+                        <SelectItem key="pending" textValue={isPersian ? 'در انتظار پرداخت' : 'Pending'}>
+                          {isPersian ? 'در انتظار پرداخت' : 'Pending'}
+                        </SelectItem>
+                        <SelectItem key="processing" textValue={isPersian ? 'در حال پردازش' : 'Processing'}>
+                          {isPersian ? 'در حال پردازش' : 'Processing'}
+                        </SelectItem>
+                        <SelectItem key="shipped" textValue={isPersian ? 'تحویل پست شده' : 'Shipped'}>
+                          {isPersian ? 'تحویل پست شده' : 'Shipped'}
+                        </SelectItem>
+                        <SelectItem key="delivered" textValue={isPersian ? 'تحویل داده شده' : 'Delivered'}>
+                          {isPersian ? 'تحویل داده شده' : 'Delivered'}
+                        </SelectItem>
+                        <SelectItem key="cancelled" textValue={isPersian ? 'لغو شده' : 'Cancelled'}>
+                          {isPersian ? 'لغو شده' : 'Cancelled'}
+                        </SelectItem>
+                      </Select>
 
-                      <div>
-                        <label className="block text-xs font-bold text-brand-text mb-1">
-                          {isPersian ? 'کد رهگیری پستی (۲۴ رقمی)' : 'Postal Tracking Code'}
-                        </label>
-                        <Input
-                          value={trackingCode}
-                          onValueChange={setTrackingCode}
-                          placeholder="مثال: ۱۲۳۴۵۶۷۸۹۰۱۲۳۴"
-                          variant="bordered"
-                          radius="lg"
-                          classNames={{
-                            inputWrapper: "h-11 px-3 bg-brand-surface border border-brand-border rounded-xl",
-                            input: "text-xs font-mono font-semibold text-brand-text",
-                          }}
-                        />
-                      </div>
+                      <Input
+                        label={isPersian ? 'کد رهگیری پستی (۲۴ رقمی)' : 'Postal Tracking Code'}
+                        labelPlacement="outside"
+                        value={trackingCode}
+                        onValueChange={setTrackingCode}
+                        placeholder="مثال: ۱۲۳۴۵۶۷۸۹۰۱۲۳۴"
+                        variant="bordered"
+                        radius="full"
+                        classNames={{
+                          inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border rounded-full shadow-xs",
+                          input: "text-xs font-mono font-semibold text-brand-text",
+                          label: "text-xs font-bold text-brand-text mb-1",
+                        }}
+                      />
                     </div>
                   </>
                 )}
@@ -431,17 +445,17 @@ export default function AdminOrdersPage() {
               <ModalFooter>
                 <Button
                   variant="flat"
-                  radius="lg"
+                  radius="full"
                   onPress={onClose}
-                  className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-xl cursor-pointer"
+                  className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-full cursor-pointer"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
                 <Button
                   onPress={handleUpdateStatus as any}
                   isLoading={submitting}
-                  radius="lg"
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-xl cursor-pointer"
+                  radius="full"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'ثبت و ارسال پیامک به مشتری' : 'Update & Notify Customer'}
                 </Button>

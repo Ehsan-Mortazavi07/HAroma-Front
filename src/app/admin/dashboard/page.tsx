@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
   Card,
   CardBody,
@@ -30,6 +31,34 @@ import { formatToman, toPersianDigits } from '@/common/utils';
 import { PATHS } from '@/common/constants/PATHS';
 import { IOrder } from '@/common/interfaces';
 import { useTranslation } from '@/common/i18n';
+
+// Stagger variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.05 },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.97 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: 'spring' as const, stiffness: 360, damping: 28 },
+  },
+};
+
+const fadeSlideUp = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as const },
+  },
+};
 
 export default function AdminDashboardPage() {
   const { isPersian } = useTranslation();
@@ -138,7 +167,12 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       {/* Top Welcome */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div
+        variants={fadeSlideUp}
+        initial="hidden"
+        animate="visible"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
         <div>
           <h1 className="text-2xl font-black text-brand-text">
             {isPersian ? 'داشبورد مدیریت و تحلیل فروش هاتف آروما' : 'Hatef Aroma Admin Dashboard'}
@@ -154,122 +188,133 @@ export default function AdminDashboardPage() {
           <Button
             as={Link}
             href={PATHS.ADMIN_PRODUCT_NEW}
-            radius="lg"
-            className="h-10 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 flex items-center gap-1.5 cursor-pointer"
+            radius="full"
+            className="h-10 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 flex items-center gap-1.5 cursor-pointer rounded-full transition-all active:scale-95"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>{isPersian ? '+ تعریف محصول جدید' : '+ Add New Product'}</span>
           </Button>
         </div>
-      </div>
+      </motion.div>
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+      >
         {kpiCards.map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
-            <Card
-              key={idx}
-              className="bg-brand-surface p-6 rounded-3xl border border-brand-border shadow-xs"
-            >
-              <CardBody className="p-0 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-brand-text-muted">{kpi.title}</span>
-                  <div className={`w-9 h-9 rounded-2xl flex items-center justify-center border ${kpi.color}`}>
-                    <Icon className="w-4 h-4" />
+            <motion.div key={idx} variants={cardVariants}>
+              <Card className="bg-brand-surface p-6 rounded-3xl border border-brand-border shadow-xs hover:border-brand-gold/40 transition-colors">
+                <CardBody className="p-0 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-brand-text-muted">{kpi.title}</span>
+                    <div className={`w-9 h-9 rounded-2xl flex items-center justify-center border ${kpi.color}`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
                   </div>
-                </div>
-                <div className="text-xl sm:text-2xl font-black text-brand-text">
-                  {kpi.value}
-                </div>
-                <div className="text-[11px] font-semibold text-brand-text-muted flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3 text-brand-bronze dark:text-brand-gold" />
-                  <span>{kpi.subtitle}</span>
-                </div>
-              </CardBody>
-            </Card>
+                  <div className="text-xl sm:text-2xl font-black text-brand-text">
+                    {loading ? <Skeleton className="h-7 w-28 rounded-xl" /> : kpi.value}
+                  </div>
+                  <div className="text-[11px] font-semibold text-brand-text-muted flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-brand-bronze dark:text-brand-gold" />
+                    <span>{kpi.subtitle}</span>
+                  </div>
+                </CardBody>
+              </Card>
+            </motion.div>
           );
         })}
-      </div>
+      </motion.div>
 
       {/* Recent Orders Table */}
-      <Card className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs">
-        <CardBody className="p-0 space-y-4">
-          <div className="flex items-center justify-between pb-4 border-b border-brand-border">
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-brand-bronze dark:text-brand-gold" />
-              <h3 className="font-bold text-base text-brand-text">
-                {isPersian ? 'آخرین سفارشات ثبت‌شده اخیر' : 'Recent Customer Orders'}
-              </h3>
+      <motion.div
+        variants={fadeSlideUp}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0.3 }}
+      >
+        <Card className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs">
+          <CardBody className="p-0 space-y-4">
+            <div className="flex items-center justify-between pb-4 border-b border-brand-border">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-brand-bronze dark:text-brand-gold" />
+                <h3 className="font-bold text-base text-brand-text">
+                  {isPersian ? 'آخرین سفارشات ثبت‌شده اخیر' : 'Recent Customer Orders'}
+                </h3>
+              </div>
+              <Link
+                href={PATHS.ADMIN_ORDERS}
+                className="text-xs font-bold text-brand-bronze dark:text-brand-gold hover:underline"
+              >
+                {isPersian ? 'مشاهده همه سفارشات' : 'View All Orders'}
+              </Link>
             </div>
-            <Link
-              href={PATHS.ADMIN_ORDERS}
-              className="text-xs font-bold text-brand-bronze dark:text-brand-gold hover:underline"
-            >
-              {isPersian ? 'مشاهده همه سفارشات' : 'View All Orders'}
-            </Link>
-          </div>
 
-          {loading ? (
-            <div className="space-y-3 py-2">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full rounded-2xl bg-brand-surface-elevated" />
-              ))}
-            </div>
-          ) : recentOrders.length === 0 ? (
-            <div className="text-center py-8 text-xs text-brand-text-muted">
-              {isPersian ? 'سفارشی برای نمایش موجود نیست.' : 'No recent orders to display.'}
-            </div>
-          ) : (
-            <Table
-              aria-label="Recent Orders Table"
-              classNames={{
-                wrapper: "p-0 bg-transparent shadow-none border-none",
-                th: "bg-brand-surface-elevated text-brand-text-muted font-bold text-xs py-3 px-4",
-                td: "py-3.5 px-4 text-xs font-semibold",
-                tr: "border-b border-brand-border hover:bg-brand-surface-elevated/60 transition-colors",
-              }}
-            >
-              <TableHeader>
-                <TableColumn>{isPersian ? 'شماره سفارش' : 'Order ID'}</TableColumn>
-                <TableColumn>{isPersian ? 'مشتری' : 'Customer'}</TableColumn>
-                <TableColumn>{isPersian ? 'مبلغ کل' : 'Total'}</TableColumn>
-                <TableColumn>{isPersian ? 'روش پرداخت' : 'Payment'}</TableColumn>
-                <TableColumn>{isPersian ? 'وضعیت' : 'Status'}</TableColumn>
-                <TableColumn>{isPersian ? 'تاریخ' : 'Date'}</TableColumn>
-              </TableHeader>
-              <TableBody>
-                {recentOrders.map((order) => (
-                  <TableRow key={order._id}>
-                    <TableCell className="font-bold text-brand-bronze dark:text-brand-gold">
-                      {isPersian ? toPersianDigits(order.orderNumber) : order.orderNumber}
-                    </TableCell>
-                    <TableCell className="text-brand-text font-bold">
-                      {order.deliveryAddress?.fullName || 'کاربر مهمان'}
-                    </TableCell>
-                    <TableCell className="font-black text-brand-text">
-                      {formatToman(order.total, isPersian)}
-                    </TableCell>
-                    <TableCell className="text-brand-text-muted">
-                      {order.paymentMethod === 'online'
-                        ? isPersian ? 'آنلاین' : 'Online'
-                        : order.paymentMethod === 'installment'
-                        ? isPersian ? 'اقساطی' : 'Installment'
-                        : isPersian ? 'در محل' : 'COD'}
-                    </TableCell>
-                    <TableCell>
-                      {getStatusChip(order.status)}
-                    </TableCell>
-                    <TableCell className="text-brand-text-muted">
-                      {new Date(order.createdAt).toLocaleDateString(isPersian ? 'fa-IR' : 'en-US')}
-                    </TableCell>
-                  </TableRow>
+            {loading ? (
+              <div className="space-y-3 py-2">
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full rounded-2xl bg-brand-surface-elevated" />
                 ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardBody>
-      </Card>
+              </div>
+            ) : recentOrders.length === 0 ? (
+              <div className="text-center py-8 text-xs text-brand-text-muted">
+                {isPersian ? 'سفارشی برای نمایش موجود نیست.' : 'No recent orders to display.'}
+              </div>
+            ) : (
+              <Table
+                aria-label="Recent Orders Table"
+                classNames={{
+                  wrapper: "p-0 bg-transparent shadow-none border-none",
+                  th: "bg-brand-surface-elevated text-brand-text-muted font-bold text-xs py-3 px-4",
+                  td: "py-3.5 px-4 text-xs font-semibold",
+                  tr: "border-b border-brand-border hover:bg-brand-surface-elevated/60 transition-colors",
+                }}
+              >
+                <TableHeader>
+                  <TableColumn>{isPersian ? 'شماره سفارش' : 'Order ID'}</TableColumn>
+                  <TableColumn>{isPersian ? 'مشتری' : 'Customer'}</TableColumn>
+                  <TableColumn>{isPersian ? 'مبلغ کل' : 'Total'}</TableColumn>
+                  <TableColumn>{isPersian ? 'روش پرداخت' : 'Payment'}</TableColumn>
+                  <TableColumn>{isPersian ? 'وضعیت' : 'Status'}</TableColumn>
+                  <TableColumn>{isPersian ? 'تاریخ' : 'Date'}</TableColumn>
+                </TableHeader>
+                <TableBody>
+                  {recentOrders.map((order) => (
+                    <TableRow key={order._id}>
+                      <TableCell className="font-bold text-brand-bronze dark:text-brand-gold">
+                        {isPersian ? toPersianDigits(order.orderNumber) : order.orderNumber}
+                      </TableCell>
+                      <TableCell className="text-brand-text font-bold">
+                        {order.deliveryAddress?.fullName || 'کاربر مهمان'}
+                      </TableCell>
+                      <TableCell className="font-black text-brand-text">
+                        {formatToman(order.total, isPersian)}
+                      </TableCell>
+                      <TableCell className="text-brand-text-muted">
+                        {order.paymentMethod === 'online'
+                          ? isPersian ? 'آنلاین' : 'Online'
+                          : order.paymentMethod === 'installment'
+                          ? isPersian ? 'اقساطی' : 'Installment'
+                          : isPersian ? 'در محل' : 'COD'}
+                      </TableCell>
+                      <TableCell>
+                        {getStatusChip(order.status)}
+                      </TableCell>
+                      <TableCell className="text-brand-text-muted">
+                        {new Date(order.createdAt).toLocaleDateString(isPersian ? 'fa-IR' : 'en-US')}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardBody>
+        </Card>
+      </motion.div>
     </div>
   );
 }

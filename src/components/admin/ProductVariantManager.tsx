@@ -181,7 +181,7 @@ export function ProductVariantManager({
 
         <Button
           size="sm"
-          radius="lg"
+          radius="full"
           variant="solid"
           onPress={handleAddNewEmpty}
           startContent={<Plus className="w-4 h-4" />}
@@ -233,7 +233,7 @@ export function ProductVariantManager({
                   <Button
                     key={tpl._id}
                     size="sm"
-                    radius="lg"
+                    radius="full"
                     variant={isAdded ? 'flat' : 'bordered'}
                     isDisabled={isAdded}
                     onPress={() => handleAddTemplate(tpl)}
@@ -274,16 +274,17 @@ export function ProductVariantManager({
                   <div className="sm:col-span-3">
                     <Input
                       label={isPersian ? 'عنوان حجم / مدل *' : 'Variant Title *'}
+                      labelPlacement="outside"
                       isRequired
                       value={variant.title}
                       onValueChange={(val) => handleUpdateVariant(idx, 'title', val)}
                       placeholder={isPersian ? 'مثال: حجم ۱۰۰ میلی‌لیتر' : 'e.g. 100 ml'}
                       variant="bordered"
-                      radius="lg"
+                      radius="full"
                       classNames={{
-                        inputWrapper: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-10',
-                        input: 'font-bold text-xs text-[#1d241d] dark:text-[#f7f4ee]',
-                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                        inputWrapper: 'h-11 px-3.5 bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                        input: 'font-bold text-xs text-brand-text',
+                        label: 'text-xs font-bold text-brand-text mb-1',
                       }}
                     />
                   </div>
@@ -292,16 +293,17 @@ export function ProductVariantManager({
                   <div className="sm:col-span-3">
                     <Input
                       label={isPersian ? 'قیمت اصلی (تومان) *' : 'Price (Toman) *'}
+                      labelPlacement="outside"
                       type="number"
                       isRequired
                       value={String(variant.price)}
                       onValueChange={(val) => handleUpdateVariant(idx, 'price', Number(val))}
                       variant="bordered"
-                      radius="lg"
+                      radius="full"
                       classNames={{
-                        inputWrapper: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-10',
-                        input: 'font-bold text-xs text-[#1d241d] dark:text-[#f7f4ee]',
-                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                        inputWrapper: 'h-11 px-3.5 bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                        input: 'font-bold text-xs text-brand-text',
+                        label: 'text-xs font-bold text-brand-text mb-1',
                       }}
                     />
                   </div>
@@ -309,7 +311,8 @@ export function ProductVariantManager({
                   {/* Discount Price Input */}
                   <div className="sm:col-span-2">
                     <Input
-                      label={isPersian ? 'قیمت تخفیف (اختیاری)' : 'Discount Price'}
+                      label={isPersian ? 'قیمت تخفیف' : 'Discount Price'}
+                      labelPlacement="outside"
                       type="number"
                       value={String(variant.discountPrice || '')}
                       onValueChange={(val) =>
@@ -317,11 +320,11 @@ export function ProductVariantManager({
                       }
                       placeholder={isPersian ? 'بدون تخفیف' : 'No discount'}
                       variant="bordered"
-                      radius="lg"
+                      radius="full"
                       classNames={{
-                        inputWrapper: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-10',
-                        input: 'font-bold text-xs text-[#1d241d] dark:text-[#f7f4ee]',
-                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                        inputWrapper: 'h-11 px-3.5 bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                        input: 'font-bold text-xs text-brand-text',
+                        label: 'text-xs font-bold text-brand-text mb-1',
                       }}
                     />
                   </div>
@@ -330,24 +333,25 @@ export function ProductVariantManager({
                   <div className="sm:col-span-2">
                     <Input
                       label={isPersian ? 'موجودی انبار' : 'Stock'}
+                      labelPlacement="outside"
                       type="number"
                       value={String(variant.stockCount)}
                       onValueChange={(val) => handleUpdateVariant(idx, 'stockCount', Number(val))}
                       variant="bordered"
-                      radius="lg"
+                      radius="full"
                       classNames={{
-                        inputWrapper: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-10',
-                        input: 'font-bold text-xs text-[#1d241d] dark:text-[#f7f4ee]',
-                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                        inputWrapper: 'h-11 px-3.5 bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                        input: 'font-bold text-xs text-brand-text',
+                        label: 'text-xs font-bold text-brand-text mb-1',
                       }}
                     />
                   </div>
 
                   {/* Actions: Default Selector, Save as Preset & Remove */}
-                  <div className="sm:col-span-2 flex items-center justify-end gap-1.5 pt-2 sm:pt-4">
+                  <div className="sm:col-span-2 flex items-center justify-end gap-1.5 pt-6">
                     <Button
                       size="sm"
-                      radius="lg"
+                      radius="full"
                       variant={variant.isDefault ? 'solid' : 'bordered'}
                       onPress={() => handleSetDefault(idx)}
                       className={`text-[11px] font-bold h-9 ${
@@ -364,7 +368,7 @@ export function ProductVariantManager({
                     <Button
                       isIconOnly
                       size="sm"
-                      radius="lg"
+                      radius="full"
                       variant="light"
                       isLoading={savingTemplateIdx === idx}
                       onPress={() => handleSaveAsReusableTemplate(variant, idx)}
@@ -377,7 +381,7 @@ export function ProductVariantManager({
                     <Button
                       isIconOnly
                       size="sm"
-                      radius="lg"
+                      radius="full"
                       variant="light"
                       color="danger"
                       onPress={() => handleRemoveVariant(idx)}

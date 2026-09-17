@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Button, Chip } from '@heroui/react';
+import { motion } from 'framer-motion';
+import { Card, Avatar, Button, Chip } from '@heroui/react';
 import {
   LayoutDashboard,
   Package,
@@ -17,11 +18,14 @@ import {
   LayoutTemplate,
   ExternalLink,
   LogOut,
+  User as UserIcon,
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { logout } from '@/stores/auth/authSlice';
 import { PATHS } from '@/common/constants/PATHS';
-import { BrandLogo } from '../common/BrandLogo';
 import { useTranslation } from '@/common/i18n';
 
 interface NavItem {
@@ -32,11 +36,35 @@ interface NavItem {
   adminOnly?: boolean;
 }
 
+const sidebarContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.04,
+      delayChildren: 0.08,
+    },
+  },
+};
+
+const sidebarItemVariants = {
+  hidden: { opacity: 0, x: 12 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 420,
+      damping: 30,
+    },
+  },
+};
+
 export function AdminSidebar() {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
-  const { isPersian } = useTranslation();
+  const { isPersian, isRTL } = useTranslation();
   const isAdmin = user?.role === 'admin';
 
   const menuItems: NavItem[] = [
@@ -53,75 +81,115 @@ export function AdminSidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-[#171d17] text-[#f7f4ee] border-e border-[#2e3a2e] flex flex-col justify-between shrink-0 min-h-screen">
-      {/* Brand Header */}
-      <div>
-        <div className="p-4 border-b border-[#2e3a2e]">
-          <BrandLogo size="sm" variant="dark" />
-          <div className="mt-2.5 px-2 py-1.5 rounded-xl bg-[#202620] border border-[#2e3a2e] flex items-center justify-between text-[11px]">
-            <span className="text-[#a69c8e]">{isPersian ? 'نقش شما:' : 'Your Role:'}</span>
+    <Card className="bg-[#1c231c]/90 dark:bg-[#151a15]/90 backdrop-blur-xl rounded-3xl p-4 sm:p-5 border border-[#2e3a2e] shadow-xl space-y-5 sticky top-24 w-full">
+      {/* Admin User Header (Matching ProfilePage style) */}
+      <div className="flex items-center gap-3.5 pb-4 border-b border-[#2e3a2e]">
+        <Avatar
+          name={user?.fullName || 'Admin'}
+          fallback={<UserIcon className="w-5 h-5 text-brand-gold" />}
+          classNames={{
+            base: 'w-12 h-12 bg-gradient-to-br from-[#242c24] to-[#141914] text-brand-gold font-black text-base border-2 border-brand-gold/30 shadow-md shadow-brand-gold/10 shrink-0 rounded-2xl',
+            name: 'font-black text-base text-brand-gold',
+          }}
+        />
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-black text-[#f7f4ee] truncate">
+            {user?.fullName || (isPersian ? 'مدیر سیستم' : 'Administrator')}
+          </h2>
+          <div className="text-[11px] text-[#a69c8e] font-mono mt-0.5 truncate">
+            {user?.email || 'admin@hatefaroma.com'}
+          </div>
+          <div className="flex items-center gap-1.5 mt-1.5">
             <Chip
-              variant="flat"
               size="sm"
-              className="bg-brand-gold/15 text-brand-gold border border-brand-gold/30 text-[10px] font-black h-6 px-2"
+              variant="flat"
+              startContent={<ShieldCheck className="w-3 h-3 text-brand-gold shrink-0" />}
+              classNames={{
+                base: 'bg-brand-gold/15 border border-brand-gold/30 text-brand-gold text-[10px] font-black h-5 rounded-xl px-2',
+                content: 'px-0.5',
+              }}
             >
-              {user?.role === 'admin'
-                ? isPersian ? 'مدیر کل (Admin)' : 'Admin'
-                : isPersian ? 'ویراستار (Editor)' : 'Editor'}
+              {isAdmin
+                ? isPersian ? 'مدیر ارشد (Super Admin)' : 'Super Admin'
+                : isPersian ? 'ویراستار محتوا (Editor)' : 'Content Editor'}
             </Chip>
           </div>
         </div>
-
-        {/* Navigation Items */}
-        <nav className="p-3 space-y-1">
-          {menuItems.map((item) => {
-            if (item.adminOnly && !isAdmin) return null;
-            const isActive = pathname === item.href;
-            const Icon = item.icon;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ease-out ${
-                  isActive
-                    ? 'bg-brand-gold text-[#141914] shadow-sm font-black'
-                    : 'text-[#e6dcce] hover:bg-[#202620] hover:text-[#f7f4ee]'
-                }`}
-              >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#1d241d]' : 'text-[#bfa27a]'}`} />
-                <span>{isPersian ? item.titleFa : item.titleEn}</span>
-              </Link>
-            );
-          })}
-        </nav>
       </div>
 
-      {/* Footer Exit Options */}
-      <div className="p-4 border-t border-[#2e3a2e] space-y-2">
+      {/* Navigation Links */}
+      <motion.nav
+        className="space-y-1"
+        variants={sidebarContainerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {menuItems.map((item) => {
+          if (item.adminOnly && !isAdmin) return null;
+          const isActive =
+            pathname === item.href ||
+            (item.href !== PATHS.ADMIN_DASHBOARD && pathname.startsWith(item.href));
+          const Icon = item.icon;
+
+          return (
+            <motion.div key={item.href} variants={sidebarItemVariants}>
+              <Button
+                as={Link}
+                href={item.href}
+                variant="light"
+                radius="full"
+                className={`w-full h-11 justify-between text-xs font-bold transition-all px-3.5 rounded-2xl ${
+                  isActive
+                    ? 'bg-brand-gold text-[#141914] font-black border border-brand-gold/40 shadow-sm shadow-brand-gold/10'
+                    : 'text-[#e6dcce] hover:text-[#bfa27a] hover:bg-[#242c24]'
+                }`}
+                startContent={
+                  <Icon
+                    className={`w-4 h-4 shrink-0 transition-transform ${
+                      isActive ? 'text-[#141914] scale-105' : 'text-[#bfa27a]'
+                    }`}
+                  />
+                }
+                endContent={
+                  isRTL ? (
+                    <ChevronLeft className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#141914]' : 'opacity-40 text-[#a69c8e]'}`} />
+                  ) : (
+                    <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#141914]' : 'opacity-40 text-[#a69c8e]'}`} />
+                  )
+                }
+              >
+                <span className="flex-1 text-start truncate">
+                  {isPersian ? item.titleFa : item.titleEn}
+                </span>
+              </Button>
+            </motion.div>
+          );
+        })}
+      </motion.nav>
+
+      {/* Footer Navigation Options */}
+      <div className="pt-3 border-t border-[#2e3a2e] space-y-1.5">
         <Button
           as={Link}
           href={PATHS.HOME}
           variant="light"
-          radius="lg"
-          size="sm"
-          className="w-full flex items-center justify-start gap-2 h-9 px-3 rounded-xl text-xs font-bold text-[#d4be9b] hover:bg-[#202620] transition-colors cursor-pointer"
+          radius="full"
+          className="w-full h-10 justify-start gap-2.5 px-3.5 text-xs font-bold text-[#bfa27a] hover:bg-[#242c24] hover:text-[#d4be9b] transition-colors"
+          startContent={<ExternalLink className="w-4 h-4 shrink-0" />}
         >
-          <ExternalLink className="w-4 h-4" />
           <span>{isPersian ? 'مشاهده وب‌سایت فروشگاه' : 'View Storefront'}</span>
         </Button>
 
         <Button
           onPress={() => dispatch(logout())}
           variant="light"
-          radius="lg"
-          size="sm"
-          className="w-full flex items-center justify-start gap-2 h-9 px-3 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-950/40 transition-colors cursor-pointer"
+          radius="full"
+          className="w-full h-10 justify-start gap-2.5 px-3.5 text-xs font-black text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+          startContent={<LogOut className="w-4 h-4 shrink-0" />}
         >
-          <LogOut className="w-4 h-4" />
           <span>{isPersian ? 'خروج از حساب' : 'Log Out'}</span>
         </Button>
       </div>
-    </aside>
+    </Card>
   );
 }

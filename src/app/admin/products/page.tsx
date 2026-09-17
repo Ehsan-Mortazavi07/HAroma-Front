@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Card,
   CardBody,
@@ -18,6 +19,7 @@ import {
   TableRow,
   TableCell,
   Skeleton,
+  Checkbox,
 } from '@heroui/react';
 import {
   Package,
@@ -276,7 +278,12 @@ export default function AdminProductsPage() {
   return (
     <div className="space-y-6">
       {/* Page Title & Add Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
         <div>
           <h1 className="text-2xl font-black text-brand-text">
             {isPersian ? 'مدیریت محصولات و عطرها' : 'Products & Fragrance Management'}
@@ -291,92 +298,107 @@ export default function AdminProductsPage() {
         <Button
           as={Link}
           href={PATHS.ADMIN_PRODUCT_NEW}
-          radius="lg"
-          className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 flex items-center gap-2 cursor-pointer self-start sm:self-auto"
+          radius="full"
+          className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 flex items-center gap-2 cursor-pointer self-start sm:self-auto rounded-full transition-all active:scale-95"
         >
           <Plus className="w-4 h-4" />
           <span>{isPersian ? 'افزودن محصول جدید' : 'Add New Product'}</span>
         </Button>
-      </div>
+      </motion.div>
 
       {/* Floating Sticky Bulk Actions Toolbar */}
-      {selectedIds.length > 0 && (
-        <Card className="sticky top-4 z-30 bg-[#1c231c] text-[#f7f4ee] border border-brand-gold/60 shadow-2xl backdrop-blur-md rounded-3xl">
-          <CardBody className="p-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <Chip className="bg-brand-gold text-[#141914] font-black text-xs shadow-xs" size="sm">
-                {isPersian
-                  ? `${toPersianDigits(selectedIds.length)} محصول انتخاب شده`
-                  : `${selectedIds.length} products selected`}
-              </Chip>
-              <span className="text-xs text-brand-gold font-semibold hidden md:inline">
-                {isPersian ? 'عملیات گروهی سریع:' : 'Bulk actions:'}
-              </span>
-            </div>
+      <AnimatePresence>
+        {selectedIds.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -16, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.97 }}
+            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+            className="sticky top-4 z-30"
+          >
+            <Card className="bg-[#1c231c] text-[#f7f4ee] border border-brand-gold/60 shadow-2xl backdrop-blur-md rounded-3xl">
+              <CardBody className="p-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Chip className="bg-brand-gold text-[#141914] font-black text-xs shadow-xs" size="sm">
+                    {isPersian
+                      ? `${toPersianDigits(selectedIds.length)} محصول انتخاب شده`
+                      : `${selectedIds.length} products selected`}
+                  </Chip>
+                  <span className="text-xs text-brand-gold font-semibold hidden md:inline">
+                    {isPersian ? 'عملیات گروهی سریع:' : 'Bulk actions:'}
+                  </span>
+                </div>
 
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button
-                size="sm"
-                radius="lg"
-                isLoading={bulkActionLoading}
-                onPress={() => handleBulkStatusChange(true)}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer"
-              >
-                {!bulkActionLoading && <Eye className="w-3.5 h-3.5" />}
-                <span>{isPersian ? 'انتشار همگانی' : 'Bulk Publish'}</span>
-              </Button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    radius="full"
+                    isLoading={bulkActionLoading}
+                    onPress={() => handleBulkStatusChange(true)}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer rounded-full"
+                  >
+                    {!bulkActionLoading && <Eye className="w-3.5 h-3.5" />}
+                    <span>{isPersian ? 'انتشار همگانی' : 'Bulk Publish'}</span>
+                  </Button>
 
-              <Button
-                size="sm"
-                radius="lg"
-                isLoading={bulkActionLoading}
-                onPress={() => handleBulkStatusChange(false)}
-                className="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs cursor-pointer"
-              >
-                {!bulkActionLoading && <EyeOff className="w-3.5 h-3.5" />}
-                <span>{isPersian ? 'عدم انتشار همگانی' : 'Bulk Unpublish'}</span>
-              </Button>
+                  <Button
+                    size="sm"
+                    radius="full"
+                    isLoading={bulkActionLoading}
+                    onPress={() => handleBulkStatusChange(false)}
+                    className="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs cursor-pointer rounded-full"
+                  >
+                    {!bulkActionLoading && <EyeOff className="w-3.5 h-3.5" />}
+                    <span>{isPersian ? 'عدم انتشار همگانی' : 'Bulk Unpublish'}</span>
+                  </Button>
 
-              {isAdmin && (
-                <Button
-                  size="sm"
-                  radius="lg"
-                  isLoading={bulkActionLoading}
-                  onPress={handleBulkDelete}
-                  className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs cursor-pointer"
-                >
-                  {!bulkActionLoading && <Trash2 className="w-3.5 h-3.5" />}
-                  <span>{isPersian ? 'حذف همگانی' : 'Bulk Delete'}</span>
-                </Button>
-              )}
+                  {isAdmin && (
+                    <Button
+                      size="sm"
+                      radius="full"
+                      isLoading={bulkActionLoading}
+                      onPress={handleBulkDelete}
+                      className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs cursor-pointer rounded-full"
+                    >
+                      {!bulkActionLoading && <Trash2 className="w-3.5 h-3.5" />}
+                      <span>{isPersian ? 'حذف همگانی' : 'Bulk Delete'}</span>
+                    </Button>
+                  )}
 
-              <Button
-                size="sm"
-                radius="lg"
-                variant="flat"
-                onPress={() => setSelectedIds([])}
-                className="bg-white/10 hover:bg-white/20 text-[#f7f4ee] font-bold text-xs cursor-pointer"
-              >
-                {isPersian ? 'لغو انتخاب‌ها' : 'Deselect All'}
-              </Button>
-            </div>
-          </CardBody>
-        </Card>
-      )}
+                  <Button
+                    size="sm"
+                    radius="full"
+                    variant="flat"
+                    onPress={() => setSelectedIds([])}
+                    className="bg-white/10 hover:bg-white/20 text-[#f7f4ee] font-bold text-xs cursor-pointer rounded-full"
+                  >
+                    {isPersian ? 'لغو انتخاب‌ها' : 'Deselect All'}
+                  </Button>
+                </div>
+              </CardBody>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Filter and Search Bar */}
-      <Card className="p-4 bg-brand-surface border border-brand-border rounded-3xl shadow-xs">
-        <CardBody className="p-0 flex flex-col sm:flex-row items-center gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+      >
+      <Card className="p-4 bg-brand-surface border border-brand-border rounded-3xl shadow-xs overflow-visible">
+        <CardBody className="p-0 flex flex-col sm:flex-row items-center gap-3 overflow-visible">
           <Input
             value={searchQuery}
             onValueChange={setSearchQuery}
             placeholder={isPersian ? 'جستجو در عنوان یا برند عطر...' : 'Search by title, brand, or slug...'}
             startContent={<Search className="w-4 h-4 text-brand-text-muted shrink-0" />}
             variant="bordered"
-            radius="lg"
+            radius="full"
             className="flex-1 w-full"
             classNames={{
-              inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-2xl shadow-xs transition-colors",
+              inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs transition-colors",
               input: "text-xs font-semibold text-brand-text",
             }}
           />
@@ -391,11 +413,11 @@ export default function AdminProductsPage() {
                 setSelectedCategory(selected ?? '');
               }}
               variant="bordered"
-              radius="lg"
+              radius="full"
               className="w-full sm:w-56"
               classNames={{
-                trigger: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-2xl shadow-xs text-xs font-bold text-brand-text",
-                value: "text-xs font-bold text-brand-text",
+                trigger: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs text-xs font-bold text-brand-text text-start",
+                value: "text-xs font-bold text-brand-text text-start",
                 popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl",
               }}
             >
@@ -411,10 +433,16 @@ export default function AdminProductsPage() {
           </div>
         </CardBody>
       </Card>
+      </motion.div>
 
       {/* Products Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+      >
       <Card className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs overflow-hidden">
-        <CardBody className="p-0">
+        <CardBody className="p-0 overflow-visible">
           {loading ? (
             <div className="p-8 space-y-4">
               {[...Array(6)].map((_, i) => (
@@ -432,7 +460,7 @@ export default function AdminProductsPage() {
             <Table
               aria-label="Products Table"
               classNames={{
-                wrapper: "p-0 bg-transparent shadow-none border-none overflow-x-auto",
+                wrapper: "p-0 bg-transparent shadow-none border-none overflow-x-auto overflow-y-hidden",
                 th: "bg-brand-surface-elevated text-brand-text-muted font-bold text-xs py-4 px-4",
                 td: "py-4 px-4 text-xs font-semibold",
                 tr: "border-b border-brand-border hover:bg-brand-surface-elevated/60 transition-colors",
@@ -440,12 +468,11 @@ export default function AdminProductsPage() {
             >
               <TableHeader>
                 <TableColumn className="w-10 text-center">
-                  <input
-                    type="checkbox"
-                    checked={isAllSelected}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="w-4 h-4 rounded-md accent-[#bfa27a] cursor-pointer"
-                    title={isPersian ? 'انتخاب همه' : 'Select all'}
+                  <Checkbox
+                    isSelected={isAllSelected}
+                    onValueChange={handleSelectAll}
+                    size="sm"
+                    aria-label={isPersian ? 'انتخاب همه' : 'Select all'}
                   />
                 </TableColumn>
                 <TableColumn>{isPersian ? 'تصویر و عنوان محصول' : 'Product & Media'}</TableColumn>
@@ -483,12 +510,7 @@ export default function AdminProductsPage() {
                       className={isSelected ? 'bg-brand-gold/10' : ''}
                     >
                       <TableCell className="text-center">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleSelectRow(product._id)}
-                          className="w-4 h-4 rounded-md accent-[#bfa27a] cursor-pointer"
-                        />
+                        <Checkbox isSelected={isSelected} onValueChange={() => handleSelectRow(product._id)} color="warning" size="sm" />
                       </TableCell>
 
                       <TableCell>
@@ -596,7 +618,7 @@ export default function AdminProductsPage() {
                             isIconOnly
                             size="sm"
                             variant="flat"
-                            radius="lg"
+                            radius="full"
                             className="bg-brand-surface-elevated text-brand-text hover:bg-brand-border/60 border border-brand-border cursor-pointer"
                             title={isPersian ? 'ویرایش کامل محصول' : 'Edit'}
                           >
@@ -609,7 +631,7 @@ export default function AdminProductsPage() {
                               size="sm"
                               variant="flat"
                               color="danger"
-                              radius="lg"
+                              radius="full"
                               onPress={() => handleDelete(product._id, product.title)}
                               isLoading={deletingId === product._id}
                               className="cursor-pointer"
@@ -635,6 +657,7 @@ export default function AdminProductsPage() {
           )}
         </CardBody>
       </Card>
+      </motion.div>
     </div>
   );
 }

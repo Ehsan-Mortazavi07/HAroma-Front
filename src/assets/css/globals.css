@@ -172,7 +172,7 @@
   }
 
   html {
-    scrollbar-gutter: stable;
+    scroll-behavior: smooth;
   }
 
   body {
@@ -189,10 +189,10 @@
   border-top-right-radius: 9999px;
 }
 
-/* Scrollbar Styling */
+/* Ultra-minimal Non-intrusive Scrollbar Styling */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -200,12 +200,37 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d4be9b;
+  background: rgba(191, 162, 122, 0.25);
   border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(191, 162, 122, 0.6);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #3e4a3e;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(191, 162, 122, 0.25) transparent;
+}
+
+.dark * {
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+/* Prevent unwanted card body scrollbars from default HeroUI styles */
+[data-slot="card-body"]:not([class*="overflow-y-auto"]):not([class*="overflow-auto"]),
+.heroui-card-body:not([class*="overflow-y-auto"]):not([class*="overflow-auto"]) {
+  overflow: visible;
 }
 
 /* Luxury Glow Effects matching Bronze Gold & Olive */

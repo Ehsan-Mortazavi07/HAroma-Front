@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Card,
   CardBody,
   Button,
   Input,
   Textarea,
-  Switch,
   Chip,
   Modal,
   ModalContent,
@@ -21,6 +21,7 @@ import { adminApi } from '@/common/api/admin';
 import { IVipPlan } from '@/common/interfaces';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
+import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 
 export default function AdminVipPlansPage() {
   const { isPersian } = useTranslation();
@@ -157,7 +158,12 @@ export default function AdminVipPlansPage() {
   return (
     <div className="space-y-6">
       {/* Header & CTA */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
         <div>
           <h1 className="text-2xl font-black text-brand-text">
             {isPersian ? 'مدیریت اشتراک‌های VIP هاتف آروما' : 'VIP Membership Plans Management'}
@@ -172,23 +178,22 @@ export default function AdminVipPlansPage() {
         <Button
           onPress={openCreateModal}
           startContent={<Plus className="w-4 h-4" />}
-          radius="lg"
-          className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 cursor-pointer"
+          radius="full"
+          className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 cursor-pointer rounded-full transition-all active:scale-95"
         >
           {isPersian ? 'افزودن پلن VIP جدید' : 'Add New VIP Plan'}
         </Button>
-      </div>
+      </motion.div>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading ? (
-          [...Array(3)].map((_, i) => (
-            <Skeleton
-              key={i}
-              className="h-64 rounded-3xl bg-brand-surface-elevated"
-            />
-          ))
-        ) : plans.length === 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-64 rounded-3xl bg-brand-surface-elevated" />
+          ))}
+        </div>
+      ) : plans.length === 0 ? (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <Card className="col-span-full p-12 text-center bg-brand-surface rounded-3xl border border-brand-border space-y-3">
             <CardBody className="flex flex-col items-center">
               <Crown className="w-12 h-12 text-brand-bronze mx-auto opacity-40 mb-3" />
@@ -197,16 +202,34 @@ export default function AdminVipPlansPage() {
               </h3>
             </CardBody>
           </Card>
-        ) : (
-          plans.map((plan) => (
-            <Card
-              key={plan._id}
-              className={`relative bg-brand-surface p-6 rounded-3xl transition-colors flex flex-col justify-between space-y-6 ${
-                plan.isPopular
-                  ? 'border-2 border-brand-gold shadow-xl'
-                  : 'border border-brand-border shadow-xs'
-              }`}
-            >
+        </motion.div>
+      ) : (
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { opacity: 1, transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+          }}
+        >
+          <AnimatePresence>
+            {plans.map((plan) => (
+              <motion.div
+                key={plan._id}
+                variants={{
+                  hidden: { opacity: 0, y: 20, scale: 0.97 },
+                  visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring' as const, stiffness: 360, damping: 28 } },
+                }}
+                layout
+              >
+              <Card
+                className={`relative bg-brand-surface p-6 rounded-3xl transition-colors flex flex-col justify-between space-y-6 h-full ${
+                  plan.isPopular
+                    ? 'border-2 border-brand-gold shadow-xl'
+                    : 'border border-brand-border shadow-xs'
+                }`}
+              >
               <CardBody className="p-0 flex flex-col justify-between h-full space-y-6">
                 {plan.isPopular && (
                   <div className="absolute -top-3.5 right-6 px-3.5 py-0.5 rounded-full bg-brand-gold text-[#141914] font-black text-[10px] shadow-sm">
@@ -281,7 +304,7 @@ export default function AdminVipPlansPage() {
                     <Button
                       isIconOnly
                       size="sm"
-                      radius="lg"
+                      radius="full"
                       variant="light"
                       onPress={() => openEditModal(plan)}
                       className="text-brand-text hover:bg-brand-surface-elevated cursor-pointer"
@@ -293,7 +316,7 @@ export default function AdminVipPlansPage() {
                     <Button
                       isIconOnly
                       size="sm"
-                      radius="lg"
+                      radius="full"
                       variant="light"
                       onPress={() => handleDelete(plan._id, plan.title)}
                       className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
@@ -304,10 +327,12 @@ export default function AdminVipPlansPage() {
                   </div>
                 </div>
               </CardBody>
-            </Card>
-          ))
-        )}
-      </div>
+              </Card>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      )}
 
       {/* Modal Dialog */}
       <Modal
@@ -335,35 +360,38 @@ export default function AdminVipPlansPage() {
               <ModalBody className="space-y-4">
                 <Input
                   label={isPersian ? 'عنوان فارسی پلن' : 'Plan Title (Persian)'}
+                  labelPlacement="outside"
                   isRequired
                   value={title}
                   onValueChange={setTitle}
                   placeholder={isPersian ? 'مثال: اشتراک طلایی ۱ ماهه' : 'e.g. 1-Month Gold VIP'}
                   variant="bordered"
-                  radius="lg"
+                  radius="full"
                   classNames={{
-                    inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                    inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                     input: "text-xs font-semibold text-brand-text",
-                    label: "text-xs font-bold text-brand-text",
+                    label: "text-xs font-bold text-brand-text mb-1",
                   }}
                 />
 
                 <Input
                   label={isPersian ? 'عنوان انگلیسی پلن' : 'Plan Title (English)'}
+                  labelPlacement="outside"
                   value={titleEn}
                   onValueChange={setTitleEn}
                   placeholder="e.g. 1-Month Gold VIP"
                   variant="bordered"
-                  radius="lg"
+                  radius="full"
                   classNames={{
-                    inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                    inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                     input: "text-xs font-semibold text-brand-text",
-                    label: "text-xs font-bold text-brand-text",
+                    label: "text-xs font-bold text-brand-text mb-1",
                   }}
                 />
 
                 <Textarea
                   label={isPersian ? 'توضیحات کوتاه' : 'Short Description'}
+                  labelPlacement="outside"
                   rows={2}
                   value={description}
                   onValueChange={setDescription}
@@ -371,59 +399,62 @@ export default function AdminVipPlansPage() {
                   variant="bordered"
                   radius="lg"
                   classNames={{
-                    inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                    inputWrapper: "p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs",
                     input: "text-xs font-semibold text-brand-text",
-                    label: "text-xs font-bold text-brand-text",
+                    label: "text-xs font-bold text-brand-text mb-1",
                   }}
                 />
 
                 <div className="grid grid-cols-3 gap-3">
                   <Input
                     label={isPersian ? 'قیمت (تومان)' : 'Price'}
+                    labelPlacement="outside"
                     type="number"
                     value={String(price)}
                     onValueChange={(v) => setPrice(Number(v) || 0)}
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
                     label={isPersian ? 'مدت (روز)' : 'Days'}
+                    labelPlacement="outside"
                     type="number"
                     value={String(durationDays)}
                     onValueChange={(v) => setDurationDays(Number(v) || 0)}
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
                     label={isPersian ? 'درصد تخفیف' : 'Discount %'}
+                    labelPlacement="outside"
                     type="number"
                     value={String(discountPercent)}
                     onValueChange={(v) => setDiscountPercent(Number(v) || 0)}
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
                 </div>
 
                 {/* Perks List */}
                 <div>
-                  <label className="block font-bold text-xs text-brand-text mb-1">
+                  <label className="block font-bold text-xs text-brand-text mb-1.5">
                     {isPersian ? 'مزایای پلن (سفارشی)' : 'Plan Perks'}
                   </label>
                   <div className="flex gap-2 mb-2">
@@ -432,18 +463,18 @@ export default function AdminVipPlansPage() {
                       onValueChange={setPerkInput}
                       placeholder={isPersian ? 'مثال: ارسال رایگان، هدیه تستر' : 'e.g. Free shipping, 2 tester vials'}
                       variant="bordered"
-                      radius="lg"
+                      radius="full"
                       className="flex-1"
                       classNames={{
-                        inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                        inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                         input: "text-xs font-semibold text-brand-text",
                       }}
                     />
                     <Button
                       onPress={addPerk}
-                      radius="lg"
+                      radius="full"
                       variant="flat"
-                      className="bg-brand-surface-elevated text-brand-bronze dark:text-brand-gold border border-brand-border font-bold text-xs"
+                      className="h-11 px-5 bg-brand-surface-elevated text-brand-bronze dark:text-brand-gold border border-brand-border font-bold text-xs rounded-full"
                     >
                       {isPersian ? 'افزودن' : 'Add'}
                     </Button>
@@ -471,44 +502,30 @@ export default function AdminVipPlansPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-2">
-                  <Switch
-                    isSelected={isPopular}
-                    onValueChange={setIsPopular}
-                    size="sm"
-                    classNames={{
-                      label: "text-xs font-bold text-brand-text",
-                    }}
-                  >
+                  <SmoothSwitch isSelected={isPopular} onValueChange={setIsPopular}>
                     {isPersian ? 'برچسب محبوب‌ترین' : 'Popular Badge'}
-                  </Switch>
+                  </SmoothSwitch>
 
-                  <Switch
-                    isSelected={isActive}
-                    onValueChange={setIsActive}
-                    size="sm"
-                    classNames={{
-                      label: "text-xs font-bold text-brand-text",
-                    }}
-                  >
+                  <SmoothSwitch isSelected={isActive} onValueChange={setIsActive}>
                     {isPersian ? 'پلن فعال باشد' : 'Plan is Active'}
-                  </Switch>
+                  </SmoothSwitch>
                 </div>
               </ModalBody>
 
               <ModalFooter>
                 <Button
                   variant="flat"
-                  radius="lg"
+                  radius="full"
                   onPress={onClose}
-                  className="font-bold text-xs"
+                  className="font-bold text-xs rounded-full cursor-pointer"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
                 <Button
                   isLoading={submitting}
-                  radius="lg"
+                  radius="full"
                   onPress={() => handleSubmit()}
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'ذخیره پلن VIP' : 'Save VIP Plan'}
                 </Button>

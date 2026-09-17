@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import {
   Card,
   CardBody,
@@ -132,7 +133,12 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
         <div>
           <h1 className="text-2xl font-black text-brand-text">
             {isPersian ? 'مدیریت کاربران، اعضای VIP و سطوح دسترسی' : 'Users & Access Control Management'}
@@ -156,10 +162,15 @@ export default function AdminUsersPage() {
             {isPersian ? 'سطح دسترسی ادیتور: فقط مشاهده' : 'Editor Access: Read-Only'}
           </Chip>
         )}
-      </div>
+      </motion.div>
 
       {/* Read-Only Mode Alert Banner for Non-Admins */}
       {!isAdmin && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, delay: 0.05 }}
+        >
         <Card className="bg-amber-500/10 border border-amber-500/30 rounded-2xl shadow-xs">
           <CardBody className="p-4 flex flex-row items-center gap-3 text-amber-900 dark:text-amber-200 text-xs">
             <ShieldAlert className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" />
@@ -173,21 +184,27 @@ export default function AdminUsersPage() {
             </div>
           </CardBody>
         </Card>
+        </motion.div>
       )}
 
       {/* Toolbar */}
-      <Card className="bg-brand-surface p-4 rounded-3xl border border-brand-border shadow-xs">
-        <CardBody className="p-0 flex flex-col sm:flex-row gap-3 items-center justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+      >
+      <Card className="bg-brand-surface p-4 rounded-3xl border border-brand-border shadow-xs overflow-visible">
+        <CardBody className="p-0 flex flex-col sm:flex-row gap-3 items-center justify-between overflow-visible">
           <Input
             value={search}
             onValueChange={setSearch}
             placeholder={isPersian ? 'جستجو بر اساس نام، ایمیل، شماره یا نام‌کاربری...' : 'Search by name, email, or username...'}
             startContent={<Search className="w-4 h-4 text-brand-text-muted shrink-0" />}
             variant="bordered"
-            radius="lg"
+            radius="full"
             className="w-full sm:w-80"
             classNames={{
-              inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-2xl shadow-xs transition-colors",
+              inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs transition-colors",
               input: "text-xs font-semibold text-brand-text",
             }}
           />
@@ -200,11 +217,11 @@ export default function AdminUsersPage() {
               setRoleFilter(selected ?? '');
             }}
             variant="bordered"
-            radius="lg"
+            radius="full"
             className="w-full sm:w-56"
             classNames={{
-              trigger: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-2xl shadow-xs text-xs font-bold text-brand-text",
-              value: "text-xs font-bold text-brand-text",
+              trigger: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs text-xs font-bold text-brand-text text-start",
+              value: "text-xs font-bold text-brand-text text-start",
               popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl",
             }}
           >
@@ -216,10 +233,16 @@ export default function AdminUsersPage() {
           </Select>
         </CardBody>
       </Card>
+      </motion.div>
 
       {/* Users Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+      >
       <Card className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs overflow-hidden">
-        <CardBody className="p-0">
+        <CardBody className="p-0 overflow-visible">
           {loading ? (
             <div className="p-8 space-y-4">
               {[...Array(5)].map((_, i) => (
@@ -390,7 +413,7 @@ export default function AdminUsersPage() {
                         <Button
                           isIconOnly
                           size="sm"
-                          radius="lg"
+                          radius="full"
                           variant="light"
                           onPress={() => handleDeleteUser(user._id, user.fullName)}
                           className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
@@ -411,6 +434,7 @@ export default function AdminUsersPage() {
           )}
         </CardBody>
       </Card>
+      </motion.div>
     </div>
   );
 }

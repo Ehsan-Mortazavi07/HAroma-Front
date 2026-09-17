@@ -271,12 +271,12 @@ export function DynamicAttributeBuilder({
       </p>
 
       {/* Attribute Picker Box */}
-      <Card className="bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] shadow-none rounded-2xl">
-        <CardBody className="p-4 sm:p-5 space-y-4">
+      <Card className="bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] shadow-none rounded-2xl overflow-visible">
+        <CardBody className="p-4 sm:p-5 space-y-4 overflow-visible">
           <div className="flex flex-col sm:flex-row gap-3 items-center">
             <Select
               aria-label={isPersian ? 'انتخاب ویژگی' : 'Select Attribute'}
-              placeholder={isPersian ? '-- انتخاب ویژگی (گروه بویایی، نت، طبع، فصل و ...) --' : '-- Select Attribute --'}
+              placeholder={isPersian ? 'انتخاب ویژگی تخصصی (گروه بویایی، نت، طبع، فصل...)' : 'Select Fragrance Attribute...'}
               selectedKeys={selectedAttrId ? new Set([selectedAttrId]) : new Set([])}
               onSelectionChange={(keys) => {
                 const selected = Array.from(keys)[0] as string;
@@ -285,11 +285,11 @@ export function DynamicAttributeBuilder({
                 setCustomValueInput('');
               }}
               variant="bordered"
-              radius="lg"
+              radius="full"
               className="w-full sm:w-2/3"
               classNames={{
-                trigger: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-11 text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
-                value: 'text-xs font-bold',
+                trigger: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-11 text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] rounded-full text-start shadow-xs',
+                value: 'text-xs font-bold text-start',
                 popoverContent: 'bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] rounded-2xl shadow-xl',
               }}
             >
@@ -302,7 +302,7 @@ export function DynamicAttributeBuilder({
 
             <Button
               size="md"
-              radius="lg"
+              radius="full"
               color="warning"
               isDisabled={!selectedAttrId || (selectedValues.length === 0 && !customValueInput.trim())}
               onPress={handleAddSelectedAttribute}
@@ -330,7 +330,7 @@ export function DynamicAttributeBuilder({
                         <Button
                           key={i}
                           size="sm"
-                          radius="lg"
+                          radius="full"
                           variant={isSelected ? 'solid' : 'bordered'}
                           onPress={() => togglePredefinedValue(val)}
                           startContent={isSelected ? <Check className="w-3.5 h-3.5" /> : undefined}
@@ -361,7 +361,7 @@ export function DynamicAttributeBuilder({
                   }}
                   placeholder={isPersian ? 'افزودن مقدار دلخواه دیگر (تایپ کنید و اینتر بزنید)...' : 'Add custom value and hit Enter...'}
                   variant="bordered"
-                  radius="lg"
+                  radius="full"
                   className="w-full sm:w-2/3"
                   classNames={{
                     inputWrapper: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-10',
@@ -370,7 +370,7 @@ export function DynamicAttributeBuilder({
                 />
                 <Button
                   size="sm"
-                  radius="lg"
+                  radius="full"
                   variant="bordered"
                   isDisabled={!customValueInput.trim()}
                   onPress={handleAddCustomValue}
@@ -434,7 +434,7 @@ export function DynamicAttributeBuilder({
                       <Button
                         isIconOnly
                         size="sm"
-                        radius="lg"
+                        radius="full"
                         variant="light"
                         color="danger"
                         onPress={() => handleRemoveAttribute(idx)}
@@ -475,7 +475,7 @@ export function DynamicAttributeBuilder({
                             }}
                             placeholder={isPersian ? 'مقدار جدید...' : 'New tag...'}
                             variant="bordered"
-                            radius="lg"
+                            radius="full"
                             className="w-28"
                             classNames={{
                               inputWrapper: 'h-7 bg-[#ffffff] dark:bg-[#1c231c] border-brand-gold',
@@ -485,7 +485,7 @@ export function DynamicAttributeBuilder({
                           <Button
                             isIconOnly
                             size="sm"
-                            radius="lg"
+                            radius="full"
                             color="warning"
                             onPress={() => handleAddTagToAttached(idx)}
                             className="h-7 w-7 min-w-7 bg-brand-gold text-[#141914]"
@@ -495,7 +495,7 @@ export function DynamicAttributeBuilder({
                           <Button
                             isIconOnly
                             size="sm"
-                            radius="lg"
+                            radius="full"
                             variant="light"
                             onPress={() => {
                               setAddingToAttrIndex(null);
@@ -509,7 +509,7 @@ export function DynamicAttributeBuilder({
                       ) : (
                         <Button
                           size="sm"
-                          radius="lg"
+                          radius="full"
                           variant="light"
                           onPress={() => {
                             setAddingToAttrIndex(idx);
@@ -564,21 +564,23 @@ export function DynamicAttributeBuilder({
               <ModalBody className="space-y-4 text-xs">
                 <Input
                   label={isPersian ? 'عنوان ویژگی *' : 'Attribute Title *'}
+                  labelPlacement="outside"
                   isRequired
                   value={newAttrName}
                   onValueChange={setNewAttrName}
                   placeholder={isPersian ? 'مثال: گروه بویایی، غلظت اسانس، طبع رایحه' : 'e.g. Olfactory Family, Concentration'}
                   variant="bordered"
-                  radius="lg"
+                  radius="full"
                   classNames={{
-                    inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
-                    input: 'text-xs font-semibold',
-                    label: 'text-xs font-bold',
+                    inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                    input: 'text-xs font-semibold text-brand-text',
+                    label: 'text-xs font-bold text-brand-text',
                   }}
                 />
 
                 <Textarea
                   label={isPersian ? 'مقادیر اولیه (با کاما یا اینتر جدا کنید) *' : 'Values (separated by comma or newline) *'}
+                  labelPlacement="outside"
                   rows={3}
                   isRequired
                   value={newAttrValues}
@@ -587,23 +589,24 @@ export function DynamicAttributeBuilder({
                   variant="bordered"
                   radius="lg"
                   classNames={{
-                    inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
-                    input: 'text-xs font-semibold',
-                    label: 'text-xs font-bold',
+                    inputWrapper: 'p-3 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-2xl shadow-xs',
+                    input: 'text-xs font-semibold text-brand-text',
+                    label: 'text-xs font-bold text-brand-text',
                   }}
                 />
 
                 <Input
                   label={isPersian ? 'واحد اندازه‌گیری (اختیاری)' : 'Unit (Optional)'}
+                  labelPlacement="outside"
                   value={newAttrUnit}
                   onValueChange={setNewAttrUnit}
                   placeholder={isPersian ? 'میل، درصد، گرم' : 'ml, %, gr'}
                   variant="bordered"
-                  radius="lg"
+                  radius="full"
                   classNames={{
-                    inputWrapper: 'bg-[#f8f5f0] dark:bg-[#242c24] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold',
-                    input: 'text-xs font-semibold',
-                    label: 'text-xs font-bold',
+                    inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                    input: 'text-xs font-semibold text-brand-text',
+                    label: 'text-xs font-bold text-brand-text',
                   }}
                 />
               </ModalBody>
@@ -611,7 +614,7 @@ export function DynamicAttributeBuilder({
               <ModalFooter>
                 <Button
                   variant="flat"
-                  radius="lg"
+                  radius="full"
                   onPress={onClose}
                   className="font-bold text-xs"
                 >
@@ -619,7 +622,7 @@ export function DynamicAttributeBuilder({
                 </Button>
                 <Button
                   color="warning"
-                  radius="lg"
+                  radius="full"
                   isLoading={creating}
                   onPress={() => handleQuickCreate()}
                   className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"

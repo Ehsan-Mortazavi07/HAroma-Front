@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Card,
   CardBody,
@@ -8,7 +9,6 @@ import {
   Input,
   Select,
   SelectItem,
-  Switch,
   Chip,
   Modal,
   ModalContent,
@@ -22,9 +22,35 @@ import { adminApi } from '@/common/api/admin';
 import { ICategory } from '@/common/interfaces';
 import { toast, toPersianDigits } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
+import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.07, delayChildren: 0.05 },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.97 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: 'spring' as const, stiffness: 360, damping: 28 },
+  },
+};
+
+const inputClassNames = {
+  inputWrapper:
+    'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:border-brand-gold rounded-full shadow-xs transition-colors',
+  input: 'text-xs font-semibold text-brand-text',
+  label: 'text-xs font-bold text-brand-text mb-1',
+};
 
 export default function AdminCategoriesPage() {
-  const { isPersian } = useTranslation();
+  const { isPersian, isRTL } = useTranslation();
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -160,7 +186,12 @@ export default function AdminCategoriesPage() {
   return (
     <div className="space-y-6">
       {/* Header & CTA */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
         <div>
           <h1 className="text-2xl font-black text-brand-text">
             {isPersian ? 'مدیریت دسته‌بندی‌های فروشگاه' : 'Categories Management'}
@@ -175,23 +206,26 @@ export default function AdminCategoriesPage() {
         <Button
           onPress={openCreateModal}
           startContent={<Plus className="w-4 h-4" />}
-          radius="lg"
-          className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 cursor-pointer"
+          radius="full"
+          className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 cursor-pointer rounded-full transition-all active:scale-95"
         >
           {isPersian ? 'افزودن دسته‌بندی جدید' : 'Add Category'}
         </Button>
-      </div>
+      </motion.div>
 
-      {/* Categories Grid / Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-        {loading ? (
-          [...Array(4)].map((_, i) => (
-            <Skeleton
-              key={i}
-              className="h-44 rounded-3xl bg-brand-surface-elevated"
-            />
-          ))
-        ) : categories.length === 0 ? (
+      {/* Categories Grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-44 rounded-3xl bg-brand-surface-elevated" />
+          ))}
+        </div>
+      ) : categories.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <Card className="col-span-full p-12 text-center bg-brand-surface rounded-3xl border border-brand-border space-y-3">
             <CardBody className="flex flex-col items-center">
               <Layers className="w-12 h-12 text-brand-bronze mx-auto opacity-40 mb-3" />
@@ -200,104 +234,112 @@ export default function AdminCategoriesPage() {
               </h3>
             </CardBody>
           </Card>
-        ) : (
-          categories.map((cat) => (
-            <Card
-              key={cat._id}
-              className="bg-brand-surface p-5 rounded-3xl border border-brand-border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-colors"
-            >
-              <CardBody className="p-0 flex flex-col justify-between h-full space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="w-10 h-10 rounded-2xl bg-brand-surface-elevated flex items-center justify-center border border-brand-border text-brand-bronze">
-                      <Layers className="w-5 h-5" />
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <Chip
-                        size="sm"
-                        variant="flat"
-                        onClick={() => handleToggleStatus(cat)}
-                        className={`cursor-pointer font-black text-[10px] ${
-                          cat.isActive !== false
-                            ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
-                            : 'bg-brand-surface-elevated text-brand-text-muted border border-brand-border'
-                        }`}
-                      >
-                        {cat.isActive !== false ? (isPersian ? 'فعال' : 'Active') : (isPersian ? 'غیرفعال' : 'Inactive')}
-                      </Chip>
-                      {cat.isFeatured && (
-                        <Chip
-                          size="sm"
-                          variant="flat"
-                          className="bg-brand-gold/20 text-brand-bronze dark:text-brand-gold border border-brand-gold/40 font-bold text-[10px]"
-                        >
-                          {isPersian ? 'ویژه صفحه اصلی' : 'Featured'}
-                        </Chip>
+        </motion.div>
+      ) : (
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"
+        >
+          <AnimatePresence>
+            {categories.map((cat) => (
+              <motion.div key={cat._id} variants={cardVariants} layout>
+                <Card className="bg-brand-surface p-5 rounded-3xl border border-brand-border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-colors h-full">
+                  <CardBody className="p-0 flex flex-col justify-between h-full space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="w-10 h-10 rounded-2xl bg-brand-surface-elevated flex items-center justify-center border border-brand-border text-brand-bronze">
+                          <Layers className="w-5 h-5" />
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <Chip
+                            size="sm"
+                            variant="flat"
+                            onClick={() => handleToggleStatus(cat)}
+                            className={`cursor-pointer font-black text-[10px] transition-colors ${
+                              cat.isActive !== false
+                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                                : 'bg-brand-surface-elevated text-brand-text-muted border border-brand-border'
+                            }`}
+                          >
+                            {cat.isActive !== false ? (isPersian ? 'فعال' : 'Active') : (isPersian ? 'غیرفعال' : 'Inactive')}
+                          </Chip>
+                          {cat.isFeatured && (
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              className="bg-brand-gold/20 text-brand-bronze dark:text-brand-gold border border-brand-gold/40 font-bold text-[10px]"
+                            >
+                              {isPersian ? 'ویژه صفحه اصلی' : 'Featured'}
+                            </Chip>
+                          )}
+                          {cat.parentId && (
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              className="bg-brand-surface-elevated text-brand-text-muted border border-brand-border text-[10px]"
+                            >
+                              {isPersian ? 'زیرمجموعه:' : 'Sub of:'}{' '}
+                              {typeof cat.parentId === 'object' && cat.parentId
+                                ? (isPersian ? cat.parentId.name : cat.parentId.nameEn || cat.parentId.name)
+                                : categories.find((c) => c._id === cat.parentId)?.name || ''}
+                            </Chip>
+                          )}
+                        </div>
+                      </div>
+
+                      <h3 className="font-black text-sm text-brand-text">
+                        {isPersian ? cat.name : cat.nameEn || cat.name}
+                      </h3>
+                      {((isPersian && cat.nameEn) || (!isPersian && cat.nameEn)) && (
+                        <div className="text-xs text-brand-text-muted font-sans mt-0.5">
+                          {isPersian ? cat.nameEn : cat.name}
+                        </div>
                       )}
-                      {cat.parentId && (
-                        <Chip
+                      <div className="text-[11px] text-brand-text-muted font-mono mt-1">
+                        slug: {cat.slug}
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-brand-border flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-brand-text-muted">
+                        {isPersian ? `اولویت: ${toPersianDigits(cat.order || 1)}` : `Order: ${cat.order || 1}`}
+                      </span>
+
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          isIconOnly
                           size="sm"
-                          variant="flat"
-                          className="bg-brand-surface-elevated text-brand-text-muted border border-brand-border text-[10px]"
+                          radius="full"
+                          variant="light"
+                          onPress={() => openEditModal(cat)}
+                          className="text-brand-text hover:bg-brand-surface-elevated cursor-pointer"
+                          aria-label={isPersian ? 'ویرایش' : 'Edit'}
                         >
-                          {isPersian ? 'زیرمجموعه:' : 'Sub of:'}{' '}
-                          {typeof cat.parentId === 'object' && cat.parentId
-                            ? (isPersian ? cat.parentId.name : cat.parentId.nameEn || cat.parentId.name)
-                            : categories.find((c) => c._id === cat.parentId)?.name || ''}
-                        </Chip>
-                      )}
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </Button>
+
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          radius="full"
+                          variant="light"
+                          onPress={() => handleDelete(cat._id, cat.name)}
+                          className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
+                          aria-label={isPersian ? 'حذف' : 'Delete'}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-
-                  <h3 className="font-black text-sm text-brand-text">
-                    {isPersian ? cat.name : cat.nameEn || cat.name}
-                  </h3>
-                  {((isPersian && cat.nameEn) || (!isPersian && cat.nameEn)) && (
-                    <div className="text-xs text-brand-text-muted font-sans mt-0.5">
-                      {isPersian ? cat.nameEn : cat.name}
-                    </div>
-                  )}
-                  <div className="text-[11px] text-brand-text-muted font-mono mt-1">
-                    slug: {cat.slug}
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-brand-border flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-brand-text-muted">
-                    {isPersian ? `اولویت: ${toPersianDigits(cat.order || 1)}` : `Order: ${cat.order || 1}`}
-                  </span>
-
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      radius="lg"
-                      variant="light"
-                      onPress={() => openEditModal(cat)}
-                      className="text-brand-text hover:bg-brand-surface-elevated cursor-pointer"
-                      aria-label={isPersian ? 'ویرایش' : 'Edit'}
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </Button>
-
-                    <Button
-                      isIconOnly
-                      size="sm"
-                      radius="lg"
-                      variant="light"
-                      onPress={() => handleDelete(cat._id, cat.name)}
-                      className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
-                      aria-label={isPersian ? 'حذف' : 'Delete'}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          ))
-        )}
-      </div>
+                  </CardBody>
+                </Card>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      )}
 
       {/* Modal Dialog */}
       <Modal
@@ -324,47 +366,42 @@ export default function AdminCategoriesPage() {
               <ModalBody className="space-y-4">
                 <Input
                   label={isPersian ? 'نام فارسی دسته‌بندی' : 'Category Name (Persian)'}
+                  labelPlacement="outside"
                   isRequired
                   value={name}
                   onValueChange={setName}
                   placeholder={isPersian ? 'مثال: عطر و ادکلن نیش' : 'e.g. Luxury Niche Perfumes'}
                   variant="bordered"
-                  radius="lg"
-                  classNames={{
-                    inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
-                    input: "text-xs font-semibold text-brand-text",
-                    label: "text-xs font-bold text-brand-text",
-                  }}
+                  radius="full"
+                  classNames={inputClassNames}
                 />
 
                 <Input
                   label={isPersian ? 'نام انگلیسی دسته‌بندی' : 'Category Name (English)'}
+                  labelPlacement="outside"
                   value={nameEn}
                   onValueChange={setNameEn}
                   placeholder="e.g. Niche Perfumes"
                   variant="bordered"
-                  radius="lg"
-                  classNames={{
-                    inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
-                    input: "text-xs font-semibold text-brand-text",
-                    label: "text-xs font-bold text-brand-text",
-                  }}
+                  radius="full"
+                  classNames={inputClassNames}
                 />
 
                 <Select
                   label={isPersian ? 'دسته والد (اختیاری برای ساب‌کتگوری)' : 'Parent Category (Optional)'}
+                  labelPlacement="outside"
                   selectedKeys={parentId ? new Set([parentId]) : new Set([])}
                   onSelectionChange={(keys) => {
                     const selected = Array.from(keys)[0] as string;
                     setParentId(selected || '');
                   }}
                   variant="bordered"
-                  radius="lg"
+                  radius="full"
                   classNames={{
-                    trigger: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold text-xs font-semibold text-brand-text",
-                    value: "text-xs font-semibold text-brand-text",
-                    label: "text-xs font-bold text-brand-text",
-                    popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl",
+                    trigger: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs text-xs font-semibold text-brand-text text-start transition-colors',
+                    value: 'text-xs font-semibold text-brand-text text-start',
+                    label: 'text-xs font-bold text-brand-text mb-1',
+                    popoverContent: 'bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl',
                   }}
                 >
                   {categories
@@ -378,71 +415,59 @@ export default function AdminCategoriesPage() {
 
                 <Input
                   label={isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
+                  labelPlacement="outside"
                   value={slug}
                   onValueChange={setSlug}
                   placeholder="e.g. niche-perfumes"
                   variant="bordered"
-                  radius="lg"
-                  classNames={{
-                    inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold font-mono",
-                    input: "text-xs font-semibold text-brand-text",
-                    label: "text-xs font-bold text-brand-text",
-                  }}
+                  radius="full"
+                  classNames={{ ...inputClassNames, inputWrapper: `${inputClassNames.inputWrapper} font-mono` }}
                 />
 
                 <Input
                   label={isPersian ? 'اولویت نمایش' : 'Display Order'}
+                  labelPlacement="outside"
                   type="number"
                   value={String(order)}
                   onValueChange={(val) => setOrder(Number(val) || 0)}
                   variant="bordered"
-                  radius="lg"
-                  classNames={{
-                    inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
-                    input: "text-xs font-bold text-brand-text",
-                    label: "text-xs font-bold text-brand-text",
-                  }}
+                  radius="full"
+                  classNames={inputClassNames}
                 />
 
-                <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                  <Switch
+                <div className="flex flex-col sm:flex-row gap-5 pt-2 px-1">
+                  <SmoothSwitch
                     isSelected={isActive}
                     onValueChange={setIsActive}
-                    size="sm"
-                    classNames={{
-                      label: "text-xs font-bold text-brand-text",
-                    }}
+                    isRtl={isRTL}
                   >
                     {isPersian ? 'دسته‌بندی فعال باشد' : 'Active and visible'}
-                  </Switch>
+                  </SmoothSwitch>
 
-                  <Switch
+                  <SmoothSwitch
                     isSelected={isFeatured}
                     onValueChange={setIsFeatured}
-                    size="sm"
-                    classNames={{
-                      label: "text-xs font-bold text-brand-text",
-                    }}
+                    isRtl={isRTL}
                   >
                     {isPersian ? 'نمایش در صفحه اصلی' : 'Featured on Home'}
-                  </Switch>
+                  </SmoothSwitch>
                 </div>
               </ModalBody>
 
               <ModalFooter>
                 <Button
                   variant="flat"
-                  radius="lg"
+                  radius="full"
                   onPress={onClose}
-                  className="font-bold text-xs"
+                  className="font-bold text-xs rounded-full cursor-pointer"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
                 <Button
                   isLoading={submitting}
-                  radius="lg"
+                  radius="full"
                   onPress={() => handleSubmit()}
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'ذخیره دسته‌بندی' : 'Save Category'}
                 </Button>

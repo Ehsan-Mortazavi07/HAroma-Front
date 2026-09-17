@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Card,
   CardBody,
   Button,
   Input,
-  Switch,
   Chip,
   Modal,
   ModalContent,
@@ -27,6 +27,7 @@ import { adminApi } from '@/common/api/admin';
 import { IAttribute, IVariantTemplate } from '@/common/interfaces';
 import { toast, toPersianDigits, formatToman, translateAttributeValue } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
+import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 
 export default function AdminAttributesPage() {
   const { isPersian } = useTranslation();
@@ -284,7 +285,12 @@ export default function AdminAttributesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+      >
         <div>
           <h1 className="text-2xl font-black text-brand-text">
             {isPersian ? 'مدیریت تنوع‌ها، حجم‌ها و ویژگی‌های داینامیک' : 'Variant Templates & Dynamic Attributes'}
@@ -300,8 +306,8 @@ export default function AdminAttributesPage() {
           <Button
             onPress={openCreateTplModal}
             startContent={<Plus className="w-4 h-4" />}
-            radius="lg"
-            className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 cursor-pointer"
+            radius="full"
+            className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 cursor-pointer rounded-full transition-all active:scale-95"
           >
             {isPersian ? 'افزودن الگوی تنوع / حجم جدید' : 'Add New Variant Template'}
           </Button>
@@ -309,22 +315,27 @@ export default function AdminAttributesPage() {
           <Button
             onPress={openCreateAttrModal}
             startContent={<Plus className="w-4 h-4" />}
-            radius="lg"
-            className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 cursor-pointer"
+            radius="full"
+            className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 cursor-pointer rounded-full transition-all active:scale-95"
           >
             {isPersian ? 'افزودن ویژگی جدید' : 'Add New Attribute'}
           </Button>
         )}
-      </div>
+      </motion.div>
 
       {/* Tabs Navigation */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
+      >
       <Card className="bg-brand-surface p-2 rounded-2xl border border-brand-border shadow-xs">
         <CardBody className="p-0 flex flex-row items-center gap-2">
           <Button
             variant={activeTab === 'variants' ? 'solid' : 'light'}
-            radius="lg"
+            radius="full"
             onPress={() => setActiveTab('variants')}
-            className={`flex-1 h-11 text-xs font-black cursor-pointer ${
+            className={`flex-1 h-11 text-xs font-black cursor-pointer rounded-full ${
               activeTab === 'variants'
                 ? 'bg-brand-gold text-[#141914] shadow-sm'
                 : 'text-brand-text-muted hover:text-brand-text'
@@ -341,9 +352,9 @@ export default function AdminAttributesPage() {
 
           <Button
             variant={activeTab === 'attributes' ? 'solid' : 'light'}
-            radius="lg"
+            radius="full"
             onPress={() => setActiveTab('attributes')}
-            className={`flex-1 h-11 text-xs font-black cursor-pointer ${
+            className={`flex-1 h-11 text-xs font-black cursor-pointer rounded-full ${
               activeTab === 'attributes'
                 ? 'bg-brand-gold text-[#141914] shadow-sm'
                 : 'text-brand-text-muted hover:text-brand-text'
@@ -355,11 +366,19 @@ export default function AdminAttributesPage() {
               </Chip>
             }
           >
-            {isPersian ? 'ویژگی‌های تخصصی و داینامیک عطر' : 'Dynamic Scent Attributes'}
+            {isPersian ? 'ویژگی‌های تخصصی (نت بویایی، فصل و...)' : 'Specialized Attributes'}
           </Button>
         </CardBody>
       </Card>
+      </motion.div>
 
+      {/* Content Area */}
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+      >
       {/* TAB 1: VARIANT TEMPLATES GRID */}
       {activeTab === 'variants' && (
         <div>
@@ -387,7 +406,7 @@ export default function AdminAttributesPage() {
                 <Button
                   onPress={openCreateTplModal}
                   startContent={<Plus className="w-4 h-4" />}
-                  radius="lg"
+                  radius="full"
                   className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-bold text-xs shadow-sm cursor-pointer"
                 >
                   {isPersian ? 'ساخت اولین الگوی تنوع' : 'Create First Template'}
@@ -395,100 +414,118 @@ export default function AdminAttributesPage() {
               </CardBody>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {variantTemplates.map((tpl) => (
-                <Card
-                  key={tpl._id}
-                  className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-colors group"
-                >
-                  <CardBody className="p-0 space-y-4 flex flex-col justify-between h-full">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-black text-base text-brand-text">
-                            {isPersian ? tpl.title : tpl.titleEn || tpl.title}
-                          </h3>
-                          {tpl.titleEn && (
-                            <span className="text-xs text-brand-text-muted font-sans">
-                              {tpl.titleEn}
-                            </span>
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+              }}
+            >
+              <AnimatePresence>
+                {variantTemplates.map((tpl) => (
+                  <motion.div
+                    key={tpl._id}
+                    variants={{
+                      hidden: { opacity: 0, y: 20, scale: 0.97 },
+                      visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring' as const, stiffness: 360, damping: 28 } },
+                    }}
+                    layout
+                  >
+                    <Card
+                      className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-colors group h-full"
+                    >
+                      <CardBody className="p-0 space-y-4 flex flex-col justify-between h-full">
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <h3 className="font-black text-base text-brand-text">
+                                {isPersian ? tpl.title : tpl.titleEn || tpl.title}
+                              </h3>
+                              {tpl.titleEn && (
+                                <span className="text-xs text-brand-text-muted font-sans">
+                                  {tpl.titleEn}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1">
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                radius="full"
+                                variant="light"
+                                onPress={() => openEditTplModal(tpl)}
+                                className="text-brand-text hover:bg-brand-surface-elevated cursor-pointer"
+                                aria-label={isPersian ? 'ویرایش الگو' : 'Edit template'}
+                              >
+                                <Edit2 className="w-4 h-4 text-brand-bronze" />
+                              </Button>
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                radius="full"
+                                variant="light"
+                                onPress={() => handleDeleteTpl(tpl._id, tpl.title)}
+                                className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
+                                aria-label={isPersian ? 'حذف الگو' : 'Delete template'}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Price & Stock info pills */}
+                          <div className="p-3.5 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="text-brand-text-muted font-medium">
+                                {isPersian ? 'قیمت پیشنهادی:' : 'Default Price:'}
+                              </span>
+                              <span className="font-black text-brand-text dark:text-brand-gold">
+                                {formatToman(tpl.defaultPrice, isPersian)}
+                              </span>
+                            </div>
+
+                            {tpl.defaultDiscountPrice && tpl.defaultDiscountPrice > 0 && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-brand-text-muted font-medium">
+                                  {isPersian ? 'قیمت تخفیف‌دار:' : 'Discount Price:'}
+                                </span>
+                                <span className="font-bold text-brand-bronze dark:text-brand-gold">
+                                  {formatToman(tpl.defaultDiscountPrice, isPersian)}
+                                </span>
+                              </div>
+                            )}
+
+                            <div className="flex items-center justify-between pt-1 border-t border-brand-border/60">
+                              <span className="text-brand-text-muted">
+                                {isPersian ? 'موجودی پیش‌فرض:' : 'Default Stock:'}
+                              </span>
+                              <span className="font-bold text-brand-text">
+                                {isPersian ? toPersianDigits(tpl.defaultStock) : tpl.defaultStock}{' '}
+                                {tpl.unit || 'عدد'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] text-brand-text-muted pt-1">
+                          <Chip size="sm" variant="flat" className="bg-brand-surface-elevated text-brand-text border border-brand-border text-[10px]">
+                            {isPersian ? 'واحد:' : 'Unit:'} {tpl.unit || 'میل'}
+                          </Chip>
+                          {tpl.isPopular && (
+                            <Chip size="sm" variant="flat" className="bg-brand-gold/20 text-brand-bronze dark:text-brand-gold font-bold border border-brand-gold/40 text-[10px]">
+                              {isPersian ? '★ پرکاربرد در محصولات' : '★ Popular'}
+                            </Chip>
                           )}
                         </div>
-
-                        <div className="flex items-center gap-1">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            radius="lg"
-                            variant="light"
-                            onPress={() => openEditTplModal(tpl)}
-                            className="text-brand-text hover:bg-brand-surface-elevated cursor-pointer"
-                            aria-label={isPersian ? 'ویرایش الگو' : 'Edit template'}
-                          >
-                            <Edit2 className="w-4 h-4 text-brand-bronze" />
-                          </Button>
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            radius="lg"
-                            variant="light"
-                            onPress={() => handleDeleteTpl(tpl._id, tpl.title)}
-                            className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
-                            aria-label={isPersian ? 'حذف الگو' : 'Delete template'}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Price & Stock info pills */}
-                      <div className="p-3.5 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="text-brand-text-muted font-medium">
-                            {isPersian ? 'قیمت پیشنهادی:' : 'Default Price:'}
-                          </span>
-                          <span className="font-black text-brand-text dark:text-brand-gold">
-                            {formatToman(tpl.defaultPrice, isPersian)}
-                          </span>
-                        </div>
-
-                        {tpl.defaultDiscountPrice && tpl.defaultDiscountPrice > 0 && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-brand-text-muted font-medium">
-                              {isPersian ? 'قیمت تخفیف‌دار:' : 'Discount Price:'}
-                            </span>
-                            <span className="font-bold text-brand-bronze dark:text-brand-gold">
-                              {formatToman(tpl.defaultDiscountPrice, isPersian)}
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-between pt-1 border-t border-brand-border/60">
-                          <span className="text-brand-text-muted">
-                            {isPersian ? 'موجودی پیش‌فرض:' : 'Default Stock:'}
-                          </span>
-                          <span className="font-bold text-brand-text">
-                            {isPersian ? toPersianDigits(tpl.defaultStock) : tpl.defaultStock}{' '}
-                            {tpl.unit || 'عدد'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] text-brand-text-muted pt-1">
-                      <Chip size="sm" variant="flat" className="bg-brand-surface-elevated text-brand-text border border-brand-border text-[10px]">
-                        {isPersian ? 'واحد:' : 'Unit:'} {tpl.unit || 'میل'}
-                      </Chip>
-                      {tpl.isPopular && (
-                        <Chip size="sm" variant="flat" className="bg-brand-gold/20 text-brand-bronze dark:text-brand-gold font-bold border border-brand-gold/40 text-[10px]">
-                          {isPersian ? '★ پرکاربرد در محصولات' : '★ Popular'}
-                        </Chip>
-                      )}
-                    </div>
-                  </CardBody>
-                </Card>
-              ))}
-            </div>
+                      </CardBody>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
           )}
         </div>
       )}
@@ -515,7 +552,7 @@ export default function AdminAttributesPage() {
                 <Button
                   onPress={openCreateAttrModal}
                   startContent={<Plus className="w-4 h-4" />}
-                  radius="lg"
+                  radius="full"
                   className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-bold text-xs shadow-sm cursor-pointer"
                 >
                   {isPersian ? 'افزودن ویژگی جدید' : 'Add Attribute'}
@@ -523,99 +560,118 @@ export default function AdminAttributesPage() {
               </CardBody>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {attributes.map((attr) => (
-                <Card
-                  key={attr._id}
-                  className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-colors group"
-                >
-                  <CardBody className="p-0 space-y-4 flex flex-col justify-between h-full">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-black text-base text-brand-text">
-                            {isPersian ? attr.name : attr.nameEn || attr.name}
-                          </h3>
-                          <span className="text-xs font-mono font-bold text-brand-bronze dark:text-brand-gold">
-                            {attr.key}
-                          </span>
-                        </div>
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+              }}
+            >
+              <AnimatePresence>
+                {attributes.map((attr) => (
+                  <motion.div
+                    key={attr._id}
+                    variants={{
+                      hidden: { opacity: 0, y: 20, scale: 0.97 },
+                      visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring' as const, stiffness: 360, damping: 28 } },
+                    }}
+                    layout
+                  >
+                    <Card
+                      className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-colors group h-full"
+                    >
+                      <CardBody className="p-0 space-y-4 flex flex-col justify-between h-full">
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <h3 className="font-black text-base text-brand-text">
+                                {isPersian ? attr.name : attr.nameEn || attr.name}
+                              </h3>
+                              <span className="text-xs font-mono font-bold text-brand-bronze dark:text-brand-gold">
+                                {attr.key}
+                              </span>
+                            </div>
 
-                        <div className="flex items-center gap-1">
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            radius="lg"
-                            variant="light"
-                            onPress={() => openEditAttrModal(attr)}
-                            className="text-brand-text hover:bg-brand-surface-elevated cursor-pointer"
-                            aria-label={isPersian ? 'ویرایش ویژگی' : 'Edit attribute'}
-                          >
-                            <Edit2 className="w-4 h-4 text-brand-bronze" />
-                          </Button>
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            radius="lg"
-                            variant="light"
-                            onPress={() => handleDeleteAttr(attr._id, attr.name)}
-                            className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
-                            aria-label={isPersian ? 'حذف ویژگی' : 'Delete attribute'}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {attr.unit && (
-                        <div className="text-[11px] text-brand-text-muted">
-                          {isPersian ? 'واحد سنجش:' : 'Unit:'}{' '}
-                          <span className="font-bold text-brand-text">
-                            {attr.unit}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Possible Values Chips */}
-                      <div className="space-y-1.5">
-                        <span className="text-[11px] font-bold text-brand-text-muted">
-                          {isPersian ? 'گزینه‌ها و مقادیر مجاز:' : 'Allowed Values:'}
-                        </span>
-                        <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
-                          {attr.possibleValues && attr.possibleValues.length > 0 ? (
-                            attr.possibleValues.map((val, idx) => (
-                              <Chip
-                                key={idx}
+                            <div className="flex items-center gap-1">
+                              <Button
+                                isIconOnly
                                 size="sm"
-                                variant="flat"
-                                className="bg-brand-surface-elevated text-brand-text border border-brand-border text-[11px] font-medium"
+                                radius="full"
+                                variant="light"
+                                onPress={() => openEditAttrModal(attr)}
+                                className="text-brand-text hover:bg-brand-surface-elevated cursor-pointer"
+                                aria-label={isPersian ? 'ویرایش ویژگی' : 'Edit attribute'}
                               >
-                                {translateAttributeValue(val, isPersian)}
-                              </Chip>
-                            ))
-                          ) : (
-                            <span className="text-[11px] text-brand-text-muted italic">
-                              {isPersian ? 'مقدار متنی آزاد' : 'Free text'}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                                <Edit2 className="w-4 h-4 text-brand-bronze" />
+                              </Button>
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                radius="full"
+                                variant="light"
+                                onPress={() => handleDeleteAttr(attr._id, attr.name)}
+                                className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
+                                aria-label={isPersian ? 'حذف ویژگی' : 'Delete attribute'}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
 
-                    <div className="pt-2 border-t border-brand-border text-[11px] text-brand-text-muted flex items-center justify-between">
-                      <span>
-                        {isPersian
-                          ? `${toPersianDigits(attr.possibleValues?.length || 0)} مقدار از پیش تعریف‌شده`
-                          : `${attr.possibleValues?.length || 0} predefined values`}
-                      </span>
-                    </div>
-                  </CardBody>
-                </Card>
-              ))}
-            </div>
+                          {attr.unit && (
+                            <div className="text-[11px] text-brand-text-muted">
+                              {isPersian ? 'واحد سنجش:' : 'Unit:'}{' '}
+                              <span className="font-bold text-brand-text">
+                                {attr.unit}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Possible Values Chips */}
+                          <div className="space-y-1.5">
+                            <span className="text-[11px] font-bold text-brand-text-muted">
+                              {isPersian ? 'گزینه‌ها و مقادیر مجاز:' : 'Allowed Values:'}
+                            </span>
+                            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
+                              {attr.possibleValues && attr.possibleValues.length > 0 ? (
+                                attr.possibleValues.map((val, idx) => (
+                                  <Chip
+                                    key={idx}
+                                    size="sm"
+                                    variant="flat"
+                                    className="bg-brand-surface-elevated text-brand-text border border-brand-border text-[11px] font-medium"
+                                  >
+                                    {translateAttributeValue(val, isPersian)}
+                                  </Chip>
+                                ))
+                              ) : (
+                                <span className="text-[11px] text-brand-text-muted italic">
+                                  {isPersian ? 'مقدار متنی آزاد' : 'Free text'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-brand-border text-[11px] text-brand-text-muted flex items-center justify-between">
+                          <span>
+                            {isPersian
+                              ? `${toPersianDigits(attr.possibleValues?.length || 0)} مقدار از پیش تعریف‌شده`
+                              : `${attr.possibleValues?.length || 0} predefined values`}
+                          </span>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
           )}
         </div>
       )}
+      </motion.div>
 
       {/* VARIANT TEMPLATE MODAL */}
       <Modal
@@ -647,30 +703,32 @@ export default function AdminAttributesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label={isPersian ? 'عنوان تنوع (فارسی)' : 'Variant Title (Persian)'}
+                    labelPlacement="outside"
                     isRequired
                     value={tplTitle}
                     onValueChange={setTplTitle}
                     placeholder={isPersian ? 'مثال: حجم ۵۰ میلی‌لیتر' : 'e.g. 50 ml'}
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-semibold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
                     label={isPersian ? 'عنوان تنوع (انگلیسی)' : 'Variant Title (English)'}
+                    labelPlacement="outside"
                     value={tplTitleEn}
                     onValueChange={setTplTitleEn}
                     placeholder="e.g. 50 ml Standard"
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-semibold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
                 </div>
@@ -678,32 +736,34 @@ export default function AdminAttributesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label={isPersian ? 'قیمت پیشنهادی پیش‌فرض (تومان)' : 'Default Price (Toman)'}
+                    labelPlacement="outside"
                     isRequired
                     type="number"
                     value={String(tplPrice)}
                     onValueChange={(v) => setTplPrice(v === '' ? '' : Number(v))}
                     placeholder="1500000"
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
                     label={isPersian ? 'قیمت تخفیف پیش‌فرض (اختیاری)' : 'Default Discount Price'}
+                    labelPlacement="outside"
                     type="number"
                     value={String(tplDiscountPrice)}
                     onValueChange={(v) => setTplDiscountPrice(v === '' ? '' : Number(v))}
                     placeholder="1290000"
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
                 </div>
@@ -711,67 +771,63 @@ export default function AdminAttributesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Input
                     label={isPersian ? 'موجودی پیش‌فرض' : 'Default Stock'}
+                    labelPlacement="outside"
                     type="number"
                     value={String(tplStock)}
                     onValueChange={(v) => setTplStock(v === '' ? '' : Number(v))}
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
                     label={isPersian ? 'واحد سنجش' : 'Unit'}
+                    labelPlacement="outside"
                     value={tplUnit}
                     onValueChange={setTplUnit}
                     placeholder="میل / ml"
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-semibold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
                     label={isPersian ? 'اولویت ترتیب' : 'Order'}
+                    labelPlacement="outside"
                     type="number"
                     value={String(tplOrder)}
                     onValueChange={(v) => setTplOrder(v === '' ? '' : Number(v))}
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
                 </div>
 
                 <div className="pt-2">
-                  <Switch
-                    isSelected={tplIsPopular}
-                    onValueChange={setTplIsPopular}
-                    size="sm"
-                    classNames={{
-                      label: "text-xs font-bold text-brand-text",
-                    }}
-                  >
+                  <SmoothSwitch isSelected={tplIsPopular} onValueChange={setTplIsPopular}>
                     {isPersian
                       ? 'نمایش به عنوان الگوی پرکاربرد در فرم ساخت محصول'
                       : 'Show as quick preset in Product Form'}
-                  </Switch>
+                  </SmoothSwitch>
                 </div>
               </ModalBody>
 
               <ModalFooter>
                 <Button
                   variant="flat"
-                  radius="lg"
+                  radius="full"
                   onPress={onClose}
                   className="font-bold text-xs"
                 >
@@ -779,7 +835,7 @@ export default function AdminAttributesPage() {
                 </Button>
                 <Button
                   isLoading={submittingTpl}
-                  radius="lg"
+                  radius="full"
                   onPress={() => handleTplSubmit()}
                   className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
                 >
@@ -821,30 +877,32 @@ export default function AdminAttributesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label={isPersian ? 'نام ویژگی (فارسی)' : 'Attribute Name (Persian)'}
+                    labelPlacement="outside"
                     isRequired
                     value={attrName}
                     onValueChange={setAttrName}
                     placeholder={isPersian ? 'مثال: طبع عطر' : 'e.g. Scent Nature'}
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-semibold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
                     label={isPersian ? 'نام ویژگی (انگلیسی)' : 'Attribute Name (English)'}
+                    labelPlacement="outside"
                     value={attrNameEn}
                     onValueChange={setAttrNameEn}
                     placeholder="e.g. Scent Nature"
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-semibold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
                 </div>
@@ -852,29 +910,31 @@ export default function AdminAttributesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label={isPersian ? 'کلید سیستمی (انگلیسی/یکتا)' : 'System Key (Unique)'}
+                    labelPlacement="outside"
                     value={attrKey}
                     onValueChange={setAttrKey}
                     placeholder="e.g. scent_nature"
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold font-mono font-bold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold font-mono font-bold rounded-full shadow-xs",
                       input: "text-xs font-semibold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
                     label={isPersian ? 'واحد سنجش (اختیاری)' : 'Unit (Optional)'}
+                    labelPlacement="outside"
                     value={attrUnit}
                     onValueChange={setAttrUnit}
                     placeholder="میل / گرم / ساعت"
                     variant="bordered"
-                    radius="lg"
+                    radius="full"
                     classNames={{
-                      inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
+                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
                       input: "text-xs font-semibold text-brand-text",
-                      label: "text-xs font-bold text-brand-text",
+                      label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
                 </div>
@@ -896,7 +956,7 @@ export default function AdminAttributesPage() {
                       }}
                       placeholder={isPersian ? 'یک مقدار وارد کرده و افزودن را بزنید (مثال: خنک)' : 'Enter value and click Add'}
                       variant="bordered"
-                      radius="lg"
+                      radius="full"
                       className="flex-1"
                       classNames={{
                         inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
@@ -905,7 +965,7 @@ export default function AdminAttributesPage() {
                     />
                     <Button
                       onPress={addPossibleValue}
-                      radius="lg"
+                      radius="full"
                       variant="flat"
                       className="bg-brand-surface-elevated text-brand-bronze dark:text-brand-gold border border-brand-border font-bold text-xs"
                     >
@@ -932,7 +992,7 @@ export default function AdminAttributesPage() {
               <ModalFooter>
                 <Button
                   variant="flat"
-                  radius="lg"
+                  radius="full"
                   onPress={onClose}
                   className="font-bold text-xs"
                 >
@@ -940,7 +1000,7 @@ export default function AdminAttributesPage() {
                 </Button>
                 <Button
                   isLoading={submittingAttr}
-                  radius="lg"
+                  radius="full"
                   onPress={() => handleAttrSubmit()}
                   className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
                 >

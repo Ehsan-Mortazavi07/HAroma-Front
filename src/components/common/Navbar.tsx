@@ -446,12 +446,13 @@ export function Navbar() {
                               <Crown className="w-4 h-4 text-[#bfa27a]" />
                               <span>باشگاه مشتریان VIP</span>
                             </Link>
+                            <div className="w-full h-px bg-[#2e3a2e] my-1" />
                             <button
                               onClick={() => {
                                 dispatch(logout());
                                 setIsProfileOpen(false);
                               }}
-                              className="flex items-center gap-2.5 p-2.5 rounded-xl text-danger hover:bg-danger-50/10 transition-colors text-right w-full"
+                              className="flex items-center gap-2.5 p-2.5 rounded-xl text-rose-500 hover:text-rose-400 font-black transition-colors text-right w-full"
                             >
                               <LogOut className="w-4 h-4" />
                               <span>خروج از حساب</span>

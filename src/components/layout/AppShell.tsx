@@ -3,6 +3,7 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import { Navbar } from '@/components/common/Navbar';
+import { AdminNavbar } from '@/components/admin/AdminNavbar';
 import { Footer } from '@/components/common/Footer';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -10,7 +11,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isAdmin = pathname?.startsWith('/admin');
 
   if (isAdmin) {
-    return <div className="w-full min-h-screen flex flex-col">{children}</div>;
+    return (
+      <div className="min-h-screen flex flex-col bg-[#f8f5f0] dark:bg-[#141914] text-[#1d241d] dark:text-[#f7f4ee] font-sans transition-colors">
+        <AdminNavbar />
+        <div className="flex-1 flex flex-col">
+          {children}
+        </div>
+      </div>
+    );
   }
 
   return (
