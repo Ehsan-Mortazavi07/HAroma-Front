@@ -1,15 +1,53 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardBody, Select, SelectItem, Switch, Button, Skeleton } from '@heroui/react';
-import { Filter, SlidersHorizontal, Sparkles, X, Check } from 'lucide-react';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import {
+  Card,
+  CardBody,
+  Button,
+  Skeleton,
+} from '@heroui/react';
+import { Filter, SlidersHorizontal, Sparkles, X, Check, ChevronDown } from 'lucide-react';
 import { IProduct, ICategory, IBrand } from '@/common/interfaces';
 import { ProductCard } from '@/components/common/ProductCard';
 import { useAppSelector } from '@/stores/hooks';
 import { toPersianDigits } from '@/common/utils';
 import { catalogApi } from '@/common/api/catalog';
+
+// Unified fluid motion variants matching Navbar Profile Dropdown
+const floatingPanelVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: -14,
+    scale: 0.985,
+    transition: {
+      duration: 0.22,
+      ease: 'easeInOut',
+    },
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.32,
+      ease: 'easeOut',
+      staggerChildren: 0.025,
+      delayChildren: 0.04,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -12,
+    scale: 0.985,
+    transition: {
+      duration: 0.2,
+      ease: 'easeInOut',
+    },
+  },
+};
 
 interface ProductsPageProps {
   initialData?: {
@@ -108,6 +146,20 @@ export function ProductsPage({
     searchParams.get('q') || '',
   );
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close sort dropdown on click outside
+  useEffect(() => {
+    if (!isSortOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(e.target as Node)) {
+        setIsSortOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSortOpen]);
 
   useEffect(() => {
     const loadBrands = async () => {
@@ -241,32 +293,61 @@ export function ProductsPage({
             <span>{isPersian ? 'فیلترها' : 'Filters'}</span>
           </Button>
 
-          <div className="flex items-center gap-2">
-            <Select
-              aria-label={isPersian ? 'مرتب‌سازی بر اساس' : 'Sort by'}
-              selectedKeys={new Set([selectedSort])}
-              onSelectionChange={(keys) => {
-                const selected = Array.from(keys)[0] as string;
-                if (selected) handleSortSelect(selected);
-              }}
-              startContent={<SlidersHorizontal className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />}
-              disallowEmptySelection
-              variant="bordered"
+          <div className="relative" ref={sortDropdownRef}>
+            <Button
               radius="full"
-              size="sm"
-              className="w-48"
-              classNames={{
-                trigger: "h-10 min-h-10 px-4 bg-brand-surface border border-brand-border/60 hover:border-brand-gold/80 rounded-full shadow-2xs text-xs font-bold text-brand-text transition-all duration-200",
-                value: "text-xs font-bold text-brand-text",
-                popoverContent: "bg-brand-surface border border-brand-border/60 text-brand-text rounded-2xl shadow-xl p-1",
-              }}
+              variant="flat"
+              onPress={() => setIsSortOpen(!isSortOpen)}
+              className={`h-10 px-4 rounded-full border text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer ${
+                isSortOpen
+                  ? 'bg-brand-gold text-[#141914] border-transparent'
+                  : 'bg-brand-surface hover:bg-brand-surface-elevated border-brand-border/70 hover:border-brand-gold text-brand-text'
+              }`}
+              aria-label={isPersian ? 'مرتب‌سازی بر اساس' : 'Sort by'}
             >
-              {sortOptions.map((opt) => (
-                <SelectItem key={opt.id} textValue={opt.label}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </Select>
+              <SlidersHorizontal className={`w-3.5 h-3.5 ${isSortOpen ? 'text-[#141914]' : 'text-brand-bronze dark:text-brand-gold'}`} />
+              <span>{sortOptions.find((opt) => opt.id === selectedSort)?.label || (isPersian ? 'مرتب‌سازی' : 'Sort')}</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isSortOpen ? 'rotate-180 text-[#141914]' : 'text-brand-text-muted'}`} />
+            </Button>
+
+            <AnimatePresence>
+              {isSortOpen && (
+                <motion.div
+                  key="sort-dropdown-card"
+                  variants={floatingPanelVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="absolute top-full mt-2 left-0 z-50 w-52 bg-brand-surface/95 dark:bg-[#151a15]/95 backdrop-blur-3xl border border-brand-border/70 dark:border-[#2e3a2e] rounded-2xl p-1.5 shadow-2xl overflow-hidden text-right"
+                >
+                  <div className="flex flex-col gap-1">
+                    {sortOptions.map((opt) => {
+                      const isSelected = selectedSort === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => {
+                            handleSortSelect(opt.id);
+                            setIsSortOpen(false);
+                          }}
+                          className={`flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer text-right ${
+                            isSelected
+                              ? 'bg-brand-gold/20 text-brand-bronze-dark dark:text-brand-gold font-black'
+                              : 'text-brand-text hover:bg-brand-surface-elevated/80 dark:hover:bg-[#242c24]'
+                          }`}
+                        >
+                          <span>{opt.label}</span>
+                          {isSelected && (
+                            <Check className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -656,24 +737,41 @@ export function ProductsPage({
             </Card>
           ) : (
             <motion.div
-              layout
+              key={`${selectedBrand || 'all'}-${selectedCategory || 'all'}-${selectedSort}-${inStockOnly}-${isVipOnly}`}
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.05,
+                    delayChildren: 0.02,
+                  },
+                },
+              }}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
             >
-              <AnimatePresence mode="popLayout">
-                {products.map((product) => (
-                  <motion.div
-                    key={product._id}
-                    layout
-                    initial={{ opacity: 0, y: 14, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.96 }}
-                    transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                    className="h-full"
-                  >
-                    <ProductCard product={product} />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+              {products.map((product) => (
+                <motion.div
+                  key={product._id}
+                  variants={{
+                    hidden: { opacity: 0, y: 16, scale: 0.98 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                      transition: {
+                        duration: 0.35,
+                        ease: [0.16, 1, 0.3, 1],
+                      },
+                    },
+                  }}
+                  className="h-full"
+                >
+                  <ProductCard product={product} />
+                </motion.div>
+              ))}
             </motion.div>
           )}
         </main>

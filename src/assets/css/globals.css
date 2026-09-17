@@ -171,6 +171,10 @@
     outline-offset: 2px;
   }
 
+  html {
+    scrollbar-gutter: stable;
+  }
+
   body {
     background-color: var(--brand-bg);
     color: var(--brand-text);
@@ -293,14 +297,15 @@ textarea,
   transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-/* Smooth modal & popover animations */
+/* Smooth modal & popover styling */
 [data-slot="modal"],
-.heroui-modal-content,
+.heroui-modal-content {
+  border-radius: 1.75rem !important;
+}
+
 [data-slot="popover"],
 .heroui-popover-content {
-  border-radius: 1.75rem !important;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border-radius: 1rem !important;
 }
 
 /* Smooth card transitions */
