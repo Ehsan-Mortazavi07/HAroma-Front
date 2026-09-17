@@ -126,7 +126,10 @@ export default function AdminCouponsPage() {
       prev.map((c) => (c._id === coupon._id ? { ...c, isActive: nextStatus } : c))
     );
     try {
-      await adminApi.updateCoupon(coupon._id, { isActive: nextStatus });
+      await adminApi.updateCoupon(coupon._id, {
+        code: coupon.code,
+        isActive: nextStatus,
+      });
       toast.success(
         nextStatus
           ? isPersian ? 'کد تخفیف با موفقیت فعال شد.' : 'Coupon activated.'

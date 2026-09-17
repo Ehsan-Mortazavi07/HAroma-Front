@@ -148,7 +148,13 @@ export default function AdminVipPlansPage() {
       prev.map((p) => (p._id === plan._id ? { ...p, isActive: nextStatus } : p))
     );
     try {
-      await adminApi.updateVipPlan(plan._id, { isActive: nextStatus });
+      await adminApi.updateVipPlan(plan._id, {
+        title: plan.title,
+        price: plan.price,
+        durationDays: plan.durationDays,
+        discountPercent: plan.discountPercent,
+        isActive: nextStatus,
+      });
       toast.success(
         nextStatus
           ? isPersian ? 'پلن با موفقیت فعال شد.' : 'VIP Plan activated.'
