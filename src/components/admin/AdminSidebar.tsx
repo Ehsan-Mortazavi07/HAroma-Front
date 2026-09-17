@@ -118,12 +118,7 @@ export function AdminSidebar() {
       </div>
 
       {/* Navigation Links */}
-      <motion.nav
-        className="space-y-1"
-        variants={sidebarContainerVariants}
-        initial="hidden"
-        animate="visible"
-      >
+      <nav className="space-y-1">
         {menuItems.map((item) => {
           if (item.adminOnly && !isAdmin) return null;
           const isActive =
@@ -132,40 +127,55 @@ export function AdminSidebar() {
           const Icon = item.icon;
 
           return (
-            <motion.div key={item.href} variants={sidebarItemVariants}>
-              <Button
-                as={Link}
-                href={item.href}
-                variant="light"
-                radius="full"
-                className={`w-full h-11 justify-between text-xs font-bold transition-all px-3.5 rounded-2xl ${
-                  isActive
-                    ? 'bg-brand-gold text-[#141914] font-black border border-brand-gold/40 shadow-sm shadow-brand-gold/10'
-                    : 'text-[#e6dcce] hover:text-[#bfa27a] hover:bg-[#242c24]'
-                }`}
-                startContent={
-                  <Icon
-                    className={`w-4 h-4 shrink-0 transition-transform ${
-                      isActive ? 'text-[#141914] scale-105' : 'text-[#bfa27a]'
-                    }`}
-                  />
-                }
-                endContent={
-                  isRTL ? (
-                    <ChevronLeft className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#141914]' : 'opacity-40 text-[#a69c8e]'}`} />
-                  ) : (
-                    <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#141914]' : 'opacity-40 text-[#a69c8e]'}`} />
-                  )
-                }
-              >
-                <span className="flex-1 text-start truncate">
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`relative flex items-center justify-between w-full h-11 px-3.5 rounded-2xl text-xs font-bold transition-colors select-none group cursor-pointer ${
+                isActive
+                  ? 'text-[#141914] font-black'
+                  : 'text-[#e6dcce] hover:text-[#f7f4ee] hover:bg-[#242c24]/70'
+              }`}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="sidebarActivePill"
+                  className="absolute inset-0 bg-brand-gold rounded-2xl shadow-md shadow-brand-gold/20"
+                  transition={{
+                    type: 'spring',
+                    stiffness: 460,
+                    damping: 34,
+                  }}
+                />
+              )}
+              <div className="relative z-10 flex items-center gap-2.5 truncate">
+                <Icon
+                  className={`w-4 h-4 shrink-0 transition-colors ${
+                    isActive ? 'text-[#141914]' : 'text-brand-gold group-hover:text-[#f7f4ee]'
+                  }`}
+                />
+                <span className="truncate">
                   {isPersian ? item.titleFa : item.titleEn}
                 </span>
-              </Button>
-            </motion.div>
+              </div>
+              <div className="relative z-10 flex items-center">
+                {isRTL ? (
+                  <ChevronLeft
+                    className={`w-3.5 h-3.5 transition-colors ${
+                      isActive ? 'text-[#141914]' : 'opacity-40 text-[#a69c8e] group-hover:opacity-80'
+                    }`}
+                  />
+                ) : (
+                  <ChevronRight
+                    className={`w-3.5 h-3.5 transition-colors ${
+                      isActive ? 'text-[#141914]' : 'opacity-40 text-[#a69c8e] group-hover:opacity-80'
+                    }`}
+                  />
+                )}
+              </div>
+            </Link>
           );
         })}
-      </motion.nav>
+      </nav>
 
       {/* Footer Navigation Options */}
       <div className="pt-3 border-t border-[#2e3a2e] space-y-1.5">

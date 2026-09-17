@@ -310,7 +310,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
                   <Input
                     label={isPersian ? 'عنوان فارسی محصول *' : 'Product Title (Persian) *'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     isRequired
                     value={values.title}
                     onValueChange={(val) => setFieldValue('title', val)}
@@ -328,7 +328,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                   <Input
                     label={isPersian ? 'عنوان انگلیسی محصول' : 'Product Title (English)'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     value={values.titleEn}
                     onValueChange={(val) => setFieldValue('titleEn', val)}
                     placeholder="e.g. Creed Aventus Eau de Parfum"
@@ -344,7 +344,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   <div className="sm:col-span-2">
                     <Input
                       label={isPersian ? 'نامک آدرس (Slug یکتا)' : 'URL Slug (Unique)'}
-                      labelPlacement="outside"
+                      labelPlacement="outside-top"
                       value={values.slug}
                       onValueChange={(val) => setFieldValue('slug', val)}
                       placeholder="creed-aventus-edp"
@@ -380,7 +380,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 text-xs">
                   <Input
                     label={isPersian ? 'قیمت پایه (تومان) *' : 'Base Retail Price (Toman) *'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     type="number"
                     isRequired
                     value={String(values.price)}
@@ -398,7 +398,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                   <Input
                     label={isPersian ? 'قیمت تخفیف‌خورده (اختیاری)' : 'Discount Price (Optional)'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     type="number"
                     value={String(values.discountPrice || '')}
                     onValueChange={(val) => setFieldValue('discountPrice', val)}
@@ -414,7 +414,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                   <Input
                     label={isPersian ? 'تعداد موجودی کل انبار' : 'Total Stock Count'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     type="number"
                     value={String(values.stockCount)}
                     onValueChange={(val) => setFieldValue('stockCount', val)}
@@ -572,44 +572,52 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold">
-                  <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between">
-                    <span className="text-emerald-700 dark:text-emerald-300 font-bold">
+                  <div className="p-3.5 px-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-3 min-w-0">
+                    <span className="text-emerald-700 dark:text-emerald-300 font-bold truncate">
                       {isPersian ? 'انتشار عمومی در سایت' : 'Published & Visible'}
                     </span>
-                    <SmoothSwitch
-                      isSelected={values.isPublished}
-                      onValueChange={(val) => setFieldValue('isPublished', val)}
-                    />
+                    <div className="shrink-0">
+                      <SmoothSwitch
+                        isSelected={values.isPublished}
+                        onValueChange={(val) => setFieldValue('isPublished', val)}
+                      />
+                    </div>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-[#9f815b]/10 border border-[#9f815b]/30 flex items-center justify-between">
-                    <span className="text-[#9f815b] dark:text-[#d4be9b] font-bold">
+                  <div className="p-3.5 px-4 rounded-2xl bg-[#9f815b]/10 border border-[#9f815b]/30 flex items-center justify-between gap-3 min-w-0">
+                    <span className="text-[#9f815b] dark:text-[#d4be9b] font-bold truncate">
                       {isPersian ? 'فقط اعضای باشگاه VIP' : 'VIP Exclusive'}
                     </span>
-                    <SmoothSwitch
-                      isSelected={values.isVipOnly}
-                      onValueChange={(val) => setFieldValue('isVipOnly', val)}
-                    />
+                    <div className="shrink-0">
+                      <SmoothSwitch
+                        isSelected={values.isVipOnly}
+                        onValueChange={(val) => setFieldValue('isVipOnly', val)}
+                      />
+                    </div>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] flex items-center justify-between">
-                    <span className="text-[#1d241d] dark:text-[#f7f4ee] font-bold">
+                  <div className="p-3.5 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] flex items-center justify-between gap-3 min-w-0">
+                    <span className="text-[#1d241d] dark:text-[#f7f4ee] font-bold truncate">
                       {isPersian ? 'منتخب در صفحه اصلی' : 'Featured Product'}
                     </span>
-                    <SmoothSwitch
-                      isSelected={values.isFeatured}
-                      onValueChange={(val) => setFieldValue('isFeatured', val)}
-                    />
+                    <div className="shrink-0">
+                      <SmoothSwitch
+                        isSelected={values.isFeatured}
+                        onValueChange={(val) => setFieldValue('isFeatured', val)}
+                      />
+                    </div>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] flex items-center justify-between">
-                    <span className="text-[#1d241d] dark:text-[#f7f4ee] font-bold">
+                  <div className="p-3.5 px-4 rounded-2xl bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] flex items-center justify-between gap-3 min-w-0">
+                    <span className="text-[#1d241d] dark:text-[#f7f4ee] font-bold truncate">
                       {isPersian ? 'کالا موجود است' : 'In-Stock & Purchasable'}
                     </span>
-                    <SmoothSwitch
-                      isSelected={values.inStock}
-                      onValueChange={(val) => setFieldValue('inStock', val)}
-                    />
+                    <div className="shrink-0">
+                      <SmoothSwitch
+                        isSelected={values.inStock}
+                        onValueChange={(val) => setFieldValue('inStock', val)}
+                      />
+                    </div>
                   </div>
                 </div>
               </CardBody>
@@ -674,7 +682,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                     <Textarea
                       label={isPersian ? 'خلاصه مشخصات فارسی' : 'Persian Short Summary'}
-                      labelPlacement="outside"
+                      labelPlacement="outside-top"
                       rows={2}
                       dir="rtl"
                       value={values.shortDescription}
@@ -691,7 +699,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                     <Textarea
                       label={isPersian ? 'توضیحات کامل و هرم بویایی فارسی *' : 'Persian Full Description & Olfactory Pyramid *'}
-                      labelPlacement="outside"
+                      labelPlacement="outside-top"
                       rows={7}
                       dir="rtl"
                       value={values.description}
@@ -721,7 +729,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                     <Textarea
                       label={isPersian ? 'خلاصه مشخصات انگلیسی' : 'English Short Summary'}
-                      labelPlacement="outside"
+                      labelPlacement="outside-top"
                       rows={2}
                       dir="ltr"
                       value={values.shortDescriptionEn}
@@ -738,7 +746,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                     <Textarea
                       label={isPersian ? 'توضیحات کامل و هرم بویایی انگلیسی' : 'English Full Description & Olfactory Pyramid'}
-                      labelPlacement="outside"
+                      labelPlacement="outside-top"
                       rows={7}
                       dir="ltr"
                       value={values.descriptionEn}
@@ -779,7 +787,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                 variant="bordered"
                 radius="full"
                 onPress={() => router.back()}
-                className="px-8 py-6 bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]"
+                className="px-8 py-6 bg-brand-surface-elevated border border-brand-border text-brand-text text-xs font-bold cursor-pointer transition-all active:scale-95"
               >
                 {isPersian ? 'انصراف' : 'Cancel'}
               </Button>
@@ -814,7 +822,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
               <ModalBody className="space-y-4 text-xs">
                 <Input
                   label={isPersian ? 'نام فارسی دسته‌بندی *' : 'Category Name (Persian) *'}
-                  labelPlacement="outside"
+                  labelPlacement="outside-top"
                   isRequired
                   value={newCatName}
                   onValueChange={setNewCatName}
@@ -830,7 +838,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                 <Input
                   label={isPersian ? 'نام انگلیسی دسته‌بندی' : 'Category Name (English)'}
-                  labelPlacement="outside"
+                  labelPlacement="outside-top"
                   value={newCatNameEn}
                   onValueChange={setNewCatNameEn}
                   placeholder="e.g. Fresh Summer Scents"
@@ -845,7 +853,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                 <Select
                   label={isPersian ? 'دسته والد (اختیاری برای ساب‌کتگوری)' : 'Parent Category (Optional)'}
-                  labelPlacement="outside"
+                  labelPlacement="outside-top"
                   selectedKeys={newCatParentId ? new Set([newCatParentId]) : new Set([])}
                   onSelectionChange={(keys) => {
                     const selected = Array.from(keys)[0] as string;
@@ -872,7 +880,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                 <Input
                   label={isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
-                  labelPlacement="outside"
+                  labelPlacement="outside-top"
                   value={newCatSlug}
                   onValueChange={setNewCatSlug}
                   placeholder="e.g. fresh-summer-scents"
@@ -891,7 +899,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   variant="flat"
                   radius="full"
                   onPress={onClose}
-                  className="font-bold text-xs"
+                  className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
@@ -900,7 +908,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   radius="full"
                   isLoading={creatingCategory}
                   onPress={() => handleQuickCreateCategory()}
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'ایجاد و انتخاب دسته' : 'Create & Select'}
                 </Button>
@@ -936,7 +944,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
               <ModalBody className="space-y-4 text-xs">
                 <Input
                   label={isPersian ? 'نام برند به فارسی *' : 'Brand Name (Persian) *'}
-                  labelPlacement="outside"
+                  labelPlacement="outside-top"
                   isRequired
                   value={newBrandName}
                   onValueChange={setNewBrandName}
@@ -952,7 +960,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                 <Input
                   label={isPersian ? 'نام برند به انگلیسی' : 'Brand Name (English)'}
-                  labelPlacement="outside"
+                  labelPlacement="outside-top"
                   value={newBrandNameEn}
                   onValueChange={setNewBrandNameEn}
                   placeholder="e.g. Tom Ford, Creed, Xerjoff"
@@ -967,7 +975,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                 <Input
                   label={isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
-                  labelPlacement="outside"
+                  labelPlacement="outside-top"
                   value={newBrandSlug}
                   onValueChange={setNewBrandSlug}
                   placeholder="e.g. tom-ford, creed"
@@ -982,7 +990,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                 <Input
                   label={isPersian ? 'آدرس اینترنتی لوگو (اختیاری)' : 'Logo URL (Optional)'}
-                  labelPlacement="outside"
+                  labelPlacement="outside-top"
                   value={newBrandLogo}
                   onValueChange={setNewBrandLogo}
                   placeholder="https://..."
@@ -1001,7 +1009,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   variant="flat"
                   radius="full"
                   onPress={onClose}
-                  className="font-bold text-xs"
+                  className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
@@ -1010,7 +1018,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   radius="full"
                   isLoading={creatingBrand}
                   onPress={() => handleQuickCreateBrand()}
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'ایجاد و انتخاب برند' : 'Create & Select'}
                 </Button>

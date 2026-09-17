@@ -35,10 +35,11 @@ import {
 import { adminApi } from '@/common/api/admin';
 import { IProduct, ICategory } from '@/common/interfaces';
 import { PATHS } from '@/common/constants/PATHS';
-import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { VipBadge } from '@/components/common/VipBadge';
 import { useTranslation } from '@/common/i18n';
+import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { useAppSelector } from '@/stores/hooks';
+import { toast, toPersianDigits, formatToman } from '@/common/utils';
 
 function AdminThumbnail({ src, title }: { src: string; title: string }) {
   const fallbackUrl =
@@ -137,31 +138,32 @@ export default function AdminProductsPage() {
     );
   };
 
-  // Toggle single product published/active status
-  const handleTogglePublish = async (product: IProduct) => {
-    const nextStatus = product.isPublished === false ? true : false;
-    setTogglingId(product._id);
+  // Toggle single product published/active status with instant optimistic update
+  const handleTogglePublish = async (product: IProduct, nextStatus: boolean) => {
+    // Optimistic UI state flip
+    setProducts((prev) =>
+      prev.map((p) => (p._id === product._id ? { ...p, isPublished: nextStatus } : p)),
+    );
     try {
       await adminApi.bulkUpdateProductsStatus([product._id], nextStatus);
-      setProducts((prev) =>
-        prev.map((p) => (p._id === product._id ? { ...p, isPublished: nextStatus } : p)),
-      );
       toast.success(
         nextStatus
           ? isPersian
-            ? `محصول «${product.title}» با موفقیت منتشر و فعال شد.`
+            ? `محصول «${product.title}» با موفقیت فعال شد.`
             : `Product "${product.title}" published.`
           : isPersian
-          ? `محصول «${product.title}» از انتشار خارج و غیرفعال شد.`
+          ? `محصول «${product.title}» غیرفعال شد.`
           : `Product "${product.title}" unpublished.`,
       );
     } catch (err: any) {
+      // Revert on error
+      setProducts((prev) =>
+        prev.map((p) => (p._id === product._id ? { ...p, isPublished: !nextStatus } : p)),
+      );
       toast.error(
         err?.response?.data?.message ||
           (isPersian ? 'خطا در تغییر وضعیت محصول.' : 'Failed to update product status.'),
       );
-    } finally {
-      setTogglingId(null);
     }
   };
 
@@ -333,9 +335,10 @@ export default function AdminProductsPage() {
                   <Button
                     size="sm"
                     radius="full"
+                    variant="flat"
                     isLoading={bulkActionLoading}
                     onPress={() => handleBulkStatusChange(true)}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs cursor-pointer rounded-full"
+                    className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-bold text-xs cursor-pointer rounded-full h-8 px-3.5"
                   >
                     {!bulkActionLoading && <Eye className="w-3.5 h-3.5" />}
                     <span>{isPersian ? 'انتشار همگانی' : 'Bulk Publish'}</span>
@@ -344,9 +347,10 @@ export default function AdminProductsPage() {
                   <Button
                     size="sm"
                     radius="full"
+                    variant="flat"
                     isLoading={bulkActionLoading}
                     onPress={() => handleBulkStatusChange(false)}
-                    className="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs cursor-pointer rounded-full"
+                    className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold text-xs cursor-pointer rounded-full h-8 px-3.5"
                   >
                     {!bulkActionLoading && <EyeOff className="w-3.5 h-3.5" />}
                     <span>{isPersian ? 'عدم انتشار همگانی' : 'Bulk Unpublish'}</span>
@@ -356,9 +360,10 @@ export default function AdminProductsPage() {
                     <Button
                       size="sm"
                       radius="full"
+                      variant="flat"
                       isLoading={bulkActionLoading}
                       onPress={handleBulkDelete}
-                      className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs cursor-pointer rounded-full"
+                      className="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 font-bold text-xs cursor-pointer rounded-full h-8 px-3.5"
                     >
                       {!bulkActionLoading && <Trash2 className="w-3.5 h-3.5" />}
                       <span>{isPersian ? 'حذف همگانی' : 'Bulk Delete'}</span>
@@ -370,7 +375,7 @@ export default function AdminProductsPage() {
                     radius="full"
                     variant="flat"
                     onPress={() => setSelectedIds([])}
-                    className="bg-white/10 hover:bg-white/20 text-[#f7f4ee] font-bold text-xs cursor-pointer rounded-full"
+                    className="bg-white/10 hover:bg-white/15 text-[#e6dcce] hover:text-[#f7f4ee] border border-white/10 font-bold text-xs cursor-pointer rounded-full h-8 px-3.5"
                   >
                     {isPersian ? 'لغو انتخاب‌ها' : 'Deselect All'}
                   </Button>
@@ -468,12 +473,14 @@ export default function AdminProductsPage() {
             >
               <TableHeader>
                 <TableColumn className="w-10 text-center">
-                  <Checkbox
-                    isSelected={isAllSelected}
-                    onValueChange={handleSelectAll}
-                    size="sm"
-                    aria-label={isPersian ? 'انتخاب همه' : 'Select all'}
-                  />
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      isSelected={isAllSelected}
+                      onValueChange={handleSelectAll}
+                      size="sm"
+                      aria-label={isPersian ? 'انتخاب همه' : 'Select all'}
+                    />
+                  </div>
                 </TableColumn>
                 <TableColumn>{isPersian ? 'تصویر و عنوان محصول' : 'Product & Media'}</TableColumn>
                 <TableColumn>{isPersian ? 'برند / خانه عطر' : 'Brand(s)'}</TableColumn>
@@ -488,7 +495,6 @@ export default function AdminProductsPage() {
                 {products.map((product) => {
                   const isSelected = selectedIds.includes(product._id);
                   const isPublished = product.isPublished !== false;
-                  const isToggling = togglingId === product._id;
 
                   const imageSrc =
                     product.images && product.images.length > 0
@@ -510,7 +516,14 @@ export default function AdminProductsPage() {
                       className={isSelected ? 'bg-brand-gold/10' : ''}
                     >
                       <TableCell className="text-center">
-                        <Checkbox isSelected={isSelected} onValueChange={() => handleSelectRow(product._id)} color="warning" size="sm" />
+                        <div className="flex items-center justify-center">
+                          <Checkbox
+                            isSelected={isSelected}
+                            onValueChange={() => handleSelectRow(product._id)}
+                            size="sm"
+                            aria-label={product.title}
+                          />
+                        </div>
                       </TableCell>
 
                       <TableCell>
@@ -579,27 +592,13 @@ export default function AdminProductsPage() {
                       </TableCell>
 
                       <TableCell className="text-center whitespace-nowrap">
-                        <Chip
-                          as="button"
-                          variant="flat"
-                          size="sm"
-                          color={isPublished ? "success" : "warning"}
-                          onClick={() => handleTogglePublish(product)}
-                          startContent={
-                            isToggling ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin ml-1" />
-                            ) : isPublished ? (
-                              <Eye className="w-3.5 h-3.5 ml-1" />
-                            ) : (
-                              <EyeOff className="w-3.5 h-3.5 ml-1" />
-                            )
-                          }
-                          className="font-bold text-xs cursor-pointer"
-                        >
-                          {isPublished
-                            ? isPersian ? 'منتشر شده' : 'Published'
-                            : isPersian ? 'پیش‌نویس' : 'Inactive'}
-                        </Chip>
+                        <div className="flex items-center justify-center">
+                          <SmoothSwitch
+                            isSelected={isPublished}
+                            onValueChange={(val) => handleTogglePublish(product, val)}
+                            ariaLabel={isPublished ? 'محصول فعال' : 'محصول پیش‌نویس'}
+                          />
+                        </div>
                       </TableCell>
 
                       <TableCell className="text-center whitespace-nowrap">

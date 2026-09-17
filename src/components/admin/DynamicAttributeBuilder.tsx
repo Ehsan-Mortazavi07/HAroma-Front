@@ -564,7 +564,7 @@ export function DynamicAttributeBuilder({
               <ModalBody className="space-y-4 text-xs">
                 <Input
                   label={isPersian ? 'عنوان ویژگی *' : 'Attribute Title *'}
-                  labelPlacement="outside"
+                  labelPlacement="outside-top"
                   isRequired
                   value={newAttrName}
                   onValueChange={setNewAttrName}
@@ -580,7 +580,7 @@ export function DynamicAttributeBuilder({
 
                 <Textarea
                   label={isPersian ? 'مقادیر اولیه (با کاما یا اینتر جدا کنید) *' : 'Values (separated by comma or newline) *'}
-                  labelPlacement="outside"
+                  labelPlacement="outside-top"
                   rows={3}
                   isRequired
                   value={newAttrValues}
@@ -597,7 +597,7 @@ export function DynamicAttributeBuilder({
 
                 <Input
                   label={isPersian ? 'واحد اندازه‌گیری (اختیاری)' : 'Unit (Optional)'}
-                  labelPlacement="outside"
+                  labelPlacement="outside-top"
                   value={newAttrUnit}
                   onValueChange={setNewAttrUnit}
                   placeholder={isPersian ? 'میل، درصد، گرم' : 'ml, %, gr'}

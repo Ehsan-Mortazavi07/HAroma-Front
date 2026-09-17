@@ -274,7 +274,7 @@ export function ProductVariantManager({
                   <div className="sm:col-span-3">
                     <Input
                       label={isPersian ? 'عنوان حجم / مدل *' : 'Variant Title *'}
-                      labelPlacement="outside"
+                      labelPlacement="outside-top"
                       isRequired
                       value={variant.title}
                       onValueChange={(val) => handleUpdateVariant(idx, 'title', val)}
@@ -282,7 +282,7 @@ export function ProductVariantManager({
                       variant="bordered"
                       radius="full"
                       classNames={{
-                        inputWrapper: 'h-11 px-3.5 bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                        inputWrapper: 'h-11 px-3.5 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
                         input: 'font-bold text-xs text-brand-text',
                         label: 'text-xs font-bold text-brand-text mb-1',
                       }}
@@ -293,7 +293,7 @@ export function ProductVariantManager({
                   <div className="sm:col-span-3">
                     <Input
                       label={isPersian ? 'قیمت اصلی (تومان) *' : 'Price (Toman) *'}
-                      labelPlacement="outside"
+                      labelPlacement="outside-top"
                       type="number"
                       isRequired
                       value={String(variant.price)}
@@ -301,7 +301,7 @@ export function ProductVariantManager({
                       variant="bordered"
                       radius="full"
                       classNames={{
-                        inputWrapper: 'h-11 px-3.5 bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                        inputWrapper: 'h-11 px-3.5 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
                         input: 'font-bold text-xs text-brand-text',
                         label: 'text-xs font-bold text-brand-text mb-1',
                       }}
@@ -312,7 +312,7 @@ export function ProductVariantManager({
                   <div className="sm:col-span-2">
                     <Input
                       label={isPersian ? 'قیمت تخفیف' : 'Discount Price'}
-                      labelPlacement="outside"
+                      labelPlacement="outside-top"
                       type="number"
                       value={String(variant.discountPrice || '')}
                       onValueChange={(val) =>
@@ -322,7 +322,7 @@ export function ProductVariantManager({
                       variant="bordered"
                       radius="full"
                       classNames={{
-                        inputWrapper: 'h-11 px-3.5 bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                        inputWrapper: 'h-11 px-3.5 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
                         input: 'font-bold text-xs text-brand-text',
                         label: 'text-xs font-bold text-brand-text mb-1',
                       }}
@@ -333,14 +333,14 @@ export function ProductVariantManager({
                   <div className="sm:col-span-2">
                     <Input
                       label={isPersian ? 'موجودی انبار' : 'Stock'}
-                      labelPlacement="outside"
+                      labelPlacement="outside-top"
                       type="number"
                       value={String(variant.stockCount)}
                       onValueChange={(val) => handleUpdateVariant(idx, 'stockCount', Number(val))}
                       variant="bordered"
                       radius="full"
                       classNames={{
-                        inputWrapper: 'h-11 px-3.5 bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                        inputWrapper: 'h-11 px-3.5 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
                         input: 'font-bold text-xs text-brand-text',
                         label: 'text-xs font-bold text-brand-text mb-1',
                       }}

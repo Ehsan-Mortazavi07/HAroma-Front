@@ -156,8 +156,11 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const handleToggleStatus = async (cat: ICategory) => {
-    const nextStatus = cat.isActive === false ? true : false;
+  const handleToggleStatus = async (cat: ICategory, nextStatus: boolean) => {
+    // Instant optimistic update
+    setCategories((prev) =>
+      prev.map((c) => (c._id === cat._id ? { ...c, isActive: nextStatus } : c)),
+    );
     try {
       await adminApi.updateCategory(cat._id, { isActive: nextStatus });
       toast.success(
@@ -165,8 +168,10 @@ export default function AdminCategoriesPage() {
           ? isPersian ? 'دسته‌بندی با موفقیت فعال شد.' : 'Category activated.'
           : isPersian ? 'دسته‌بندی غیرفعال شد.' : 'Category deactivated.'
       );
-      loadCategories();
     } catch (err: any) {
+      setCategories((prev) =>
+        prev.map((c) => (c._id === cat._id ? { ...c, isActive: !nextStatus } : c)),
+      );
       toast.error(err?.response?.data?.message || (isPersian ? 'خطا در تغییر وضعیت دسته‌بندی.' : 'Failed to toggle status.'));
     }
   };
@@ -248,23 +253,11 @@ export default function AdminCategoriesPage() {
                 <Card className="bg-brand-surface p-5 rounded-3xl border border-brand-border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-colors h-full">
                   <CardBody className="p-0 flex flex-col justify-between h-full space-y-4">
                     <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="w-10 h-10 rounded-2xl bg-brand-surface-elevated flex items-center justify-center border border-brand-border text-brand-bronze">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="w-10 h-10 rounded-2xl bg-brand-surface-elevated flex items-center justify-center border border-brand-border text-brand-bronze shadow-xs">
                           <Layers className="w-5 h-5" />
                         </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <Chip
-                            size="sm"
-                            variant="flat"
-                            onClick={() => handleToggleStatus(cat)}
-                            className={`cursor-pointer font-black text-[10px] transition-colors ${
-                              cat.isActive !== false
-                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
-                                : 'bg-brand-surface-elevated text-brand-text-muted border border-brand-border'
-                            }`}
-                          >
-                            {cat.isActive !== false ? (isPersian ? 'فعال' : 'Active') : (isPersian ? 'غیرفعال' : 'Inactive')}
-                          </Chip>
+                        <div className="flex items-center gap-2">
                           {cat.isFeatured && (
                             <Chip
                               size="sm"
@@ -274,31 +267,42 @@ export default function AdminCategoriesPage() {
                               {isPersian ? 'ویژه صفحه اصلی' : 'Featured'}
                             </Chip>
                           )}
-                          {cat.parentId && (
-                            <Chip
-                              size="sm"
-                              variant="flat"
-                              className="bg-brand-surface-elevated text-brand-text-muted border border-brand-border text-[10px]"
-                            >
-                              {isPersian ? 'زیرمجموعه:' : 'Sub of:'}{' '}
-                              {typeof cat.parentId === 'object' && cat.parentId
-                                ? (isPersian ? cat.parentId.name : cat.parentId.nameEn || cat.parentId.name)
-                                : categories.find((c) => c._id === cat.parentId)?.name || ''}
-                            </Chip>
-                          )}
+                          <SmoothSwitch
+                            size="sm"
+                            isSelected={cat.isActive !== false}
+                            onValueChange={(val) => handleToggleStatus(cat, val)}
+                            isRtl={isRTL}
+                          >
+                            <span className={`text-[11px] font-bold ${cat.isActive !== false ? 'text-emerald-600 dark:text-emerald-400' : 'text-brand-text-muted'}`}>
+                              {cat.isActive !== false ? (isPersian ? 'فعال' : 'Active') : (isPersian ? 'غیرفعال' : 'Inactive')}
+                            </span>
+                          </SmoothSwitch>
                         </div>
                       </div>
 
-                      <h3 className="font-black text-sm text-brand-text">
-                        {isPersian ? cat.name : cat.nameEn || cat.name}
-                      </h3>
-                      {((isPersian && cat.nameEn) || (!isPersian && cat.nameEn)) && (
-                        <div className="text-xs text-brand-text-muted font-sans mt-0.5">
-                          {isPersian ? cat.nameEn : cat.name}
-                        </div>
-                      )}
-                      <div className="text-[11px] text-brand-text-muted font-mono mt-1">
-                        slug: {cat.slug}
+                      <div className="space-y-1">
+                        <h3 className="font-black text-sm text-brand-text">
+                          {isPersian ? cat.name : cat.nameEn || cat.name}
+                        </h3>
+                        {((isPersian && cat.nameEn) || (!isPersian && cat.nameEn)) && (
+                          <div className="text-xs text-brand-text-muted font-sans">
+                            {isPersian ? cat.nameEn : cat.name}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <span className="text-[11px] font-mono text-brand-text-muted bg-brand-surface-elevated px-2 py-0.5 rounded-md border border-brand-border/60">
+                          {cat.slug}
+                        </span>
+                        {cat.parentId && (
+                          <span className="text-[10px] text-brand-bronze dark:text-brand-gold bg-brand-gold/10 px-2 py-0.5 rounded-md border border-brand-gold/30">
+                            {isPersian ? 'زیرمجموعه:' : 'Sub of:'}{' '}
+                            {typeof cat.parentId === 'object' && cat.parentId
+                              ? (isPersian ? cat.parentId.name : cat.parentId.nameEn || cat.parentId.name)
+                              : categories.find((c) => c._id === cat.parentId)?.name || ''}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -347,11 +351,12 @@ export default function AdminCategoriesPage() {
         onOpenChange={setModalOpen}
         backdrop="blur"
         placement="center"
+        size="2xl"
         classNames={{
-          base: "bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl max-w-lg mx-4",
-          header: "border-b border-brand-border pb-3",
-          body: "py-4",
-          footer: "border-t border-brand-border pt-3",
+          base: "bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl mx-4",
+          header: "border-b border-brand-border pb-3 px-6 pt-5",
+          body: "py-5 px-6",
+          footer: "border-t border-brand-border pt-3 px-6 pb-5",
         }}
       >
         <ModalContent>
@@ -364,93 +369,107 @@ export default function AdminCategoriesPage() {
               </ModalHeader>
 
               <ModalBody className="space-y-4">
-                <Input
-                  label={isPersian ? 'نام فارسی دسته‌بندی' : 'Category Name (Persian)'}
-                  labelPlacement="outside"
-                  isRequired
-                  value={name}
-                  onValueChange={setName}
-                  placeholder={isPersian ? 'مثال: عطر و ادکلن نیش' : 'e.g. Luxury Niche Perfumes'}
-                  variant="bordered"
-                  radius="full"
-                  classNames={inputClassNames}
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label={isPersian ? 'نام فارسی دسته‌بندی' : 'Category Name (Persian)'}
+                    labelPlacement="outside-top"
+                    isRequired
+                    value={name}
+                    onValueChange={setName}
+                    placeholder={isPersian ? 'مثال: عطر و ادکلن نیش' : 'e.g. Luxury Niche Perfumes'}
+                    variant="bordered"
+                    radius="full"
+                    classNames={inputClassNames}
+                  />
 
-                <Input
-                  label={isPersian ? 'نام انگلیسی دسته‌بندی' : 'Category Name (English)'}
-                  labelPlacement="outside"
-                  value={nameEn}
-                  onValueChange={setNameEn}
-                  placeholder="e.g. Niche Perfumes"
-                  variant="bordered"
-                  radius="full"
-                  classNames={inputClassNames}
-                />
+                  <Input
+                    label={isPersian ? 'نام انگلیسی دسته‌بندی' : 'Category Name (English)'}
+                    labelPlacement="outside-top"
+                    value={nameEn}
+                    onValueChange={setNameEn}
+                    placeholder="e.g. Niche Perfumes"
+                    variant="bordered"
+                    radius="full"
+                    classNames={inputClassNames}
+                  />
+                </div>
 
-                <Select
-                  label={isPersian ? 'دسته والد (اختیاری برای ساب‌کتگوری)' : 'Parent Category (Optional)'}
-                  labelPlacement="outside"
-                  selectedKeys={parentId ? new Set([parentId]) : new Set([])}
-                  onSelectionChange={(keys) => {
-                    const selected = Array.from(keys)[0] as string;
-                    setParentId(selected || '');
-                  }}
-                  variant="bordered"
-                  radius="full"
-                  classNames={{
-                    trigger: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs text-xs font-semibold text-brand-text text-start transition-colors',
-                    value: 'text-xs font-semibold text-brand-text text-start',
-                    label: 'text-xs font-bold text-brand-text mb-1',
-                    popoverContent: 'bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl',
-                  }}
-                >
-                  {categories
-                    .filter((c) => !editingCat || c._id !== editingCat._id)
-                    .map((c) => (
-                      <SelectItem key={c._id} textValue={isPersian ? c.name : c.nameEn || c.name}>
-                        {isPersian ? c.name : c.nameEn || c.name}
-                      </SelectItem>
-                    ))}
-                </Select>
-
-                <Input
-                  label={isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
-                  labelPlacement="outside"
-                  value={slug}
-                  onValueChange={setSlug}
-                  placeholder="e.g. niche-perfumes"
-                  variant="bordered"
-                  radius="full"
-                  classNames={{ ...inputClassNames, inputWrapper: `${inputClassNames.inputWrapper} font-mono` }}
-                />
-
-                <Input
-                  label={isPersian ? 'اولویت نمایش' : 'Display Order'}
-                  labelPlacement="outside"
-                  type="number"
-                  value={String(order)}
-                  onValueChange={(val) => setOrder(Number(val) || 0)}
-                  variant="bordered"
-                  radius="full"
-                  classNames={inputClassNames}
-                />
-
-                <div className="flex flex-col sm:flex-row gap-5 pt-2 px-1">
-                  <SmoothSwitch
-                    isSelected={isActive}
-                    onValueChange={setIsActive}
-                    isRtl={isRTL}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Select
+                    label={isPersian ? 'دسته والد (اختیاری برای ساب‌کتگوری)' : 'Parent Category (Optional)'}
+                    labelPlacement="outside-top"
+                    selectedKeys={parentId ? new Set([parentId]) : new Set([])}
+                    onSelectionChange={(keys) => {
+                      const selected = Array.from(keys)[0] as string;
+                      setParentId(selected || '');
+                    }}
+                    variant="bordered"
+                    radius="full"
+                    classNames={{
+                      trigger: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs text-xs font-semibold text-brand-text text-start transition-colors',
+                      value: 'text-xs font-semibold text-brand-text text-start',
+                      label: 'text-xs font-bold text-brand-text mb-1',
+                      popoverContent: 'bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl',
+                    }}
                   >
-                    {isPersian ? 'دسته‌بندی فعال باشد' : 'Active and visible'}
-                  </SmoothSwitch>
+                    {categories
+                      .filter((c) => !editingCat || c._id !== editingCat._id)
+                      .map((c) => (
+                        <SelectItem key={c._id} textValue={isPersian ? c.name : c.nameEn || c.name}>
+                          {isPersian ? c.name : c.nameEn || c.name}
+                        </SelectItem>
+                      ))}
+                  </Select>
 
-                  <SmoothSwitch
-                    isSelected={isFeatured}
-                    onValueChange={setIsFeatured}
-                    isRtl={isRTL}
-                  >
-                    {isPersian ? 'نمایش در صفحه اصلی' : 'Featured on Home'}
-                  </SmoothSwitch>
+                  <Input
+                    label={isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
+                    labelPlacement="outside-top"
+                    value={slug}
+                    onValueChange={setSlug}
+                    placeholder="e.g. niche-perfumes"
+                    variant="bordered"
+                    radius="full"
+                    classNames={{ ...inputClassNames, inputWrapper: `${inputClassNames.inputWrapper} font-mono` }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label={isPersian ? 'اولویت نمایش' : 'Display Order'}
+                    labelPlacement="outside-top"
+                    type="number"
+                    value={String(order)}
+                    onValueChange={(val) => setOrder(Number(val) || 0)}
+                    variant="bordered"
+                    radius="full"
+                    classNames={inputClassNames}
+                  />
+
+                  <div className="flex items-center gap-4 pt-6">
+                    <div className="flex-1 p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between">
+                      <SmoothSwitch
+                        isSelected={isActive}
+                        onValueChange={setIsActive}
+                        isRtl={isRTL}
+                      >
+                        <span className="text-xs font-bold text-brand-text">
+                          {isPersian ? 'دسته‌بندی فعال' : 'Active'}
+                        </span>
+                      </SmoothSwitch>
+                    </div>
+
+                    <div className="flex-1 p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between">
+                      <SmoothSwitch
+                        isSelected={isFeatured}
+                        onValueChange={setIsFeatured}
+                        isRtl={isRTL}
+                      >
+                        <span className="text-xs font-bold text-brand-text">
+                          {isPersian ? 'ویژه صفحه اصلی' : 'Featured'}
+                        </span>
+                      </SmoothSwitch>
+                    </div>
+                  </div>
                 </div>
               </ModalBody>
 
@@ -459,7 +478,7 @@ export default function AdminCategoriesPage() {
                   variant="flat"
                   radius="full"
                   onPress={onClose}
-                  className="font-bold text-xs rounded-full cursor-pointer"
+                  className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-full cursor-pointer transition-all active:scale-95 px-5"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
@@ -467,7 +486,7 @@ export default function AdminCategoriesPage() {
                   isLoading={submitting}
                   radius="full"
                   onPress={() => handleSubmit()}
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95 px-6"
                 >
                   {isPersian ? 'ذخیره دسته‌بندی' : 'Save Category'}
                 </Button>

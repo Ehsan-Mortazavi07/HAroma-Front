@@ -90,21 +90,39 @@ html[dir="rtl"] [data-state="checked"] [data-slot="thumb"] {
 }
 
 /* ==========================================================================
-   HeroUI Checkbox - Brand Gold Theme
+   HeroUI Checkbox - Brand Gold Theme & Compact Curves
    ========================================================================== */
+label:has(input[type="checkbox"]) > span:first-of-type,
+[data-slot="base"]:has(input[type="checkbox"]) span:first-of-type,
 [data-slot="checkbox-wrapper"],
 .heroui-checkbox-wrapper {
-  border-radius: 6px !important;
-  border-color: #ded6c8;
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+  min-width: 1.125rem !important;
+  min-height: 1.125rem !important;
+  max-width: 1.125rem !important;
+  max-height: 1.125rem !important;
+  border-radius: 0.375rem !important;
+  border: 1.5px solid #ded6c8 !important;
+  background-color: transparent !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
 }
 
+.dark label:has(input[type="checkbox"]) > span:first-of-type,
+.dark [data-slot="base"]:has(input[type="checkbox"]) span:first-of-type,
 .dark [data-slot="checkbox-wrapper"],
 .dark .heroui-checkbox-wrapper {
-  border-color: #2e3a2e;
+  border-color: #3e4c3e !important;
 }
 
 /* Checked state - Bronze Gold with dark checkmark */
+[data-selected="true"] > span:first-of-type,
+label[data-selected="true"] > span:first-of-type,
+.group[data-selected="true"] > span:first-of-type,
 [data-selected="true"] [data-slot="checkbox-wrapper"],
 [data-selected="true"] .heroui-checkbox-wrapper,
 .group[data-selected="true"] [data-slot="wrapper"],
@@ -113,40 +131,94 @@ html[dir="rtl"] [data-state="checked"] [data-slot="thumb"] {
   border-color: #bfa27a !important;
 }
 
+[data-selected="true"] svg,
+label[data-selected="true"] svg,
 [data-selected="true"] [data-slot="icon"],
-[data-selected="true"] .heroui-checkbox-icon,
-.group[data-selected="true"] [data-slot="icon"] {
+[data-selected="true"] .heroui-checkbox-icon {
   color: #141914 !important;
-  font-weight: 900;
+  width: 0.75rem !important;
+  height: 0.75rem !important;
+  stroke: #141914 !important;
+  stroke-width: 3px !important;
+  fill: none !important;
+  opacity: 1 !important;
 }
 
 /* ==========================================================================
-   HeroUI Input & Select Outside Labels
+   HeroUI Input & Select Outside Labels (Guaranteed Non-Overlapping)
    ========================================================================== */
-[data-slot="base"][data-placement="outside"] {
-  display: flex;
-  flex-direction: column;
-}
-
-[data-slot="base"][data-placement="outside"] [data-slot="label"] {
+[data-slot="label"] {
+  position: relative !important;
+  transform: none !important;
+  display: block !important;
+  margin-bottom: 0.375rem !important;
   font-size: 0.75rem !important;
   line-height: 1.25rem !important;
   font-weight: 700 !important;
-  margin-bottom: 0.375rem !important;
   color: inherit !important;
-  position: static !important;
-  transform: none !important;
+  pointer-events: auto !important;
+  text-align: right !important;
+  width: auto !important;
 }
 
-/* Ensure select trigger aligns text to start (right in RTL) */
+[dir="rtl"] [data-slot="label"],
+html[dir="rtl"] [data-slot="label"] {
+  text-align: right !important;
+}
+
+[dir="ltr"] [data-slot="label"],
+html[dir="ltr"] [data-slot="label"] {
+  text-align: left !important;
+}
+
+[data-slot="base"]:has([data-slot="label"]) {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+[data-slot="main-wrapper"] {
+  width: 100% !important;
+}
+
+[data-slot="input-wrapper"] {
+  position: relative !important;
+  width: 100% !important;
+}
+
+/* ==========================================================================
+   HeroUI Select - Minimal & Elegant
+   ========================================================================== */
 [data-slot="trigger"] {
   text-align: start !important;
 }
 
-/* Ensure listbox items align right in RTL */
+[dir="rtl"] [data-slot="trigger"] {
+  text-align: right !important;
+}
+
+[data-slot="value"] {
+  text-align: start !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+}
+
+[dir="rtl"] [data-slot="value"] {
+  text-align: right !important;
+}
+
+[data-slot="selector-icon"] {
+  width: 1rem !important;
+  height: 1rem !important;
+  opacity: 0.65 !important;
+}
+
+/* Popover listbox RTL styling */
 [dir="rtl"] [data-slot="listbox-item"],
 html[dir="rtl"] [data-slot="listbox-item"] {
   text-align: right !important;
   justify-content: flex-start !important;
+  font-size: 0.75rem !important;
+  border-radius: 0.75rem !important;
+  padding: 0.5rem 0.75rem !important;
 }
 

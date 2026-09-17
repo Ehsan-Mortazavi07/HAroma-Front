@@ -31,18 +31,15 @@ export function AdminLayoutShell({ children }: { children: React.ReactNode }) {
 
           {/* Admin Main Content Area */}
           <div className="lg:col-span-9 xl:col-span-9 min-w-0">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.main
-                key={pathname}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full"
-              >
-                {children}
-              </motion.main>
-            </AnimatePresence>
+            <motion.main
+              key={pathname}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="w-full"
+            >
+              {children}
+            </motion.main>
           </div>
         </div>
       </div>

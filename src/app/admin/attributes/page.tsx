@@ -703,7 +703,7 @@ export default function AdminAttributesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label={isPersian ? 'عنوان تنوع (فارسی)' : 'Variant Title (Persian)'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     isRequired
                     value={tplTitle}
                     onValueChange={setTplTitle}
@@ -719,7 +719,7 @@ export default function AdminAttributesPage() {
 
                   <Input
                     label={isPersian ? 'عنوان تنوع (انگلیسی)' : 'Variant Title (English)'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     value={tplTitleEn}
                     onValueChange={setTplTitleEn}
                     placeholder="e.g. 50 ml Standard"
@@ -736,7 +736,7 @@ export default function AdminAttributesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label={isPersian ? 'قیمت پیشنهادی پیش‌فرض (تومان)' : 'Default Price (Toman)'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     isRequired
                     type="number"
                     value={String(tplPrice)}
@@ -753,7 +753,7 @@ export default function AdminAttributesPage() {
 
                   <Input
                     label={isPersian ? 'قیمت تخفیف پیش‌فرض (اختیاری)' : 'Default Discount Price'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     type="number"
                     value={String(tplDiscountPrice)}
                     onValueChange={(v) => setTplDiscountPrice(v === '' ? '' : Number(v))}
@@ -771,7 +771,7 @@ export default function AdminAttributesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Input
                     label={isPersian ? 'موجودی پیش‌فرض' : 'Default Stock'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     type="number"
                     value={String(tplStock)}
                     onValueChange={(v) => setTplStock(v === '' ? '' : Number(v))}
@@ -786,7 +786,7 @@ export default function AdminAttributesPage() {
 
                   <Input
                     label={isPersian ? 'واحد سنجش' : 'Unit'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     value={tplUnit}
                     onValueChange={setTplUnit}
                     placeholder="میل / ml"
@@ -801,7 +801,7 @@ export default function AdminAttributesPage() {
 
                   <Input
                     label={isPersian ? 'اولویت ترتیب' : 'Order'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     type="number"
                     value={String(tplOrder)}
                     onValueChange={(v) => setTplOrder(v === '' ? '' : Number(v))}
@@ -829,7 +829,7 @@ export default function AdminAttributesPage() {
                   variant="flat"
                   radius="full"
                   onPress={onClose}
-                  className="font-bold text-xs"
+                  className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
@@ -837,7 +837,7 @@ export default function AdminAttributesPage() {
                   isLoading={submittingTpl}
                   radius="full"
                   onPress={() => handleTplSubmit()}
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'ذخیره الگو' : 'Save Template'}
                 </Button>
@@ -877,7 +877,7 @@ export default function AdminAttributesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label={isPersian ? 'نام ویژگی (فارسی)' : 'Attribute Name (Persian)'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     isRequired
                     value={attrName}
                     onValueChange={setAttrName}
@@ -893,7 +893,7 @@ export default function AdminAttributesPage() {
 
                   <Input
                     label={isPersian ? 'نام ویژگی (انگلیسی)' : 'Attribute Name (English)'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     value={attrNameEn}
                     onValueChange={setAttrNameEn}
                     placeholder="e.g. Scent Nature"
@@ -910,7 +910,7 @@ export default function AdminAttributesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label={isPersian ? 'کلید سیستمی (انگلیسی/یکتا)' : 'System Key (Unique)'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     value={attrKey}
                     onValueChange={setAttrKey}
                     placeholder="e.g. scent_nature"
@@ -925,7 +925,7 @@ export default function AdminAttributesPage() {
 
                   <Input
                     label={isPersian ? 'واحد سنجش (اختیاری)' : 'Unit (Optional)'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     value={attrUnit}
                     onValueChange={setAttrUnit}
                     placeholder="میل / گرم / ساعت"
@@ -994,7 +994,7 @@ export default function AdminAttributesPage() {
                   variant="flat"
                   radius="full"
                   onPress={onClose}
-                  className="font-bold text-xs"
+                  className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
@@ -1002,7 +1002,7 @@ export default function AdminAttributesPage() {
                   isLoading={submittingAttr}
                   radius="full"
                   onPress={() => handleAttrSubmit()}
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'ذخیره ویژگی' : 'Save Attribute'}
                 </Button>

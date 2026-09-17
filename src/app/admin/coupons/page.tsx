@@ -121,6 +121,25 @@ export default function AdminCouponsPage() {
     }
   };
 
+  const handleToggleStatus = async (coupon: ICoupon, nextStatus: boolean) => {
+    setCoupons((prev) =>
+      prev.map((c) => (c._id === coupon._id ? { ...c, isActive: nextStatus } : c))
+    );
+    try {
+      await adminApi.updateCoupon(coupon._id, { isActive: nextStatus });
+      toast.success(
+        nextStatus
+          ? isPersian ? 'کد تخفیف با موفقیت فعال شد.' : 'Coupon activated.'
+          : isPersian ? 'کد تخفیف غیرفعال شد.' : 'Coupon deactivated.'
+      );
+    } catch (err: any) {
+      setCoupons((prev) =>
+        prev.map((c) => (c._id === coupon._id ? { ...c, isActive: !nextStatus } : c))
+      );
+      toast.error(err?.response?.data?.message || (isPersian ? 'خطا در تغییر وضعیت.' : 'Failed to toggle coupon.'));
+    }
+  };
+
   const handleDelete = async (id: string, couponCode: string) => {
     if (!confirm(isPersian ? `آیا از حذف کد تخفیف «${couponCode}» اطمینان دارید؟` : `Are you sure you want to delete coupon "${couponCode}"?`)) return;
 
@@ -159,7 +178,7 @@ export default function AdminCouponsPage() {
           radius="full"
           className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 cursor-pointer rounded-full transition-all active:scale-95"
         >
-          {isPersian ? 'تعریف کد تخفیف جدید' : 'Add New Coupon'}
+          {isPersian ? 'افزودن کد تخفیف جدید' : 'Add Coupon'}
         </Button>
       </motion.div>
 
@@ -173,7 +192,7 @@ export default function AdminCouponsPage() {
         <CardBody className="p-0">
           {loading ? (
             <div className="p-8 space-y-4">
-              {[...Array(5)].map((_, i) => (
+              {[...Array(4)].map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full rounded-2xl bg-brand-surface-elevated" />
               ))}
             </div>
@@ -181,7 +200,7 @@ export default function AdminCouponsPage() {
             <div className="p-12 text-center space-y-3">
               <Ticket className="w-12 h-12 text-brand-bronze mx-auto opacity-40" />
               <h3 className="font-bold text-sm text-brand-text">
-                {isPersian ? 'هنوز کد تخفیفی ایجاد نشده است' : 'No coupons created yet'}
+                {isPersian ? 'هیچ کد تخفیفی ایجاد نشده است' : 'No coupons found'}
               </h3>
             </div>
           ) : (
@@ -195,8 +214,8 @@ export default function AdminCouponsPage() {
               }}
             >
               <TableHeader>
-                <TableColumn>{isPersian ? 'کد تخفیف' : 'Coupon Code'}</TableColumn>
-                <TableColumn>{isPersian ? 'میزان تخفیف' : 'Discount Rate'}</TableColumn>
+                <TableColumn>{isPersian ? 'کد اختصاصی' : 'Code'}</TableColumn>
+                <TableColumn>{isPersian ? 'میزان تخفیف' : 'Discount'}</TableColumn>
                 <TableColumn>{isPersian ? 'حداقل خرید' : 'Min Purchase'}</TableColumn>
                 <TableColumn>{isPersian ? 'حداکثر تخفیف' : 'Max Discount'}</TableColumn>
                 <TableColumn>{isPersian ? 'تعداد استفاده' : 'Usage Limit'}</TableColumn>
@@ -231,17 +250,15 @@ export default function AdminCouponsPage() {
                     </TableCell>
 
                     <TableCell>
-                      <Chip
+                      <SmoothSwitch
                         size="sm"
-                        variant="flat"
-                        className={
-                          coupon.isActive
-                            ? 'bg-brand-gold/20 text-brand-bronze dark:text-brand-gold border border-brand-gold/40 font-black'
-                            : 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30 font-bold'
-                        }
+                        isSelected={coupon.isActive}
+                        onValueChange={(val) => handleToggleStatus(coupon, val)}
                       >
-                        {coupon.isActive ? (isPersian ? 'فعال' : 'Active') : (isPersian ? 'غیرفعال' : 'Inactive')}
-                      </Chip>
+                        <span className={`text-[11px] font-bold ${coupon.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-brand-text-muted'}`}>
+                          {coupon.isActive ? (isPersian ? 'فعال' : 'Active') : (isPersian ? 'غیرفعال' : 'Inactive')}
+                        </span>
+                      </SmoothSwitch>
                     </TableCell>
 
                     <TableCell className="text-center">
@@ -286,11 +303,12 @@ export default function AdminCouponsPage() {
         onOpenChange={setModalOpen}
         backdrop="blur"
         placement="center"
+        size="xl"
         classNames={{
-          base: "bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl max-w-md mx-4",
-          header: "border-b border-brand-border pb-3",
-          body: "py-4",
-          footer: "border-t border-brand-border pt-3",
+          base: "bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl mx-4",
+          header: "border-b border-brand-border pb-3 px-6 pt-5",
+          body: "py-5 px-6",
+          footer: "border-t border-brand-border pt-3 px-6 pb-5",
         }}
       >
         <ModalContent>
@@ -305,7 +323,7 @@ export default function AdminCouponsPage() {
               <ModalBody className="space-y-4">
                 <Input
                   label={isPersian ? 'کد تخفیف (لاتین و بدون فاصله)' : 'Coupon Code (Latin)'}
-                  labelPlacement="outside"
+                  labelPlacement="outside-top"
                   isRequired
                   value={code}
                   onValueChange={(v) => setCode(v.toUpperCase())}
@@ -319,10 +337,10 @@ export default function AdminCouponsPage() {
                   }}
                 />
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label={isPersian ? 'درصد تخفیف (۱ تا ۱۰۰)' : 'Discount %'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     type="number"
                     value={String(discountPercent)}
                     onValueChange={(v) => setDiscountPercent(Number(v) || 0)}
@@ -337,7 +355,7 @@ export default function AdminCouponsPage() {
 
                   <Input
                     label={isPersian ? 'یا مبلغ ثابت (تومان)' : 'Or Fixed Amount (Toman)'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     type="number"
                     value={String(discountAmount)}
                     onValueChange={(v) => setDiscountAmount(Number(v) || 0)}
@@ -351,10 +369,10 @@ export default function AdminCouponsPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label={isPersian ? 'حداقل خرید (تومان)' : 'Min Purchase'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     type="number"
                     value={String(minPurchase)}
                     onValueChange={(v) => setMinPurchase(Number(v) || 0)}
@@ -369,7 +387,7 @@ export default function AdminCouponsPage() {
 
                   <Input
                     label={isPersian ? 'سقف تخفیف (تومان)' : 'Max Discount'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     type="number"
                     value={String(maxDiscount)}
                     onValueChange={(v) => setMaxDiscount(Number(v) || 0)}
@@ -383,10 +401,10 @@ export default function AdminCouponsPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                   <Input
                     label={isPersian ? 'حداکثر دفعات استفاده' : 'Usage Limit'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     type="number"
                     value={String(usageLimit)}
                     onValueChange={(v) => setUsageLimit(Number(v) || 0)}
@@ -399,10 +417,14 @@ export default function AdminCouponsPage() {
                     }}
                   />
 
-                  <div className="pt-2">
-                    <SmoothSwitch isSelected={isActive} onValueChange={setIsActive}>
-                      {isPersian ? 'کد تخفیف فعال باشد' : 'Coupon is Active'}
-                    </SmoothSwitch>
+                  <div className="pt-6">
+                    <div className="p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between">
+                      <SmoothSwitch isSelected={isActive} onValueChange={setIsActive}>
+                        <span className="text-xs font-bold text-brand-text">
+                          {isPersian ? 'کد تخفیف فعال باشد' : 'Coupon is Active'}
+                        </span>
+                      </SmoothSwitch>
+                    </div>
                   </div>
                 </div>
               </ModalBody>
@@ -412,7 +434,7 @@ export default function AdminCouponsPage() {
                   variant="flat"
                   radius="full"
                   onPress={onClose}
-                  className="font-bold text-xs rounded-full cursor-pointer"
+                  className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-full cursor-pointer transition-all active:scale-95 px-5"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
@@ -420,7 +442,7 @@ export default function AdminCouponsPage() {
                   isLoading={submitting}
                   radius="full"
                   onPress={() => handleSubmit()}
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95 px-6"
                 >
                   {isPersian ? 'ذخیره کد تخفیف' : 'Save Coupon'}
                 </Button>

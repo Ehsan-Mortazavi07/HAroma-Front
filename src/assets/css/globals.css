@@ -190,46 +190,85 @@
 }
 
 /* Ultra-minimal Non-intrusive Scrollbar Styling */
-::-webkit-scrollbar {
+* {
+  scrollbar-width: none;
+}
+
+html, body, .overflow-y-auto, .overflow-auto, [data-slot="scroll-area"], .custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(191, 162, 122, 0.3) transparent;
+}
+
+.dark html, .dark body, .dark .overflow-y-auto, .dark .overflow-auto, .dark [data-slot="scroll-area"], .dark .custom-scrollbar {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+/* Hide webkit scrollbars by default unless explicitly scrollable */
+*::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-auto::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
   width: 5px;
   height: 5px;
 }
 
-::-webkit-scrollbar-track {
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+.overflow-y-auto::-webkit-scrollbar-track,
+.overflow-auto::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(191, 162, 122, 0.25);
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+.overflow-y-auto::-webkit-scrollbar-thumb,
+.overflow-auto::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(191, 162, 122, 0.3);
   border-radius: 9999px;
   transition: background 0.2s ease;
 }
 
-::-webkit-scrollbar-thumb:hover {
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+.overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.overflow-auto::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(191, 162, 122, 0.6);
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+.dark html::-webkit-scrollbar-thumb,
+.dark body::-webkit-scrollbar-thumb,
+.dark .overflow-y-auto::-webkit-scrollbar-thumb,
+.dark .overflow-auto::-webkit-scrollbar-thumb,
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
+.dark html::-webkit-scrollbar-thumb:hover,
+.dark body::-webkit-scrollbar-thumb:hover,
+.dark .overflow-y-auto::-webkit-scrollbar-thumb:hover,
+.dark .overflow-auto::-webkit-scrollbar-thumb:hover,
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
-/* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(191, 162, 122, 0.25) transparent;
-}
-
-.dark * {
-  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
-}
-
 /* Prevent unwanted card body scrollbars from default HeroUI styles */
-[data-slot="card-body"]:not([class*="overflow-y-auto"]):not([class*="overflow-auto"]),
-.heroui-card-body:not([class*="overflow-y-auto"]):not([class*="overflow-auto"]) {
+[data-slot="body"],
+[data-slot="card-body"],
+.heroui-card-body {
+  overflow: visible !important;
+}
+
+[data-slot="card"],
+.heroui-card {
   overflow: visible;
 }
 

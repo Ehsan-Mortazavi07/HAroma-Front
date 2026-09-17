@@ -155,6 +155,37 @@ const floatingPanelVariants: Variants = {
   },
 };
 
+// High-end fluid dropdown variants for Profile Menu (smooth deceleration, zero layout shift)
+const profileDropdownVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.96,
+    y: -6,
+    transition: {
+      duration: 0.16,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      duration: 0.2,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.96,
+    y: -6,
+    transition: {
+      duration: 0.15,
+      ease: [0.16, 1, 0.3, 1],
+    },
+  },
+};
+
 const categoryItemVariants: Variants = {
   hidden: { opacity: 0, y: 10, scale: 0.97 },
   visible: {
@@ -401,11 +432,11 @@ export function Navbar() {
 
                       <motion.div
                         key="profile-dropdown-card"
-                        variants={floatingPanelVariants}
+                        variants={profileDropdownVariants}
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className="fixed sm:absolute inset-x-3 sm:inset-auto top-[76px] sm:top-full left-0 sm:left-1/2 sm:-translate-x-1/2 mt-0 sm:mt-3.5 w-auto sm:w-72 max-w-[calc(100vw-24px)] sm:max-w-none mx-auto sm:mx-0 bg-[#1c231c]/95 dark:bg-[#151a15]/95 backdrop-blur-3xl border border-[#2e3a2e] rounded-3xl p-4 shadow-2xl z-50 overflow-hidden text-right"
+                        className="fixed sm:absolute inset-x-3 sm:inset-auto top-[76px] sm:top-full left-0 sm:left-0 mt-0 sm:mt-3.5 w-auto sm:w-72 max-w-[calc(100vw-24px)] sm:max-w-none bg-[#1c231c]/95 dark:bg-[#151a15]/95 backdrop-blur-3xl border border-[#2e3a2e] rounded-3xl p-4 shadow-2xl z-50 overflow-hidden text-right"
                       >
                       {isAuthenticated && user ? (
                         <>

@@ -70,11 +70,16 @@ export default function AdminUsersPage() {
       return;
     }
 
+    const previousUsers = [...users];
+    setUsers((prev) =>
+      prev.map((u) => (u._id === userId ? { ...u, role: newRole as any } : u))
+    );
+
     try {
       await adminApi.updateUserRole(userId, newRole);
       toast.success(isPersian ? 'نقش کاربر با موفقیت تغییر کرد.' : 'User role updated successfully.');
-      loadUsers();
     } catch (err: any) {
+      setUsers(previousUsers);
       toast.error(isPersian ? 'خطا در تغییر نقش کاربر.' : 'Failed to update user role.');
     }
   };
@@ -89,15 +94,22 @@ export default function AdminUsersPage() {
       return;
     }
 
+    const nextVip = !currentVip;
+    setUsers((prev) =>
+      prev.map((u) => (u._id === userId ? { ...u, isVip: nextVip } : u))
+    );
+
     try {
-      await adminApi.updateUserVip(userId, !currentVip);
+      await adminApi.updateUserVip(userId, nextVip);
       toast.success(
         currentVip
           ? isPersian ? 'وضعیت VIP غیرفعال شد.' : 'VIP membership revoked.'
           : isPersian ? 'عضویت VIP برای کاربر فعال شد! 👑' : 'VIP membership granted! 👑',
       );
-      loadUsers();
     } catch (err: any) {
+      setUsers((prev) =>
+        prev.map((u) => (u._id === userId ? { ...u, isVip: currentVip } : u))
+      );
       toast.error(isPersian ? 'خطا در تغییر وضعیت VIP.' : 'Failed to update VIP status.');
     }
   };
@@ -333,15 +345,36 @@ export default function AdminUsersPage() {
 
                     <TableCell>
                       {isAdmin ? (
-                        <select
-                          value={user.role}
-                          onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                          className="px-3 py-1.5 rounded-xl bg-brand-surface-elevated text-xs font-bold text-brand-text border border-brand-border focus:ring-2 focus:ring-brand-gold cursor-pointer"
+                        <Select
+                          aria-label={isPersian ? 'نقش کاربری' : 'User Role'}
+                          selectedKeys={new Set([user.role])}
+                          onSelectionChange={(keys) => {
+                            const selected = Array.from(keys)[0] as string;
+                            if (selected && selected !== user.role) {
+                              handleRoleChange(user._id, selected);
+                            }
+                          }}
+                          variant="bordered"
+                          radius="full"
+                          size="sm"
+                          disallowEmptySelection
+                          className="w-36"
+                          classNames={{
+                            trigger: "h-8 px-3 min-h-8 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full text-xs font-bold text-brand-text text-start shadow-xs",
+                            value: "text-xs font-bold text-brand-text text-start",
+                            popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl",
+                          }}
                         >
-                          <option value="user">{isPersian ? 'کاربر عادی' : 'User'}</option>
-                          <option value="editor">{isPersian ? 'ویراستار' : 'Editor'}</option>
-                          <option value="admin">{isPersian ? 'مدیر کل' : 'Admin'}</option>
-                        </select>
+                          <SelectItem key="user" textValue={isPersian ? 'کاربر عادی' : 'User'}>
+                            {isPersian ? 'کاربر عادی' : 'User'}
+                          </SelectItem>
+                          <SelectItem key="editor" textValue={isPersian ? 'ویراستار' : 'Editor'}>
+                            {isPersian ? 'ویراستار' : 'Editor'}
+                          </SelectItem>
+                          <SelectItem key="admin" textValue={isPersian ? 'مدیر کل' : 'Admin'}>
+                            {isPersian ? 'مدیر کل' : 'Admin'}
+                          </SelectItem>
+                        </Select>
                       ) : (
                         <Chip
                           variant="flat"

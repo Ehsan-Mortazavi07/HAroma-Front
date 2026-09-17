@@ -149,8 +149,11 @@ export default function AdminBrandsPage() {
     }
   };
 
-  const handleToggleStatus = async (b: IBrand) => {
-    const nextStatus = b.isActive === false ? true : false;
+  const handleToggleStatus = async (b: IBrand, nextStatus: boolean) => {
+    // Optimistic update
+    setBrands((prev) =>
+      prev.map((item) => (item._id === b._id ? { ...item, isActive: nextStatus } : item))
+    );
     try {
       await adminApi.updateBrand(b._id, { isActive: nextStatus });
       toast.success(
@@ -158,8 +161,10 @@ export default function AdminBrandsPage() {
           ? isPersian ? 'برند با موفقیت فعال شد.' : 'Brand activated.'
           : isPersian ? 'برند غیرفعال شد.' : 'Brand deactivated.'
       );
-      loadBrands();
     } catch (err: any) {
+      setBrands((prev) =>
+        prev.map((item) => (item._id === b._id ? { ...item, isActive: !nextStatus } : item))
+      );
       toast.error(err?.response?.data?.message || (isPersian ? 'خطا در تغییر وضعیت برند.' : 'Failed to toggle brand status.'));
     }
   };
@@ -245,7 +250,7 @@ export default function AdminBrandsPage() {
                   <CardBody className="p-0 flex flex-col justify-between h-full space-y-4">
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <div className="w-12 h-12 rounded-2xl bg-brand-surface-elevated flex items-center justify-center border border-brand-border text-brand-bronze overflow-hidden">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-surface-elevated flex items-center justify-center border border-brand-border text-brand-bronze overflow-hidden shadow-xs">
                           {b.logo ? (
                             <img src={b.logo} alt={b.name} className="w-full h-full object-contain p-1.5" />
                           ) : (
@@ -253,19 +258,7 @@ export default function AdminBrandsPage() {
                           )}
                         </div>
 
-                        <div className="flex flex-col items-end gap-1">
-                          <Chip
-                            size="sm"
-                            variant="flat"
-                            onClick={() => handleToggleStatus(b)}
-                            className={`cursor-pointer font-black text-[10px] transition-colors ${
-                              b.isActive !== false
-                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
-                                : 'bg-brand-surface-elevated text-brand-text-muted border border-brand-border'
-                            }`}
-                          >
-                            {b.isActive !== false ? (isPersian ? 'فعال' : 'Active') : (isPersian ? 'غیرفعال' : 'Inactive')}
-                          </Chip>
+                        <div className="flex items-center gap-2">
                           {b.isFeatured && (
                             <Chip
                               size="sm"
@@ -275,20 +268,36 @@ export default function AdminBrandsPage() {
                               {isPersian ? 'برند منتخب' : 'Featured Brand'}
                             </Chip>
                           )}
+                          <SmoothSwitch
+                            size="sm"
+                            isSelected={b.isActive !== false}
+                            onValueChange={(val) => handleToggleStatus(b, val)}
+                            isRtl={isRTL}
+                          >
+                            <span className={`text-[11px] font-bold ${b.isActive !== false ? 'text-emerald-600 dark:text-emerald-400' : 'text-brand-text-muted'}`}>
+                              {b.isActive !== false ? (isPersian ? 'فعال' : 'Active') : (isPersian ? 'غیرفعال' : 'Inactive')}
+                            </span>
+                          </SmoothSwitch>
                         </div>
                       </div>
 
-                      <h3 className="font-black text-sm text-brand-text">
-                        {isPersian ? b.name : b.nameEn || b.name}
-                      </h3>
-                      {((isPersian && b.nameEn) || (!isPersian && b.nameEn)) && (
-                        <div className="text-xs text-brand-text-muted font-sans mt-0.5">
-                          {isPersian ? b.nameEn : b.name}
-                        </div>
-                      )}
-                      <div className="text-[11px] text-brand-text-muted font-mono mt-1">
-                        slug: {b.slug}
+                      <div className="space-y-1">
+                        <h3 className="font-black text-sm text-brand-text">
+                          {isPersian ? b.name : b.nameEn || b.name}
+                        </h3>
+                        {((isPersian && b.nameEn) || (!isPersian && b.nameEn)) && (
+                          <div className="text-xs text-brand-text-muted font-sans">
+                            {isPersian ? b.nameEn : b.name}
+                          </div>
+                        )}
                       </div>
+
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <span className="text-[11px] font-mono text-brand-text-muted bg-brand-surface-elevated px-2 py-0.5 rounded-md border border-brand-border/60">
+                          {b.slug}
+                        </span>
+                      </div>
+
                       {b.description && (
                         <p className="text-xs text-brand-text-muted line-clamp-2 mt-2">
                           {b.description}
@@ -341,11 +350,12 @@ export default function AdminBrandsPage() {
         onOpenChange={setModalOpen}
         backdrop="blur"
         placement="center"
+        size="2xl"
         classNames={{
-          base: "bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl max-w-md mx-4",
-          header: "border-b border-brand-border pb-3",
-          body: "py-4",
-          footer: "border-t border-brand-border pt-3",
+          base: "bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl mx-4",
+          header: "border-b border-brand-border pb-3 px-6 pt-5",
+          body: "py-5 px-6",
+          footer: "border-t border-brand-border pt-3 px-6 pb-5",
         }}
       >
         <ModalContent>
@@ -358,54 +368,58 @@ export default function AdminBrandsPage() {
               </ModalHeader>
 
               <ModalBody className="space-y-4">
-                <Input
-                  label={isPersian ? 'نام برند به فارسی' : 'Brand Name (Persian)'}
-                  labelPlacement="outside"
-                  isRequired
-                  value={name}
-                  onValueChange={setName}
-                  placeholder={isPersian ? 'مثال: کرید، تام فورد، زرجوف' : 'e.g. Creed, Xerjoff'}
-                  variant="bordered"
-                  radius="full"
-                  classNames={inputClassNames}
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label={isPersian ? 'نام برند به فارسی' : 'Brand Name (Persian)'}
+                    labelPlacement="outside-top"
+                    isRequired
+                    value={name}
+                    onValueChange={setName}
+                    placeholder={isPersian ? 'مثال: کرید، تام فورد، زرجوف' : 'e.g. Creed, Xerjoff'}
+                    variant="bordered"
+                    radius="full"
+                    classNames={inputClassNames}
+                  />
 
-                <Input
-                  label={isPersian ? 'نام برند به انگلیسی' : 'Brand Name (English)'}
-                  labelPlacement="outside"
-                  value={nameEn}
-                  onValueChange={setNameEn}
-                  placeholder="e.g. Creed, Tom Ford, Xerjoff"
-                  variant="bordered"
-                  radius="full"
-                  classNames={inputClassNames}
-                />
+                  <Input
+                    label={isPersian ? 'نام برند به انگلیسی' : 'Brand Name (English)'}
+                    labelPlacement="outside-top"
+                    value={nameEn}
+                    onValueChange={setNameEn}
+                    placeholder="e.g. Creed, Tom Ford, Xerjoff"
+                    variant="bordered"
+                    radius="full"
+                    classNames={inputClassNames}
+                  />
+                </div>
 
-                <Input
-                  label={isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
-                  labelPlacement="outside"
-                  value={slug}
-                  onValueChange={setSlug}
-                  placeholder="e.g. creed, tom-ford, xerjoff"
-                  variant="bordered"
-                  radius="full"
-                  classNames={{ ...inputClassNames, inputWrapper: `${inputClassNames.inputWrapper} font-mono` }}
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label={isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
+                    labelPlacement="outside-top"
+                    value={slug}
+                    onValueChange={setSlug}
+                    placeholder="e.g. creed, tom-ford, xerjoff"
+                    variant="bordered"
+                    radius="full"
+                    classNames={{ ...inputClassNames, inputWrapper: `${inputClassNames.inputWrapper} font-mono` }}
+                  />
 
-                <Input
-                  label={isPersian ? 'آدرس لوگوی برند (اختیاری)' : 'Brand Logo URL (Optional)'}
-                  labelPlacement="outside"
-                  value={logo}
-                  onValueChange={setLogo}
-                  placeholder="https://..."
-                  variant="bordered"
-                  radius="full"
-                  classNames={{ ...inputClassNames, inputWrapper: `${inputClassNames.inputWrapper} font-mono` }}
-                />
+                  <Input
+                    label={isPersian ? 'آدرس لوگوی برند (اختیاری)' : 'Brand Logo URL (Optional)'}
+                    labelPlacement="outside-top"
+                    value={logo}
+                    onValueChange={setLogo}
+                    placeholder="https://..."
+                    variant="bordered"
+                    radius="full"
+                    classNames={{ ...inputClassNames, inputWrapper: `${inputClassNames.inputWrapper} font-mono` }}
+                  />
+                </div>
 
                 <Textarea
                   label={isPersian ? 'توضیحات کوتاه درباره خانه عطر' : 'Short Description'}
-                  labelPlacement="outside"
+                  labelPlacement="outside-top"
                   rows={2}
                   value={description}
                   onValueChange={setDescription}
@@ -413,38 +427,49 @@ export default function AdminBrandsPage() {
                   variant="bordered"
                   radius="lg"
                   classNames={{
-                    ...inputClassNames,
                     inputWrapper: 'p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:border-brand-gold rounded-2xl shadow-xs transition-colors',
+                    input: 'text-xs font-semibold text-brand-text',
+                    label: 'text-xs font-bold text-brand-text mb-1',
                   }}
                 />
 
-                <Input
-                  label={isPersian ? 'اولویت نمایش' : 'Display Order'}
-                  labelPlacement="outside"
-                  type="number"
-                  value={String(order)}
-                  onValueChange={(val) => setOrder(Number(val) || 0)}
-                  variant="bordered"
-                  radius="full"
-                  classNames={inputClassNames}
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                  <Input
+                    label={isPersian ? 'اولویت نمایش' : 'Display Order'}
+                    labelPlacement="outside-top"
+                    type="number"
+                    value={String(order)}
+                    onValueChange={(val) => setOrder(Number(val) || 0)}
+                    variant="bordered"
+                    radius="full"
+                    classNames={inputClassNames}
+                  />
 
-                <div className="flex flex-col sm:flex-row gap-5 pt-2 px-1">
-                  <SmoothSwitch
-                    isSelected={isActive}
-                    onValueChange={setIsActive}
-                    isRtl={isRTL}
-                  >
-                    {isPersian ? 'برند فعال و قابل نمایش باشد' : 'Active and visible'}
-                  </SmoothSwitch>
+                  <div className="flex items-center gap-4 pt-6">
+                    <div className="flex-1 p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between">
+                      <SmoothSwitch
+                        isSelected={isActive}
+                        onValueChange={setIsActive}
+                        isRtl={isRTL}
+                      >
+                        <span className="text-xs font-bold text-brand-text">
+                          {isPersian ? 'برند فعال' : 'Active'}
+                        </span>
+                      </SmoothSwitch>
+                    </div>
 
-                  <SmoothSwitch
-                    isSelected={isFeatured}
-                    onValueChange={setIsFeatured}
-                    isRtl={isRTL}
-                  >
-                    {isPersian ? 'برند منتخب' : 'Featured Brand'}
-                  </SmoothSwitch>
+                    <div className="flex-1 p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between">
+                      <SmoothSwitch
+                        isSelected={isFeatured}
+                        onValueChange={setIsFeatured}
+                        isRtl={isRTL}
+                      >
+                        <span className="text-xs font-bold text-brand-text">
+                          {isPersian ? 'برند منتخب' : 'Featured'}
+                        </span>
+                      </SmoothSwitch>
+                    </div>
+                  </div>
                 </div>
               </ModalBody>
 
@@ -453,7 +478,7 @@ export default function AdminBrandsPage() {
                   variant="flat"
                   radius="full"
                   onPress={onClose}
-                  className="font-bold text-xs rounded-full cursor-pointer"
+                  className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-full cursor-pointer transition-all active:scale-95 px-5"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
@@ -461,7 +486,7 @@ export default function AdminBrandsPage() {
                   isLoading={submitting}
                   radius="full"
                   onPress={() => handleSubmit()}
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95 px-6"
                 >
                   {isPersian ? 'ذخیره برند' : 'Save Brand'}
                 </Button>

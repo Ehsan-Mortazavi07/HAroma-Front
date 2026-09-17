@@ -9,6 +9,7 @@ interface SmoothSwitchProps {
   children?: React.ReactNode;
   ariaLabel?: string;
   isRtl?: boolean;
+  size?: 'sm' | 'md';
 }
 
 /**
@@ -22,10 +23,13 @@ export function SmoothSwitch({
   onValueChange,
   children,
   ariaLabel,
+  size = 'md',
 }: SmoothSwitchProps) {
+  const isSmall = size === 'sm';
+
   return (
     <label
-      className="flex items-center gap-2.5 cursor-pointer select-none group"
+      className="flex items-center gap-2 cursor-pointer select-none group"
       aria-label={ariaLabel}
     >
       <button
@@ -37,20 +41,24 @@ export function SmoothSwitch({
           e.stopPropagation();
           onValueChange(!isSelected);
         }}
-        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-250 focus-visible:outline-2 focus-visible:outline-brand-gold shadow-2xs ${
+        className={`relative inline-flex shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors duration-250 focus-visible:outline-2 focus-visible:outline-brand-gold shadow-2xs ${
+          isSmall ? 'h-5 w-9' : 'h-6 w-11'
+        } ${
           isSelected
             ? 'bg-emerald-500 dark:bg-emerald-600 shadow-sm shadow-emerald-500/20'
             : 'bg-[#ded6c8] dark:bg-[#2e3a2e]'
         }`}
       >
         <motion.span
-          animate={{ x: isSelected ? 20 : 0 }}
+          animate={{ x: isSelected ? (isSmall ? 16 : 20) : 0 }}
           transition={{
             type: 'spring',
             stiffness: 520,
             damping: 32,
           }}
-          className="pointer-events-none block h-5 w-5 rounded-full bg-white shadow-md"
+          className={`pointer-events-none block rounded-full bg-white shadow-md ${
+            isSmall ? 'h-4 w-4' : 'h-5 w-5'
+          }`}
         />
       </button>
       {children && (

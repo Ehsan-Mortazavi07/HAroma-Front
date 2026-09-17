@@ -389,7 +389,7 @@ export default function AdminOrdersPage() {
                     <div className="space-y-4 pt-2 border-t border-brand-border">
                       <Select
                         label={isPersian ? 'تغییر وضعیت سفارش' : 'Update Status'}
-                        labelPlacement="outside"
+                        labelPlacement="outside-top"
                         aria-label={isPersian ? 'تغییر وضعیت' : 'Update Status'}
                         selectedKeys={new Set([newStatus])}
                         onSelectionChange={(keys) => {
@@ -425,7 +425,7 @@ export default function AdminOrdersPage() {
 
                       <Input
                         label={isPersian ? 'کد رهگیری پستی (۲۴ رقمی)' : 'Postal Tracking Code'}
-                        labelPlacement="outside"
+                        labelPlacement="outside-top"
                         value={trackingCode}
                         onValueChange={setTrackingCode}
                         placeholder="مثال: ۱۲۳۴۵۶۷۸۹۰۱۲۳۴"

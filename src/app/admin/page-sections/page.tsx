@@ -87,24 +87,34 @@ export default function AdminPageSectionsPage() {
   }, []);
 
   const handleToggleVisibility = async (sec: IPageSection) => {
+    const nextVis = !sec.isVisible;
+    setSections((prev) =>
+      prev.map((s) => (s._id === sec._id ? { ...s, isVisible: nextVis } : s))
+    );
     try {
-      await adminApi.updatePageSection(sec.sectionKey || sec._id, { isVisible: !sec.isVisible });
+      await adminApi.updatePageSection(sec.sectionKey || sec._id, { isVisible: nextVis });
       toast.success(
         isPersian
-          ? `نمایش بخش «${sec.title}» ${!sec.isVisible ? 'فعال' : 'غیرفعال'} شد.`
+          ? `نمایش بخش «${sec.title}» ${nextVis ? 'فعال' : 'غیرفعال'} شد.`
           : `Section "${sec.title}" visibility toggled.`,
       );
-      loadSections();
     } catch (err) {
+      setSections((prev) =>
+        prev.map((s) => (s._id === sec._id ? { ...s, isVisible: !nextVis } : s))
+      );
       toast.error(isPersian ? 'خطا در تغییر وضعیت نمایش.' : 'Failed to update visibility.');
     }
   };
 
   const handleToggleVip = async (sec: IPageSection) => {
+    const nextVip = !sec.isVipOnly;
+    setSections((prev) =>
+      prev.map((s) => (s._id === sec._id ? { ...s, isVipOnly: nextVip } : s))
+    );
     try {
-      await adminApi.updatePageSection(sec.sectionKey || sec._id, { isVipOnly: !sec.isVipOnly });
+      await adminApi.updatePageSection(sec.sectionKey || sec._id, { isVipOnly: nextVip });
       toast.success(
-        !sec.isVipOnly
+        nextVip
           ? isPersian
             ? `بخش «${sec.title}» اختصاصی کاربران VIP شد! 👑`
             : `Section "${sec.title}" is now VIP exclusive!`
@@ -112,8 +122,10 @@ export default function AdminPageSectionsPage() {
             ? `بخش «${sec.title}» عمومی شد.`
             : `Section "${sec.title}" is now public.`,
       );
-      loadSections();
     } catch (err) {
+      setSections((prev) =>
+        prev.map((s) => (s._id === sec._id ? { ...s, isVipOnly: !nextVip } : s))
+      );
       toast.error(isPersian ? 'خطا در تغییر دسترسی VIP.' : 'Failed to update VIP access.');
     }
   };
@@ -358,13 +370,13 @@ export default function AdminPageSectionsPage() {
         onOpenChange={setModalOpen}
         backdrop="blur"
         placement="center"
-        size="2xl"
         scrollBehavior="inside"
+        size="3xl"
         classNames={{
-          base: 'bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-2xl mx-4',
-          header: 'border-b border-[#e6dcce] dark:border-[#2e3a2e] pb-3',
-          body: 'py-5',
-          footer: 'border-t border-[#e6dcce] dark:border-[#2e3a2e] pt-3',
+          base: 'bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl mx-4',
+          header: 'border-b border-brand-border pb-3 px-6 pt-5',
+          body: 'py-5 px-6',
+          footer: 'border-t border-brand-border pt-3 px-6 pb-5',
         }}
       >
         <ModalContent>
@@ -383,14 +395,14 @@ export default function AdminPageSectionsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
                     label={isPersian ? 'عنوان بخش (فارسی)' : 'Section Title (FA)'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     isRequired
                     value={title}
                     onValueChange={setTitle}
                     variant="bordered"
                     radius="full"
                     classNames={{
-                      inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                      inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
                       input: 'text-xs font-semibold text-brand-text',
                       label: 'text-xs font-bold text-brand-text mb-1',
                     }}
@@ -398,14 +410,14 @@ export default function AdminPageSectionsPage() {
 
                   <Input
                     label={isPersian ? 'عنوان بخش (انگلیسی)' : 'Section Title (EN)'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     value={titleEn}
                     onValueChange={setTitleEn}
                     placeholder="e.g. Footer Content & Settings"
                     variant="bordered"
                     radius="full"
                     classNames={{
-                      inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                      inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
                       input: 'text-xs font-semibold text-brand-text',
                       label: 'text-xs font-bold text-brand-text mb-1',
                     }}
@@ -414,7 +426,7 @@ export default function AdminPageSectionsPage() {
 
                 {/* Special Controls for Footer Customizer */}
                 {editingSection?.sectionKey === 'footer_settings' ? (
-                  <div className="space-y-4 pt-2 border-t border-[#e6dcce] dark:border-[#2e3a2e]">
+                  <div className="space-y-4 pt-2 border-t border-brand-border">
                     <div className="font-bold text-[#9f815b] flex items-center gap-1.5 text-sm">
                       <FileText className="w-4 h-4" />
                       <span>{isPersian ? 'متون و مشخصات فوتر' : 'Footer Content Details'}</span>
@@ -422,14 +434,14 @@ export default function AdminPageSectionsPage() {
 
                     <Textarea
                       label={isPersian ? 'متن درباره برند در فوتر (فارسی)' : 'About Brand Bio (Persian)'}
-                      labelPlacement="outside"
+                      labelPlacement="outside-top"
                       rows={3}
                       value={aboutFa}
                       onValueChange={setAboutFa}
                       variant="bordered"
                       radius="lg"
                       classNames={{
-                        inputWrapper: 'p-3 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-2xl shadow-xs',
+                        inputWrapper: 'p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs',
                         input: 'text-xs font-semibold leading-relaxed text-brand-text',
                         label: 'text-xs font-bold text-brand-text mb-1',
                       }}
@@ -437,14 +449,14 @@ export default function AdminPageSectionsPage() {
 
                     <Textarea
                       label={isPersian ? 'متن درباره برند در فوتر (انگلیسی)' : 'About Brand Bio (English)'}
-                      labelPlacement="outside"
+                      labelPlacement="outside-top"
                       rows={3}
                       value={aboutEn}
                       onValueChange={setAboutEn}
                       variant="bordered"
                       radius="lg"
                       classNames={{
-                        inputWrapper: 'p-3 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-2xl shadow-xs',
+                        inputWrapper: 'p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs',
                         input: 'text-xs font-semibold leading-relaxed text-brand-text',
                         label: 'text-xs font-bold text-brand-text mb-1',
                       }}
@@ -453,14 +465,14 @@ export default function AdminPageSectionsPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input
                         label={isPersian ? 'شماره تماس و پشتیبانی' : 'Support Phone'}
-                        labelPlacement="outside"
+                        labelPlacement="outside-top"
                         value={phone}
                         onValueChange={setPhone}
                         placeholder="۰۲۱-۸۸۸۸۷۷۶۶"
                         variant="bordered"
                         radius="full"
                         classNames={{
-                          inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                          inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
                           input: 'text-xs font-mono font-bold text-brand-text',
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
@@ -468,7 +480,7 @@ export default function AdminPageSectionsPage() {
 
                       <Input
                         label={isPersian ? 'ایمیل پشتیبانی' : 'Support Email'}
-                        labelPlacement="outside"
+                        labelPlacement="outside-top"
                         type="email"
                         value={email}
                         onValueChange={setEmail}
@@ -476,7 +488,7 @@ export default function AdminPageSectionsPage() {
                         variant="bordered"
                         radius="full"
                         classNames={{
-                          inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                          inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
                           input: 'text-xs font-sans font-semibold text-brand-text',
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
@@ -486,13 +498,13 @@ export default function AdminPageSectionsPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input
                         label={isPersian ? 'آدرس فروشگاه (فارسی)' : 'Address (Persian)'}
-                        labelPlacement="outside"
+                        labelPlacement="outside-top"
                         value={addressFa}
                         onValueChange={setAddressFa}
                         variant="bordered"
                         radius="full"
                         classNames={{
-                          inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                          inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
                           input: 'text-xs font-semibold text-brand-text',
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
@@ -500,13 +512,13 @@ export default function AdminPageSectionsPage() {
 
                       <Input
                         label={isPersian ? 'آدرس فروشگاه (انگلیسی)' : 'Address (English)'}
-                        labelPlacement="outside"
+                        labelPlacement="outside-top"
                         value={addressEn}
                         onValueChange={setAddressEn}
                         variant="bordered"
                         radius="full"
                         classNames={{
-                          inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                          inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
                           input: 'text-xs font-semibold text-brand-text',
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
@@ -516,13 +528,13 @@ export default function AdminPageSectionsPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input
                         label={isPersian ? 'متن کپی‌رایت انتهای فوتر (فارسی)' : 'Copyright Text (Persian)'}
-                        labelPlacement="outside"
+                        labelPlacement="outside-top"
                         value={copyrightFa}
                         onValueChange={setCopyrightFa}
                         variant="bordered"
                         radius="full"
                         classNames={{
-                          inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                          inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
                           input: 'text-xs font-semibold text-brand-text',
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
@@ -530,13 +542,13 @@ export default function AdminPageSectionsPage() {
 
                       <Input
                         label={isPersian ? 'متن کپی‌رایت انتهای فوتر (انگلیسی)' : 'Copyright Text (English)'}
-                        labelPlacement="outside"
+                        labelPlacement="outside-top"
                         value={copyrightEn}
                         onValueChange={setCopyrightEn}
                         variant="bordered"
                         radius="full"
                         classNames={{
-                          inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                          inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
                           input: 'text-xs font-semibold text-brand-text',
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
@@ -546,7 +558,7 @@ export default function AdminPageSectionsPage() {
                 ) : (
                   <Input
                     label={isPersian ? 'اولویت چیدمان در صفحه' : 'Display Order'}
-                    labelPlacement="outside"
+                    labelPlacement="outside-top"
                     type="number"
                     min={1}
                     value={String(order)}
@@ -554,7 +566,7 @@ export default function AdminPageSectionsPage() {
                     variant="bordered"
                     radius="full"
                     classNames={{
-                      inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                      inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
                       input: 'text-xs font-bold text-brand-text',
                       label: 'text-xs font-bold text-brand-text mb-1',
                     }}
@@ -580,7 +592,7 @@ export default function AdminPageSectionsPage() {
                   variant="flat"
                   radius="full"
                   onPress={() => onClose()}
-                  className="font-bold text-xs"
+                  className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
@@ -591,7 +603,7 @@ export default function AdminPageSectionsPage() {
                   isLoading={submitting}
                   onPress={() => handleSubmit()}
                   startContent={!submitting && <Save className="w-4 h-4" />}
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
                 >
                   {isPersian ? 'ذخیره تغییرات' : 'Save Changes'}
                 </Button>
