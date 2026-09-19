@@ -85,14 +85,6 @@ const ROLE_CONFIG = {
     iconColor: 'text-emerald-500 dark:text-emerald-400',
     icon: ShieldCheck,
   },
-  vip: {
-    id: 'vip',
-    labelFa: 'کاربر VIP',
-    labelEn: 'VIP Member',
-    badgeClass: 'bg-brand-gold/15 hover:bg-brand-gold/20 border-brand-gold/35 text-brand-bronze-dark dark:text-brand-gold font-bold',
-    iconColor: 'text-brand-gold',
-    icon: Crown,
-  },
   user: {
     id: 'user',
     labelFa: 'کاربر عادی',
@@ -106,7 +98,6 @@ const ROLE_CONFIG = {
 const ROLE_OPTIONS = [
   { key: 'admin', labelFa: 'مدیر کل', labelEn: 'Admin', icon: ShieldAlert, iconColor: 'text-amber-500 dark:text-amber-400' },
   { key: 'editor', labelFa: 'ویراستار', labelEn: 'Editor', icon: ShieldCheck, iconColor: 'text-emerald-500 dark:text-emerald-400' },
-  { key: 'vip', labelFa: 'کاربر طلایی (VIP)', labelEn: 'VIP Member', icon: Crown, iconColor: 'text-brand-gold' },
   { key: 'user', labelFa: 'کاربر عادی', labelEn: 'User', icon: UserIcon, iconColor: 'text-neutral-500 dark:text-neutral-400' },
 ];
 
