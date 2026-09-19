@@ -241,7 +241,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   if (!currentUserData) return null;
 
   const roleLabels: Record<string, { fa: string; en: string; color: string; icon: any }> = {
-    admin: { fa: 'مدیر کل سیستم', en: 'Super Admin', color: 'text-amber-500 bg-amber-500/10 border-amber-500/30', icon: ShieldAlert },
+    admin: { fa: 'مدیر کل سیستم', en: 'Super Admin', color: 'text-brand-bronze dark:text-brand-gold bg-brand-gold/10 border-brand-gold/30', icon: ShieldAlert },
     editor: { fa: 'ویراستار محتوا', en: 'Content Editor', color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/30', icon: ShieldCheck },
     user: { fa: 'کاربر عادی', en: 'Standard User', color: 'text-neutral-500 bg-neutral-500/10 border-neutral-500/20', icon: UserIcon },
   };
@@ -484,7 +484,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     {(isEditing ? formData.isVip : currentUserData.isVip) && (
                       <div
                         title={isPersian ? 'کاربر طلایی VIP' : 'VIP Member'}
-                        className="absolute -bottom-1 -left-1 w-6 h-6 rounded-lg bg-gradient-to-tr from-amber-600 to-amber-400 border border-white/40 flex items-center justify-center shadow-md text-[#1a1f1a]"
+                        className="absolute -bottom-1 -left-1 w-6 h-6 rounded-lg bg-gradient-to-tr from-brand-bronze to-brand-gold border border-white/40 flex items-center justify-center shadow-md text-[#1a1f1a]"
                       >
                         <Crown className="w-3.5 h-3.5 fill-current" />
                       </div>
@@ -519,7 +519,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                         <Chip
                           size="sm"
                           variant="solid"
-                          className="bg-amber-500/20 text-amber-500 border border-amber-500/30 text-[10px] font-black h-6"
+                          className="bg-brand-gold/15 text-brand-bronze dark:text-brand-gold border border-brand-gold/30 text-[10px] font-black h-6"
                         >
                           {isPersian ? 'حالت ویرایش مدیر کل' : 'Admin Edit Mode'}
                         </Chip>
@@ -561,7 +561,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                       }
                       className={`font-black text-xs cursor-pointer shadow-xs active:scale-95 transition-all ${
                         isEditing
-                          ? 'bg-amber-500 text-[#141914]'
+                          ? 'bg-brand-gold text-[#141914]'
                           : 'border-brand-gold/60 text-brand-bronze dark:text-brand-gold hover:bg-brand-gold/10'
                       }`}
                     >
@@ -634,15 +634,15 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
               </div>
             ) : (
               /* ======================= EDIT MODE NAVIGATION TABS ======================= */
-              <div className="px-5 sm:px-6 pt-3 border-b border-brand-border/40 bg-amber-500/5 shrink-0">
+              <div className="px-5 sm:px-6 pt-3 border-b border-brand-border/40 bg-brand-gold/5 shrink-0">
                 <Tabs
                   selectedKey={selectedEditTab}
                   onSelectionChange={(k) => setSelectedEditTab(k as string)}
                   variant="underlined"
                   classNames={{
                     tabList: 'gap-6 p-0 border-b-0',
-                    cursor: 'w-full bg-amber-500 h-0.5 rounded-full',
-                    tab: 'max-w-fit px-1 h-10 text-xs font-bold text-brand-text-muted data-[selected=true]:text-amber-500 data-[selected=true]:font-black',
+                    cursor: 'w-full bg-brand-gold h-0.5 rounded-full',
+                    tab: 'max-w-fit px-1 h-10 text-xs font-bold text-brand-text-muted data-[selected=true]:text-brand-bronze dark:data-[selected=true]:text-brand-gold data-[selected=true]:font-black',
                   }}
                 >
                   <Tab
@@ -701,7 +701,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     className="space-y-6"
                   >
                     {/* Notice Banner */}
-                    <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2.5">
+                    <div className="p-3.5 rounded-2xl bg-brand-gold/8 border border-brand-gold/20 text-xs text-brand-bronze dark:text-brand-gold flex items-start gap-2.5">
                       <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                       <p className="leading-relaxed">
                         {isPersian
@@ -845,7 +845,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             <SelectItem
                               key="admin"
                               textValue={isPersian ? 'مدیر ارشد (Super Admin)' : 'Super Admin'}
-                              startContent={<ShieldAlert className="w-4 h-4 text-amber-500" />}
+                              startContent={<ShieldAlert className="w-4 h-4 text-brand-bronze dark:text-brand-gold" />}
                               className="text-xs font-bold text-right rounded-xl my-0.5 text-brand-text"
                             >
                               {isPersian
@@ -1767,7 +1767,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     isLoading={isSaving}
                     onPress={handleSaveAll}
                     startContent={!isSaving && <Save className="w-4 h-4" />}
-                    className="font-black text-xs bg-amber-500 text-[#141914] shadow-md rounded-xl h-9 px-4 cursor-pointer hover:bg-amber-400 active:scale-95 transition-all"
+                    className="font-black text-xs bg-brand-gold text-[#141914] shadow-md rounded-xl h-9 px-4 cursor-pointer hover:opacity-90 active:scale-95 transition-all"
                   >
                     {isPersian ? 'ذخیره تمامی تغییرات' : 'Save All Changes'}
                   </Button>
@@ -1801,7 +1801,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                         variant="flat"
                         onPress={() => setIsEditing(true)}
                         startContent={<Pencil className="w-3.5 h-3.5" />}
-                        className="font-black text-xs bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-xl h-9 cursor-pointer hover:bg-amber-500/25"
+                        className="font-black text-xs bg-brand-gold/15 text-brand-bronze dark:text-brand-gold border border-brand-gold/30 rounded-xl h-9 cursor-pointer hover:bg-brand-gold/25"
                       >
                         {isPersian ? 'ویرایش مشخصات' : 'Edit Details'}
                       </Button>
