@@ -207,9 +207,17 @@ html[dir="ltr"] [data-slot="label"] {
 }
 
 [data-slot="selector-icon"] {
-  width: 1rem !important;
-  height: 1rem !important;
+  width: 0.95rem !important;
+  height: 0.95rem !important;
   opacity: 0.65 !important;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+}
+
+[data-open="true"] [data-slot="selector-icon"],
+[data-slot="trigger"][data-open="true"] [data-slot="selector-icon"],
+[data-state="open"] [data-slot="selector-icon"] {
+  transform: rotate(180deg) !important;
+  opacity: 1 !important;
 }
 
 /* Popover listbox RTL styling */
@@ -220,5 +228,34 @@ html[dir="rtl"] [data-slot="listbox-item"] {
   font-size: 0.75rem !important;
   border-radius: 0.75rem !important;
   padding: 0.5rem 0.75rem !important;
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+[data-slot="listbox-item"]:active {
+  transform: scale(0.98);
+}
+
+/* HeroUI Dropdown Menu RTL & Clean Minimal Styling */
+[data-slot="menu"],
+[dir="rtl"] [data-slot="menu"] {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+[data-slot="menu-item"],
+[dir="rtl"] [data-slot="menu-item"] {
+  text-align: right !important;
+  direction: rtl !important;
+  justify-content: flex-start !important;
+  border-radius: 0.75rem !important;
+  font-size: 0.75rem !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+/* Ensure no default HeroUI dark or beige highlight overrides custom active style */
+[data-slot="menu-item"][data-selected="true"] {
+  background-color: transparent !important;
 }
 

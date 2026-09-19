@@ -7,8 +7,10 @@ import {
   CardBody,
   Button,
   Input,
-  Select,
-  SelectItem,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
   Chip,
   Table,
   TableHeader,
@@ -18,13 +20,203 @@ import {
   TableCell,
   Skeleton,
 } from '@heroui/react';
-import { Users, Search, Crown, ShieldAlert, Calendar, MapPin, Trash2 } from 'lucide-react';
+import {
+  Users,
+  Search,
+  Crown,
+  ShieldAlert,
+  ShieldCheck,
+  Calendar,
+  MapPin,
+  Trash2,
+  Filter,
+  User as UserIcon,
+  ChevronDown,
+} from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { IUser } from '@/common/interfaces';
 import { toPersianDigits, toast } from '@/common/utils';
 import { formatDisplayBirthDate } from '@/common/utils/date';
 import { useTranslation } from '@/common/i18n';
 import { useAppSelector } from '@/stores/hooks';
+
+// Unified soft luxury spring motion matching high-end iOS/Apple dropdown physics
+const softDropdownMotionProps = {
+  variants: {
+    initial: {
+      opacity: 0,
+      scale: 0.96,
+    },
+    enter: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        type: 'spring' as const,
+        stiffness: 350,
+        damping: 26,
+        mass: 0.7,
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.96,
+      transition: {
+        duration: 0.16,
+        ease: [0.16, 1, 0.3, 1] as const,
+      },
+    },
+  },
+};
+
+const ROLE_CONFIG = {
+  admin: {
+    id: 'admin',
+    labelFa: 'مدیر کل',
+    labelEn: 'Admin',
+    badgeClass: 'bg-amber-500/10 hover:bg-amber-500/15 border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold',
+    iconColor: 'text-amber-500 dark:text-amber-400',
+    icon: ShieldAlert,
+  },
+  editor: {
+    id: 'editor',
+    labelFa: 'ویراستار',
+    labelEn: 'Editor',
+    badgeClass: 'bg-emerald-500/10 hover:bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold',
+    iconColor: 'text-emerald-500 dark:text-emerald-400',
+    icon: ShieldCheck,
+  },
+  vip: {
+    id: 'vip',
+    labelFa: 'کاربر VIP',
+    labelEn: 'VIP Member',
+    badgeClass: 'bg-brand-gold/15 hover:bg-brand-gold/20 border-brand-gold/35 text-brand-bronze-dark dark:text-brand-gold font-bold',
+    iconColor: 'text-brand-gold',
+    icon: Crown,
+  },
+  user: {
+    id: 'user',
+    labelFa: 'کاربر عادی',
+    labelEn: 'User',
+    badgeClass: 'bg-neutral-100 hover:bg-neutral-200/80 dark:bg-neutral-800/80 dark:hover:bg-neutral-800 border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 font-medium',
+    iconColor: 'text-neutral-500 dark:text-neutral-400',
+    icon: UserIcon,
+  },
+};
+
+const ROLE_OPTIONS = [
+  { key: 'admin', labelFa: 'مدیر کل', labelEn: 'Admin', icon: ShieldAlert, iconColor: 'text-amber-500 dark:text-amber-400' },
+  { key: 'editor', labelFa: 'ویراستار', labelEn: 'Editor', icon: ShieldCheck, iconColor: 'text-emerald-500 dark:text-emerald-400' },
+  { key: 'vip', labelFa: 'کاربر طلایی (VIP)', labelEn: 'VIP Member', icon: Crown, iconColor: 'text-brand-gold' },
+  { key: 'user', labelFa: 'کاربر عادی', labelEn: 'User', icon: UserIcon, iconColor: 'text-neutral-500 dark:text-neutral-400' },
+];
+
+const ROLE_FILTER_OPTIONS = [
+  { key: 'all', labelFa: 'همه نقش‌های کاربری', labelEn: 'All User Roles', icon: Users, iconColor: 'text-brand-gold' },
+  ...ROLE_OPTIONS,
+];
+
+function UserRoleCell({
+  user,
+  isAdmin,
+  isPersian,
+  onRoleChange,
+}: {
+  user: IUser;
+  isAdmin: boolean;
+  isPersian: boolean;
+  onRoleChange: (userId: string, newRole: string) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const rawRole = (user.role || '').toLowerCase().trim();
+  const roleKey = (rawRole in ROLE_CONFIG ? rawRole : 'user') as keyof typeof ROLE_CONFIG;
+  const roleDef = ROLE_CONFIG[roleKey];
+  const Icon = roleDef.icon;
+
+  if (!isAdmin) {
+    return (
+      <Chip
+        variant="flat"
+        size="sm"
+        radius="full"
+        startContent={<Icon className={`w-3.5 h-3.5 shrink-0 ${roleDef.iconColor}`} />}
+        classNames={{
+          base: `h-8 px-3 rounded-full border shadow-2xs ${roleDef.badgeClass}`,
+          content: "flex items-center gap-1.5 px-0 text-xs font-bold",
+        }}
+      >
+        {isPersian ? roleDef.labelFa : roleDef.labelEn}
+      </Chip>
+    );
+  }
+
+  return (
+    <Dropdown
+      placement="bottom-start"
+      offset={6}
+      shouldBlockScroll={false}
+      onOpenChange={setIsOpen}
+      motionProps={softDropdownMotionProps}
+      classNames={{
+        base: "p-0",
+        content: "min-w-[170px] p-1.5 bg-brand-surface/98 dark:bg-[#161c16]/98 backdrop-blur-2xl border border-brand-border dark:border-[#2e3a2e] text-brand-text rounded-2xl shadow-xl z-50",
+      }}
+    >
+      <DropdownTrigger>
+        <Button
+          size="sm"
+          radius="full"
+          variant="bordered"
+          className={`h-8 px-3 rounded-full border text-xs font-bold transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs active:scale-95 flex items-center justify-between gap-2 min-w-[125px] ${roleDef.badgeClass}`}
+        >
+          <div className="flex items-center gap-1.5 truncate">
+            <Icon className={`w-3.5 h-3.5 shrink-0 ${roleDef.iconColor}`} />
+            <span className="truncate">{isPersian ? roleDef.labelFa : roleDef.labelEn}</span>
+          </div>
+          <ChevronDown
+            className={`w-3 h-3 transition-transform duration-300 ease-out shrink-0 opacity-60 ${
+              isOpen ? 'rotate-180 opacity-100 text-brand-gold' : ''
+            }`}
+          />
+        </Button>
+      </DropdownTrigger>
+      <DropdownMenu
+        aria-label={isPersian ? 'تغییر نقش کاربری' : 'Change User Role'}
+        onAction={(key) => {
+          const selected = key as string;
+          if (selected && selected !== roleKey) {
+            onRoleChange(user._id, selected);
+          }
+        }}
+        className="p-1"
+      >
+        {ROLE_OPTIONS.map((opt) => {
+          const isSelected = roleKey === opt.key;
+          const OptIcon = opt.icon;
+          return (
+            <DropdownItem
+              key={opt.key}
+              textValue={isPersian ? opt.labelFa : opt.labelEn}
+              className={`rounded-xl py-2 px-2.5 text-xs font-medium transition-all duration-150 cursor-pointer flex items-center justify-between ${
+                isSelected
+                  ? 'bg-brand-gold/15 text-brand-gold font-bold'
+                  : 'text-brand-text hover:bg-brand-surface-elevated'
+              }`}
+              startContent={<OptIcon className={`w-3.5 h-3.5 shrink-0 ${opt.iconColor}`} />}
+              endContent={
+                isSelected ? (
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-gold shrink-0 mr-auto" />
+                ) : null
+              }
+            >
+              <span>{isPersian ? opt.labelFa : opt.labelEn}</span>
+            </DropdownItem>
+          );
+        })}
+      </DropdownMenu>
+    </Dropdown>
+  );
+}
 
 export default function AdminUsersPage() {
   const { isPersian } = useTranslation();
@@ -36,6 +228,7 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+  const [isRoleFilterOpen, setIsRoleFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadUsers = async () => {
@@ -135,13 +328,6 @@ export default function AdminUsersPage() {
     }
   };
 
-  const roleOptions = [
-    { id: '', label: isPersian ? 'همه نقش‌های کاربری' : 'All User Roles' },
-    { id: 'admin', label: isPersian ? 'مدیر کل (Admin)' : 'Admin' },
-    { id: 'editor', label: isPersian ? 'ویراستار (Editor)' : 'Editor' },
-    { id: 'user', label: isPersian ? 'کاربر عادی (User)' : 'User' },
-  ];
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -221,28 +407,74 @@ export default function AdminUsersPage() {
             }}
           />
 
-          <Select
-            aria-label={isPersian ? 'فیلتر نقش کاربری' : 'Role Filter'}
-            selectedKeys={new Set([roleFilter])}
-            onSelectionChange={(keys) => {
-              const selected = Array.from(keys)[0] as string;
-              setRoleFilter(selected ?? '');
-            }}
-            variant="bordered"
-            radius="full"
-            className="w-full sm:w-56"
-            classNames={{
-              trigger: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs text-xs font-bold text-brand-text text-start",
-              value: "text-xs font-bold text-brand-text text-start",
-              popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl",
-            }}
-          >
-            {roleOptions.map((opt) => (
-              <SelectItem key={opt.id} textValue={opt.label}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </Select>
+          {/* HeroUI Minimal, Curved, Fluid Role Filter Dropdown */}
+          {(() => {
+            const currentFilter = ROLE_FILTER_OPTIONS.find((opt) => opt.key === (roleFilter || 'all')) || ROLE_FILTER_OPTIONS[0];
+            return (
+              <Dropdown
+                placement="bottom-end"
+                offset={8}
+                shouldBlockScroll={false}
+                onOpenChange={setIsRoleFilterOpen}
+                motionProps={softDropdownMotionProps}
+                classNames={{
+                  base: "p-0",
+                  content: "min-w-[200px] p-1.5 bg-brand-surface/98 dark:bg-[#161c16]/98 backdrop-blur-2xl border border-brand-border dark:border-[#2e3a2e] text-brand-text rounded-2xl shadow-xl z-50",
+                }}
+              >
+                <DropdownTrigger>
+                  <Button
+                    radius="full"
+                    variant="bordered"
+                    className="h-11 px-4 bg-brand-surface-elevated/80 hover:bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/70 text-brand-text text-xs font-bold rounded-full transition-all duration-200 shadow-xs active:scale-98 flex items-center justify-between gap-3 min-w-[185px] cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <Filter className="w-3.5 h-3.5 text-brand-gold shrink-0" />
+                      <span className="truncate">{isPersian ? currentFilter.labelFa : currentFilter.labelEn}</span>
+                    </div>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-brand-text-muted transition-transform duration-300 ease-out shrink-0 ${
+                        isRoleFilterOpen ? 'rotate-180 text-brand-gold' : ''
+                      }`}
+                    />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label={isPersian ? 'فیلتر نقش کاربری' : 'Role Filter'}
+                  onAction={(key) => {
+                    const selected = key as string;
+                    setRoleFilter(selected === 'all' || !selected ? '' : selected);
+                    setPage(1);
+                  }}
+                  className="p-1"
+                >
+                  {ROLE_FILTER_OPTIONS.map((opt) => {
+                    const isSelected = (roleFilter || 'all') === opt.key;
+                    const OptIcon = opt.icon;
+                    return (
+                      <DropdownItem
+                        key={opt.key}
+                        textValue={isPersian ? opt.labelFa : opt.labelEn}
+                        className={`rounded-xl py-2 px-3 text-xs font-medium transition-all duration-150 cursor-pointer flex items-center justify-between ${
+                          isSelected
+                            ? 'bg-brand-gold/15 text-brand-gold font-bold'
+                            : 'text-brand-text hover:bg-brand-surface-elevated'
+                        }`}
+                        startContent={<OptIcon className={`w-4 h-4 shrink-0 ${opt.iconColor}`} />}
+                        endContent={
+                          isSelected ? (
+                            <span className="w-1.5 h-1.5 rounded-full bg-brand-gold shrink-0 mr-auto" />
+                          ) : null
+                        }
+                      >
+                        <span className="truncate">{isPersian ? opt.labelFa : opt.labelEn}</span>
+                      </DropdownItem>
+                    );
+                  })}
+                </DropdownMenu>
+              </Dropdown>
+            );
+          })()}
         </CardBody>
       </Card>
       </motion.div>
@@ -344,61 +576,12 @@ export default function AdminUsersPage() {
                     </TableCell>
 
                     <TableCell>
-                      {isAdmin ? (
-                        <Select
-                          aria-label={isPersian ? 'نقش کاربری' : 'User Role'}
-                          selectedKeys={new Set([user.role])}
-                          onSelectionChange={(keys) => {
-                            const selected = Array.from(keys)[0] as string;
-                            if (selected && selected !== user.role) {
-                              handleRoleChange(user._id, selected);
-                            }
-                          }}
-                          variant="bordered"
-                          radius="full"
-                          size="sm"
-                          disallowEmptySelection
-                          className="w-36"
-                          classNames={{
-                            trigger: "h-8 px-3 min-h-8 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full text-xs font-bold text-brand-text text-start shadow-xs",
-                            value: "text-xs font-bold text-brand-text text-start",
-                            popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl",
-                          }}
-                        >
-                          <SelectItem key="user" textValue={isPersian ? 'کاربر عادی' : 'User'}>
-                            {isPersian ? 'کاربر عادی' : 'User'}
-                          </SelectItem>
-                          <SelectItem key="editor" textValue={isPersian ? 'ویراستار' : 'Editor'}>
-                            {isPersian ? 'ویراستار' : 'Editor'}
-                          </SelectItem>
-                          <SelectItem key="admin" textValue={isPersian ? 'مدیر کل' : 'Admin'}>
-                            {isPersian ? 'مدیر کل' : 'Admin'}
-                          </SelectItem>
-                        </Select>
-                      ) : (
-                        <Chip
-                          variant="flat"
-                          size="sm"
-                          classNames={{
-                            base: user.role === 'admin'
-                              ? 'bg-amber-500/15 border border-amber-500/30'
-                              : user.role === 'editor'
-                              ? 'bg-emerald-500/15 border border-emerald-500/30'
-                              : 'bg-brand-surface-elevated border border-brand-border',
-                            content: user.role === 'admin'
-                              ? 'text-amber-700 dark:text-amber-400 font-bold text-xs'
-                              : user.role === 'editor'
-                              ? 'text-emerald-700 dark:text-emerald-400 font-bold text-xs'
-                              : 'text-brand-text-muted font-bold text-xs',
-                          }}
-                        >
-                          {user.role === 'admin'
-                            ? isPersian ? 'مدیر کل (Admin)' : 'Admin'
-                            : user.role === 'editor'
-                            ? isPersian ? 'ویراستار (Editor)' : 'Editor'
-                            : isPersian ? 'کاربر عادی (User)' : 'User'}
-                        </Chip>
-                      )}
+                      <UserRoleCell
+                        user={user}
+                        isAdmin={isAdmin}
+                        isPersian={isPersian}
+                        onRoleChange={handleRoleChange}
+                      />
                     </TableCell>
 
                     <TableCell className="text-center">
@@ -409,10 +592,10 @@ export default function AdminUsersPage() {
                           variant={user.isVip ? 'solid' : 'bordered'}
                           onPress={() => handleToggleVip(user._id, user.isVip)}
                           startContent={<Crown className="w-3.5 h-3.5" />}
-                          className={`font-bold text-xs cursor-pointer ${
+                          className={`font-bold text-xs cursor-pointer transition-all active:scale-95 shadow-2xs ${
                             user.isVip
                               ? 'bg-brand-gold text-[#141914] shadow-xs font-black'
-                              : 'border-brand-border text-brand-text-muted hover:border-brand-gold'
+                              : 'border-brand-border text-brand-text-muted hover:border-brand-gold/80 hover:text-brand-text'
                           }`}
                         >
                           {user.isVip
@@ -449,7 +632,7 @@ export default function AdminUsersPage() {
                           radius="full"
                           variant="light"
                           onPress={() => handleDeleteUser(user._id, user.fullName)}
-                          className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
+                          className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer transition-all active:scale-95"
                           aria-label={isPersian ? 'حذف کاربر' : 'Delete'}
                         >
                           <Trash2 className="w-4 h-4" />
