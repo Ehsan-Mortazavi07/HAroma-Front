@@ -41,29 +41,40 @@ import { useTranslation } from '@/common/i18n';
 import { useAppSelector } from '@/stores/hooks';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 
-// Unified soft luxury spring motion matching high-end iOS/Apple dropdown physics
+// Calm, elegant, ultra-smooth glide-down motion for select boxes and dropdowns
 const softDropdownMotionProps = {
   variants: {
     initial: {
       opacity: 0,
-      scale: 0.96,
+      y: -10,
+      scale: 0.98,
     },
     enter: {
       opacity: 1,
+      y: 0,
       scale: 1,
       transition: {
-        type: 'spring' as const,
-        stiffness: 350,
-        damping: 26,
-        mass: 0.7,
+        y: {
+          duration: 0.38,
+          ease: [0.16, 1, 0.3, 1] as const, // Apple fluid deceleration curve
+        },
+        scale: {
+          duration: 0.38,
+          ease: [0.16, 1, 0.3, 1] as const,
+        },
+        opacity: {
+          duration: 0.26,
+          ease: 'easeOut' as const,
+        },
       },
     },
     exit: {
       opacity: 0,
-      scale: 0.96,
+      y: -8,
+      scale: 0.98,
       transition: {
-        duration: 0.16,
-        ease: [0.16, 1, 0.3, 1] as const,
+        duration: 0.2,
+        ease: [0.32, 0, 0.67, 0] as const,
       },
     },
   },
@@ -151,7 +162,7 @@ function UserRoleCell({
       motionProps={softDropdownMotionProps}
       classNames={{
         base: "p-0",
-        content: "min-w-[170px] p-1.5 bg-brand-surface/98 dark:bg-[#161c16]/98 backdrop-blur-2xl border border-brand-border dark:border-[#2e3a2e] text-brand-text rounded-2xl shadow-xl z-50",
+        content: "min-w-[170px] p-1.5 bg-brand-surface/98 dark:bg-[#161c16]/98 backdrop-blur-2xl border border-brand-border dark:border-[#2e3a2e] text-brand-text rounded-2xl shadow-xl z-50 will-change-transform",
       }}
     >
       <DropdownTrigger>
@@ -424,7 +435,7 @@ export default function AdminUsersPage() {
                 motionProps={softDropdownMotionProps}
                 classNames={{
                   base: "p-0",
-                  content: "min-w-[200px] p-1.5 bg-brand-surface/98 dark:bg-[#161c16]/98 backdrop-blur-2xl border border-brand-border dark:border-[#2e3a2e] text-brand-text rounded-2xl shadow-xl z-50",
+                  content: "min-w-[200px] p-1.5 bg-brand-surface/98 dark:bg-[#161c16]/98 backdrop-blur-2xl border border-brand-border dark:border-[#2e3a2e] text-brand-text rounded-2xl shadow-xl z-50 will-change-transform",
                 }}
               >
                 <DropdownTrigger>

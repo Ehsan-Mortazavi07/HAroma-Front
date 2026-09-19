@@ -30,18 +30,18 @@ const modalMotionProps = {
     enter: {
       scale: 1,
       opacity: 1,
+      y: 0,
       transition: {
-        type: 'spring' as const,
-        stiffness: 400,
-        damping: 28,
-        mass: 0.6,
+        duration: 0.28,
+        ease: [0.16, 1, 0.3, 1] as const,
       },
     },
     exit: {
-      scale: 0.95,
+      scale: 0.96,
       opacity: 0,
+      y: 6,
       transition: {
-        duration: 0.16,
+        duration: 0.18,
         ease: [0.16, 1, 0.3, 1] as const,
       },
     },
@@ -76,12 +76,12 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
         if (!isLoading && onOpenChange) onOpenChange(open);
       }}
       onClose={handleClose}
-      backdrop="blur"
+      backdrop="transparent"
       placement="center"
       size="md"
       motionProps={modalMotionProps}
       classNames={{
-        backdrop: 'bg-black/50 backdrop-blur-sm',
+        backdrop: 'bg-transparent backdrop-blur-none pointer-events-none',
         base: 'bg-brand-surface/98 dark:bg-[#161c16]/98 border border-brand-border dark:border-[#2e3a2e] text-brand-text rounded-3xl shadow-2xl mx-4 overflow-hidden',
         header: 'border-b border-brand-border/60 pb-3 pt-5 px-6 flex items-center gap-3',
         body: 'py-5 px-6',
@@ -115,12 +115,12 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
 
             <ModalFooter className="flex items-center justify-end gap-2.5">
               <Button
-                variant="flat"
+                variant="light"
                 radius="lg"
                 size="md"
                 isDisabled={isLoading}
                 onPress={handleClose}
-                className="font-bold text-xs bg-brand-surface-elevated text-brand-text hover:bg-brand-border/50 border border-brand-border/60 cursor-pointer rounded-2xl"
+                className="font-bold text-xs bg-transparent hover:bg-brand-surface-elevated text-brand-text border border-brand-border/60 cursor-pointer rounded-2xl"
               >
                 {cancelText}
               </Button>
