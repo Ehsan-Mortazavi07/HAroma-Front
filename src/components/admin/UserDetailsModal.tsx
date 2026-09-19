@@ -116,10 +116,12 @@ const inputLabelClass = 'text-xs font-bold text-brand-text mb-1 block';
 
 const selectClassNames = {
   base: 'w-full',
-  label: 'text-xs font-bold text-brand-text mb-1 block',
+  label: 'text-xs font-bold text-brand-text mb-1 block text-right',
   trigger:
-    'h-11 px-4 bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] hover:border-brand-gold/60 rounded-2xl shadow-2xs text-xs font-bold text-brand-text text-start transition-colors data-[disabled=true]:opacity-50',
-  value: 'text-xs font-bold text-brand-text text-start',
+    'h-11 !px-3 !pl-10 !pr-3 bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] hover:border-brand-gold/60 rounded-2xl shadow-2xs text-xs font-bold text-brand-text transition-colors data-[disabled=true]:opacity-50 relative flex items-center justify-between',
+  innerWrapper: 'w-full flex items-center justify-start gap-2',
+  value: 'text-xs font-bold text-brand-text !text-right w-full',
+  selectorIcon: '!absolute !left-3 !right-auto top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted transition-transform duration-200 shrink-0 pointer-events-none',
   popoverContent:
     'bg-brand-surface dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] text-brand-text rounded-2xl shadow-2xl z-[10005] p-1.5 max-h-64 overflow-y-auto',
 };
@@ -461,7 +463,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     >
       <ModalContent>
         {() => (
-          <>
+          <div className="flex flex-col h-full w-full" dir={isPersian ? 'rtl' : 'ltr'}>
             {/* Header Hero Banner */}
             <ModalHeader className="p-5 sm:p-6 pb-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
@@ -524,7 +526,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs text-brand-text-muted font-mono flex-wrap">
+                    <div className="flex items-center gap-3 text-xs text-brand-text-muted font-mono flex-wrap" dir="ltr">
                       <span className="font-bold text-brand-bronze dark:text-brand-gold">
                         @{isEditing ? formData.username : currentUserData.username}
                       </span>
@@ -666,7 +668,16 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     title={
                       <div className="flex items-center gap-2">
                         <MapPin className="w-3.5 h-3.5" />
-                        <span>{isPersian ? 'نشانی پستی و گیرنده' : 'Shipping & Recipient'}</span>
+                        <span>{isPersian ? 'آدرس و نشانی تحویل' : 'Shipping Address'}</span>
+                      </div>
+                    }
+                  />
+                  <Tab
+                    key="recipient"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <Package className="w-3.5 h-3.5" />
+                        <span>{isPersian ? 'مشخصات گیرنده و نکات' : 'Recipient & Notes'}</span>
                       </div>
                     }
                   />
@@ -783,16 +794,36 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               }
                             }}
                             variant="bordered"
+                            dir={isPersian ? 'rtl' : 'ltr'}
                             classNames={selectClassNames}
+                            renderValue={(items) => (
+                              <div className="flex items-center gap-1.5 overflow-hidden w-full justify-start" dir="rtl">
+                                {items.map((item) => (
+                                  <Chip
+                                    key={item.key}
+                                    size="sm"
+                                    variant="flat"
+                                    className="rounded-full bg-brand-gold/15 dark:bg-brand-gold/25 text-brand-text font-black text-xs h-7 px-3 border border-brand-gold/40 flex items-center shrink-0"
+                                  >
+                                    {item.textValue}
+                                  </Chip>
+                                ))}
+                              </div>
+                            )}
                             popoverProps={{
+                              dir: isPersian ? 'rtl' : 'ltr',
                               className: 'z-[10005]',
+                            }}
+                            listboxProps={{
+                              dir: isPersian ? 'rtl' : 'ltr',
+                              className: 'p-1',
                             }}
                           >
                             <SelectItem
                               key="user"
                               textValue={isPersian ? 'کاربر عادی' : 'Standard User'}
                               startContent={<UserIcon className="w-4 h-4 text-neutral-400" />}
-                              className="text-xs font-bold text-start"
+                              className="text-xs font-bold text-right rounded-xl my-0.5 text-brand-text"
                             >
                               {isPersian ? 'کاربر عادی (مشتری فروشگاه)' : 'Standard User (Customer)'}
                             </SelectItem>
@@ -800,7 +831,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               key="editor"
                               textValue={isPersian ? 'ویراستار محتوا' : 'Content Editor'}
                               startContent={<ShieldCheck className="w-4 h-4 text-emerald-500" />}
-                              className="text-xs font-bold text-start"
+                              className="text-xs font-bold text-right rounded-xl my-0.5 text-brand-text"
                             >
                               {isPersian
                                 ? 'ویراستار محتوا (دسترسی به محصولات و سفارشات)'
@@ -810,7 +841,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               key="admin"
                               textValue={isPersian ? 'مدیر ارشد (Super Admin)' : 'Super Admin'}
                               startContent={<ShieldAlert className="w-4 h-4 text-amber-500" />}
-                              className="text-xs font-bold text-start"
+                              className="text-xs font-bold text-right rounded-xl my-0.5 text-brand-text"
                             >
                               {isPersian
                                 ? 'مدیر ارشد (دسترسی کامل به تمامی بخش‌های سیستم)'
@@ -984,7 +1015,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                       </div>
                     )}
 
-                    {/* EDIT TAB 3: SHIPPING & RECIPIENT */}
+                    {/* EDIT TAB 3: SHIPPING ADDRESS */}
                     {selectedEditTab === 'shipping' && (
                       <div className="space-y-5">
                         {/* Province & City with official HeroUI Select */}
@@ -1003,13 +1034,37 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               }));
                             }}
                             variant="bordered"
+                            dir={isPersian ? 'rtl' : 'ltr'}
                             classNames={selectClassNames}
+                            renderValue={(items) => (
+                              <div className="flex items-center gap-1.5 overflow-hidden w-full justify-start" dir="rtl">
+                                {items.map((item) => (
+                                  <Chip
+                                    key={item.key}
+                                    size="sm"
+                                    variant="flat"
+                                    className="rounded-full bg-brand-gold/15 dark:bg-brand-gold/25 text-brand-text font-black text-xs h-7 px-3 border border-brand-gold/40 flex items-center shrink-0"
+                                  >
+                                    {item.textValue}
+                                  </Chip>
+                                ))}
+                              </div>
+                            )}
                             popoverProps={{
+                              dir: isPersian ? 'rtl' : 'ltr',
                               className: 'z-[10005]',
+                            }}
+                            listboxProps={{
+                              dir: isPersian ? 'rtl' : 'ltr',
+                              className: 'p-1',
                             }}
                           >
                             {IRAN_PROVINCES.map((prov) => (
-                              <SelectItem key={prov.name} textValue={prov.name} className="text-xs font-bold text-start">
+                              <SelectItem
+                                key={prov.name}
+                                textValue={prov.name}
+                                className="text-xs font-bold text-right rounded-xl my-0.5 text-brand-text"
+                              >
                                 {prov.name}
                               </SelectItem>
                             ))}
@@ -1037,13 +1092,37 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               }));
                             }}
                             variant="bordered"
+                            dir={isPersian ? 'rtl' : 'ltr'}
                             classNames={selectClassNames}
+                            renderValue={(items) => (
+                              <div className="flex items-center gap-1.5 overflow-hidden w-full justify-start" dir="rtl">
+                                {items.map((item) => (
+                                  <Chip
+                                    key={item.key}
+                                    size="sm"
+                                    variant="flat"
+                                    className="rounded-full bg-brand-gold/15 dark:bg-brand-gold/25 text-brand-text font-black text-xs h-7 px-3 border border-brand-gold/40 flex items-center shrink-0"
+                                  >
+                                    {item.textValue}
+                                  </Chip>
+                                ))}
+                              </div>
+                            )}
                             popoverProps={{
+                              dir: isPersian ? 'rtl' : 'ltr',
                               className: 'z-[10005]',
+                            }}
+                            listboxProps={{
+                              dir: isPersian ? 'rtl' : 'ltr',
+                              className: 'p-1',
                             }}
                           >
                             {(selectedProvinceObj?.cities || []).map((cityName) => (
-                              <SelectItem key={cityName} textValue={cityName} className="text-xs font-bold text-start">
+                              <SelectItem
+                                key={cityName}
+                                textValue={cityName}
+                                className="text-xs font-bold text-right rounded-xl my-0.5 text-brand-text"
+                              >
                                 {cityName}
                               </SelectItem>
                             ))}
@@ -1052,11 +1131,12 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
                         {/* Full Address */}
                         <Textarea
+                          dir={isPersian ? 'rtl' : 'ltr'}
                           label={isPersian ? 'نشانی دقیق پستی (خیابان، کوچه، بن‌بست)' : 'Street Address'}
                           labelPlacement="outside-top"
                           value={formData.address}
                           onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                          minRows={2}
+                          minRows={3}
                           placeholder={
                             isPersian
                               ? 'مثال: بلوار کشاورز، خیابان ۱۶ آذر، کوچه بهار، ساختمان شماره ۵'
@@ -1066,7 +1146,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             label: inputLabelClass,
                             inputWrapper:
                               'bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] rounded-2xl hover:border-brand-gold/60 focus-within:!border-brand-gold p-3 shadow-2xs',
-                            input: 'text-xs font-medium text-brand-text leading-relaxed',
+                            input: 'text-xs font-medium text-brand-text leading-relaxed text-right',
                           }}
                         />
 
@@ -1116,69 +1196,95 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             }}
                           />
                         </div>
+                      </div>
+                    )}
 
-                        {/* Recipient Details */}
-                        <div className="pt-4 border-t border-brand-border/40 space-y-4">
-                          <span className="text-xs font-bold text-brand-gold block">
-                            {isPersian ? 'مشخصات تحویل‌گیرنده و یادداشت‌های ارسال:' : 'Recipient Contact Details:'}
+                    {/* EDIT TAB 4: RECIPIENT & NOTES */}
+                    {selectedEditTab === 'recipient' && (
+                      <div className="space-y-5">
+                        <div className="p-3.5 rounded-2xl bg-brand-surface-elevated/50 dark:bg-[#182018] border border-brand-border/60 text-xs text-brand-text-muted flex items-center gap-2.5">
+                          <Package className="w-4 h-4 text-brand-gold shrink-0" />
+                          <span>
+                            {isPersian
+                              ? 'در صورتی که سفارش توسط شخص دیگری تحویل گرفته می‌شود، اطلاعات تماس و یادداشت‌های ارسال را اینجا وارد کنید.'
+                              : 'If the order is received by another person, enter contact details and delivery notes here.'}
                           </span>
+                        </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Input
-                              label={isPersian ? 'نام و نام خانوادگی تحویل‌گیرنده' : 'Recipient Full Name'}
-                              labelPlacement="outside-top"
-                              value={formData.recipientName}
-                              onChange={(e) =>
-                                setFormData({ ...formData, recipientName: e.target.value })
-                              }
-                              placeholder={isPersian ? 'نام شخص دریافت‌کننده' : 'Recipient Name'}
-                              startContent={<UserIcon className="w-4 h-4 text-brand-text-muted shrink-0" />}
-                              classNames={{
-                                label: inputLabelClass,
-                                inputWrapper: inputWrapperClass,
-                                input: 'text-xs font-bold text-brand-text',
-                              }}
-                            />
-
-                            <Input
-                              label={isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone Number'}
-                              labelPlacement="outside-top"
-                              value={formData.recipientPhone}
-                              onChange={(e) =>
-                                setFormData({ ...formData, recipientPhone: e.target.value })
-                              }
-                              placeholder="09123456789"
-                              dir="ltr"
-                              startContent={<Phone className="w-4 h-4 text-brand-text-muted shrink-0" />}
-                              classNames={{
-                                label: inputLabelClass,
-                                inputWrapper: inputWrapperClass,
-                                input: 'text-xs font-mono font-bold text-brand-text',
-                              }}
-                            />
-                          </div>
-
-                          <Textarea
-                            label={isPersian ? 'توضیحات و یادداشت تحویل' : 'Delivery / Address Notes'}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <Input
+                            label={isPersian ? 'نام و نام خانوادگی تحویل‌گیرنده' : 'Recipient Full Name'}
                             labelPlacement="outside-top"
-                            value={formData.addressNotes}
+                            value={formData.recipientName}
                             onChange={(e) =>
-                              setFormData({ ...formData, addressNotes: e.target.value })
+                              setFormData({ ...formData, recipientName: e.target.value })
                             }
-                            minRows={2}
-                            placeholder={
-                              isPersian
-                                ? 'مثال: زنگ دوم سمت راست، لطفاً قبل از مراجعه تماس گرفته شود.'
-                                : 'Special instructions for courier...'
-                            }
+                            placeholder={isPersian ? 'نام شخص دریافت‌کننده' : 'Recipient Name'}
+                            startContent={<UserIcon className="w-4 h-4 text-brand-text-muted shrink-0" />}
                             classNames={{
                               label: inputLabelClass,
-                              inputWrapper:
-                                'bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] rounded-2xl hover:border-brand-gold/60 focus-within:!border-brand-gold p-3 shadow-2xs',
-                              input: 'text-xs font-medium text-brand-text leading-relaxed',
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-bold text-brand-text',
+                            }}
+                          />
+
+                          <Input
+                            label={isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone Number'}
+                            labelPlacement="outside-top"
+                            value={formData.recipientPhone}
+                            onChange={(e) =>
+                              setFormData({ ...formData, recipientPhone: e.target.value })
+                            }
+                            placeholder="09123456789"
+                            dir="ltr"
+                            startContent={<Phone className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            classNames={{
+                              label: inputLabelClass,
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-mono font-bold text-brand-text',
                             }}
                           />
                         </div>
+
+                        <Input
+                          label={isPersian ? 'ایمیل تحویل‌گیرنده (اختیاری)' : 'Recipient Email (Optional)'}
+                          labelPlacement="outside-top"
+                          type="email"
+                          value={formData.recipientEmail}
+                          onChange={(e) =>
+                            setFormData({ ...formData, recipientEmail: e.target.value })
+                          }
+                          placeholder="recipient@domain.com"
+                          dir="ltr"
+                          startContent={<Mail className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                          classNames={{
+                            label: inputLabelClass,
+                            inputWrapper: inputWrapperClass,
+                            input: 'text-xs font-mono font-semibold text-brand-text',
+                          }}
+                        />
+
+                        <Textarea
+                          dir={isPersian ? 'rtl' : 'ltr'}
+                          label={isPersian ? 'توضیحات و یادداشت تحویل' : 'Delivery / Address Notes'}
+                          labelPlacement="outside-top"
+                          value={formData.addressNotes}
+                          onChange={(e) =>
+                            setFormData({ ...formData, addressNotes: e.target.value })
+                          }
+                          minRows={3}
+                          placeholder={
+                            isPersian
+                              ? 'مثال: زنگ دوم سمت راست، لطفاً قبل از مراجعه تماس گرفته شود.'
+                              : 'Special instructions for courier...'
+                          }
+                          classNames={{
+                            label: inputLabelClass,
+                            inputWrapper:
+                              'bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] rounded-2xl hover:border-brand-gold/60 focus-within:!border-brand-gold p-3 shadow-2xs',
+                            input: 'text-xs font-medium text-brand-text leading-relaxed text-right',
+                          }}
+                        />
                       </div>
                     )}
                   </motion.div>
@@ -1696,7 +1802,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 </>
               )}
             </ModalFooter>
-          </>
+          </div>
         )}
       </ModalContent>
     </Modal>
