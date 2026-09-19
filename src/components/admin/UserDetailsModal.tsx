@@ -13,6 +13,12 @@ import {
   Tab,
   Avatar,
   Skeleton,
+  Input,
+  Textarea,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from '@heroui/react';
 import {
   User as UserIcon,
@@ -33,11 +39,26 @@ import {
   Trash2,
   ExternalLink,
   ChevronLeft,
+  Pencil,
+  Eye,
+  Lock,
+  EyeOff,
+  Sparkles,
+  Save,
+  X,
+  AlertCircle,
+  Building,
+  Hash,
+  RefreshCw,
+  HelpCircle,
 } from 'lucide-react';
-import { IUser, IOrder } from '@/common/interfaces';
+import { IUser, IOrder, UserRole } from '@/common/interfaces';
 import { adminApi } from '@/common/api/admin';
-import { formatToman, toPersianDigits, toast } from '@/common/utils';
-import { formatDisplayBirthDate } from '@/common/utils/date';
+import { formatToman, toPersianDigits, toEnglishDigits, toast } from '@/common/utils';
+import { formatDisplayBirthDate, parseIsoDate, gregorianToJalali } from '@/common/utils/date';
+import { IRAN_PROVINCES } from '@/common/constants/iranProvinces';
+import { BirthDatePicker } from '@/components/common/BirthDatePicker';
+import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface UserDetailsModalProps {
@@ -45,8 +66,10 @@ export interface UserDetailsModalProps {
   onOpenChange?: (open: boolean) => void;
   onClose?: () => void;
   user: IUser | null;
+  initialMode?: 'view' | 'edit';
   isPersian?: boolean;
   isAdmin?: boolean;
+  onUserUpdated?: (updatedUser: IUser) => void;
   onToggleVip?: (userId: string, currentVip: boolean) => void | Promise<void>;
   onRoleChange?: (userId: string, newRole: string) => void | Promise<void>;
   onDeleteUser?: (userId: string, userName: string) => void;
@@ -90,30 +113,101 @@ const modalMotionProps = {
   },
 };
 
+const inputWrapperClass =
+  'bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] rounded-2xl h-11 hover:border-brand-gold/60 focus-within:!border-brand-gold shadow-2xs transition-all';
+const inputLabelClass = 'text-xs font-bold text-brand-text mb-1 block';
+
 export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   isOpen,
   onOpenChange,
   onClose,
   user,
+  initialMode = 'view',
   isPersian = true,
   isAdmin = true,
+  onUserUpdated,
   onToggleVip,
   onRoleChange,
   onDeleteUser,
 }) => {
+  // Mode state: 'view' or 'edit'
+  const [isEditing, setIsEditing] = useState<boolean>(initialMode === 'edit' && !!isAdmin);
   const [selectedTab, setSelectedTab] = useState<string>('profile');
+  const [selectedEditTab, setSelectedEditTab] = useState<string>('identity');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
+  // Edit form state
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [currentUserData, setCurrentUserData] = useState<IUser | null>(user);
+
+  const [formData, setFormData] = useState({
+    fullName: '',
+    username: '',
+    email: '',
+    phone: '',
+    password: '',
+    role: 'user' as UserRole,
+    isVip: false,
+    vipExpiresAt: null as string | null,
+    avatar: '',
+    birthDate: null as string | null,
+    birthDateShamsi: null as string | null,
+    province: '',
+    city: '',
+    address: '',
+    postalCode: '',
+    buildingNumber: '',
+    unit: '',
+    recipientName: '',
+    recipientPhone: '',
+    recipientEmail: '',
+    addressNotes: '',
+  });
+
+  // Sync state with incoming user
   useEffect(() => {
-    if (isOpen && user?._id) {
-      fetchUserOrders(user._id);
+    if (user) {
+      setCurrentUserData(user);
+      setFormData({
+        fullName: user.fullName || '',
+        username: user.username || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        password: '',
+        role: user.role || 'user',
+        isVip: user.isVip ?? false,
+        vipExpiresAt: user.vipExpiresAt || null,
+        avatar: user.avatar || '',
+        birthDate: user.birthDate || null,
+        birthDateShamsi: user.birthDateShamsi || null,
+        province: user.province || '',
+        city: user.city || '',
+        address: user.address || '',
+        postalCode: user.postalCode || '',
+        buildingNumber: user.buildingNumber || '',
+        unit: user.unit || '',
+        recipientName: user.recipientName || '',
+        recipientPhone: user.recipientPhone || '',
+        recipientEmail: user.recipientEmail || '',
+        addressNotes: user.addressNotes || '',
+      });
+      setIsEditing(initialMode === 'edit' && !!isAdmin);
+    }
+  }, [user, initialMode, isAdmin, isOpen]);
+
+  useEffect(() => {
+    if (isOpen && currentUserData?._id) {
+      fetchUserOrders(currentUserData._id);
     } else {
       setOrders([]);
       setSelectedTab('profile');
+      setSelectedEditTab('identity');
+      setShowPassword(false);
     }
-  }, [isOpen, user?._id]);
+  }, [isOpen, currentUserData?._id]);
 
   const fetchUserOrders = async (userId: string) => {
     setLoadingOrders(true);
@@ -136,7 +230,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  if (!user) return null;
+  if (!currentUserData) return null;
 
   const roleLabels: Record<string, { fa: string; en: string; color: string; icon: any }> = {
     admin: { fa: 'مدیر کل سیستم', en: 'Super Admin', color: 'text-amber-500 bg-amber-500/10 border-amber-500/30', icon: ShieldAlert },
@@ -144,10 +238,9 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     user: { fa: 'کاربر عادی', en: 'Standard User', color: 'text-neutral-500 bg-neutral-500/10 border-neutral-500/20', icon: UserIcon },
   };
 
-  const currentRole = roleLabels[user.role] || roleLabels.user;
-  const RoleIcon = currentRole.icon;
+  const activeRole = roleLabels[currentUserData.role] || roleLabels.user;
+  const RoleIcon = activeRole.icon;
 
-  // Calculate total spent by user
   const totalSpent = orders.reduce((sum, order) => sum + (order.total || 0), 0);
 
   const formatDateTime = (dateStr?: string | null) => {
@@ -176,6 +269,175 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     }
   };
 
+  // Helper to generate a strong random password for admin convenience
+  const generateRandomPassword = () => {
+    const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*';
+    let pwd = '';
+    for (let i = 0; i < 12; i++) {
+      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setFormData((prev) => ({ ...prev, password: pwd }));
+    setShowPassword(true);
+    toast.success(isPersian ? 'رمز عبور تصادفی امن تولید شد.' : 'Strong random password generated.');
+  };
+
+  // Handle BirthDatePicker change in edit mode
+  const handleBirthDateChange = (isoDate: string) => {
+    const parsed = parseIsoDate(isoDate);
+    let shamsi: string | null = null;
+    if (parsed) {
+      const [jy, jm, jd] = gregorianToJalali(parsed[0], parsed[1], parsed[2]);
+      shamsi = `${jy}/${jm < 10 ? '0' + jm : jm}/${jd < 10 ? '0' + jd : jd}`;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      birthDate: isoDate,
+      birthDateShamsi: shamsi,
+    }));
+  };
+
+  // VIP duration presets
+  const handleSetVipDuration = (days: number | null) => {
+    if (days === null) {
+      setFormData((prev) => ({ ...prev, isVip: true, vipExpiresAt: null }));
+    } else {
+      const expiry = new Date();
+      expiry.setDate(expiry.getDate() + days);
+      setFormData((prev) => ({
+        ...prev,
+        isVip: true,
+        vipExpiresAt: expiry.toISOString(),
+      }));
+    }
+  };
+
+  // Save All Changes
+  const handleSaveAll = async () => {
+    if (!isAdmin) {
+      toast.error(
+        isPersian
+          ? 'ویرایش مشخصات کاربران تنها برای مدیر ارشد مجاز است.'
+          : 'Editing user details is restricted to Super Admins.',
+      );
+      return;
+    }
+
+    if (!formData.fullName.trim()) {
+      toast.error(isPersian ? 'نام و نام خانوادگی الزامی است.' : 'Full name is required.');
+      return;
+    }
+
+    if (!formData.username.trim()) {
+      toast.error(isPersian ? 'نام کاربری الزامی است.' : 'Username is required.');
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      toast.error(isPersian ? 'آدرس ایمیل الزامی است.' : 'Email is required.');
+      return;
+    }
+
+    // Phone validation
+    const cleanPhone = formData.phone ? toEnglishDigits(formData.phone).trim() : '';
+    if (cleanPhone && !/^09\d{9}$/.test(cleanPhone)) {
+      toast.error(
+        isPersian
+          ? 'شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود.'
+          : 'Phone number must be an 11-digit Iranian mobile number (09...).',
+      );
+      return;
+    }
+
+    // Postal code validation
+    const cleanPostal = formData.postalCode ? toEnglishDigits(formData.postalCode).trim() : '';
+    if (cleanPostal && !/^\d{10}$/.test(cleanPostal)) {
+      toast.error(
+        isPersian
+          ? 'کد پستی باید دقیقاً ۱۰ رقم عددی باشد.'
+          : 'Postal code must be exactly 10 digits.',
+      );
+      return;
+    }
+
+    // Recipient phone validation
+    const cleanRecPhone = formData.recipientPhone ? toEnglishDigits(formData.recipientPhone).trim() : '';
+    if (cleanRecPhone && !/^09\d{9}$/.test(cleanRecPhone)) {
+      toast.error(
+        isPersian
+          ? 'شماره تماس تحویل‌گیرنده باید ۱۱ رقم بوده و با ۰۹ شروع شود.'
+          : 'Recipient phone must be an 11-digit mobile number.',
+      );
+      return;
+    }
+
+    // Password validation
+    if (formData.password && formData.password.length < 6) {
+      toast.error(
+        isPersian
+          ? 'رمز عبور باید حداقل ۶ کاراکتر باشد.'
+          : 'Password must be at least 6 characters long.',
+      );
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const payload: any = {
+        fullName: formData.fullName.trim(),
+        username: formData.username.trim().toLowerCase(),
+        email: formData.email.trim().toLowerCase(),
+        phone: cleanPhone,
+        role: formData.role,
+        isVip: formData.isVip,
+        vipExpiresAt: formData.isVip ? formData.vipExpiresAt : null,
+        avatar: formData.avatar.trim(),
+        birthDate: formData.birthDate || null,
+        birthDateShamsi: formData.birthDateShamsi || null,
+        province: formData.province.trim(),
+        city: formData.city.trim(),
+        address: formData.address.trim(),
+        postalCode: cleanPostal,
+        buildingNumber: formData.buildingNumber.trim(),
+        unit: formData.unit.trim(),
+        recipientName: formData.recipientName.trim(),
+        recipientPhone: cleanRecPhone,
+        recipientEmail: formData.recipientEmail ? formData.recipientEmail.trim().toLowerCase() : '',
+        addressNotes: formData.addressNotes.trim(),
+      };
+
+      if (formData.password) {
+        payload.password = formData.password;
+      }
+
+      const updatedUser = await adminApi.updateUser(currentUserData._id, payload);
+      const resultingUser: IUser = updatedUser?.data || updatedUser;
+
+      setCurrentUserData(resultingUser);
+      setFormData((prev) => ({ ...prev, password: '' }));
+      setIsEditing(false);
+
+      if (onUserUpdated) {
+        onUserUpdated(resultingUser);
+      }
+
+      toast.success(
+        isPersian
+          ? 'تمام اطلاعات کاربر با موفقیت بروزرسانی شد.'
+          : 'All user information updated successfully.',
+      );
+    } catch (err: any) {
+      console.error('Failed to update user', err);
+      const errMsg =
+        err?.response?.data?.message ||
+        (isPersian ? 'خطا در بروزرسانی اطلاعات کاربر.' : 'Failed to update user details.');
+      toast.error(Array.isArray(errMsg) ? errMsg[0] : errMsg);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const selectedProvinceObj = IRAN_PROVINCES.find((p) => p.name === formData.province);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -189,10 +451,11 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       classNames={{
         backdrop: 'bg-black/60 backdrop-blur-sm z-[9998]',
         wrapper: 'fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto',
-        base: 'm-auto max-w-3xl w-full bg-brand-surface dark:bg-[#141914] border border-brand-border dark:border-[#2a352a] text-brand-text rounded-3xl shadow-2xl overflow-hidden p-0 max-h-[90vh] flex flex-col',
+        base: 'm-auto max-w-3xl w-full bg-brand-surface dark:bg-[#141914] border border-brand-border dark:border-[#2a352a] text-brand-text rounded-3xl shadow-2xl overflow-hidden p-0 max-h-[92vh] flex flex-col',
         header: 'p-0 border-b border-brand-border/60 dark:border-[#2a352a]',
         body: 'p-0 overflow-y-auto',
-        footer: 'p-4 sm:px-6 border-t border-brand-border/60 dark:border-[#2a352a] bg-brand-surface-elevated/30 dark:bg-[#101410] flex items-center justify-between gap-3',
+        footer:
+          'p-4 sm:px-6 border-t border-brand-border/60 dark:border-[#2a352a] bg-brand-surface-elevated/30 dark:bg-[#101410] flex items-center justify-between gap-3',
         closeButton: 'top-4 end-4 text-brand-text-muted hover:bg-brand-surface-elevated rounded-xl',
       }}
     >
@@ -206,14 +469,17 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 <div className="flex items-center gap-4 min-w-0">
                   <div className="relative shrink-0">
                     <Avatar
-                      src={user.avatar || undefined}
-                      name={user.fullName || user.username}
+                      src={isEditing ? formData.avatar || undefined : currentUserData.avatar || undefined}
+                      name={
+                        (isEditing ? formData.fullName : currentUserData.fullName) ||
+                        currentUserData.username
+                      }
                       classNames={{
                         base: 'w-16 h-16 sm:w-18 sm:h-18 rounded-2xl border-2 border-brand-gold/40 shadow-lg text-lg font-black bg-gradient-to-br from-[#242c24] to-[#121612] text-brand-gold',
                         name: 'font-black text-lg text-brand-gold',
                       }}
                     />
-                    {user.isVip && (
+                    {(isEditing ? formData.isVip : currentUserData.isVip) && (
                       <div
                         title={isPersian ? 'کاربر طلایی VIP' : 'VIP Member'}
                         className="absolute -bottom-1 -left-1 w-6 h-6 rounded-lg bg-gradient-to-tr from-amber-600 to-amber-400 border border-white/40 flex items-center justify-center shadow-md text-[#1a1f1a]"
@@ -226,17 +492,18 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h2 className="text-base sm:text-lg font-black text-brand-text truncate">
-                        {user.fullName || (isPersian ? 'کاربر بدون نام' : 'Unnamed User')}
+                        {(isEditing ? formData.fullName : currentUserData.fullName) ||
+                          (isPersian ? 'کاربر بدون نام' : 'Unnamed User')}
                       </h2>
                       <Chip
                         size="sm"
                         variant="flat"
                         startContent={<RoleIcon className="w-3.5 h-3.5 shrink-0" />}
-                        className={`text-xs font-black h-6 border ${currentRole.color}`}
+                        className={`text-xs font-black h-6 border ${activeRole.color}`}
                       >
-                        {isPersian ? currentRole.fa : currentRole.en}
+                        {isPersian ? activeRole.fa : activeRole.en}
                       </Chip>
-                      {user.isVip && (
+                      {(isEditing ? formData.isVip : currentUserData.isVip) && (
                         <Chip
                           size="sm"
                           variant="solid"
@@ -246,19 +513,28 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           {isPersian ? 'VIP طلایی' : 'VIP Member'}
                         </Chip>
                       )}
+                      {isEditing && (
+                        <Chip
+                          size="sm"
+                          variant="solid"
+                          className="bg-amber-500/20 text-amber-500 border border-amber-500/30 text-[10px] font-black h-6"
+                        >
+                          {isPersian ? 'حالت ویرایش مدیر کل' : 'Admin Edit Mode'}
+                        </Chip>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-3 text-xs text-brand-text-muted font-mono flex-wrap">
                       <span className="font-bold text-brand-bronze dark:text-brand-gold">
-                        @{user.username}
+                        @{isEditing ? formData.username : currentUserData.username}
                       </span>
                       <span>•</span>
                       <button
-                        onClick={() => copyToClipboard(user._id, 'id')}
+                        onClick={() => copyToClipboard(currentUserData._id, 'id')}
                         className="group flex items-center gap-1 hover:text-brand-text transition-colors cursor-pointer"
                         title={isPersian ? 'کپی شناسه سیستمی کاربر' : 'Copy User ID'}
                       >
-                        <span>ID: {user._id.slice(0, 8)}...</span>
+                        <span>ID: {currentUserData._id.slice(0, 8)}...</span>
                         {copiedKey === 'id' ? (
                           <Check className="w-3 h-3 text-emerald-500" />
                         ) : (
@@ -269,552 +545,1238 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                   </div>
                 </div>
 
-                {/* VIP Quick Action Button in Header */}
-                {isAdmin && onToggleVip && (
-                  <div className="shrink-0 flex items-center gap-2 self-end sm:self-auto">
+                {/* Top Action Toggle Buttons (Admin Only) */}
+                <div className="shrink-0 flex items-center gap-2 self-end sm:self-auto">
+                  {isAdmin ? (
                     <Button
                       size="sm"
                       radius="full"
-                      variant={user.isVip ? 'solid' : 'bordered'}
-                      onPress={() => onToggleVip(user._id, user.isVip)}
-                      startContent={<Crown className="w-3.5 h-3.5" />}
+                      variant={isEditing ? 'solid' : 'bordered'}
+                      color={isEditing ? 'warning' : 'default'}
+                      onPress={() => setIsEditing(!isEditing)}
+                      startContent={
+                        isEditing ? <Eye className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />
+                      }
                       className={`font-black text-xs cursor-pointer shadow-xs active:scale-95 transition-all ${
-                        user.isVip
-                          ? 'bg-brand-gold text-[#141914]'
-                          : 'border-brand-border text-brand-text-muted hover:border-brand-gold hover:text-brand-text'
+                        isEditing
+                          ? 'bg-amber-500 text-[#141914]'
+                          : 'border-brand-gold/60 text-brand-bronze dark:text-brand-gold hover:bg-brand-gold/10'
                       }`}
                     >
-                      {user.isVip
-                        ? isPersian ? 'لغو عضویت VIP' : 'Revoke VIP'
-                        : isPersian ? 'ارتقا به VIP طلایی' : 'Upgrade to VIP'}
+                      {isEditing
+                        ? isPersian
+                          ? 'انصراف از ویرایش'
+                          : 'Exit Edit Mode'
+                        : isPersian
+                        ? 'ویرایش تمامی اطلاعات'
+                        : 'Edit All Details'}
                     </Button>
-                  </div>
-                )}
+                  ) : (
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      className="bg-brand-surface-elevated text-brand-text-muted border border-brand-border text-[11px]"
+                    >
+                      {isPersian ? 'فقط مشاهده' : 'View Only'}
+                    </Chip>
+                  )}
+                </div>
               </div>
             </ModalHeader>
 
-            {/* Navigation Tabs */}
-            <div className="px-5 sm:px-6 pt-3 border-b border-brand-border/40 bg-brand-surface-elevated/20">
-              <Tabs
-                selectedKey={selectedTab}
-                onSelectionChange={(k) => setSelectedTab(k as string)}
-                variant="underlined"
-                classNames={{
-                  tabList: 'gap-6 p-0 border-none',
-                  cursor: 'w-full bg-brand-gold h-[2.5px] rounded-full',
-                  tab: 'max-w-fit px-1 h-10 font-bold text-xs sm:text-sm',
-                  tabContent: 'group-data-[selected=true]:text-brand-gold font-bold',
-                }}
-              >
-                <Tab
-                  key="profile"
-                  title={
-                    <div className="flex items-center gap-2">
-                      <UserIcon className="w-4 h-4" />
-                      <span>{isPersian ? 'مشخصات فردی و حساب' : 'Profile & Account'}</span>
-                    </div>
-                  }
-                />
-                <Tab
-                  key="address"
-                  title={
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      <span>{isPersian ? 'نشانی و آدرس پستی' : 'Shipping Address'}</span>
-                      {user.city && (
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                      )}
-                    </div>
-                  }
-                />
-                <Tab
-                  key="orders"
-                  title={
-                    <div className="flex items-center gap-2">
-                      <ShoppingBag className="w-4 h-4" />
-                      <span>{isPersian ? 'سوابق سفارشات' : 'Order History'}</span>
-                      <Chip size="sm" variant="flat" className="h-5 text-[11px] px-1.5 bg-brand-surface-elevated">
-                        {loadingOrders ? '...' : toPersianDigits(orders.length)}
-                      </Chip>
-                    </div>
-                  }
-                />
-              </Tabs>
-            </div>
-
-            {/* Modal Body Contents */}
-            <ModalBody className="p-5 sm:p-6 space-y-6">
-              <AnimatePresence mode="wait">
-                {selectedTab === 'profile' && (
-                  <motion.div
-                    key="tab-profile"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-6"
-                  >
-                    {/* Key Metrics / Highlights Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="p-3.5 rounded-2xl bg-brand-surface-elevated/50 dark:bg-[#1a221a] border border-brand-border/60 dark:border-[#2a352a] space-y-1">
-                        <div className="text-[11px] text-brand-text-muted flex items-center gap-1.5 font-medium">
-                          <ShoppingBag className="w-3.5 h-3.5 text-brand-bronze" />
-                          <span>{isPersian ? 'تعداد سفارشات' : 'Total Orders'}</span>
-                        </div>
-                        <div className="text-base font-black text-brand-text">
-                          {loadingOrders ? '...' : toPersianDigits(orders.length)} {isPersian ? 'سفارش' : 'orders'}
-                        </div>
+            {/* View Mode Tabs vs Edit Mode Tabs */}
+            {!isEditing ? (
+              /* ======================= VIEW MODE NAVIGATION TABS ======================= */
+              <div className="px-5 sm:px-6 pt-3 border-b border-brand-border/40 bg-brand-surface-elevated/20">
+                <Tabs
+                  selectedKey={selectedTab}
+                  onSelectionChange={(k) => setSelectedTab(k as string)}
+                  variant="underlined"
+                  classNames={{
+                    tabList: 'gap-6 p-0 border-b-0',
+                    cursor: 'w-full bg-brand-gold h-0.5 rounded-full',
+                    tab: 'max-w-fit px-1 h-10 text-xs font-bold text-brand-text-muted data-[selected=true]:text-brand-text data-[selected=true]:font-black',
+                  }}
+                >
+                  <Tab
+                    key="profile"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <UserIcon className="w-3.5 h-3.5" />
+                        <span>{isPersian ? 'مشخصات و حساب' : 'Profile & Account'}</span>
                       </div>
-
-                      <div className="p-3.5 rounded-2xl bg-brand-surface-elevated/50 dark:bg-[#1a221a] border border-brand-border/60 dark:border-[#2a352a] space-y-1">
-                        <div className="text-[11px] text-brand-text-muted flex items-center gap-1.5 font-medium">
-                          <Crown className="w-3.5 h-3.5 text-brand-gold" />
-                          <span>{isPersian ? 'وضعیت VIP' : 'VIP Status'}</span>
-                        </div>
-                        <div className="text-base font-black text-brand-gold truncate">
-                          {user.isVip ? (isPersian ? 'فعال (طلایی)' : 'Active') : (isPersian ? 'غیرفعال' : 'Inactive')}
-                        </div>
+                    }
+                  />
+                  <Tab
+                    key="address"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span>{isPersian ? 'نشانی و تحویل' : 'Shipping Address'}</span>
                       </div>
-
-                      <div className="p-3.5 rounded-2xl bg-brand-surface-elevated/50 dark:bg-[#1a221a] border border-brand-border/60 dark:border-[#2a352a] space-y-1">
-                        <div className="text-[11px] text-brand-text-muted flex items-center gap-1.5 font-medium">
-                          <MapPin className="w-3.5 h-3.5 text-rose-500" />
-                          <span>{isPersian ? 'موقعیت' : 'City / Location'}</span>
-                        </div>
-                        <div className="text-base font-black text-brand-text truncate">
-                          {user.city || (isPersian ? 'ثبت نشده' : 'Not set')}
-                        </div>
-                      </div>
-
-                      <div className="p-3.5 rounded-2xl bg-brand-surface-elevated/50 dark:bg-[#1a221a] border border-brand-border/60 dark:border-[#2a352a] space-y-1">
-                        <div className="text-[11px] text-brand-text-muted flex items-center gap-1.5 font-medium">
-                          <Clock className="w-3.5 h-3.5 text-emerald-500" />
-                          <span>{isPersian ? 'مجموع خریدها' : 'Total Spent'}</span>
-                        </div>
-                        <div className="text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 truncate">
-                          {loadingOrders ? '...' : formatToman(totalSpent, isPersian)}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Personal & Contact Information Card */}
-                    <div className="rounded-2xl border border-brand-border/70 dark:border-[#2a352a] bg-brand-surface-elevated/30 dark:bg-[#161d16] p-4 sm:p-5 space-y-4">
-                      <h3 className="font-black text-sm text-brand-text flex items-center gap-2 pb-2 border-b border-brand-border/40">
-                        <UserIcon className="w-4 h-4 text-brand-gold" />
-                        <span>{isPersian ? 'اطلاعات شناسایی و ارتباطی' : 'Personal & Contact Information'}</span>
-                      </h3>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                        {/* Full Name */}
-                        <div className="space-y-1">
-                          <span className="text-brand-text-muted block text-[11px] font-semibold">
-                            {isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
-                          </span>
-                          <span className="font-black text-sm text-brand-text block">
-                            {user.fullName || '—'}
-                          </span>
-                        </div>
-
-                        {/* Username */}
-                        <div className="space-y-1">
-                          <span className="text-brand-text-muted block text-[11px] font-semibold">
-                            {isPersian ? 'نام کاربری' : 'Username'}
-                          </span>
-                          <span className="font-bold text-sm text-brand-bronze dark:text-brand-gold font-mono block">
-                            @{user.username}
-                          </span>
-                        </div>
-
-                        {/* Email Address */}
-                        <div className="space-y-1">
-                          <span className="text-brand-text-muted block text-[11px] font-semibold">
-                            {isPersian ? 'آدرس ایمیل' : 'Email Address'}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-3.5 h-3.5 text-brand-bronze shrink-0" />
-                            <a
-                              href={`mailto:${user.email}`}
-                              className="font-bold text-brand-text hover:text-brand-gold transition-colors truncate font-sans"
-                            >
-                              {user.email}
-                            </a>
-                            <button
-                              onClick={() => copyToClipboard(user.email, 'email')}
-                              className="p-1 hover:bg-brand-surface rounded-md text-brand-text-muted transition-colors cursor-pointer"
-                              title={isPersian ? 'کپی ایمیل' : 'Copy email'}
-                            >
-                              {copiedKey === 'email' ? (
-                                <Check className="w-3 h-3 text-emerald-500" />
-                              ) : (
-                                <Copy className="w-3 h-3" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Phone Number */}
-                        <div className="space-y-1">
-                          <span className="text-brand-text-muted block text-[11px] font-semibold">
-                            {isPersian ? 'شماره موبایل / تماس' : 'Phone Number'}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-3.5 h-3.5 text-brand-bronze shrink-0" />
-                            {user.phone ? (
-                              <>
-                                <a
-                                  href={`tel:${user.phone}`}
-                                  className="font-bold text-brand-text hover:text-brand-gold transition-colors font-mono"
-                                >
-                                  {user.phone}
-                                </a>
-                                <button
-                                  onClick={() => copyToClipboard(user.phone || '', 'phone')}
-                                  className="p-1 hover:bg-brand-surface rounded-md text-brand-text-muted transition-colors cursor-pointer"
-                                  title={isPersian ? 'کپی شماره تماس' : 'Copy phone'}
-                                >
-                                  {copiedKey === 'phone' ? (
-                                    <Check className="w-3 h-3 text-emerald-500" />
-                                  ) : (
-                                    <Copy className="w-3 h-3" />
-                                  )}
-                                </button>
-                              </>
-                            ) : (
-                              <span className="text-brand-text-muted font-sans">—</span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Birth Date */}
-                        <div className="space-y-1">
-                          <span className="text-brand-text-muted block text-[11px] font-semibold">
-                            {isPersian ? 'تاریخ تولد (شمسی / میلادی)' : 'Birth Date'}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-3.5 h-3.5 text-brand-bronze shrink-0" />
-                            {user.birthDate || user.birthDateShamsi ? (
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-bold text-brand-text">
-                                  {user.birthDate
-                                    ? formatDisplayBirthDate(user.birthDate, 'jalali', isPersian)
-                                    : user.birthDateShamsi}
-                                </span>
-                                {user.birthDate && (
-                                  <span className="text-brand-text-muted font-mono text-[11px]">
-                                    ({formatDisplayBirthDate(user.birthDate, 'gregorian', false)})
-                                  </span>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-brand-text-muted font-sans">—</span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Registration Date */}
-                        <div className="space-y-1">
-                          <span className="text-brand-text-muted block text-[11px] font-semibold">
-                            {isPersian ? 'تاریخ و زمان ثبت‌نام' : 'Registration Date'}
-                          </span>
-                          <div className="flex items-center gap-2 text-brand-text font-medium">
-                            <Clock className="w-3.5 h-3.5 text-brand-bronze shrink-0" />
-                            <span>{formatDateTime(user.createdAt)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* VIP Subscription Details Card */}
-                    <div className="rounded-2xl border border-brand-gold/30 bg-gradient-to-br from-brand-gold/10 to-transparent p-4 sm:p-5 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-black text-sm text-brand-text flex items-center gap-2">
-                          <Crown className="w-4 h-4 text-brand-gold" />
-                          <span>{isPersian ? 'جزئیات اشتراک VIP باشگاه مشتریان' : 'VIP Membership Details'}</span>
-                        </h3>
-                        <Chip
-                          size="sm"
-                          variant="solid"
-                          className={user.isVip ? 'bg-brand-gold text-[#141914] font-black' : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-bold'}
-                        >
-                          {user.isVip ? (isPersian ? 'اشتراک فعال' : 'Active VIP') : (isPersian ? 'غیرفعال' : 'Standard')}
+                    }
+                  />
+                  <Tab
+                    key="orders"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                        <span>{isPersian ? 'تاریخچه سفارشات' : 'Order History'}</span>
+                        <Chip size="sm" variant="flat" className="h-4 text-[10px] px-1 font-bold">
+                          {toPersianDigits(orders.length)}
                         </Chip>
                       </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
-                        <div>
-                          <span className="text-[11px] text-brand-text-muted block">
-                            {isPersian ? 'تاریخ انقضای عضویت VIP' : 'VIP Expiration Date'}
-                          </span>
-                          <span className="font-bold text-brand-text block mt-0.5">
-                            {user.vipExpiresAt ? formatDateTime(user.vipExpiresAt) : (user.isVip ? (isPersian ? 'نامحدود (دائمی)' : 'Lifetime') : '—')}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-brand-text-muted block">
-                            {isPersian ? 'مزایای فعال برای کاربر' : 'Active Privileges'}
-                          </span>
-                          <span className="font-bold text-brand-text block mt-0.5">
-                            {user.isVip
-                              ? isPersian ? 'تخفیف ویژه، دسترسی زودهنگام به محصولات نیش، ارسال رایگان' : 'Special discounts & priority shipping'
-                              : isPersian ? 'بدون مزایای ویژه' : 'Standard privileges'}
-                          </span>
-                        </div>
+                    }
+                  />
+                </Tabs>
+              </div>
+            ) : (
+              /* ======================= EDIT MODE NAVIGATION TABS ======================= */
+              <div className="px-5 sm:px-6 pt-3 border-b border-brand-border/40 bg-amber-500/5">
+                <Tabs
+                  selectedKey={selectedEditTab}
+                  onSelectionChange={(k) => setSelectedEditTab(k as string)}
+                  variant="underlined"
+                  classNames={{
+                    tabList: 'gap-6 p-0 border-b-0',
+                    cursor: 'w-full bg-amber-500 h-0.5 rounded-full',
+                    tab: 'max-w-fit px-1 h-10 text-xs font-bold text-brand-text-muted data-[selected=true]:text-amber-500 data-[selected=true]:font-black',
+                  }}
+                >
+                  <Tab
+                    key="identity"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <UserIcon className="w-3.5 h-3.5" />
+                        <span>{isPersian ? 'مشخصات هویتی و رمز' : 'Identity & Password'}</span>
                       </div>
-                    </div>
-                  </motion.div>
-                )}
+                    }
+                  />
+                  <Tab
+                    key="vip"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <Crown className="w-3.5 h-3.5" />
+                        <span>{isPersian ? 'عضویت طلایی VIP' : 'VIP Subscription'}</span>
+                      </div>
+                    }
+                  />
+                  <Tab
+                    key="shipping"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span>{isPersian ? 'آدرس و نشانی تحویل' : 'Shipping Address'}</span>
+                      </div>
+                    }
+                  />
+                  <Tab
+                    key="recipient"
+                    title={
+                      <div className="flex items-center gap-2">
+                        <Package className="w-3.5 h-3.5" />
+                        <span>{isPersian ? 'مشخصات گیرنده و نکات' : 'Recipient & Notes'}</span>
+                      </div>
+                    }
+                  />
+                </Tabs>
+              </div>
+            )}
 
-                {selectedTab === 'address' && (
+            {/* Modal Body */}
+            <ModalBody className="p-5 sm:p-6 space-y-6">
+              <AnimatePresence mode="wait">
+                {/* ========================================================================= */}
+                {/* ============================= EDIT MODE ================================= */}
+                {/* ========================================================================= */}
+                {isEditing ? (
                   <motion.div
-                    key="tab-address"
+                    key="edit-container"
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-4"
+                    transition={{ duration: 0.25 }}
+                    className="space-y-6"
                   >
-                    {user.address || user.city || user.province ? (
-                      <div className="space-y-4">
-                        {/* Primary Address Card */}
-                        <div className="rounded-2xl border border-brand-border/70 dark:border-[#2a352a] bg-brand-surface-elevated/30 dark:bg-[#161d16] p-5 space-y-4">
-                          <div className="flex items-center justify-between pb-3 border-b border-brand-border/40">
-                            <h3 className="font-black text-sm text-brand-text flex items-center gap-2">
-                              <Home className="w-4 h-4 text-brand-gold" />
-                              <span>{isPersian ? 'آدرس پستی پیش‌فرض ثبت‌شده' : 'Default Postal Address'}</span>
-                            </h3>
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-brand-bronze dark:text-brand-gold">
-                              <MapPin className="w-3.5 h-3.5" />
-                              <span>{user.province ? `${user.province}، ` : ''}{user.city || '—'}</span>
-                            </div>
-                          </div>
+                    {/* Notice Banner */}
+                    <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2.5">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <p className="leading-relaxed">
+                        {isPersian
+                          ? 'شما به عنوان مدیر کل سیستم مجاز به تغییر تک‌تک فیلدهای اطلاعاتی این کاربر (شامل اطلاعات هویتی، رمز عبور مستقیم، نقش دسترسی، عضویت VIP و آدرس‌ها) هستید.'
+                          : 'As a Super Admin, you are authorized to modify every single piece of information for this user, including direct password resets, role, VIP status, and delivery addresses.'}
+                      </p>
+                    </div>
 
-                          {/* Full Street Address */}
-                          <div className="space-y-1">
-                            <span className="text-brand-text-muted text-[11px] font-semibold block">
-                              {isPersian ? 'نشانی دقیق پستی' : 'Street Address'}
-                            </span>
-                            <p className="text-sm font-bold text-brand-text leading-relaxed">
-                              {user.address || (isPersian ? 'ثبت نشده است' : 'Not provided')}
-                            </p>
-                          </div>
+                    {/* EDIT TAB 1: IDENTITY & PASSWORD */}
+                    {selectedEditTab === 'identity' && (
+                      <div className="space-y-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <Input
+                            label={isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
+                            labelPlacement="outside-top"
+                            isRequired
+                            value={formData.fullName}
+                            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                            placeholder={isPersian ? 'مثال: علیرضا محمدی' : 'e.g. John Doe'}
+                            classNames={{
+                              label: inputLabelClass,
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-bold text-brand-text',
+                            }}
+                          />
 
-                          {/* Postal Code, Building & Unit */}
-                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2 border-t border-brand-border/40 text-xs">
-                            <div className="space-y-1">
-                              <span className="text-brand-text-muted text-[11px] font-semibold block">
-                                {isPersian ? 'کد پستی ۱۰ رقمی' : 'Postal Code'}
-                              </span>
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-mono font-black text-sm text-brand-text">
-                                  {user.postalCode || '—'}
-                                </span>
-                                {user.postalCode && (
-                                  <button
-                                    onClick={() => copyToClipboard(user.postalCode || '', 'zip')}
-                                    className="p-1 hover:bg-brand-surface rounded text-brand-text-muted cursor-pointer"
-                                  >
-                                    {copiedKey === 'zip' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                                  </button>
-                                )}
-                              </div>
-                            </div>
+                          <Input
+                            label={isPersian ? 'نام کاربری (یکتا)' : 'Username (Unique)'}
+                            labelPlacement="outside-top"
+                            isRequired
+                            value={formData.username}
+                            onChange={(e) =>
+                              setFormData({ ...formData, username: e.target.value.toLowerCase() })
+                            }
+                            startContent={<span className="text-brand-text-muted text-xs font-mono">@</span>}
+                            placeholder="username"
+                            dir="ltr"
+                            classNames={{
+                              label: inputLabelClass,
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-mono font-bold text-brand-text',
+                            }}
+                          />
 
-                            <div className="space-y-1">
-                              <span className="text-brand-text-muted text-[11px] font-semibold block">
-                                {isPersian ? 'پلاک' : 'Building No.'}
-                              </span>
-                              <span className="font-bold text-sm text-brand-text block">
-                                {user.buildingNumber || '—'}
-                              </span>
-                            </div>
+                          <Input
+                            label={isPersian ? 'آدرس ایمیل' : 'Email Address'}
+                            labelPlacement="outside-top"
+                            isRequired
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) =>
+                              setFormData({ ...formData, email: e.target.value.toLowerCase() })
+                            }
+                            startContent={<Mail className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            placeholder="user@domain.com"
+                            dir="ltr"
+                            classNames={{
+                              label: inputLabelClass,
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-mono font-semibold text-brand-text',
+                            }}
+                          />
 
-                            <div className="space-y-1">
-                              <span className="text-brand-text-muted text-[11px] font-semibold block">
-                                {isPersian ? 'واحد' : 'Unit'}
-                              </span>
-                              <span className="font-bold text-sm text-brand-text block">
-                                {user.unit || '—'}
-                              </span>
-                            </div>
+                          <Input
+                            label={isPersian ? 'شماره تلفن همراه' : 'Mobile Phone'}
+                            labelPlacement="outside-top"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            startContent={<Phone className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            placeholder="09123456789"
+                            dir="ltr"
+                            classNames={{
+                              label: inputLabelClass,
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-mono font-semibold text-brand-text',
+                            }}
+                          />
+                        </div>
+
+                        {/* Role Selection */}
+                        <div className="space-y-2">
+                          <label className={inputLabelClass}>
+                            {isPersian ? 'نقش و سطح دسترسی کاربر در سامانه' : 'User Role & Permissions'}
+                          </label>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {[
+                              {
+                                key: 'user',
+                                fa: 'کاربر عادی',
+                                en: 'Standard User',
+                                descFa: 'دسترسی فقط به بخش فروشگاه و حساب خود',
+                                descEn: 'Store & personal account only',
+                                icon: UserIcon,
+                              },
+                              {
+                                key: 'editor',
+                                fa: 'ویراستار محتوا',
+                                en: 'Content Editor',
+                                descFa: 'دسترسی به مدیریت محصولات و سفارشات',
+                                descEn: 'Can manage products & orders',
+                                icon: ShieldCheck,
+                              },
+                              {
+                                key: 'admin',
+                                fa: 'مدیر کل سیستم',
+                                en: 'Super Admin',
+                                descFa: 'دسترسی نامحدود به تمامی بخش‌ها',
+                                descEn: 'Full access to all systems',
+                                icon: ShieldAlert,
+                              },
+                            ].map((r) => {
+                              const isSel = formData.role === r.key;
+                              const Icon = r.icon;
+                              return (
+                                <div
+                                  key={r.key}
+                                  onClick={() => setFormData({ ...formData, role: r.key as UserRole })}
+                                  className={`p-3.5 rounded-2xl border cursor-pointer transition-all flex flex-col gap-1.5 ${
+                                    isSel
+                                      ? 'bg-brand-gold/10 border-brand-gold shadow-xs'
+                                      : 'bg-brand-surface-elevated/40 border-brand-border/60 hover:border-brand-gold/40'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <Icon
+                                        className={`w-4 h-4 ${
+                                          isSel ? 'text-brand-gold' : 'text-brand-text-muted'
+                                        }`}
+                                      />
+                                      <span
+                                        className={`text-xs font-black ${
+                                          isSel ? 'text-brand-text' : 'text-brand-text-muted'
+                                        }`}
+                                      >
+                                        {isPersian ? r.fa : r.en}
+                                      </span>
+                                    </div>
+                                    {isSel && <Check className="w-3.5 h-3.5 text-brand-gold" />}
+                                  </div>
+                                  <span className="text-[10px] text-brand-text-muted leading-tight">
+                                    {isPersian ? r.descFa : r.descEn}
+                                  </span>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
 
-                        {/* Recipient Details Card */}
-                        <div className="rounded-2xl border border-brand-border/70 dark:border-[#2a352a] bg-brand-surface-elevated/30 dark:bg-[#161d16] p-5 space-y-4">
-                          <h3 className="font-black text-sm text-brand-text flex items-center gap-2 pb-2 border-b border-brand-border/40">
-                            <UserIcon className="w-4 h-4 text-brand-gold" />
-                            <span>{isPersian ? 'مشخصات تحویل‌گیرنده سفارشات' : 'Recipient Information'}</span>
-                          </h3>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                            <div className="space-y-1">
-                              <span className="text-brand-text-muted text-[11px] font-semibold block">
-                                {isPersian ? 'نام تحویل‌گیرنده' : 'Recipient Name'}
-                              </span>
-                              <span className="font-bold text-sm text-brand-text block">
-                                {user.recipientName || user.fullName || '—'}
-                              </span>
+                        {/* Password Reset Direct (No current password needed for admin) */}
+                        <div className="p-4 rounded-2xl border border-brand-border/60 bg-brand-surface-elevated/30 space-y-3">
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div className="flex items-center gap-2">
+                              <Lock className="w-4 h-4 text-brand-gold shrink-0" />
+                              <div>
+                                <span className="text-xs font-bold text-brand-text">
+                                  {isPersian ? 'تنظیم / ریست رمز عبور کاربر' : 'Set / Reset User Password'}
+                                </span>
+                                <p className="text-[11px] text-brand-text-muted mt-0.5">
+                                  {isPersian
+                                    ? 'مدیر کل نیازی به وارد کردن کلمه عبور فعلی ندارد. در صورت عدم تغییر، فیلد را خالی بگذارید.'
+                                    : 'Super Admin does not require current password. Leave blank if unchanged.'}
+                                </p>
+                              </div>
                             </div>
 
-                            <div className="space-y-1">
-                              <span className="text-brand-text-muted text-[11px] font-semibold block">
-                                {isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone'}
-                              </span>
-                              <span className="font-mono font-bold text-sm text-brand-text block">
-                                {user.recipientPhone || user.phone || '—'}
-                              </span>
-                            </div>
-
-                            <div className="space-y-1">
-                              <span className="text-brand-text-muted text-[11px] font-semibold block">
-                                {isPersian ? 'ایمیل تحویل‌گیرنده' : 'Recipient Email'}
-                              </span>
-                              <span className="font-mono font-bold text-xs text-brand-text block truncate">
-                                {user.recipientEmail || user.email || '—'}
-                              </span>
-                            </div>
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              onPress={generateRandomPassword}
+                              startContent={<Sparkles className="w-3.5 h-3.5 text-brand-gold" />}
+                              className="text-xs font-bold h-8 rounded-xl bg-brand-surface-elevated text-brand-text border border-brand-border cursor-pointer"
+                            >
+                              {isPersian ? 'تولید رمز تصادفی امن' : 'Generate Strong Password'}
+                            </Button>
                           </div>
 
-                          {user.addressNotes && (
-                            <div className="pt-2 border-t border-brand-border/40 space-y-1">
-                              <span className="text-brand-text-muted text-[11px] font-semibold block">
-                                {isPersian ? 'توضیحات تکمیلی و نکات تحویل' : 'Delivery Notes'}
+                          <Input
+                            labelPlacement="outside-top"
+                            type={showPassword ? 'text' : 'password'}
+                            value={formData.password}
+                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            placeholder={
+                              isPersian
+                                ? 'کلمه عبور جدید را وارد کنید (حداقل ۶ کاراکتر)...'
+                                : 'Enter new password (min 6 characters)...'
+                            }
+                            dir="ltr"
+                            endContent={
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="text-brand-text-muted hover:text-brand-text cursor-pointer p-1"
+                              >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            }
+                            classNames={{
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-mono font-semibold text-brand-text',
+                            }}
+                          />
+                        </div>
+
+                        {/* Avatar URL & Birth Date */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <Input
+                            label={isPersian ? 'لینک تصویر آواتار (URL)' : 'Avatar Image URL'}
+                            labelPlacement="outside-top"
+                            value={formData.avatar}
+                            onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
+                            placeholder="https://example.com/avatar.jpg"
+                            dir="ltr"
+                            startContent={<UserIcon className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            classNames={{
+                              label: inputLabelClass,
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-mono text-brand-text',
+                            }}
+                          />
+
+                          <div className="space-y-1">
+                            <BirthDatePicker
+                              value={formData.birthDate}
+                              onChange={handleBirthDateChange}
+                              label={
+                                isPersian
+                                  ? 'تاریخ تولد کاربر (شمسی و میلادی)'
+                                  : 'Date of Birth (Solar & Gregorian)'
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* EDIT TAB 2: VIP STATUS */}
+                    {selectedEditTab === 'vip' && (
+                      <div className="space-y-5">
+                        <div className="p-4 sm:p-5 rounded-3xl border border-brand-gold/30 bg-brand-gold/5 space-y-4">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-2xl bg-brand-gold/20 flex items-center justify-center text-brand-gold shrink-0">
+                                <Crown className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <h3 className="text-sm font-black text-brand-text">
+                                  {isPersian ? 'وضعیت عضویت ویژه VIP' : 'VIP Membership Status'}
+                                </h3>
+                                <p className="text-xs text-brand-text-muted mt-0.5">
+                                  {isPersian
+                                    ? 'کاربران VIP از ارسال رایگان و تخفیف‌های ویژه باشگاه مشتریان بهره‌مند می‌شوند'
+                                    : 'VIP members enjoy free shipping and luxury customer club discounts'}
+                                </p>
+                              </div>
+                            </div>
+
+                            <SmoothSwitch
+                              isSelected={formData.isVip}
+                              onValueChange={(val) => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  isVip: val,
+                                  vipExpiresAt: val ? prev.vipExpiresAt : null,
+                                }));
+                              }}
+                              ariaLabel="Toggle VIP"
+                            />
+                          </div>
+
+                          {formData.isVip && (
+                            <div className="pt-4 border-t border-brand-gold/20 space-y-3">
+                              <span className="text-xs font-bold text-brand-text block">
+                                {isPersian
+                                  ? 'انتخاب مدت اعتبار و تاریخ انقضای اشتراک VIP:'
+                                  : 'Select VIP Expiration / Duration:'}
                               </span>
-                              <p className="text-xs text-brand-text font-medium leading-relaxed bg-brand-surface p-2.5 rounded-xl border border-brand-border/60">
-                                {user.addressNotes}
-                              </p>
+
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {[
+                                  { days: 30, labelFa: '۳۰ روزه', labelEn: '30 Days' },
+                                  { days: 90, labelFa: '۹۰ روزه', labelEn: '90 Days' },
+                                  { days: 180, labelFa: '۱۸۰ روزه', labelEn: '180 Days' },
+                                  { days: 365, labelFa: '۱ ساله', labelEn: '1 Year' },
+                                  { days: null, labelFa: 'دائمی و نامحدود', labelEn: 'Lifetime' },
+                                ].map((preset) => (
+                                  <Button
+                                    key={preset.labelEn}
+                                    size="sm"
+                                    variant="flat"
+                                    onPress={() => handleSetVipDuration(preset.days)}
+                                    className="text-xs font-bold bg-brand-surface-elevated text-brand-text border border-brand-gold/30 hover:bg-brand-gold/15 rounded-xl h-8 cursor-pointer"
+                                  >
+                                    {isPersian ? preset.labelFa : preset.labelEn}
+                                  </Button>
+                                ))}
+                              </div>
+
+                              <div className="mt-3 p-3 rounded-xl bg-brand-surface-elevated/70 border border-brand-border text-xs flex items-center justify-between">
+                                <span className="text-brand-text-muted">
+                                  {isPersian ? 'تاریخ انقضای فعلی اشتراک:' : 'Current Expiry Date:'}
+                                </span>
+                                <span className="font-bold text-brand-gold font-mono">
+                                  {formData.vipExpiresAt
+                                    ? formatDateTime(formData.vipExpiresAt)
+                                    : isPersian
+                                    ? 'نامحدود (دائمی)'
+                                    : 'Lifetime'}
+                                </span>
+                              </div>
                             </div>
                           )}
                         </div>
                       </div>
-                    ) : (
-                      <div className="p-12 text-center rounded-2xl border border-dashed border-brand-border text-brand-text-muted space-y-3">
-                        <MapPin className="w-10 h-10 text-brand-bronze mx-auto opacity-40" />
-                        <h4 className="font-bold text-sm text-brand-text">
-                          {isPersian ? 'هنوز نشانی یا آدرس پستی ثبت نشده است' : 'No shipping address registered'}
-                        </h4>
-                        <p className="text-xs max-w-sm mx-auto">
-                          {isPersian
-                            ? 'این کاربر هنوز در پروفایل یا حین ثبت سفارش، آدرس پستی خود را تکمیل نکرده است.'
-                            : 'This user has not yet entered their delivery address in their account.'}
-                        </p>
-                      </div>
                     )}
-                  </motion.div>
-                )}
 
-                {selectedTab === 'orders' && (
-                  <motion.div
-                    key="tab-orders"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-4"
-                  >
-                    {loadingOrders ? (
-                      <div className="space-y-3">
-                        {[1, 2, 3].map((i) => (
-                          <div key={i} className="p-4 rounded-2xl border border-brand-border/60 space-y-2">
-                            <Skeleton className="h-4 w-1/3 rounded-lg" />
-                            <Skeleton className="h-3 w-1/2 rounded-lg" />
-                          </div>
-                        ))}
-                      </div>
-                    ) : orders.length === 0 ? (
-                      <div className="p-12 text-center rounded-2xl border border-dashed border-brand-border text-brand-text-muted space-y-3">
-                        <ShoppingBag className="w-10 h-10 text-brand-bronze mx-auto opacity-40" />
-                        <h4 className="font-bold text-sm text-brand-text">
-                          {isPersian ? 'هیچ سفارشی توسط این کاربر ثبت نشده است' : 'No orders found for this user'}
-                        </h4>
-                        <p className="text-xs max-w-sm mx-auto">
-                          {isPersian
-                            ? 'تاکنون خریدی با این حساب کاربری در فروشگاه هاتف آروما انجام نشده است.'
-                            : 'This user has not placed any orders yet.'}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {orders.map((order) => (
-                          <div
-                            key={order._id}
-                            className="p-4 rounded-2xl border border-brand-border/70 dark:border-[#2a352a] bg-brand-surface-elevated/30 dark:bg-[#161d16] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:border-brand-gold/60 transition-colors"
-                          >
-                            <div className="space-y-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-mono font-black text-sm text-brand-text">
-                                  #{order.orderNumber}
-                                </span>
-                                <Chip
-                                  size="sm"
+                    {/* EDIT TAB 3: SHIPPING ADDRESS */}
+                    {selectedEditTab === 'shipping' && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Province */}
+                          <div className="space-y-1">
+                            <label className={inputLabelClass}>
+                              {isPersian ? 'استان' : 'Province'}
+                            </label>
+                            <Dropdown placement="bottom-start">
+                              <DropdownTrigger>
+                                <Button
                                   variant="flat"
-                                  className={`text-[10px] font-black h-5 ${
-                                    order.status === 'delivered'
-                                      ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30'
-                                      : order.status === 'shipped'
-                                      ? 'bg-sky-500/15 text-sky-600 border-sky-500/30'
-                                      : order.status === 'cancelled'
-                                      ? 'bg-rose-500/15 text-rose-600 border-rose-500/30'
-                                      : 'bg-amber-500/15 text-amber-600 border-amber-500/30'
-                                  }`}
+                                  className={`w-full justify-between font-bold text-xs ${inputWrapperClass} px-3.5`}
                                 >
-                                  {order.status}
-                                </Chip>
-                              </div>
-                              <div className="text-[11px] text-brand-text-muted flex items-center gap-3">
-                                <span>{formatDateTime(order.createdAt)}</span>
-                                <span>•</span>
-                                <span>{toPersianDigits(order.items?.length || 0)} {isPersian ? 'قلم کالا' : 'items'}</span>
-                              </div>
-                            </div>
-
-                            <div className="text-start sm:text-end shrink-0">
-                              <span className="text-[11px] text-brand-text-muted block">
-                                {isPersian ? 'مبلغ کل سفارش' : 'Total Amount'}
-                              </span>
-                              <span className="font-black text-sm text-brand-bronze dark:text-brand-gold">
-                                {formatToman(order.total, isPersian)}
-                              </span>
-                            </div>
+                                  <span>
+                                    {formData.province || (isPersian ? 'انتخاب استان...' : 'Select Province...')}
+                                  </span>
+                                  <ChevronLeft className="w-3.5 h-3.5 text-brand-text-muted" />
+                                </Button>
+                              </DropdownTrigger>
+                              <DropdownMenu
+                                aria-label="Provinces"
+                                className="max-h-60 overflow-y-auto"
+                                onAction={(key) =>
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    province: key as string,
+                                    city: '',
+                                  }))
+                                }
+                              >
+                                {IRAN_PROVINCES.map((prov) => (
+                                  <DropdownItem key={prov.name} className="text-xs font-bold">
+                                    {prov.name}
+                                  </DropdownItem>
+                                ))}
+                              </DropdownMenu>
+                            </Dropdown>
                           </div>
-                        ))}
+
+                          {/* City */}
+                          <div className="space-y-1">
+                            <label className={inputLabelClass}>{isPersian ? 'شهر' : 'City'}</label>
+                            {selectedProvinceObj && selectedProvinceObj.cities.length > 0 ? (
+                              <Dropdown placement="bottom-start">
+                                <DropdownTrigger>
+                                  <Button
+                                    variant="flat"
+                                    className={`w-full justify-between font-bold text-xs ${inputWrapperClass} px-3.5`}
+                                  >
+                                    <span>
+                                      {formData.city || (isPersian ? 'انتخاب شهر...' : 'Select City...')}
+                                    </span>
+                                    <ChevronLeft className="w-3.5 h-3.5 text-brand-text-muted" />
+                                  </Button>
+                                </DropdownTrigger>
+                                <DropdownMenu
+                                  aria-label="Cities"
+                                  className="max-h-60 overflow-y-auto"
+                                  onAction={(key) =>
+                                    setFormData((prev) => ({ ...prev, city: key as string }))
+                                  }
+                                >
+                                  {selectedProvinceObj.cities.map((city) => (
+                                    <DropdownItem key={city} className="text-xs font-bold">
+                                      {city}
+                                    </DropdownItem>
+                                  ))}
+                                </DropdownMenu>
+                              </Dropdown>
+                            ) : (
+                              <Input
+                                labelPlacement="outside-top"
+                                value={formData.city}
+                                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                placeholder={isPersian ? 'نام شهر...' : 'City name...'}
+                                classNames={{
+                                  inputWrapper: inputWrapperClass,
+                                  input: 'text-xs font-bold text-brand-text',
+                                }}
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Full Address */}
+                        <Textarea
+                          label={isPersian ? 'نشانی دقیق پستی (خیابان، کوچه، بن‌بست)' : 'Street Address'}
+                          labelPlacement="outside-top"
+                          value={formData.address}
+                          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                          minRows={3}
+                          placeholder={
+                            isPersian
+                              ? 'مثال: بلوار کشاورز، خیابان ۱۶ آذر، کوچه بهار، ساختمان شماره ۵'
+                              : 'Street address details...'
+                          }
+                          classNames={{
+                            label: inputLabelClass,
+                            inputWrapper:
+                              'bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] rounded-2xl hover:border-brand-gold/60 focus-within:!border-brand-gold p-3 shadow-2xs',
+                            input: 'text-xs font-medium text-brand-text leading-relaxed',
+                          }}
+                        />
+
+                        {/* Postal Code, Building, Unit */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          <Input
+                            label={isPersian ? 'کد پستی ۱۰ رقمی' : 'Postal Code'}
+                            labelPlacement="outside-top"
+                            value={formData.postalCode}
+                            onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                            placeholder="1234567890"
+                            dir="ltr"
+                            startContent={<Hash className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            classNames={{
+                              label: inputLabelClass,
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-mono font-bold text-brand-text',
+                            }}
+                          />
+
+                          <Input
+                            label={isPersian ? 'پلاک' : 'Building / No'}
+                            labelPlacement="outside-top"
+                            value={formData.buildingNumber}
+                            onChange={(e) =>
+                              setFormData({ ...formData, buildingNumber: e.target.value })
+                            }
+                            placeholder={isPersian ? 'مثال: ۲۴' : 'e.g. 24'}
+                            startContent={<Building className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            classNames={{
+                              label: inputLabelClass,
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-bold text-brand-text',
+                            }}
+                          />
+
+                          <Input
+                            label={isPersian ? 'واحد' : 'Unit'}
+                            labelPlacement="outside-top"
+                            value={formData.unit}
+                            onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                            placeholder={isPersian ? 'مثال: ۳' : 'e.g. 3'}
+                            classNames={{
+                              label: inputLabelClass,
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-bold text-brand-text',
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* EDIT TAB 4: RECIPIENT & NOTES */}
+                    {selectedEditTab === 'recipient' && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <Input
+                            label={isPersian ? 'نام و نام خانوادگی تحویل‌گیرنده' : 'Recipient Full Name'}
+                            labelPlacement="outside-top"
+                            value={formData.recipientName}
+                            onChange={(e) =>
+                              setFormData({ ...formData, recipientName: e.target.value })
+                            }
+                            placeholder={isPersian ? 'نام شخص دریافت‌کننده' : 'Recipient Name'}
+                            startContent={<UserIcon className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            classNames={{
+                              label: inputLabelClass,
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-bold text-brand-text',
+                            }}
+                          />
+
+                          <Input
+                            label={isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone Number'}
+                            labelPlacement="outside-top"
+                            value={formData.recipientPhone}
+                            onChange={(e) =>
+                              setFormData({ ...formData, recipientPhone: e.target.value })
+                            }
+                            placeholder="09123456789"
+                            dir="ltr"
+                            startContent={<Phone className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            classNames={{
+                              label: inputLabelClass,
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-mono font-bold text-brand-text',
+                            }}
+                          />
+
+                          <Input
+                            label={isPersian ? 'ایمیل تحویل‌گیرنده (اختیاری)' : 'Recipient Email (Optional)'}
+                            labelPlacement="outside-top"
+                            type="email"
+                            value={formData.recipientEmail}
+                            onChange={(e) =>
+                              setFormData({ ...formData, recipientEmail: e.target.value })
+                            }
+                            placeholder="recipient@domain.com"
+                            dir="ltr"
+                            startContent={<Mail className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            classNames={{
+                              label: inputLabelClass,
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-mono text-brand-text',
+                            }}
+                          />
+                        </div>
+
+                        <Textarea
+                          label={isPersian ? 'توضیحات و یادداشت تحویل' : 'Delivery / Address Notes'}
+                          labelPlacement="outside-top"
+                          value={formData.addressNotes}
+                          onChange={(e) =>
+                            setFormData({ ...formData, addressNotes: e.target.value })
+                          }
+                          minRows={3}
+                          placeholder={
+                            isPersian
+                              ? 'مثال: زنگ دوم سمت راست، لطفاً قبل از مراجعه تماس گرفته شود.'
+                              : 'Special instructions for courier...'
+                          }
+                          classNames={{
+                            label: inputLabelClass,
+                            inputWrapper:
+                              'bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] rounded-2xl hover:border-brand-gold/60 focus-within:!border-brand-gold p-3 shadow-2xs',
+                            input: 'text-xs font-medium text-brand-text leading-relaxed',
+                          }}
+                        />
                       </div>
                     )}
                   </motion.div>
+                ) : (
+                  /* ========================================================================= */
+                  /* ============================= VIEW MODE ================================= */
+                  /* ========================================================================= */
+                  <>
+                    {/* TAB 1: PROFILE & ACCOUNT */}
+                    {selectedTab === 'profile' && (
+                      <motion.div
+                        key="profile-view"
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.2 }}
+                        className="space-y-6"
+                      >
+                        {/* Metrics Banner */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="p-3.5 rounded-2xl bg-brand-surface-elevated/60 dark:bg-[#182018] border border-brand-border/60">
+                            <span className="text-[11px] text-brand-text-muted block">
+                              {isPersian ? 'نقش کاربری' : 'Role'}
+                            </span>
+                            <span className="text-sm font-black text-brand-text mt-1 block">
+                              {isPersian ? activeRole.fa : activeRole.en}
+                            </span>
+                          </div>
+
+                          <div className="p-3.5 rounded-2xl bg-brand-surface-elevated/60 dark:bg-[#182018] border border-brand-border/60">
+                            <span className="text-[11px] text-brand-text-muted block">
+                              {isPersian ? 'عضویت VIP' : 'VIP Membership'}
+                            </span>
+                            <span
+                              className={`text-sm font-black mt-1 block ${
+                                currentUserData.isVip ? 'text-amber-500' : 'text-brand-text-muted'
+                              }`}
+                            >
+                              {currentUserData.isVip
+                                ? isPersian
+                                  ? 'فعال طلایی'
+                                  : 'Active'
+                                : isPersian
+                                ? 'عادی'
+                                : 'Regular'}
+                            </span>
+                          </div>
+
+                          <div className="p-3.5 rounded-2xl bg-brand-surface-elevated/60 dark:bg-[#182018] border border-brand-border/60">
+                            <span className="text-[11px] text-brand-text-muted block">
+                              {isPersian ? 'کل سفارشات' : 'Orders'}
+                            </span>
+                            <span className="text-sm font-black text-brand-text mt-1 block">
+                              {loadingOrders ? (
+                                <Skeleton className="h-4 w-10 rounded-md" />
+                              ) : (
+                                `${toPersianDigits(orders.length)} ${isPersian ? 'سفارش' : ''}`
+                              )}
+                            </span>
+                          </div>
+
+                          <div className="p-3.5 rounded-2xl bg-brand-surface-elevated/60 dark:bg-[#182018] border border-brand-border/60">
+                            <span className="text-[11px] text-brand-text-muted block">
+                              {isPersian ? 'مجموع خریدها' : 'Total Spend'}
+                            </span>
+                            <span className="text-sm font-black text-brand-bronze dark:text-brand-gold mt-1 block truncate">
+                              {loadingOrders ? (
+                                <Skeleton className="h-4 w-16 rounded-md" />
+                              ) : (
+                                formatToman(totalSpent, isPersian)
+                              )}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Contact & Personal Data Cards */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Email Card */}
+                          <div className="p-4 rounded-2xl border border-brand-border/60 bg-brand-surface-elevated/30 flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-9 h-9 rounded-xl bg-brand-surface-elevated flex items-center justify-center text-brand-gold border border-brand-border shrink-0">
+                                <Mail className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <span className="text-[11px] text-brand-text-muted block">
+                                  {isPersian ? 'آدرس ایمیل' : 'Email'}
+                                </span>
+                                <span
+                                  dir="ltr"
+                                  className="font-bold text-xs text-brand-text truncate block mt-0.5"
+                                >
+                                  {currentUserData.email || '—'}
+                                </span>
+                              </div>
+                            </div>
+                            {currentUserData.email && (
+                              <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                  onClick={() => copyToClipboard(currentUserData.email, 'email')}
+                                  className="p-1.5 rounded-lg hover:bg-brand-surface-elevated text-brand-text-muted hover:text-brand-text cursor-pointer transition-colors"
+                                  title={isPersian ? 'کپی ایمیل' : 'Copy'}
+                                >
+                                  {copiedKey === 'email' ? (
+                                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+                                <a
+                                  href={`mailto:${currentUserData.email}`}
+                                  className="p-1.5 rounded-lg hover:bg-brand-surface-elevated text-brand-text-muted hover:text-brand-text transition-colors"
+                                  title={isPersian ? 'ارسال ایمیل' : 'Send Mail'}
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Phone Card */}
+                          <div className="p-4 rounded-2xl border border-brand-border/60 bg-brand-surface-elevated/30 flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-9 h-9 rounded-xl bg-brand-surface-elevated flex items-center justify-center text-brand-gold border border-brand-border shrink-0">
+                                <Phone className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <span className="text-[11px] text-brand-text-muted block">
+                                  {isPersian ? 'شماره تلفن همراه' : 'Phone'}
+                                </span>
+                                <span
+                                  dir="ltr"
+                                  className="font-bold text-xs text-brand-text font-mono block mt-0.5"
+                                >
+                                  {currentUserData.phone ? toPersianDigits(currentUserData.phone) : '—'}
+                                </span>
+                              </div>
+                            </div>
+                            {currentUserData.phone && (
+                              <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                  onClick={() => copyToClipboard(currentUserData.phone || '', 'phone')}
+                                  className="p-1.5 rounded-lg hover:bg-brand-surface-elevated text-brand-text-muted hover:text-brand-text cursor-pointer transition-colors"
+                                  title={isPersian ? 'کپی تلفن' : 'Copy'}
+                                >
+                                  {copiedKey === 'phone' ? (
+                                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+                                <a
+                                  href={`tel:${currentUserData.phone}`}
+                                  className="p-1.5 rounded-lg hover:bg-brand-surface-elevated text-brand-text-muted hover:text-brand-text transition-colors"
+                                  title={isPersian ? 'تماس' : 'Call'}
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Birth Date */}
+                          <div className="p-4 rounded-2xl border border-brand-border/60 bg-brand-surface-elevated/30 flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-brand-surface-elevated flex items-center justify-center text-brand-gold border border-brand-border shrink-0">
+                              <Calendar className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <span className="text-[11px] text-brand-text-muted block">
+                                {isPersian ? 'تاریخ تولد' : 'Birth Date'}
+                              </span>
+                              <span className="font-bold text-xs text-brand-text block mt-0.5">
+                                {formatDisplayBirthDate(
+                                  currentUserData.birthDate,
+                                  isPersian ? 'jalali' : 'gregorian',
+                                  isPersian,
+                                ) || currentUserData.birthDateShamsi || '—'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Registration Date */}
+                          <div className="p-4 rounded-2xl border border-brand-border/60 bg-brand-surface-elevated/30 flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-brand-surface-elevated flex items-center justify-center text-brand-gold border border-brand-border shrink-0">
+                              <Clock className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <span className="text-[11px] text-brand-text-muted block">
+                                {isPersian ? 'تاریخ و ساعت ثبت‌نام' : 'Joined Date'}
+                              </span>
+                              <span className="font-bold text-xs text-brand-text block mt-0.5">
+                                {formatDateTime(currentUserData.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* VIP Subscription Details Banner */}
+                        <div className="p-4 sm:p-5 rounded-3xl border border-brand-gold/30 bg-brand-gold/5 space-y-3">
+                          <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div className="flex items-center gap-2.5">
+                              <Crown className="w-5 h-5 text-brand-gold" />
+                              <h3 className="text-sm font-black text-brand-text">
+                                {isPersian ? 'وضعیت اشتراک ویژه طلایی (VIP)' : 'VIP Subscription Status'}
+                              </h3>
+                            </div>
+                            {currentUserData.isVip ? (
+                              <Chip size="sm" variant="solid" className="bg-brand-gold text-[#141914] font-black text-xs">
+                                {isPersian ? 'اشتراک فعال' : 'Active VIP'}
+                              </Chip>
+                            ) : (
+                              <Chip size="sm" variant="flat" className="bg-brand-surface-elevated text-brand-text-muted text-xs">
+                                {isPersian ? 'غیرفعال' : 'Inactive'}
+                              </Chip>
+                            )}
+                          </div>
+
+                          {currentUserData.isVip ? (
+                            <div className="text-xs text-brand-text-muted space-y-1 pt-1">
+                              <p>
+                                {isPersian ? 'انقضای اشتراک:' : 'Expires at:'}{' '}
+                                <strong className="text-brand-text font-bold">
+                                  {currentUserData.vipExpiresAt
+                                    ? formatDateTime(currentUserData.vipExpiresAt)
+                                    : isPersian
+                                    ? 'نامحدود (دائمی)'
+                                    : 'Lifetime Unlimited'}
+                                </strong>
+                              </p>
+                              <p className="text-[11px] text-brand-gold/90 font-medium">
+                                {isPersian
+                                  ? 'مزایای فعال: تخفیف ۱۰٪ روی کلیه ادکلن‌ها، ارسال رایگان اختصاصی و پشتیبانی اولویت‌دار.'
+                                  : 'Active perks: 10% storewide discount, free courier delivery, priority support.'}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-brand-text-muted">
+                              {isPersian
+                                ? 'این کاربر در حال حاضر عضو باشگاه مشتریان ویژه نیست.'
+                                : 'This user is currently a regular customer.'}
+                            </p>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* TAB 2: SHIPPING ADDRESS VIEW */}
+                    {selectedTab === 'address' && (
+                      <motion.div
+                        key="address-view"
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.2 }}
+                        className="space-y-4"
+                      >
+                        {currentUserData.address || currentUserData.city || currentUserData.province ? (
+                          <div className="space-y-4">
+                            {/* Province & City Banner */}
+                            <div className="p-4 rounded-2xl bg-brand-surface-elevated/40 border border-brand-border/60 flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-2xl bg-brand-gold/15 flex items-center justify-center text-brand-gold shrink-0">
+                                <Home className="w-5 h-5" />
+                              </div>
+                              <div className="min-w-0">
+                                <span className="text-[11px] text-brand-text-muted block">
+                                  {isPersian ? 'استان و شهر' : 'Province & City'}
+                                </span>
+                                <span className="font-black text-sm text-brand-text block mt-0.5">
+                                  {currentUserData.province || '—'} / {currentUserData.city || '—'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Detailed Street Address */}
+                            <div className="p-4 rounded-2xl bg-brand-surface-elevated/40 border border-brand-border/60 space-y-2">
+                              <span className="text-[11px] text-brand-text-muted block">
+                                {isPersian ? 'نشانی دقیق پستی' : 'Street Address'}
+                              </span>
+                              <p className="text-xs font-bold text-brand-text leading-relaxed">
+                                {currentUserData.address || '—'}
+                              </p>
+                              <div className="flex items-center gap-4 text-xs text-brand-text-muted pt-2 border-t border-brand-border/40 flex-wrap">
+                                <span>
+                                  {isPersian ? 'پلاک:' : 'Building:'}{' '}
+                                  <strong className="text-brand-text">
+                                    {currentUserData.buildingNumber || '—'}
+                                  </strong>
+                                </span>
+                                <span>•</span>
+                                <span>
+                                  {isPersian ? 'واحد:' : 'Unit:'}{' '}
+                                  <strong className="text-brand-text">{currentUserData.unit || '—'}</strong>
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Postal Code & Recipient Info */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="p-4 rounded-2xl bg-brand-surface-elevated/40 border border-brand-border/60 flex items-start justify-between gap-2">
+                                <div>
+                                  <span className="text-[11px] text-brand-text-muted block">
+                                    {isPersian ? 'کد پستی ۱۰ رقمی' : 'Postal Code'}
+                                  </span>
+                                  <span className="font-black text-xs font-mono text-brand-text block mt-1">
+                                    {currentUserData.postalCode
+                                      ? toPersianDigits(currentUserData.postalCode)
+                                      : '—'}
+                                  </span>
+                                </div>
+                                {currentUserData.postalCode && (
+                                  <button
+                                    onClick={() =>
+                                      copyToClipboard(currentUserData.postalCode || '', 'postal')
+                                    }
+                                    className="p-1.5 rounded-lg hover:bg-brand-surface-elevated text-brand-text-muted hover:text-brand-text cursor-pointer transition-colors"
+                                    title={isPersian ? 'کپی کد پستی' : 'Copy'}
+                                  >
+                                    {copiedKey === 'postal' ? (
+                                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                    ) : (
+                                      <Copy className="w-3.5 h-3.5" />
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+
+                              <div className="p-4 rounded-2xl bg-brand-surface-elevated/40 border border-brand-border/60">
+                                <span className="text-[11px] text-brand-text-muted block">
+                                  {isPersian ? 'نام و شماره تماس گیرنده' : 'Recipient Contact'}
+                                </span>
+                                <span className="font-bold text-xs text-brand-text block mt-1">
+                                  {currentUserData.recipientName || '—'}{' '}
+                                  {currentUserData.recipientPhone && (
+                                    <span className="font-mono text-brand-gold">
+                                      ({toPersianDigits(currentUserData.recipientPhone)})
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Delivery Notes if any */}
+                            {currentUserData.addressNotes && (
+                              <div className="p-4 rounded-2xl bg-brand-surface-elevated/20 border border-brand-border/40 text-xs">
+                                <span className="text-[11px] text-brand-text-muted block mb-1">
+                                  {isPersian ? 'توضیحات و نکات تحویل' : 'Delivery Notes'}
+                                </span>
+                                <p className="text-brand-text italic leading-relaxed">
+                                  &ldquo;{currentUserData.addressNotes}&rdquo;
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="py-12 text-center space-y-3">
+                            <div className="w-12 h-12 rounded-2xl bg-brand-surface-elevated mx-auto flex items-center justify-center text-brand-text-muted">
+                              <MapPin className="w-6 h-6" />
+                            </div>
+                            <h4 className="text-sm font-bold text-brand-text">
+                              {isPersian ? 'هیچ آدرسی ثبت نشده است' : 'No Address Registered'}
+                            </h4>
+                            <p className="text-xs text-brand-text-muted max-w-sm mx-auto">
+                              {isPersian
+                                ? 'این کاربر هنوز نشانی پستی در پروفایل خود ثبت نکرده است. شما می‌توانید با زدن دکمه ویرایش برای این کاربر آدرس ثبت کنید.'
+                                : 'This user has not registered a delivery address yet. You can click Edit to add one.'}
+                            </p>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+
+                    {/* TAB 3: ORDER HISTORY VIEW */}
+                    {selectedTab === 'orders' && (
+                      <motion.div
+                        key="orders-view"
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.2 }}
+                        className="space-y-4"
+                      >
+                        {loadingOrders ? (
+                          <div className="space-y-3">
+                            {[1, 2, 3].map((i) => (
+                              <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+                            ))}
+                          </div>
+                        ) : orders.length === 0 ? (
+                          <div className="py-12 text-center space-y-3">
+                            <div className="w-12 h-12 rounded-2xl bg-brand-surface-elevated mx-auto flex items-center justify-center text-brand-text-muted">
+                              <ShoppingBag className="w-6 h-6" />
+                            </div>
+                            <h4 className="text-sm font-bold text-brand-text">
+                              {isPersian ? 'هیچ سفارشی ثبت نشده است' : 'No Orders Found'}
+                            </h4>
+                            <p className="text-xs text-brand-text-muted max-w-sm mx-auto">
+                              {isPersian
+                                ? 'این کاربر تا کنون خریدی در فروشگاه هاتف آروما ثبت نکرده است.'
+                                : 'This customer has not placed any orders yet.'}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                            {orders.map((order) => (
+                              <div
+                                key={order._id}
+                                className="p-4 rounded-2xl border border-brand-border/60 bg-brand-surface-elevated/30 hover:bg-brand-surface-elevated/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                              >
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-mono font-bold text-xs text-brand-text">
+                                      #{order.orderNumber || order._id.slice(-8).toUpperCase()}
+                                    </span>
+                                    <Chip
+                                      size="sm"
+                                      variant="flat"
+                                      className={`text-[10px] font-black h-5 ${
+                                        order.status === 'delivered'
+                                          ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30'
+                                          : order.status === 'shipped'
+                                          ? 'bg-sky-500/15 text-sky-600 border-sky-500/30'
+                                          : order.status === 'cancelled'
+                                          ? 'bg-rose-500/15 text-rose-600 border-rose-500/30'
+                                          : 'bg-amber-500/15 text-amber-600 border-amber-500/30'
+                                      }`}
+                                    >
+                                      {order.status}
+                                    </Chip>
+                                  </div>
+                                  <div className="text-[11px] text-brand-text-muted flex items-center gap-3">
+                                    <span>{formatDateTime(order.createdAt)}</span>
+                                    <span>•</span>
+                                    <span>
+                                      {toPersianDigits(order.items?.length || 0)}{' '}
+                                      {isPersian ? 'قلم کالا' : 'items'}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="text-start sm:text-end shrink-0">
+                                  <span className="text-[11px] text-brand-text-muted block">
+                                    {isPersian ? 'مبلغ کل سفارش' : 'Total Amount'}
+                                  </span>
+                                  <span className="font-black text-sm text-brand-bronze dark:text-brand-gold">
+                                    {formatToman(order.total, isPersian)}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </>
                 )}
               </AnimatePresence>
             </ModalBody>
 
             {/* Modal Footer with Actions */}
             <ModalFooter>
-              <div className="flex items-center gap-2">
-                {isAdmin && onDeleteUser && (
+              {isEditing ? (
+                /* Edit Mode Footer */
+                <div className="flex items-center justify-between w-full">
                   <Button
                     size="sm"
-                    color="danger"
-                    variant="light"
-                    onPress={() => {
-                      if (onClose) onClose();
-                      onDeleteUser(user._id, user.fullName);
-                    }}
-                    startContent={<Trash2 className="w-4 h-4" />}
-                    className="font-bold text-xs cursor-pointer hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-xl"
+                    variant="flat"
+                    onPress={() => setIsEditing(false)}
+                    startContent={<X className="w-4 h-4" />}
+                    className="font-bold text-xs bg-brand-surface-elevated text-brand-text border border-brand-border/60 rounded-xl h-9 cursor-pointer"
                   >
-                    {isPersian ? 'حذف حساب کاربر' : 'Delete Account'}
+                    {isPersian ? 'انصراف' : 'Cancel'}
                   </Button>
-                )}
-              </div>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="flat"
-                  onPress={onClose}
-                  className="font-bold text-xs bg-brand-surface-elevated text-brand-text border border-brand-border/60 rounded-xl h-9 cursor-pointer"
-                >
-                  {isPersian ? 'بستن' : 'Close'}
-                </Button>
-              </div>
+                  <Button
+                    size="sm"
+                    color="warning"
+                    variant="solid"
+                    isLoading={isSaving}
+                    onPress={handleSaveAll}
+                    startContent={!isSaving && <Save className="w-4 h-4" />}
+                    className="font-black text-xs bg-amber-500 text-[#141914] shadow-md rounded-xl h-9 px-4 cursor-pointer hover:bg-amber-400 active:scale-95 transition-all"
+                  >
+                    {isPersian ? 'ذخیره تمامی تغییرات' : 'Save All Changes'}
+                  </Button>
+                </div>
+              ) : (
+                /* View Mode Footer */
+                <>
+                  <div className="flex items-center gap-2">
+                    {isAdmin && onDeleteUser && (
+                      <Button
+                        size="sm"
+                        color="danger"
+                        variant="light"
+                        onPress={() => {
+                          if (onClose) onClose();
+                          onDeleteUser(currentUserData._id, currentUserData.fullName);
+                        }}
+                        startContent={<Trash2 className="w-4 h-4" />}
+                        className="font-bold text-xs cursor-pointer hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-xl"
+                      >
+                        {isPersian ? 'حذف حساب کاربر' : 'Delete Account'}
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {isAdmin && (
+                      <Button
+                        size="sm"
+                        color="warning"
+                        variant="flat"
+                        onPress={() => setIsEditing(true)}
+                        startContent={<Pencil className="w-3.5 h-3.5" />}
+                        className="font-black text-xs bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-xl h-9 cursor-pointer hover:bg-amber-500/25"
+                      >
+                        {isPersian ? 'ویرایش مشخصات' : 'Edit Details'}
+                      </Button>
+                    )}
+
+                    <Button
+                      size="sm"
+                      variant="flat"
+                      onPress={onClose}
+                      className="font-bold text-xs bg-brand-surface-elevated text-brand-text border border-brand-border/60 rounded-xl h-9 cursor-pointer"
+                    >
+                      {isPersian ? 'بستن' : 'Close'}
+                    </Button>
+                  </div>
+                </>
+              )}
             </ModalFooter>
           </>
         )}

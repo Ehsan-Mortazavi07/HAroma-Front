@@ -33,6 +33,7 @@ import {
   User as UserIcon,
   ChevronDown,
   Eye,
+  Pencil,
 } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { IUser } from '@/common/interfaces';
@@ -244,10 +245,33 @@ export default function AdminUsersPage() {
   // User Details Modal State
   const [selectedUserForDetails, setSelectedUserForDetails] = useState<IUser | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [detailsModalMode, setDetailsModalMode] = useState<'view' | 'edit'>('view');
 
   const handleOpenDetails = (user: IUser) => {
     setSelectedUserForDetails(user);
+    setDetailsModalMode('view');
     setDetailsModalOpen(true);
+  };
+
+  const handleOpenEdit = (user: IUser) => {
+    if (!isAdmin) {
+      toast.error(
+        isPersian
+          ? 'ویرایش اطلاعات کاربران تنها برای مدیر کل سیستم مجاز است.'
+          : 'Editing user information is restricted to Super Admins.',
+      );
+      return;
+    }
+    setSelectedUserForDetails(user);
+    setDetailsModalMode('edit');
+    setDetailsModalOpen(true);
+  };
+
+  const handleUserUpdated = (updatedUser: IUser) => {
+    setUsers((prev) =>
+      prev.map((u) => (u._id === updatedUser._id ? { ...u, ...updatedUser } : u))
+    );
+    setSelectedUserForDetails(updatedUser);
   };
 
   const loadUsers = async () => {
@@ -683,6 +707,21 @@ export default function AdminUsersPage() {
                           <Eye className="w-4 h-4" />
                         </Button>
 
+                        {isAdmin && (
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            radius="full"
+                            variant="light"
+                            onPress={() => handleOpenEdit(user)}
+                            className="text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 cursor-pointer transition-all active:scale-95"
+                            aria-label={isPersian ? 'ویرایش تمامی اطلاعات کاربر' : 'Edit All User Details'}
+                            title={isPersian ? 'ویرایش تمامی اطلاعات کاربر' : 'Edit All User Details'}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        )}
+
                         {isAdmin ? (
                           <Button
                             isIconOnly
@@ -712,13 +751,15 @@ export default function AdminUsersPage() {
       </Card>
       </motion.div>
 
-      {/* Comprehensive User Details Modal */}
+      {/* Comprehensive User Details & Edit Modal */}
       <UserDetailsModal
         isOpen={detailsModalOpen}
         onOpenChange={setDetailsModalOpen}
         user={selectedUserForDetails}
+        initialMode={detailsModalMode}
         isPersian={isPersian}
         isAdmin={isAdmin}
+        onUserUpdated={handleUserUpdated}
         onToggleVip={handleToggleVip}
         onRoleChange={handleRoleChange}
         onDeleteUser={(userId, userName) => {
