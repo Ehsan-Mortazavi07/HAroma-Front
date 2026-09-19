@@ -39,10 +39,15 @@ export function ToastContainer() {
         {toasts.map((toast) => (
           <motion.div
             key={toast.id}
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            layout
+            initial={{ opacity: 0, y: 16, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            className={`pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-2xl shadow-xl border backdrop-blur-md ${
+            exit={{ opacity: 0, y: -10, scale: 0.94 }}
+            transition={{
+              duration: 0.36,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            className={`pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-2xl shadow-xl border backdrop-blur-md transform-gpu ${
               toast.type === 'success'
                 ? 'bg-emerald-900/90 border-emerald-700 text-white'
                 : toast.type === 'error'
