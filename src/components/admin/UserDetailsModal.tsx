@@ -15,10 +15,8 @@ import {
   Skeleton,
   Input,
   Textarea,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
+  Select,
+  SelectItem,
 } from '@heroui/react';
 import {
   User as UserIcon,
@@ -50,7 +48,6 @@ import {
   Building,
   Hash,
   RefreshCw,
-  HelpCircle,
 } from 'lucide-react';
 import { IUser, IOrder, UserRole } from '@/common/interfaces';
 import { adminApi } from '@/common/api/admin';
@@ -88,15 +85,15 @@ const modalMotionProps = {
       y: 0,
       transition: {
         scale: {
-          duration: 0.38,
+          duration: 0.36,
           ease: [0.16, 1, 0.3, 1] as const,
         },
         y: {
-          duration: 0.38,
+          duration: 0.36,
           ease: [0.16, 1, 0.3, 1] as const,
         },
         opacity: {
-          duration: 0.28,
+          duration: 0.25,
           ease: 'easeOut' as const,
         },
       },
@@ -106,7 +103,7 @@ const modalMotionProps = {
       opacity: 0,
       y: 10,
       transition: {
-        duration: 0.22,
+        duration: 0.2,
         ease: [0.16, 1, 0.3, 1] as const,
       },
     },
@@ -116,6 +113,16 @@ const modalMotionProps = {
 const inputWrapperClass =
   'bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] rounded-2xl h-11 hover:border-brand-gold/60 focus-within:!border-brand-gold shadow-2xs transition-all';
 const inputLabelClass = 'text-xs font-bold text-brand-text mb-1 block';
+
+const selectClassNames = {
+  base: 'w-full',
+  label: 'text-xs font-bold text-brand-text mb-1 block',
+  trigger:
+    'h-11 px-4 bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] hover:border-brand-gold/60 rounded-2xl shadow-2xs text-xs font-bold text-brand-text text-start transition-colors data-[disabled=true]:opacity-50',
+  value: 'text-xs font-bold text-brand-text text-start',
+  popoverContent:
+    'bg-brand-surface dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] text-brand-text rounded-2xl shadow-2xl z-[10005] p-1.5 max-h-64 overflow-y-auto',
+};
 
 export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   isOpen,
@@ -130,7 +137,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   onRoleChange,
   onDeleteUser,
 }) => {
-  // Mode state: 'view' or 'edit'
   const [isEditing, setIsEditing] = useState<boolean>(initialMode === 'edit' && !!isAdmin);
   const [selectedTab, setSelectedTab] = useState<string>('profile');
   const [selectedEditTab, setSelectedEditTab] = useState<string>('identity');
@@ -269,7 +275,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     }
   };
 
-  // Helper to generate a strong random password for admin convenience
   const generateRandomPassword = () => {
     const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*';
     let pwd = '';
@@ -281,7 +286,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     toast.success(isPersian ? 'رمز عبور تصادفی امن تولید شد.' : 'Strong random password generated.');
   };
 
-  // Handle BirthDatePicker change in edit mode
   const handleBirthDateChange = (isoDate: string) => {
     const parsed = parseIsoDate(isoDate);
     let shamsi: string | null = null;
@@ -296,7 +300,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     }));
   };
 
-  // VIP duration presets
   const handleSetVipDuration = (days: number | null) => {
     if (days === null) {
       setFormData((prev) => ({ ...prev, isVip: true, vipExpiresAt: null }));
@@ -337,7 +340,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       return;
     }
 
-    // Phone validation
     const cleanPhone = formData.phone ? toEnglishDigits(formData.phone).trim() : '';
     if (cleanPhone && !/^09\d{9}$/.test(cleanPhone)) {
       toast.error(
@@ -348,7 +350,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       return;
     }
 
-    // Postal code validation
     const cleanPostal = formData.postalCode ? toEnglishDigits(formData.postalCode).trim() : '';
     if (cleanPostal && !/^\d{10}$/.test(cleanPostal)) {
       toast.error(
@@ -359,7 +360,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       return;
     }
 
-    // Recipient phone validation
     const cleanRecPhone = formData.recipientPhone ? toEnglishDigits(formData.recipientPhone).trim() : '';
     if (cleanRecPhone && !/^09\d{9}$/.test(cleanRecPhone)) {
       toast.error(
@@ -370,7 +370,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       return;
     }
 
-    // Password validation
     if (formData.password && formData.password.length < 6) {
       toast.error(
         isPersian
@@ -451,12 +450,13 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       classNames={{
         backdrop: 'bg-black/60 backdrop-blur-sm z-[9998]',
         wrapper: 'fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto',
-        base: 'm-auto max-w-3xl w-full bg-brand-surface dark:bg-[#141914] border border-brand-border dark:border-[#2a352a] text-brand-text rounded-3xl shadow-2xl overflow-hidden p-0 max-h-[92vh] flex flex-col',
-        header: 'p-0 border-b border-brand-border/60 dark:border-[#2a352a]',
-        body: 'p-0 overflow-y-auto',
+        // Stable, fixed-height container so switching tabs or modes NEVER causes jumping or resizing
+        base: 'm-auto max-w-3xl w-full h-[680px] max-h-[90vh] bg-brand-surface dark:bg-[#141914] border border-brand-border dark:border-[#2a352a] text-brand-text rounded-3xl shadow-2xl overflow-hidden p-0 flex flex-col',
+        header: 'p-0 border-b border-brand-border/60 dark:border-[#2a352a] shrink-0',
+        body: 'flex-1 p-5 sm:p-6 overflow-y-auto',
         footer:
-          'p-4 sm:px-6 border-t border-brand-border/60 dark:border-[#2a352a] bg-brand-surface-elevated/30 dark:bg-[#101410] flex items-center justify-between gap-3',
-        closeButton: 'top-4 end-4 text-brand-text-muted hover:bg-brand-surface-elevated rounded-xl',
+          'p-4 sm:px-6 border-t border-brand-border/60 dark:border-[#2a352a] bg-brand-surface-elevated/30 dark:bg-[#101410] flex items-center justify-between gap-3 shrink-0',
+        closeButton: 'top-4 end-4 text-brand-text-muted hover:bg-brand-surface-elevated rounded-xl z-20',
       }}
     >
       <ModalContent>
@@ -546,7 +546,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 </div>
 
                 {/* Top Action Toggle Buttons (Admin Only) */}
-                <div className="shrink-0 flex items-center gap-2 self-end sm:self-auto">
+                <div className="shrink-0 flex items-center gap-2 self-end sm:self-auto pe-8 sm:pe-0">
                   {isAdmin ? (
                     <Button
                       size="sm"
@@ -587,7 +587,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
             {/* View Mode Tabs vs Edit Mode Tabs */}
             {!isEditing ? (
               /* ======================= VIEW MODE NAVIGATION TABS ======================= */
-              <div className="px-5 sm:px-6 pt-3 border-b border-brand-border/40 bg-brand-surface-elevated/20">
+              <div className="px-5 sm:px-6 pt-3 border-b border-brand-border/40 bg-brand-surface-elevated/20 shrink-0">
                 <Tabs
                   selectedKey={selectedTab}
                   onSelectionChange={(k) => setSelectedTab(k as string)}
@@ -632,7 +632,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
               </div>
             ) : (
               /* ======================= EDIT MODE NAVIGATION TABS ======================= */
-              <div className="px-5 sm:px-6 pt-3 border-b border-brand-border/40 bg-amber-500/5">
+              <div className="px-5 sm:px-6 pt-3 border-b border-brand-border/40 bg-amber-500/5 shrink-0">
                 <Tabs
                   selectedKey={selectedEditTab}
                   onSelectionChange={(k) => setSelectedEditTab(k as string)}
@@ -666,16 +666,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     title={
                       <div className="flex items-center gap-2">
                         <MapPin className="w-3.5 h-3.5" />
-                        <span>{isPersian ? 'آدرس و نشانی تحویل' : 'Shipping Address'}</span>
-                      </div>
-                    }
-                  />
-                  <Tab
-                    key="recipient"
-                    title={
-                      <div className="flex items-center gap-2">
-                        <Package className="w-3.5 h-3.5" />
-                        <span>{isPersian ? 'مشخصات گیرنده و نکات' : 'Recipient & Notes'}</span>
+                        <span>{isPersian ? 'نشانی پستی و گیرنده' : 'Shipping & Recipient'}</span>
                       </div>
                     }
                   />
@@ -683,19 +674,19 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
               </div>
             )}
 
-            {/* Modal Body */}
-            <ModalBody className="p-5 sm:p-6 space-y-6">
+            {/* Modal Body with smooth opacity transition and zero container jumping */}
+            <ModalBody className="p-5 sm:p-6 overflow-y-auto">
               <AnimatePresence mode="wait">
                 {/* ========================================================================= */}
                 {/* ============================= EDIT MODE ================================= */}
                 {/* ========================================================================= */}
                 {isEditing ? (
                   <motion.div
-                    key="edit-container"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.25 }}
+                    key={`edit-${selectedEditTab}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.16 }}
                     className="space-y-6"
                   >
                     {/* Notice Banner */}
@@ -703,7 +694,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                       <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                       <p className="leading-relaxed">
                         {isPersian
-                          ? 'شما به عنوان مدیر کل سیستم مجاز به تغییر تک‌تک فیلدهای اطلاعاتی این کاربر (شامل اطلاعات هویتی، رمز عبور مستقیم، نقش دسترسی، عضویت VIP و آدرس‌ها) هستید.'
+                          ? 'شما به عنوان مدیر ارشد سیستم مجاز به تغییر تمامی مشخصات این کاربر (شامل اطلاعات هویتی، رمز عبور مستقیم بدون نیاز به رمز قبلی، نقش دسترسی، عضویت VIP و آدرس‌ها) هستید.'
                           : 'As a Super Admin, you are authorized to modify every single piece of information for this user, including direct password resets, role, VIP status, and delivery addresses.'}
                       </p>
                     </div>
@@ -779,77 +770,71 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           />
                         </div>
 
-                        {/* Role Selection */}
-                        <div className="space-y-2">
-                          <label className={inputLabelClass}>
-                            {isPersian ? 'نقش و سطح دسترسی کاربر در سامانه' : 'User Role & Permissions'}
-                          </label>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            {[
-                              {
-                                key: 'user',
-                                fa: 'کاربر عادی',
-                                en: 'Standard User',
-                                descFa: 'دسترسی فقط به بخش فروشگاه و حساب خود',
-                                descEn: 'Store & personal account only',
-                                icon: UserIcon,
-                              },
-                              {
-                                key: 'editor',
-                                fa: 'ویراستار محتوا',
-                                en: 'Content Editor',
-                                descFa: 'دسترسی به مدیریت محصولات و سفارشات',
-                                descEn: 'Can manage products & orders',
-                                icon: ShieldCheck,
-                              },
-                              {
-                                key: 'admin',
-                                fa: 'مدیر کل سیستم',
-                                en: 'Super Admin',
-                                descFa: 'دسترسی نامحدود به تمامی بخش‌ها',
-                                descEn: 'Full access to all systems',
-                                icon: ShieldAlert,
-                              },
-                            ].map((r) => {
-                              const isSel = formData.role === r.key;
-                              const Icon = r.icon;
-                              return (
-                                <div
-                                  key={r.key}
-                                  onClick={() => setFormData({ ...formData, role: r.key as UserRole })}
-                                  className={`p-3.5 rounded-2xl border cursor-pointer transition-all flex flex-col gap-1.5 ${
-                                    isSel
-                                      ? 'bg-brand-gold/10 border-brand-gold shadow-xs'
-                                      : 'bg-brand-surface-elevated/40 border-brand-border/60 hover:border-brand-gold/40'
-                                  }`}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <Icon
-                                        className={`w-4 h-4 ${
-                                          isSel ? 'text-brand-gold' : 'text-brand-text-muted'
-                                        }`}
-                                      />
-                                      <span
-                                        className={`text-xs font-black ${
-                                          isSel ? 'text-brand-text' : 'text-brand-text-muted'
-                                        }`}
-                                      >
-                                        {isPersian ? r.fa : r.en}
-                                      </span>
-                                    </div>
-                                    {isSel && <Check className="w-3.5 h-3.5 text-brand-gold" />}
-                                  </div>
-                                  <span className="text-[10px] text-brand-text-muted leading-tight">
-                                    {isPersian ? r.descFa : r.descEn}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
+                        {/* HeroUI Select for User Role */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <Select
+                            label={isPersian ? 'نقش کاربری در سامانه' : 'System Role'}
+                            labelPlacement="outside-top"
+                            selectedKeys={new Set([formData.role])}
+                            onSelectionChange={(keys) => {
+                              const selected = Array.from(keys)[0] as UserRole;
+                              if (selected) {
+                                setFormData((prev) => ({ ...prev, role: selected }));
+                              }
+                            }}
+                            variant="bordered"
+                            classNames={selectClassNames}
+                            popoverProps={{
+                              className: 'z-[10005]',
+                            }}
+                          >
+                            <SelectItem
+                              key="user"
+                              textValue={isPersian ? 'کاربر عادی' : 'Standard User'}
+                              startContent={<UserIcon className="w-4 h-4 text-neutral-400" />}
+                              className="text-xs font-bold text-start"
+                            >
+                              {isPersian ? 'کاربر عادی (مشتری فروشگاه)' : 'Standard User (Customer)'}
+                            </SelectItem>
+                            <SelectItem
+                              key="editor"
+                              textValue={isPersian ? 'ویراستار محتوا' : 'Content Editor'}
+                              startContent={<ShieldCheck className="w-4 h-4 text-emerald-500" />}
+                              className="text-xs font-bold text-start"
+                            >
+                              {isPersian
+                                ? 'ویراستار محتوا (دسترسی به محصولات و سفارشات)'
+                                : 'Content Editor (Products & Orders)'}
+                            </SelectItem>
+                            <SelectItem
+                              key="admin"
+                              textValue={isPersian ? 'مدیر ارشد (Super Admin)' : 'Super Admin'}
+                              startContent={<ShieldAlert className="w-4 h-4 text-amber-500" />}
+                              className="text-xs font-bold text-start"
+                            >
+                              {isPersian
+                                ? 'مدیر ارشد (دسترسی کامل به تمامی بخش‌های سیستم)'
+                                : 'Super Admin (Full Access)'}
+                            </SelectItem>
+                          </Select>
+
+                          <Input
+                            label={isPersian ? 'لینک تصویر آواتار (URL)' : 'Avatar Image URL'}
+                            labelPlacement="outside-top"
+                            value={formData.avatar}
+                            onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
+                            placeholder="https://example.com/avatar.jpg"
+                            dir="ltr"
+                            startContent={<UserIcon className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            classNames={{
+                              label: inputLabelClass,
+                              inputWrapper: inputWrapperClass,
+                              input: 'text-xs font-mono text-brand-text',
+                            }}
+                          />
                         </div>
 
-                        {/* Password Reset Direct (No current password needed for admin) */}
+                        {/* Password Reset Direct */}
                         <div className="p-4 rounded-2xl border border-brand-border/60 bg-brand-surface-elevated/30 space-y-3">
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <div className="flex items-center gap-2">
@@ -860,7 +845,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                 </span>
                                 <p className="text-[11px] text-brand-text-muted mt-0.5">
                                   {isPersian
-                                    ? 'مدیر کل نیازی به وارد کردن کلمه عبور فعلی ندارد. در صورت عدم تغییر، فیلد را خالی بگذارید.'
+                                    ? 'مدیر کل نیازی به وارد کردن کلمه عبور فعلی ندارد. در صورت عدم نیاز فیلد را خالی بگذارید.'
                                     : 'Super Admin does not require current password. Leave blank if unchanged.'}
                                 </p>
                               </div>
@@ -871,7 +856,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               variant="flat"
                               onPress={generateRandomPassword}
                               startContent={<Sparkles className="w-3.5 h-3.5 text-brand-gold" />}
-                              className="text-xs font-bold h-8 rounded-xl bg-brand-surface-elevated text-brand-text border border-brand-border cursor-pointer"
+                              className="text-xs font-bold h-8 rounded-xl bg-brand-surface-elevated text-brand-text border border-brand-border cursor-pointer hover:border-brand-gold"
                             >
                               {isPersian ? 'تولید رمز تصادفی امن' : 'Generate Strong Password'}
                             </Button>
@@ -904,34 +889,17 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           />
                         </div>
 
-                        {/* Avatar URL & Birth Date */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <Input
-                            label={isPersian ? 'لینک تصویر آواتار (URL)' : 'Avatar Image URL'}
-                            labelPlacement="outside-top"
-                            value={formData.avatar}
-                            onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-                            placeholder="https://example.com/avatar.jpg"
-                            dir="ltr"
-                            startContent={<UserIcon className="w-4 h-4 text-brand-text-muted shrink-0" />}
-                            classNames={{
-                              label: inputLabelClass,
-                              inputWrapper: inputWrapperClass,
-                              input: 'text-xs font-mono text-brand-text',
-                            }}
+                        {/* Birth Date Picker */}
+                        <div className="space-y-1">
+                          <BirthDatePicker
+                            value={formData.birthDate}
+                            onChange={handleBirthDateChange}
+                            label={
+                              isPersian
+                                ? 'تاریخ تولد کاربر (شمسی و میلادی)'
+                                : 'Date of Birth (Solar & Gregorian)'
+                            }
                           />
-
-                          <div className="space-y-1">
-                            <BirthDatePicker
-                              value={formData.birthDate}
-                              onChange={handleBirthDateChange}
-                              label={
-                                isPersian
-                                  ? 'تاریخ تولد کاربر (شمسی و میلادی)'
-                                  : 'Date of Birth (Solar & Gregorian)'
-                              }
-                            />
-                          </div>
                         </div>
                       </div>
                     )}
@@ -939,11 +907,11 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     {/* EDIT TAB 2: VIP STATUS */}
                     {selectedEditTab === 'vip' && (
                       <div className="space-y-5">
-                        <div className="p-4 sm:p-5 rounded-3xl border border-brand-gold/30 bg-brand-gold/5 space-y-4">
+                        <div className="p-5 rounded-3xl border border-brand-gold/30 bg-brand-gold/5 space-y-5">
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-2xl bg-brand-gold/20 flex items-center justify-center text-brand-gold shrink-0">
-                                <Crown className="w-5 h-5" />
+                              <div className="w-11 h-11 rounded-2xl bg-brand-gold/20 flex items-center justify-center text-brand-gold shrink-0">
+                                <Crown className="w-6 h-6" />
                               </div>
                               <div>
                                 <h3 className="text-sm font-black text-brand-text">
@@ -998,7 +966,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                 ))}
                               </div>
 
-                              <div className="mt-3 p-3 rounded-xl bg-brand-surface-elevated/70 border border-brand-border text-xs flex items-center justify-between">
+                              <div className="mt-3 p-3.5 rounded-2xl bg-brand-surface-elevated/70 border border-brand-border text-xs flex items-center justify-between">
                                 <span className="text-brand-text-muted">
                                   {isPersian ? 'تاریخ انقضای فعلی اشتراک:' : 'Current Expiry Date:'}
                                 </span>
@@ -1016,90 +984,70 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                       </div>
                     )}
 
-                    {/* EDIT TAB 3: SHIPPING ADDRESS */}
+                    {/* EDIT TAB 3: SHIPPING & RECIPIENT */}
                     {selectedEditTab === 'shipping' && (
-                      <div className="space-y-4">
+                      <div className="space-y-5">
+                        {/* Province & City with official HeroUI Select */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {/* Province */}
-                          <div className="space-y-1">
-                            <label className={inputLabelClass}>
-                              {isPersian ? 'استان' : 'Province'}
-                            </label>
-                            <Dropdown placement="bottom-start">
-                              <DropdownTrigger>
-                                <Button
-                                  variant="flat"
-                                  className={`w-full justify-between font-bold text-xs ${inputWrapperClass} px-3.5`}
-                                >
-                                  <span>
-                                    {formData.province || (isPersian ? 'انتخاب استان...' : 'Select Province...')}
-                                  </span>
-                                  <ChevronLeft className="w-3.5 h-3.5 text-brand-text-muted" />
-                                </Button>
-                              </DropdownTrigger>
-                              <DropdownMenu
-                                aria-label="Provinces"
-                                className="max-h-60 overflow-y-auto"
-                                onAction={(key) =>
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    province: key as string,
-                                    city: '',
-                                  }))
-                                }
-                              >
-                                {IRAN_PROVINCES.map((prov) => (
-                                  <DropdownItem key={prov.name} className="text-xs font-bold">
-                                    {prov.name}
-                                  </DropdownItem>
-                                ))}
-                              </DropdownMenu>
-                            </Dropdown>
-                          </div>
+                          <Select
+                            label={isPersian ? 'استان' : 'Province'}
+                            labelPlacement="outside-top"
+                            placeholder={isPersian ? 'انتخاب استان...' : 'Select Province...'}
+                            selectedKeys={formData.province ? new Set([formData.province]) : new Set([])}
+                            onSelectionChange={(keys) => {
+                              const selected = Array.from(keys)[0] as string;
+                              setFormData((prev) => ({
+                                ...prev,
+                                province: selected || '',
+                                city: '',
+                              }));
+                            }}
+                            variant="bordered"
+                            classNames={selectClassNames}
+                            popoverProps={{
+                              className: 'z-[10005]',
+                            }}
+                          >
+                            {IRAN_PROVINCES.map((prov) => (
+                              <SelectItem key={prov.name} textValue={prov.name} className="text-xs font-bold text-start">
+                                {prov.name}
+                              </SelectItem>
+                            ))}
+                          </Select>
 
-                          {/* City */}
-                          <div className="space-y-1">
-                            <label className={inputLabelClass}>{isPersian ? 'شهر' : 'City'}</label>
-                            {selectedProvinceObj && selectedProvinceObj.cities.length > 0 ? (
-                              <Dropdown placement="bottom-start">
-                                <DropdownTrigger>
-                                  <Button
-                                    variant="flat"
-                                    className={`w-full justify-between font-bold text-xs ${inputWrapperClass} px-3.5`}
-                                  >
-                                    <span>
-                                      {formData.city || (isPersian ? 'انتخاب شهر...' : 'Select City...')}
-                                    </span>
-                                    <ChevronLeft className="w-3.5 h-3.5 text-brand-text-muted" />
-                                  </Button>
-                                </DropdownTrigger>
-                                <DropdownMenu
-                                  aria-label="Cities"
-                                  className="max-h-60 overflow-y-auto"
-                                  onAction={(key) =>
-                                    setFormData((prev) => ({ ...prev, city: key as string }))
-                                  }
-                                >
-                                  {selectedProvinceObj.cities.map((city) => (
-                                    <DropdownItem key={city} className="text-xs font-bold">
-                                      {city}
-                                    </DropdownItem>
-                                  ))}
-                                </DropdownMenu>
-                              </Dropdown>
-                            ) : (
-                              <Input
-                                labelPlacement="outside-top"
-                                value={formData.city}
-                                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                placeholder={isPersian ? 'نام شهر...' : 'City name...'}
-                                classNames={{
-                                  inputWrapper: inputWrapperClass,
-                                  input: 'text-xs font-bold text-brand-text',
-                                }}
-                              />
-                            )}
-                          </div>
+                          <Select
+                            label={isPersian ? 'شهر' : 'City'}
+                            labelPlacement="outside-top"
+                            placeholder={
+                              formData.province
+                                ? isPersian
+                                  ? 'انتخاب شهر...'
+                                  : 'Select City...'
+                                : isPersian
+                                ? 'ابتدا استان را انتخاب کنید'
+                                : 'Select province first'
+                            }
+                            isDisabled={!formData.province || !selectedProvinceObj?.cities.length}
+                            selectedKeys={formData.city ? new Set([formData.city]) : new Set([])}
+                            onSelectionChange={(keys) => {
+                              const selected = Array.from(keys)[0] as string;
+                              setFormData((prev) => ({
+                                ...prev,
+                                city: selected || '',
+                              }));
+                            }}
+                            variant="bordered"
+                            classNames={selectClassNames}
+                            popoverProps={{
+                              className: 'z-[10005]',
+                            }}
+                          >
+                            {(selectedProvinceObj?.cities || []).map((cityName) => (
+                              <SelectItem key={cityName} textValue={cityName} className="text-xs font-bold text-start">
+                                {cityName}
+                              </SelectItem>
+                            ))}
+                          </Select>
                         </div>
 
                         {/* Full Address */}
@@ -1108,7 +1056,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           labelPlacement="outside-top"
                           value={formData.address}
                           onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                          minRows={3}
+                          minRows={2}
                           placeholder={
                             isPersian
                               ? 'مثال: بلوار کشاورز، خیابان ۱۶ آذر، کوچه بهار، ساختمان شماره ۵'
@@ -1168,85 +1116,69 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             }}
                           />
                         </div>
-                      </div>
-                    )}
 
-                    {/* EDIT TAB 4: RECIPIENT & NOTES */}
-                    {selectedEditTab === 'recipient' && (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <Input
-                            label={isPersian ? 'نام و نام خانوادگی تحویل‌گیرنده' : 'Recipient Full Name'}
+                        {/* Recipient Details */}
+                        <div className="pt-4 border-t border-brand-border/40 space-y-4">
+                          <span className="text-xs font-bold text-brand-gold block">
+                            {isPersian ? 'مشخصات تحویل‌گیرنده و یادداشت‌های ارسال:' : 'Recipient Contact Details:'}
+                          </span>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Input
+                              label={isPersian ? 'نام و نام خانوادگی تحویل‌گیرنده' : 'Recipient Full Name'}
+                              labelPlacement="outside-top"
+                              value={formData.recipientName}
+                              onChange={(e) =>
+                                setFormData({ ...formData, recipientName: e.target.value })
+                              }
+                              placeholder={isPersian ? 'نام شخص دریافت‌کننده' : 'Recipient Name'}
+                              startContent={<UserIcon className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                              classNames={{
+                                label: inputLabelClass,
+                                inputWrapper: inputWrapperClass,
+                                input: 'text-xs font-bold text-brand-text',
+                              }}
+                            />
+
+                            <Input
+                              label={isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone Number'}
+                              labelPlacement="outside-top"
+                              value={formData.recipientPhone}
+                              onChange={(e) =>
+                                setFormData({ ...formData, recipientPhone: e.target.value })
+                              }
+                              placeholder="09123456789"
+                              dir="ltr"
+                              startContent={<Phone className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                              classNames={{
+                                label: inputLabelClass,
+                                inputWrapper: inputWrapperClass,
+                                input: 'text-xs font-mono font-bold text-brand-text',
+                              }}
+                            />
+                          </div>
+
+                          <Textarea
+                            label={isPersian ? 'توضیحات و یادداشت تحویل' : 'Delivery / Address Notes'}
                             labelPlacement="outside-top"
-                            value={formData.recipientName}
+                            value={formData.addressNotes}
                             onChange={(e) =>
-                              setFormData({ ...formData, recipientName: e.target.value })
+                              setFormData({ ...formData, addressNotes: e.target.value })
                             }
-                            placeholder={isPersian ? 'نام شخص دریافت‌کننده' : 'Recipient Name'}
-                            startContent={<UserIcon className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            minRows={2}
+                            placeholder={
+                              isPersian
+                                ? 'مثال: زنگ دوم سمت راست، لطفاً قبل از مراجعه تماس گرفته شود.'
+                                : 'Special instructions for courier...'
+                            }
                             classNames={{
                               label: inputLabelClass,
-                              inputWrapper: inputWrapperClass,
-                              input: 'text-xs font-bold text-brand-text',
-                            }}
-                          />
-
-                          <Input
-                            label={isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone Number'}
-                            labelPlacement="outside-top"
-                            value={formData.recipientPhone}
-                            onChange={(e) =>
-                              setFormData({ ...formData, recipientPhone: e.target.value })
-                            }
-                            placeholder="09123456789"
-                            dir="ltr"
-                            startContent={<Phone className="w-4 h-4 text-brand-text-muted shrink-0" />}
-                            classNames={{
-                              label: inputLabelClass,
-                              inputWrapper: inputWrapperClass,
-                              input: 'text-xs font-mono font-bold text-brand-text',
-                            }}
-                          />
-
-                          <Input
-                            label={isPersian ? 'ایمیل تحویل‌گیرنده (اختیاری)' : 'Recipient Email (Optional)'}
-                            labelPlacement="outside-top"
-                            type="email"
-                            value={formData.recipientEmail}
-                            onChange={(e) =>
-                              setFormData({ ...formData, recipientEmail: e.target.value })
-                            }
-                            placeholder="recipient@domain.com"
-                            dir="ltr"
-                            startContent={<Mail className="w-4 h-4 text-brand-text-muted shrink-0" />}
-                            classNames={{
-                              label: inputLabelClass,
-                              inputWrapper: inputWrapperClass,
-                              input: 'text-xs font-mono text-brand-text',
+                              inputWrapper:
+                                'bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] rounded-2xl hover:border-brand-gold/60 focus-within:!border-brand-gold p-3 shadow-2xs',
+                              input: 'text-xs font-medium text-brand-text leading-relaxed',
                             }}
                           />
                         </div>
-
-                        <Textarea
-                          label={isPersian ? 'توضیحات و یادداشت تحویل' : 'Delivery / Address Notes'}
-                          labelPlacement="outside-top"
-                          value={formData.addressNotes}
-                          onChange={(e) =>
-                            setFormData({ ...formData, addressNotes: e.target.value })
-                          }
-                          minRows={3}
-                          placeholder={
-                            isPersian
-                              ? 'مثال: زنگ دوم سمت راست، لطفاً قبل از مراجعه تماس گرفته شود.'
-                              : 'Special instructions for courier...'
-                          }
-                          classNames={{
-                            label: inputLabelClass,
-                            inputWrapper:
-                              'bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] rounded-2xl hover:border-brand-gold/60 focus-within:!border-brand-gold p-3 shadow-2xs',
-                            input: 'text-xs font-medium text-brand-text leading-relaxed',
-                          }}
-                        />
                       </div>
                     )}
                   </motion.div>
@@ -1254,17 +1186,17 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                   /* ========================================================================= */
                   /* ============================= VIEW MODE ================================= */
                   /* ========================================================================= */
-                  <>
-                    {/* TAB 1: PROFILE & ACCOUNT */}
+                  <motion.div
+                    key={`view-${selectedTab}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.16 }}
+                    className="space-y-6"
+                  >
+                    {/* TAB 1: PROFILE & ACCOUNT VIEW */}
                     {selectedTab === 'profile' && (
-                      <motion.div
-                        key="profile-view"
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.2 }}
-                        className="space-y-6"
-                      >
+                      <div className="space-y-6">
                         {/* Metrics Banner */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           <div className="p-3.5 rounded-2xl bg-brand-surface-elevated/60 dark:bg-[#182018] border border-brand-border/60">
@@ -1489,19 +1421,12 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             </p>
                           )}
                         </div>
-                      </motion.div>
+                      </div>
                     )}
 
                     {/* TAB 2: SHIPPING ADDRESS VIEW */}
                     {selectedTab === 'address' && (
-                      <motion.div
-                        key="address-view"
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.2 }}
-                        className="space-y-4"
-                      >
+                      <div className="space-y-4">
                         {currentUserData.address || currentUserData.city || currentUserData.province ? (
                           <div className="space-y-4">
                             {/* Province & City Banner */}
@@ -1600,7 +1525,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             )}
                           </div>
                         ) : (
-                          <div className="py-12 text-center space-y-3">
+                          <div className="py-16 text-center space-y-3">
                             <div className="w-12 h-12 rounded-2xl bg-brand-surface-elevated mx-auto flex items-center justify-center text-brand-text-muted">
                               <MapPin className="w-6 h-6" />
                             </div>
@@ -1614,19 +1539,12 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             </p>
                           </div>
                         )}
-                      </motion.div>
+                      </div>
                     )}
 
                     {/* TAB 3: ORDER HISTORY VIEW */}
                     {selectedTab === 'orders' && (
-                      <motion.div
-                        key="orders-view"
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.2 }}
-                        className="space-y-4"
-                      >
+                      <div className="space-y-4">
                         {loadingOrders ? (
                           <div className="space-y-3">
                             {[1, 2, 3].map((i) => (
@@ -1634,7 +1552,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             ))}
                           </div>
                         ) : orders.length === 0 ? (
-                          <div className="py-12 text-center space-y-3">
+                          <div className="py-16 text-center space-y-3">
                             <div className="w-12 h-12 rounded-2xl bg-brand-surface-elevated mx-auto flex items-center justify-center text-brand-text-muted">
                               <ShoppingBag className="w-6 h-6" />
                             </div>
@@ -1697,9 +1615,9 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             ))}
                           </div>
                         )}
-                      </motion.div>
+                      </div>
                     )}
-                  </>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </ModalBody>
