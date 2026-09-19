@@ -22,6 +22,7 @@ import { IVipPlan } from '@/common/interfaces';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 
 export default function AdminVipPlansPage() {
   const { isPersian } = useTranslation();
@@ -29,6 +30,11 @@ export default function AdminVipPlansPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<IVipPlan | null>(null);
+
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form State
   const [title, setTitle] = useState('');
@@ -168,15 +174,24 @@ export default function AdminVipPlansPage() {
     }
   };
 
-  const handleDelete = async (id: string, planTitle: string) => {
-    if (!confirm(isPersian ? `آیا از حذف پلن اشتراک «${planTitle}» اطمینان دارید؟` : `Are you sure you want to delete plan "${planTitle}"?`)) return;
+  const handleDeleteClick = (id: string, planTitle: string) => {
+    setPlanToDelete({ id, title: planTitle });
+    setDeleteModalOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!planToDelete) return;
+    setIsDeleting(true);
     try {
-      await adminApi.deleteVipPlan(id);
+      await adminApi.deleteVipPlan(planToDelete.id);
       toast.success(isPersian ? 'پلن با موفقیت حذف شد.' : 'Plan deleted successfully.');
+      setDeleteModalOpen(false);
+      setPlanToDelete(null);
       loadPlans();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || (isPersian ? 'خطا در حذف پلن.' : 'Failed to delete plan.'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -338,7 +353,7 @@ export default function AdminVipPlansPage() {
                         size="sm"
                         radius="full"
                         variant="light"
-                        onPress={() => handleDelete(plan._id, plan.title)}
+                        onPress={() => handleDeleteClick(plan._id, plan.title)}
                         className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
                         aria-label={isPersian ? 'حذف' : 'Delete'}
                       >
@@ -565,6 +580,40 @@ export default function AdminVipPlansPage() {
           )}
         </ModalContent>
       </Modal>
+
+      {/* HeroUI Delete Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        title={isPersian ? 'حذف پلن اشتراک VIP' : 'Delete VIP Plan'}
+        description={
+          isPersian ? (
+            <div>
+              <p>
+                آیا از حذف پلن اشتراک <strong className="text-brand-text font-black">«{planToDelete?.title}»</strong> اطمینان دارید؟
+              </p>
+              <p className="mt-2 text-xs text-rose-500 font-medium">
+                کاربران با اشتراک فعال تا پایان مهلت اعتبار خود دسترسی خواهند داشت اما خرید این پلن دیگر ممکن نخواهد بود.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p>
+                Are you sure you want to delete VIP plan <strong className="text-brand-text font-bold">&quot;{planToDelete?.title}&quot;</strong>?
+              </p>
+              <p className="mt-2 text-xs text-rose-500 font-medium">
+                Users with active subscriptions will retain access until expiration, but new purchases will be disabled.
+              </p>
+            </div>
+          )
+        }
+        confirmText={isPersian ? 'بله، حذف پلن' : 'Yes, Delete Plan'}
+        cancelText={isPersian ? 'انصراف' : 'Cancel'}
+        confirmColor="danger"
+        icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

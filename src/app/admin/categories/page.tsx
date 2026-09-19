@@ -23,6 +23,7 @@ import { ICategory } from '@/common/interfaces';
 import { toast, toPersianDigits } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -55,6 +56,11 @@ export default function AdminCategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<ICategory | null>(null);
+
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [catToDelete, setCatToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form State
   const [name, setName] = useState('');
@@ -176,15 +182,24 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const handleDelete = async (id: string, catName: string) => {
-    if (!confirm(isPersian ? `آیا از حذف دسته‌بندی «${catName}» اطمینان دارید؟` : `Are you sure you want to delete category "${catName}"?`)) return;
+  const handleDeleteClick = (id: string, catName: string) => {
+    setCatToDelete({ id, name: catName });
+    setDeleteModalOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!catToDelete) return;
+    setIsDeleting(true);
     try {
-      await adminApi.deleteCategory(id);
+      await adminApi.deleteCategory(catToDelete.id);
       toast.success(isPersian ? 'دسته‌بندی با موفقیت حذف شد.' : 'Category deleted successfully.');
+      setDeleteModalOpen(false);
+      setCatToDelete(null);
       loadCategories();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || (isPersian ? 'خطا در حذف دسته‌بندی.' : 'Failed to delete category.'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -329,7 +344,7 @@ export default function AdminCategoriesPage() {
                           size="sm"
                           radius="full"
                           variant="light"
-                          onPress={() => handleDelete(cat._id, cat.name)}
+                          onPress={() => handleDeleteClick(cat._id, cat.name)}
                           className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
                           aria-label={isPersian ? 'حذف' : 'Delete'}
                         >
@@ -495,6 +510,40 @@ export default function AdminCategoriesPage() {
           )}
         </ModalContent>
       </Modal>
+
+      {/* HeroUI Delete Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        title={isPersian ? 'حذف دسته‌بندی' : 'Delete Category'}
+        description={
+          isPersian ? (
+            <div>
+              <p>
+                آیا از حذف دسته‌بندی <strong className="text-brand-text font-black">«{catToDelete?.name}»</strong> اطمینان دارید؟
+              </p>
+              <p className="mt-2 text-xs text-rose-500 font-medium">
+                محصولات این دسته‌بندی بدون دسته‌بندی خواهند شد یا باید مجدداً دسته‌بندی شوند.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p>
+                Are you sure you want to delete category <strong className="text-brand-text font-bold">&quot;{catToDelete?.name}&quot;</strong>?
+              </p>
+              <p className="mt-2 text-xs text-rose-500 font-medium">
+                Products linked to this category will become unassigned.
+              </p>
+            </div>
+          )
+        }
+        confirmText={isPersian ? 'بله، حذف دسته‌بندی' : 'Yes, Delete Category'}
+        cancelText={isPersian ? 'انصراف' : 'Cancel'}
+        confirmColor="danger"
+        icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

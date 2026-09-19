@@ -27,6 +27,7 @@ import { ICoupon } from '@/common/interfaces';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 
 export default function AdminCouponsPage() {
   const { isPersian } = useTranslation();
@@ -34,6 +35,11 @@ export default function AdminCouponsPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<ICoupon | null>(null);
+
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [couponToDelete, setCouponToDelete] = useState<{ id: string; code: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form
   const [code, setCode] = useState('');
@@ -143,15 +149,24 @@ export default function AdminCouponsPage() {
     }
   };
 
-  const handleDelete = async (id: string, couponCode: string) => {
-    if (!confirm(isPersian ? `آیا از حذف کد تخفیف «${couponCode}» اطمینان دارید؟` : `Are you sure you want to delete coupon "${couponCode}"?`)) return;
+  const handleDeleteClick = (id: string, couponCode: string) => {
+    setCouponToDelete({ id, code: couponCode });
+    setDeleteModalOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!couponToDelete) return;
+    setIsDeleting(true);
     try {
-      await adminApi.deleteCoupon(id);
+      await adminApi.deleteCoupon(couponToDelete.id);
       toast.success(isPersian ? 'کد تخفیف با موفقیت حذف شد.' : 'Coupon deleted successfully.');
+      setDeleteModalOpen(false);
+      setCouponToDelete(null);
       loadCoupons();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || (isPersian ? 'خطا در حذف کد تخفیف.' : 'Failed to delete coupon.'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -283,7 +298,7 @@ export default function AdminCouponsPage() {
                           size="sm"
                           radius="full"
                           variant="light"
-                          onPress={() => handleDelete(coupon._id, coupon.code)}
+                          onPress={() => handleDeleteClick(coupon._id, coupon.code)}
                           className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
                           aria-label={isPersian ? 'حذف' : 'Delete'}
                         >
@@ -454,6 +469,40 @@ export default function AdminCouponsPage() {
           )}
         </ModalContent>
       </Modal>
+
+      {/* HeroUI Delete Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        title={isPersian ? 'حذف کد تخفیف' : 'Delete Coupon'}
+        description={
+          isPersian ? (
+            <div>
+              <p>
+                آیا از حذف کد تخفیف <strong className="text-brand-text font-black">«{couponToDelete?.code}»</strong> اطمینان دارید؟
+              </p>
+              <p className="mt-2 text-xs text-rose-500 font-medium">
+                پس از حذف، مشتریان دیگر امکان استفاده از این کد تخفیف را در تسویه‌حساب نخواهند داشت.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p>
+                Are you sure you want to delete coupon <strong className="text-brand-text font-bold">&quot;{couponToDelete?.code}&quot;</strong>?
+              </p>
+              <p className="mt-2 text-xs text-rose-500 font-medium">
+                Once deleted, customers will no longer be able to use this coupon at checkout.
+              </p>
+            </div>
+          )
+        }
+        confirmText={isPersian ? 'بله، حذف کد تخفیف' : 'Yes, Delete Coupon'}
+        cancelText={isPersian ? 'انصراف' : 'Cancel'}
+        confirmColor="danger"
+        icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

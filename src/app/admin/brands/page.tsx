@@ -22,6 +22,7 @@ import { IBrand } from '@/common/interfaces';
 import { toast, toPersianDigits } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -54,6 +55,11 @@ export default function AdminBrandsPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<IBrand | null>(null);
+
+  // Delete modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [brandToDelete, setBrandToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form State
   const [name, setName] = useState('');
@@ -169,15 +175,24 @@ export default function AdminBrandsPage() {
     }
   };
 
-  const handleDelete = async (id: string, brandName: string) => {
-    if (!confirm(isPersian ? `آیا از حذف برند «${brandName}» اطمینان دارید؟` : `Are you sure you want to delete brand "${brandName}"?`)) return;
+  const handleDeleteClick = (id: string, brandName: string) => {
+    setBrandToDelete({ id, name: brandName });
+    setDeleteModalOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!brandToDelete) return;
+    setIsDeleting(true);
     try {
-      await adminApi.deleteBrand(id);
+      await adminApi.deleteBrand(brandToDelete.id);
       toast.success(isPersian ? 'برند با موفقیت حذف شد.' : 'Brand deleted successfully.');
+      setDeleteModalOpen(false);
+      setBrandToDelete(null);
       loadBrands();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || (isPersian ? 'خطا در حذف برند.' : 'Failed to delete brand.'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -328,7 +343,7 @@ export default function AdminBrandsPage() {
                           size="sm"
                           radius="full"
                           variant="light"
-                          onPress={() => handleDelete(b._id, b.name)}
+                          onPress={() => handleDeleteClick(b._id, b.name)}
                           className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
                           aria-label={isPersian ? 'حذف' : 'Delete'}
                         >
@@ -495,6 +510,40 @@ export default function AdminBrandsPage() {
           )}
         </ModalContent>
       </Modal>
+
+      {/* HeroUI Delete Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        title={isPersian ? 'حذف برند' : 'Delete Brand'}
+        description={
+          isPersian ? (
+            <div>
+              <p>
+                آیا از حذف برند <strong className="text-brand-text font-black">«{brandToDelete?.name}»</strong> اطمینان دارید؟
+              </p>
+              <p className="mt-2 text-xs text-rose-500 font-medium">
+                محصولات این برند بدون برند خواهند شد یا باید مجدداً برند آنها تعیین شود.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p>
+                Are you sure you want to delete brand <strong className="text-brand-text font-bold">&quot;{brandToDelete?.name}&quot;</strong>?
+              </p>
+              <p className="mt-2 text-xs text-rose-500 font-medium">
+                Products linked to this brand will become unassigned.
+              </p>
+            </div>
+          )
+        }
+        confirmText={isPersian ? 'بله، حذف برند' : 'Yes, Delete Brand'}
+        cancelText={isPersian ? 'انصراف' : 'Cancel'}
+        confirmColor="danger"
+        icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

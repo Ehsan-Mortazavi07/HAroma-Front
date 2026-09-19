@@ -39,6 +39,7 @@ import { toPersianDigits, toast } from '@/common/utils';
 import { formatDisplayBirthDate } from '@/common/utils/date';
 import { useTranslation } from '@/common/i18n';
 import { useAppSelector } from '@/stores/hooks';
+import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 
 // Unified soft luxury spring motion matching high-end iOS/Apple dropdown physics
 const softDropdownMotionProps = {
@@ -222,6 +223,11 @@ export default function AdminUsersPage() {
   const [isRoleFilterOpen, setIsRoleFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // HeroUI Delete Modal State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const loadUsers = async () => {
     setLoading(true);
     try {
@@ -298,7 +304,7 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleDeleteUser = async (userId: string, name: string) => {
+  const handleDeleteClick = (userId: string, name: string) => {
     if (!isAdmin) {
       toast.error(
         isPersian
@@ -307,15 +313,23 @@ export default function AdminUsersPage() {
       );
       return;
     }
+    setUserToDelete({ id: userId, name });
+    setDeleteModalOpen(true);
+  };
 
-    if (!confirm(isPersian ? `آیا از حذف حساب کاربری «${name}» اطمینان دارید؟` : `Are you sure you want to delete account "${name}"?`)) return;
-
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+    setIsDeleting(true);
     try {
-      await adminApi.deleteUser(userId);
+      await adminApi.deleteUser(userToDelete.id);
       toast.success(isPersian ? 'کاربر با موفقیت حذف شد.' : 'User deleted successfully.');
+      setDeleteModalOpen(false);
+      setUserToDelete(null);
       loadUsers();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || (isPersian ? 'خطا در حذف کاربر.' : 'Failed to delete user.'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -622,7 +636,7 @@ export default function AdminUsersPage() {
                           size="sm"
                           radius="full"
                           variant="light"
-                          onPress={() => handleDeleteUser(user._id, user.fullName)}
+                          onPress={() => handleDeleteClick(user._id, user.fullName)}
                           className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer transition-all active:scale-95"
                           aria-label={isPersian ? 'حذف کاربر' : 'Delete'}
                         >
@@ -642,6 +656,40 @@ export default function AdminUsersPage() {
         </CardBody>
       </Card>
       </motion.div>
+
+      {/* HeroUI Delete Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        title={isPersian ? 'حذف حساب کاربری' : 'Delete User Account'}
+        description={
+          isPersian ? (
+            <div>
+              <p>
+                آیا از حذف حساب کاربری <strong className="text-brand-text font-black">«{userToDelete?.name}»</strong> اطمینان دارید؟
+              </p>
+              <p className="mt-2 text-xs text-rose-500 font-medium">
+                این عملیات غیرقابل بازگشت است و تمام دسترسی‌ها و اطلاعات این حساب کاربری لغو خواهد شد.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p>
+                Are you sure you want to delete account <strong className="text-brand-text font-bold">&quot;{userToDelete?.name}&quot;</strong>?
+              </p>
+              <p className="mt-2 text-xs text-rose-500 font-medium">
+                This action is permanent and cannot be undone.
+              </p>
+            </div>
+          )
+        }
+        confirmText={isPersian ? 'بله، حذف حساب' : 'Yes, Delete Account'}
+        cancelText={isPersian ? 'انصراف' : 'Cancel'}
+        confirmColor="danger"
+        icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

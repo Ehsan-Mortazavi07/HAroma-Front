@@ -28,6 +28,7 @@ import { IAttribute, IVariantTemplate } from '@/common/interfaces';
 import { toast, toPersianDigits, formatToman, translateAttributeValue } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 
 export default function AdminAttributesPage() {
   const { isPersian } = useTranslation();
@@ -38,6 +39,16 @@ export default function AdminAttributesPage() {
   const [loadingAttrs, setLoadingAttrs] = useState(true);
   const [attrModalOpen, setAttrModalOpen] = useState(false);
   const [editingAttr, setEditingAttr] = useState<IAttribute | null>(null);
+
+  // HeroUI Delete Confirm Modal State
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfig, setDeleteConfig] = useState<{
+    title: string;
+    description: React.ReactNode;
+    confirmText: string;
+    action: () => Promise<void>;
+  } | null>(null);
+  const [isDeletingItem, setIsDeletingItem] = useState(false);
   const [attrName, setAttrName] = useState('');
   const [attrNameEn, setAttrNameEn] = useState('');
   const [attrKey, setAttrKey] = useState('');
@@ -170,23 +181,40 @@ export default function AdminAttributesPage() {
     }
   };
 
-  const handleDeleteAttr = async (id: string, name: string) => {
-    if (
-      !confirm(
-        isPersian
-          ? `آیا از حذف ویژگی «${name}» اطمینان دارید؟`
-          : `Are you sure you want to delete attribute "${name}"?`,
-      )
-    )
-      return;
-
-    try {
-      await adminApi.deleteAttribute(id);
-      toast.success(isPersian ? 'ویژگی حذف شد.' : 'Attribute deleted.');
-      loadAttributes();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || (isPersian ? 'خطا در حذف ویژگی.' : 'Failed to delete attribute.'));
-    }
+  const requestDeleteAttr = (id: string, name: string) => {
+    setDeleteConfig({
+      title: isPersian ? 'حذف ویژگی' : 'Delete Attribute',
+      description: isPersian ? (
+        <div>
+          <p>
+            آیا از حذف ویژگی <strong className="text-brand-text font-black">«{name}»</strong> اطمینان دارید؟
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            تمام مقادیر مرتبط با این ویژگی در محصولات حذف خواهند شد.
+          </p>
+        </div>
+      ) : (
+        <div>
+          <p>
+            Are you sure you want to delete attribute <strong className="text-brand-text font-bold">&quot;{name}&quot;</strong>?
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            All associated values across products will be affected.
+          </p>
+        </div>
+      ),
+      confirmText: isPersian ? 'بله، حذف ویژگی' : 'Yes, Delete Attribute',
+      action: async () => {
+        try {
+          await adminApi.deleteAttribute(id);
+          toast.success(isPersian ? 'ویژگی حذف شد.' : 'Attribute deleted.');
+          loadAttributes();
+        } catch (err: any) {
+          toast.error(err?.response?.data?.message || (isPersian ? 'خطا در حذف ویژگی.' : 'Failed to delete attribute.'));
+        }
+      },
+    });
+    setDeleteConfirmOpen(true);
   };
 
   // --- VARIANT TEMPLATE HANDLERS ---
@@ -263,22 +291,51 @@ export default function AdminAttributesPage() {
     }
   };
 
-  const handleDeleteTpl = async (id: string, title: string) => {
-    if (
-      !confirm(
-        isPersian
-          ? `آیا از حذف الگوی تنوع «${title}» اطمینان دارید؟`
-          : `Are you sure you want to delete variant template "${title}"?`,
-      )
-    )
-      return;
+  const requestDeleteTpl = (id: string, title: string) => {
+    setDeleteConfig({
+      title: isPersian ? 'حذف الگوی تنوع' : 'Delete Variant Template',
+      description: isPersian ? (
+        <div>
+          <p>
+            آیا از حذف الگوی تنوع <strong className="text-brand-text font-black">«{title}»</strong> اطمینان دارید؟
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            این الگو دیگر در ساخت سریع تنوع برای محصولات جدید در دسترس نخواهد بود.
+          </p>
+        </div>
+      ) : (
+        <div>
+          <p>
+            Are you sure you want to delete variant template <strong className="text-brand-text font-bold">&quot;{title}&quot;</strong>?
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            This template will no longer be available for fast product variant setup.
+          </p>
+        </div>
+      ),
+      confirmText: isPersian ? 'بله، حذف الگو' : 'Yes, Delete Template',
+      action: async () => {
+        try {
+          await adminApi.deleteVariantTemplate(id);
+          toast.success(isPersian ? 'الگوی تنوع حذف شد.' : 'Variant template deleted.');
+          loadVariantTemplates();
+        } catch (err: any) {
+          toast.error(err?.response?.data?.message || (isPersian ? 'خطا در حذف الگو.' : 'Failed to delete template.'));
+        }
+      },
+    });
+    setDeleteConfirmOpen(true);
+  };
 
+  const executeDeleteAction = async () => {
+    if (!deleteConfig) return;
+    setIsDeletingItem(true);
     try {
-      await adminApi.deleteVariantTemplate(id);
-      toast.success(isPersian ? 'الگوی تنوع حذف شد.' : 'Variant template deleted.');
-      loadVariantTemplates();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || (isPersian ? 'خطا در حذف الگو.' : 'Failed to delete template.'));
+      await deleteConfig.action();
+      setDeleteConfirmOpen(false);
+      setDeleteConfig(null);
+    } finally {
+      setIsDeletingItem(false);
     }
   };
 
@@ -467,7 +524,7 @@ export default function AdminAttributesPage() {
                                 size="sm"
                                 radius="full"
                                 variant="light"
-                                onPress={() => handleDeleteTpl(tpl._id, tpl.title)}
+                                onPress={() => requestDeleteTpl(tpl._id, tpl.title)}
                                 className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
                                 aria-label={isPersian ? 'حذف الگو' : 'Delete template'}
                               >
@@ -611,7 +668,7 @@ export default function AdminAttributesPage() {
                                 size="sm"
                                 radius="full"
                                 variant="light"
-                                onPress={() => handleDeleteAttr(attr._id, attr.name)}
+                                onPress={() => requestDeleteAttr(attr._id, attr.name)}
                                 className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
                                 aria-label={isPersian ? 'حذف ویژگی' : 'Delete attribute'}
                               >
@@ -1011,6 +1068,20 @@ export default function AdminAttributesPage() {
           )}
         </ModalContent>
       </Modal>
+
+      {/* HeroUI Delete Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title={deleteConfig?.title || ''}
+        description={deleteConfig?.description || null}
+        confirmText={deleteConfig?.confirmText || (isPersian ? 'بله، حذف' : 'Yes, Delete')}
+        cancelText={isPersian ? 'انصراف' : 'Cancel'}
+        confirmColor="danger"
+        icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
+        isLoading={isDeletingItem}
+        onConfirm={executeDeleteAction}
+      />
     </div>
   );
 }

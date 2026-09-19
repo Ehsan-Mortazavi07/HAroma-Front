@@ -38,6 +38,7 @@ import { PATHS } from '@/common/constants/PATHS';
 import { VipBadge } from '@/components/common/VipBadge';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { useAppSelector } from '@/stores/hooks';
 import { toast, toPersianDigits, formatToman } from '@/common/utils';
 
@@ -89,6 +90,16 @@ export default function AdminProductsPage() {
   // Multi-selection & Bulk action state
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
+  // HeroUI Confirm Modal state
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{
+    title: string;
+    description: React.ReactNode;
+    confirmText: string;
+    action: () => Promise<void>;
+  } | null>(null);
+  const [isConfirmLoading, setIsConfirmLoading] = useState(false);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -197,7 +208,7 @@ export default function AdminProductsPage() {
   };
 
   // Bulk soft delete (Admin only)
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (!isAdmin) {
       toast.error(
         isPersian
@@ -208,38 +219,55 @@ export default function AdminProductsPage() {
     }
 
     if (selectedIds.length === 0) return;
-    if (
-      !confirm(
-        isPersian
-          ? `آیا از حذف گروهی ${toPersianDigits(selectedIds.length)} محصول انتخاب شده اطمینان کامل دارید؟`
-          : `Are you sure you want to delete ${selectedIds.length} selected products?`,
-      )
-    ) {
-      return;
-    }
 
-    setBulkActionLoading(true);
-    try {
-      await adminApi.bulkDeleteProducts(selectedIds);
-      toast.success(
-        isPersian
-          ? `${toPersianDigits(selectedIds.length)} محصول با موفقیت حذف گردید.`
-          : `${selectedIds.length} products deleted successfully.`,
-      );
-      setSelectedIds([]);
-      fetchProducts();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message ||
-          (isPersian ? 'خطا در حذف گروهی محصولات.' : 'Failed to delete products.'),
-      );
-    } finally {
-      setBulkActionLoading(false);
-    }
+    setConfirmConfig({
+      title: isPersian ? 'حذف گروهی محصولات' : 'Bulk Delete Products',
+      description: isPersian ? (
+        <div>
+          <p>
+            آیا از حذف گروهی <strong className="text-brand-text font-black">{toPersianDigits(selectedIds.length)}</strong> محصول انتخاب شده اطمینان کامل دارید؟
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            این محصولات از کاتالوگ فروشگاه حذف خواهند شد.
+          </p>
+        </div>
+      ) : (
+        <div>
+          <p>
+            Are you sure you want to delete <strong className="text-brand-text font-bold">{selectedIds.length}</strong> selected products?
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            These products will be removed from the catalog.
+          </p>
+        </div>
+      ),
+      confirmText: isPersian ? 'بله، حذف گروهی' : 'Yes, Delete All',
+      action: async () => {
+        setBulkActionLoading(true);
+        try {
+          await adminApi.bulkDeleteProducts(selectedIds);
+          toast.success(
+            isPersian
+              ? `${toPersianDigits(selectedIds.length)} محصول با موفقیت حذف گردید.`
+              : `${selectedIds.length} products deleted successfully.`,
+          );
+          setSelectedIds([]);
+          fetchProducts();
+        } catch (err: any) {
+          toast.error(
+            err?.response?.data?.message ||
+              (isPersian ? 'خطا در حذف گروهی محصولات.' : 'Failed to delete products.'),
+          );
+        } finally {
+          setBulkActionLoading(false);
+        }
+      },
+    });
+    setConfirmModalOpen(true);
   };
 
   // Delete single product (Admin only)
-  const handleDelete = async (id: string, title: string) => {
+  const handleDelete = (id: string, title: string) => {
     if (!isAdmin) {
       toast.error(
         isPersian
@@ -249,29 +277,57 @@ export default function AdminProductsPage() {
       return;
     }
 
-    if (
-      !confirm(
-        isPersian
-          ? `آیا از حذف محصول «${title}» اطمینان دارید؟`
-          : `Are you sure you want to delete "${title}"?`,
-      )
-    ) {
-      return;
-    }
+    setConfirmConfig({
+      title: isPersian ? 'حذف محصول' : 'Delete Product',
+      description: isPersian ? (
+        <div>
+          <p>
+            آیا از حذف محصول <strong className="text-brand-text font-black">«{title}»</strong> اطمینان دارید؟
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            این عملیات غیرقابل بازگشت است و محصول از فروشگاه حذف خواهد شد.
+          </p>
+        </div>
+      ) : (
+        <div>
+          <p>
+            Are you sure you want to delete product <strong className="text-brand-text font-bold">&quot;{title}&quot;</strong>?
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            This action cannot be undone.
+          </p>
+        </div>
+      ),
+      confirmText: isPersian ? 'بله، حذف محصول' : 'Yes, Delete Product',
+      action: async () => {
+        setDeletingId(id);
+        try {
+          await adminApi.deleteProduct(id);
+          toast.success(isPersian ? 'محصول با موفقیت حذف گردید.' : 'Product deleted successfully.');
+          setSelectedIds((prev) => prev.filter((item) => item !== id));
+          fetchProducts();
+        } catch (err: any) {
+          toast.error(
+            err?.response?.data?.message ||
+              (isPersian ? 'خطا در حذف محصول.' : 'Failed to delete product.'),
+          );
+        } finally {
+          setDeletingId(null);
+        }
+      },
+    });
+    setConfirmModalOpen(true);
+  };
 
-    setDeletingId(id);
+  const executeConfirmAction = async () => {
+    if (!confirmConfig) return;
+    setIsConfirmLoading(true);
     try {
-      await adminApi.deleteProduct(id);
-      toast.success(isPersian ? 'محصول با موفقیت حذف گردید.' : 'Product deleted successfully.');
-      setSelectedIds((prev) => prev.filter((item) => item !== id));
-      fetchProducts();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message ||
-          (isPersian ? 'خطا در حذف محصول.' : 'Failed to delete product.'),
-      );
+      await confirmConfig.action();
+      setConfirmModalOpen(false);
+      setConfirmConfig(null);
     } finally {
-      setDeletingId(null);
+      setIsConfirmLoading(false);
     }
   };
 
@@ -657,6 +713,20 @@ export default function AdminProductsPage() {
         </CardBody>
       </Card>
       </motion.div>
+
+      {/* HeroUI Delete Confirmation Modal */}
+      <AdminConfirmModal
+        isOpen={confirmModalOpen}
+        onOpenChange={setConfirmModalOpen}
+        title={confirmConfig?.title || ''}
+        description={confirmConfig?.description || null}
+        confirmText={confirmConfig?.confirmText || (isPersian ? 'بله، حذف' : 'Yes, Delete')}
+        cancelText={isPersian ? 'انصراف' : 'Cancel'}
+        confirmColor="danger"
+        icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
+        isLoading={isConfirmLoading}
+        onConfirm={executeConfirmAction}
+      />
     </div>
   );
 }
