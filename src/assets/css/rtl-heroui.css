@@ -285,21 +285,33 @@ html[dir="rtl"] [role="option"] {
   transition: background-color 0.15s ease, color 0.15s ease !important;
 }
 
-/* Selected item in dropdown: curved with high-contrast text in both light and dark modes */
+/* Selected item in dropdown: curved gold highlight in both light and dark modes */
 [dir="rtl"] [role="option"][data-selected="true"],
 html[dir="rtl"] [role="option"][data-selected="true"] {
-  background-color: rgba(191, 162, 122, 0.2) !important;
-  color: #1a221a !important;
+  background-color: rgba(191, 162, 122, 0.18) !important;
+  color: #3d2e1a !important;
   font-weight: 800 !important;
-  border: 1px solid rgba(191, 162, 122, 0.45) !important;
+  border: 1px solid rgba(191, 162, 122, 0.4) !important;
   border-radius: 0.75rem !important;
 }
 
+/* Suppress HeroUI's second hover layer on already-selected items */
+[dir="rtl"] [role="option"][data-selected="true"][data-hover="true"],
+html[dir="rtl"] [role="option"][data-selected="true"][data-hover="true"] {
+  background-color: rgba(191, 162, 122, 0.26) !important;
+}
+
 .dark [dir="rtl"] [role="option"][data-selected="true"],
-.dark html[dir="rtl"] [role="option"][data-selected="true"] {
-  background-color: rgba(191, 162, 122, 0.25) !important;
-  color: #f7f3ec !important;
-  border-color: rgba(191, 162, 122, 0.4) !important;
+.dark html[dir="rtl"] [role="option"][data-selected="true"],
+html.dark [dir="rtl"] [role="option"][data-selected="true"] {
+  background-color: rgba(191, 162, 122, 0.22) !important;
+  color: #e8c97a !important;
+  border-color: rgba(191, 162, 122, 0.45) !important;
+}
+
+.dark [dir="rtl"] [role="option"][data-selected="true"][data-hover="true"],
+html.dark [dir="rtl"] [role="option"][data-selected="true"][data-hover="true"] {
+  background-color: rgba(191, 162, 122, 0.32) !important;
 }
 
 /* HeroUI Dropdown Menu RTL & Clean Minimal Styling */

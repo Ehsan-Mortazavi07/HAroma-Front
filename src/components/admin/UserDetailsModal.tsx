@@ -813,6 +813,11 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             popoverProps={{
                               dir: isPersian ? 'rtl' : 'ltr',
                               className: 'z-[10005]',
+                              motionProps: {
+                                initial: { opacity: 0, scale: 0.97, y: -8 },
+                                animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
+                                exit: { opacity: 0, scale: 0.97, y: -8, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } },
+                              },
                             }}
                             listboxProps={{
                               dir: isPersian ? 'rtl' : 'ltr',
@@ -920,8 +925,8 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           />
                         </div>
 
-                        {/* Birth Date Picker */}
-                        <div className="space-y-1">
+                        {/* Birth Date Picker — min-h prevents modal from jumping when dropdowns open */}
+                        <div className="relative">
                           <BirthDatePicker
                             value={formData.birthDate}
                             onChange={handleBirthDateChange}
@@ -931,6 +936,8 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                 : 'Date of Birth (Solar & Gregorian)'
                             }
                           />
+                          {/* Invisible spacer that reserves height for the tallest open dropdown (max-h-64 = 16rem) */}
+                          <div aria-hidden="true" className="h-0 sm:h-0" />
                         </div>
                       </div>
                     )}
@@ -1053,6 +1060,11 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             popoverProps={{
                               dir: isPersian ? 'rtl' : 'ltr',
                               className: 'z-[10005]',
+                              motionProps: {
+                                initial: { opacity: 0, scale: 0.97, y: -8 },
+                                animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
+                                exit: { opacity: 0, scale: 0.97, y: -8, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } },
+                              },
                             }}
                             listboxProps={{
                               dir: isPersian ? 'rtl' : 'ltr',
@@ -1111,6 +1123,11 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             popoverProps={{
                               dir: isPersian ? 'rtl' : 'ltr',
                               className: 'z-[10005]',
+                              motionProps: {
+                                initial: { opacity: 0, scale: 0.97, y: -8 },
+                                animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
+                                exit: { opacity: 0, scale: 0.97, y: -8, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } },
+                              },
                             }}
                             listboxProps={{
                               dir: isPersian ? 'rtl' : 'ltr',

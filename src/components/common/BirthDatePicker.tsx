@@ -242,7 +242,7 @@ export function BirthDatePicker({
       </div>
 
       {/* 3 Proportional In-Place RTL Dropdowns (3 cols Day, 5 cols Month, 4 cols Year) */}
-      <div className="grid grid-cols-12 gap-3 relative">
+      <div className={`grid grid-cols-12 gap-3 relative transition-all duration-200 ${openDropdown ? 'pb-72' : 'pb-0'}`}>
         {/* Day Select (3 cols) */}
         <div ref={dayRef} className="col-span-12 sm:col-span-3 space-y-1.5 relative">
           <label className="block text-xs font-bold text-brand-text-muted px-1">
