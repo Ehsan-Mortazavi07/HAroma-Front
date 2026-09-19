@@ -32,6 +32,7 @@ import {
   Filter,
   User as UserIcon,
   ChevronDown,
+  Eye,
 } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { IUser } from '@/common/interfaces';
@@ -40,6 +41,7 @@ import { formatDisplayBirthDate } from '@/common/utils/date';
 import { useTranslation } from '@/common/i18n';
 import { useAppSelector } from '@/stores/hooks';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
+import { UserDetailsModal } from '@/components/admin/UserDetailsModal';
 
 // Calm, elegant, ultra-smooth glide-down motion for select boxes and dropdowns
 const softDropdownMotionProps = {
@@ -239,6 +241,15 @@ export default function AdminUsersPage() {
   const [userToDelete, setUserToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // User Details Modal State
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState<IUser | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+
+  const handleOpenDetails = (user: IUser) => {
+    setSelectedUserForDetails(user);
+    setDetailsModalOpen(true);
+  };
+
   const loadUsers = async () => {
     setLoading(true);
     try {
@@ -275,12 +286,18 @@ export default function AdminUsersPage() {
     setUsers((prev) =>
       prev.map((u) => (u._id === userId ? { ...u, role: newRole as any } : u))
     );
+    setSelectedUserForDetails((prev) =>
+      prev && prev._id === userId ? { ...prev, role: newRole as any } : prev
+    );
 
     try {
       await adminApi.updateUserRole(userId, newRole);
       toast.success(isPersian ? 'نقش کاربر با موفقیت تغییر کرد.' : 'User role updated successfully.');
     } catch (err: any) {
       setUsers(previousUsers);
+      setSelectedUserForDetails((prev) =>
+        prev && prev._id === userId ? { ...prev, role: (previousUsers.find(u => u._id === userId)?.role || 'user') as any } : prev
+      );
       toast.error(isPersian ? 'خطا در تغییر نقش کاربر.' : 'Failed to update user role.');
     }
   };
@@ -299,6 +316,9 @@ export default function AdminUsersPage() {
     setUsers((prev) =>
       prev.map((u) => (u._id === userId ? { ...u, isVip: nextVip } : u))
     );
+    setSelectedUserForDetails((prev) =>
+      prev && prev._id === userId ? { ...prev, isVip: nextVip } : prev
+    );
 
     try {
       await adminApi.updateUserVip(userId, nextVip);
@@ -310,6 +330,9 @@ export default function AdminUsersPage() {
     } catch (err: any) {
       setUsers((prev) =>
         prev.map((u) => (u._id === userId ? { ...u, isVip: currentVip } : u))
+      );
+      setSelectedUserForDetails((prev) =>
+        prev && prev._id === userId ? { ...prev, isVip: currentVip } : prev
       );
       toast.error(isPersian ? 'خطا در تغییر وضعیت VIP.' : 'Failed to update VIP status.');
     }
@@ -539,15 +562,20 @@ export default function AdminUsersPage() {
                 {users.map((user) => (
                   <TableRow key={user._id}>
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-brand-gold text-[#141914] font-black flex items-center justify-center text-xs shadow-sm shrink-0">
-                          {user.fullName.charAt(0)}
+                      <div
+                        onClick={() => handleOpenDetails(user)}
+                        className="flex items-center gap-3 cursor-pointer group select-none"
+                        title={isPersian ? 'کلیک جهت مشاهده تمام جزئیات کاربر' : 'Click to view user details'}
+                      >
+                        <div className="w-10 h-10 rounded-2xl bg-brand-gold text-[#141914] font-black flex items-center justify-center text-xs shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                          {user.fullName ? user.fullName.charAt(0) : (user.username ? user.username.charAt(0) : 'U')}
                         </div>
                         <div>
-                          <div className="font-bold text-sm text-brand-text">
-                            {user.fullName}
+                          <div className="font-bold text-sm text-brand-text group-hover:text-brand-gold transition-colors flex items-center gap-1.5">
+                            <span>{user.fullName}</span>
+                            <Eye className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-brand-gold transition-opacity" />
                           </div>
-                          <div className="text-[11px] text-brand-text-muted">
+                          <div className="text-[11px] text-brand-text-muted font-mono">
                             @{user.username}
                           </div>
                         </div>
@@ -641,23 +669,39 @@ export default function AdminUsersPage() {
                     </TableCell>
 
                     <TableCell className="text-center whitespace-nowrap">
-                      {isAdmin ? (
+                      <div className="flex items-center justify-center gap-1.5">
                         <Button
                           isIconOnly
                           size="sm"
                           radius="full"
                           variant="light"
-                          onPress={() => handleDeleteClick(user._id, user.fullName)}
-                          className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer transition-all active:scale-95"
-                          aria-label={isPersian ? 'حذف کاربر' : 'Delete'}
+                          onPress={() => handleOpenDetails(user)}
+                          className="text-brand-text-muted hover:text-brand-gold hover:bg-brand-surface-elevated cursor-pointer transition-all active:scale-95"
+                          aria-label={isPersian ? 'مشاهده تمام جزئیات کاربر' : 'View User Details'}
+                          title={isPersian ? 'مشاهده تمام جزئیات کاربر' : 'View User Details'}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Eye className="w-4 h-4" />
                         </Button>
-                      ) : (
-                        <Chip size="sm" variant="flat" className="bg-brand-surface-elevated text-brand-text-muted border border-brand-border text-[11px]">
-                          {isPersian ? 'فقط مشاهده' : 'View Only'}
-                        </Chip>
-                      )}
+
+                        {isAdmin ? (
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            radius="full"
+                            variant="light"
+                            onPress={() => handleDeleteClick(user._id, user.fullName)}
+                            className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer transition-all active:scale-95"
+                            aria-label={isPersian ? 'حذف کاربر' : 'Delete'}
+                            title={isPersian ? 'حذف حساب کاربری' : 'Delete User'}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        ) : (
+                          <Chip size="sm" variant="flat" className="bg-brand-surface-elevated text-brand-text-muted border border-brand-border text-[11px]">
+                            {isPersian ? 'فقط مشاهده' : 'View Only'}
+                          </Chip>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -667,6 +711,21 @@ export default function AdminUsersPage() {
         </CardBody>
       </Card>
       </motion.div>
+
+      {/* Comprehensive User Details Modal */}
+      <UserDetailsModal
+        isOpen={detailsModalOpen}
+        onOpenChange={setDetailsModalOpen}
+        user={selectedUserForDetails}
+        isPersian={isPersian}
+        isAdmin={isAdmin}
+        onToggleVip={handleToggleVip}
+        onRoleChange={handleRoleChange}
+        onDeleteUser={(userId, userName) => {
+          setDetailsModalOpen(false);
+          handleDeleteClick(userId, userName);
+        }}
+      />
 
       {/* HeroUI Delete Confirmation Modal */}
       <AdminConfirmModal

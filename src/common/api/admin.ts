@@ -148,6 +148,10 @@ export const adminApi = {
     const res = await axiosInstance.patch(`/admin/users/${id}/vip`, { isVip, durationDays });
     return res.data;
   },
+  getUserOrders: async (userId: string, params?: Record<string, any>) => {
+    const res = await axiosInstance.get('/admin/orders', { params: { ...params, userId } });
+    return res.data;
+  },
   deleteUser: async (id: string) => {
     const res = await axiosInstance.delete(`/admin/users/${id}`);
     return res.data;
