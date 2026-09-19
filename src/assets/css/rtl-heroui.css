@@ -41,7 +41,7 @@
 }
 
 /* HeroUI Switch & Curve Enforcement */
-[data-slot="wrapper"],
+label:has([data-slot="thumb"]) [data-slot="wrapper"],
 .heroui-switch-wrapper {
   border-radius: 9999px !important;
   transition: background-color 0.28s cubic-bezier(0.16, 1, 0.3, 1),
@@ -59,20 +59,30 @@
 
 /* Ensure unselected switch wrapper has a clear, visible background */
 .heroui-switch-wrapper,
-[data-slot="wrapper"]:not([data-selected="true"]):not([data-state="checked"]) {
+label:has([data-slot="thumb"]) [data-slot="wrapper"]:not([data-selected="true"]):not([data-state="checked"]) {
   background-color: #ded6c8;
 }
 
 .dark .heroui-switch-wrapper,
-.dark [data-slot="wrapper"]:not([data-selected="true"]):not([data-state="checked"]) {
+.dark label:has([data-slot="thumb"]) [data-slot="wrapper"]:not([data-selected="true"]):not([data-state="checked"]) {
   background-color: #2e3a2e;
 }
 
 /* Selected switch background */
-[data-selected="true"] [data-slot="wrapper"],
-[data-state="checked"] [data-slot="wrapper"],
+label:has([data-slot="thumb"])[data-selected="true"] [data-slot="wrapper"],
+label:has([data-slot="thumb"])[data-state="checked"] [data-slot="wrapper"],
 [data-selected="true"].heroui-switch-wrapper {
   background-color: #bfa27a !important;
+}
+
+/* HeroUI Modal & Dialog - Ensure modal wrapper never inherits switch background or border-radius */
+div[data-slot="wrapper"]:has([data-slot="base"]),
+div[data-slot="wrapper"][class*="fixed"],
+div[data-slot="wrapper"][class*="w-screen"],
+.heroui-modal-wrapper {
+  border-radius: 0 !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
 }
 
 /* Thumb sliding in LTR */
@@ -257,5 +267,18 @@ html[dir="rtl"] [data-slot="listbox-item"] {
 /* Ensure no default HeroUI dark or beige highlight overrides custom active style */
 [data-slot="menu-item"][data-selected="true"] {
   background-color: transparent !important;
+}
+
+/* Admin Confirm Modal Workspace Centering - Offsets sidebar (25%) on desktop to center over main content */
+@media (min-width: 1024px) {
+  .admin-confirm-modal-wrapper {
+    padding-inline-start: min(25vw, 400px) !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .admin-confirm-modal-wrapper {
+    padding-inline-start: 0 !important;
+  }
 }
 

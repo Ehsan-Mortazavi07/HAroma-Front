@@ -78,23 +78,24 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
       onClose={handleClose}
       backdrop="transparent"
       placement="center"
-      size="md"
+      size="sm"
+      hideCloseButton={true}
       motionProps={modalMotionProps}
       classNames={{
-        backdrop: 'bg-transparent backdrop-blur-none pointer-events-none',
-        base: 'bg-brand-surface/98 dark:bg-[#161c16]/98 border border-brand-border dark:border-[#2e3a2e] text-brand-text rounded-3xl shadow-2xl mx-4 overflow-hidden',
-        header: 'border-b border-brand-border/60 pb-3 pt-5 px-6 flex items-center gap-3',
-        body: 'py-5 px-6',
-        footer: 'border-t border-brand-border/60 pt-3 pb-5 px-6 flex justify-end gap-2.5',
-        closeButton: 'hover:bg-brand-surface-elevated text-brand-text-muted rounded-xl cursor-pointer top-4 end-4',
+        backdrop: 'bg-transparent backdrop-blur-none pointer-events-none hidden',
+        wrapper: 'fixed inset-0 z-50 flex items-center justify-center p-4 !bg-transparent !rounded-none pointer-events-auto admin-confirm-modal-wrapper lg:ps-[min(25vw,400px)]',
+        base: 'm-auto max-w-[340px] w-full bg-brand-surface dark:bg-[#182018] border border-brand-border dark:border-[#2e3a2e] text-brand-text rounded-[26px] shadow-2xl overflow-hidden p-0',
+        header: 'p-0 pt-6 pb-2 px-5 flex flex-col items-center justify-center text-center',
+        body: 'p-0 py-1.5 px-5 text-center',
+        footer: 'p-0 pt-3.5 pb-5 px-5 flex items-center justify-center w-full',
       }}
     >
       <ModalContent>
         {() => (
           <>
-            <ModalHeader className="flex items-center gap-3">
+            <ModalHeader className="p-0 pt-6 pb-2 px-5 flex flex-col items-center justify-center text-center">
               <div
-                className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border ${
+                className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 mb-3 border ${
                   isDanger
                     ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 shadow-sm shadow-rose-500/10'
                     : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
@@ -102,40 +103,42 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
               >
                 {icon || <AlertTriangle className="w-5 h-5" />}
               </div>
-              <div className="flex flex-col">
-                <h3 className="font-black text-base text-brand-text">{title}</h3>
-              </div>
+              <h3 className="font-black text-sm text-brand-text text-center tracking-tight leading-snug">
+                {title}
+              </h3>
             </ModalHeader>
 
-            <ModalBody className="py-4">
-              <div className="text-sm text-brand-text-muted leading-relaxed space-y-2">
+            <ModalBody className="p-0 py-1.5 px-5 text-center">
+              <div className="text-xs text-brand-text-muted leading-relaxed text-center space-y-1.5 [&_p]:text-center [&_strong]:text-brand-text [&_strong]:font-bold">
                 {typeof description === 'string' ? <p>{description}</p> : description}
               </div>
             </ModalBody>
 
-            <ModalFooter className="flex items-center justify-end gap-2.5">
-              <Button
-                variant="light"
-                radius="lg"
-                size="md"
-                isDisabled={isLoading}
-                onPress={handleClose}
-                className="font-bold text-xs bg-transparent hover:bg-brand-surface-elevated text-brand-text border border-brand-border/60 cursor-pointer rounded-2xl"
-              >
-                {cancelText}
-              </Button>
-              <Button
-                color={confirmColor}
-                radius="lg"
-                size="md"
-                isLoading={isLoading}
-                onPress={onConfirm}
-                className={`font-bold text-xs cursor-pointer shadow-md active:scale-95 transition-all rounded-2xl ${
-                  isDanger ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/25' : ''
-                }`}
-              >
-                {confirmText}
-              </Button>
+            <ModalFooter className="p-0 pt-3.5 pb-5 px-5 flex items-center justify-center w-full">
+              <div className="grid grid-cols-2 gap-2.5 w-full">
+                <Button
+                  variant="flat"
+                  radius="lg"
+                  size="sm"
+                  isDisabled={isLoading}
+                  onPress={handleClose}
+                  className="font-bold text-xs bg-brand-surface-elevated/70 hover:bg-brand-surface-elevated text-brand-text border border-brand-border/60 cursor-pointer rounded-xl h-9 active:scale-95 transition-all"
+                >
+                  {cancelText}
+                </Button>
+                <Button
+                  color={confirmColor}
+                  radius="lg"
+                  size="sm"
+                  isLoading={isLoading}
+                  onPress={onConfirm}
+                  className={`font-bold text-xs cursor-pointer shadow-md active:scale-95 transition-all rounded-xl h-9 ${
+                    isDanger ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/25' : ''
+                  }`}
+                >
+                  {confirmText}
+                </Button>
+              </div>
             </ModalFooter>
           </>
         )}
