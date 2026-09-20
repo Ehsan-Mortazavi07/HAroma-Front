@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MapPin, Building, ChevronDown, Search, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { IRAN_PROVINCES } from '@/common/constants/iranProvinces';
 import { useTranslation } from '@/common/i18n';
 
@@ -12,6 +13,7 @@ interface ProvinceCitySelectProps {
   onChangeCity?: (city: string) => void;
   onChange?: (val: { province: string; city: string }) => void;
   disabled?: boolean;
+  required?: boolean;
   className?: string;
 }
 
@@ -22,6 +24,7 @@ export function ProvinceCitySelect({
   onChangeCity,
   onChange,
   disabled = false,
+  required = false,
   className = '',
 }: ProvinceCitySelectProps) {
   const { isPersian } = useTranslation();
@@ -141,7 +144,7 @@ export function ProvinceCitySelect({
           <label className="text-xs font-bold text-brand-text">
             {isPersian ? 'استان' : 'Province / State'}
           </label>
-          <span className="text-rose-500 font-bold text-xs">*</span>
+          {required && <span className="text-rose-500 font-bold text-xs">*</span>}
         </div>
 
         <div className="relative">
@@ -166,62 +169,68 @@ export function ProvinceCitySelect({
           </button>
 
           {/* Province Dropdown Menu */}
-          {openDropdown === 'province' && (
-            <div
-              className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-2 space-y-1.5 overscroll-contain"
-            >
-              {/* Search Bar */}
-              <div className="relative px-1 pt-1 pb-1">
-                <Search className="w-3.5 h-3.5 text-brand-text-muted absolute right-3.5 top-3.5 shrink-0 pointer-events-none" />
-                <input
-                  type="text"
-                  autoFocus
-                  value={provinceSearch}
-                  onChange={(e) => setProvinceSearch(e.target.value)}
-                  placeholder={isPersian ? 'جستجوی استان...' : 'Search province...'}
-                  className="w-full h-9 pr-8 pl-3 text-xs font-semibold rounded-xl bg-brand-surface-elevated border border-brand-border text-brand-text placeholder:text-brand-text-muted/60 focus:outline-none focus:border-brand-gold"
-                />
-                {provinceSearch && (
-                  <button
-                    type="button"
-                    onClick={() => setProvinceSearch('')}
-                    className="absolute left-3 top-3 text-brand-text-muted hover:text-brand-text"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
+          <AnimatePresence>
+            {openDropdown === 'province' && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-2 space-y-1.5 overscroll-contain origin-top"
+              >
+                {/* Search Bar */}
+                <div className="relative px-1 pt-1 pb-1">
+                  <Search className="w-3.5 h-3.5 text-brand-text-muted absolute right-3.5 top-3.5 shrink-0 pointer-events-none" />
+                  <input
+                    type="text"
+                    autoFocus
+                    value={provinceSearch}
+                    onChange={(e) => setProvinceSearch(e.target.value)}
+                    placeholder={isPersian ? 'جستجوی استان...' : 'Search province...'}
+                    className="w-full h-9 pr-8 pl-3 text-xs font-semibold rounded-xl bg-brand-surface-elevated border border-brand-border text-brand-text placeholder:text-brand-text-muted/60 focus:outline-none focus:border-brand-gold"
+                  />
+                  {provinceSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setProvinceSearch('')}
+                      className="absolute left-3 top-3 text-brand-text-muted hover:text-brand-text"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
 
-              {/* Province Items List */}
-              <div ref={provinceListRef} className="max-h-56 overflow-y-auto space-y-0.5 p-0.5 overscroll-contain">
-                {filteredProvinces.length === 0 ? (
-                  <div className="p-3 text-center text-xs text-brand-text-muted">
-                    {isPersian ? 'استانی با این نام یافت نشد' : 'No province found'}
-                  </div>
-                ) : (
-                  filteredProvinces.map((p) => {
-                    const isSelected = p.name === province;
-                    return (
-                      <button
-                        key={`prov-${p.name}`}
-                        data-selected={isSelected ? 'true' : 'false'}
-                        type="button"
-                        onClick={() => handleSelectProvince(p.name)}
-                        className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
-                          isSelected
-                            ? 'bg-brand-gold text-[#141914]'
-                            : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
-                        }`}
-                      >
-                        <span>{p.name}</span>
-                        {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914]" />}
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          )}
+                {/* Province Items List */}
+                <div ref={provinceListRef} className="max-h-56 overflow-y-auto space-y-0.5 p-0.5 overscroll-contain">
+                  {filteredProvinces.length === 0 ? (
+                    <div className="p-3 text-center text-xs text-brand-text-muted">
+                      {isPersian ? 'استانی با این نام یافت نشد' : 'No province found'}
+                    </div>
+                  ) : (
+                    filteredProvinces.map((p) => {
+                      const isSelected = p.name === province;
+                      return (
+                        <button
+                          key={`prov-${p.name}`}
+                          data-selected={isSelected ? 'true' : 'false'}
+                          type="button"
+                          onClick={() => handleSelectProvince(p.name)}
+                          className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
+                            isSelected
+                              ? 'bg-brand-gold text-[#141914]'
+                              : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
+                          }`}
+                        >
+                          <span>{p.name}</span>
+                          {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914]" />}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -232,7 +241,7 @@ export function ProvinceCitySelect({
           <label className="text-xs font-bold text-brand-text">
             {isPersian ? 'شهر' : 'City'}
           </label>
-          <span className="text-rose-500 font-bold text-xs">*</span>
+          {required && <span className="text-rose-500 font-bold text-xs">*</span>}
         </div>
 
         <div className="relative">
@@ -259,62 +268,68 @@ export function ProvinceCitySelect({
           </button>
 
           {/* City Dropdown Menu */}
-          {openDropdown === 'city' && (
-            <div
-              className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-2 space-y-1.5 overscroll-contain"
-            >
-              {/* Search Bar */}
-              <div className="relative px-1 pt-1 pb-1">
-                <Search className="w-3.5 h-3.5 text-brand-text-muted absolute right-3.5 top-3.5 shrink-0 pointer-events-none" />
-                <input
-                  type="text"
-                  autoFocus
-                  value={citySearch}
-                  onChange={(e) => setCitySearch(e.target.value)}
-                  placeholder={isPersian ? 'جستجوی شهر...' : 'Search city...'}
-                  className="w-full h-9 pr-8 pl-3 text-xs font-semibold rounded-xl bg-brand-surface-elevated border border-brand-border text-brand-text placeholder:text-brand-text-muted/60 focus:outline-none focus:border-brand-gold"
-                />
-                {citySearch && (
-                  <button
-                    type="button"
-                    onClick={() => setCitySearch('')}
-                    className="absolute left-3 top-3 text-brand-text-muted hover:text-brand-text"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
+          <AnimatePresence>
+            {openDropdown === 'city' && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-2 space-y-1.5 overscroll-contain origin-top"
+              >
+                {/* Search Bar */}
+                <div className="relative px-1 pt-1 pb-1">
+                  <Search className="w-3.5 h-3.5 text-brand-text-muted absolute right-3.5 top-3.5 shrink-0 pointer-events-none" />
+                  <input
+                    type="text"
+                    autoFocus
+                    value={citySearch}
+                    onChange={(e) => setCitySearch(e.target.value)}
+                    placeholder={isPersian ? 'جستجوی شهر...' : 'Search city...'}
+                    className="w-full h-9 pr-8 pl-3 text-xs font-semibold rounded-xl bg-brand-surface-elevated border border-brand-border text-brand-text placeholder:text-brand-text-muted/60 focus:outline-none focus:border-brand-gold"
+                  />
+                  {citySearch && (
+                    <button
+                      type="button"
+                      onClick={() => setCitySearch('')}
+                      className="absolute left-3 top-3 text-brand-text-muted hover:text-brand-text"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
 
-              {/* City Items List */}
-              <div ref={cityListRef} className="max-h-56 overflow-y-auto space-y-0.5 p-0.5 overscroll-contain">
-                {filteredCities.length === 0 ? (
-                  <div className="p-3 text-center text-xs text-brand-text-muted">
-                    {isPersian ? 'شهری با این نام یافت نشد' : 'No city found'}
-                  </div>
-                ) : (
-                  filteredCities.map((c) => {
-                    const isSelected = c === city;
-                    return (
-                      <button
-                        key={`city-${c}`}
-                        data-selected={isSelected ? 'true' : 'false'}
-                        type="button"
-                        onClick={() => handleSelectCity(c)}
-                        className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
-                          isSelected
-                            ? 'bg-brand-gold text-[#141914]'
-                            : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
-                        }`}
-                      >
-                        <span>{c}</span>
-                        {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914]" />}
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          )}
+                {/* City Items List */}
+                <div ref={cityListRef} className="max-h-56 overflow-y-auto space-y-0.5 p-0.5 overscroll-contain">
+                  {filteredCities.length === 0 ? (
+                    <div className="p-3 text-center text-xs text-brand-text-muted">
+                      {isPersian ? 'شهری با این نام یافت نشد' : 'No city found'}
+                    </div>
+                  ) : (
+                    filteredCities.map((c) => {
+                      const isSelected = c === city;
+                      return (
+                        <button
+                          key={`city-${c}`}
+                          data-selected={isSelected ? 'true' : 'false'}
+                          type="button"
+                          onClick={() => handleSelectCity(c)}
+                          className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
+                            isSelected
+                              ? 'bg-brand-gold text-[#141914]'
+                              : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
+                          }`}
+                        >
+                          <span>{c}</span>
+                          {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914]" />}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

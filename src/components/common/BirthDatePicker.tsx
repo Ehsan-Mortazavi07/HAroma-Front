@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Calendar, RefreshCw, ChevronDown, Sparkles } from 'lucide-react';
 import { Button, Chip } from '@heroui/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   gregorianToJalali,
   jalaliToGregorian,
@@ -270,32 +271,38 @@ export function BirthDatePicker({
             </button>
 
             {/* Custom Day Dropdown Menu */}
-            {openDropdown === 'day' && (
-              <div
-                ref={listRef}
-                className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 max-h-64 overflow-y-auto space-y-0.5 overscroll-contain"
-              >
-                {days.map((d) => {
-                  const isSelected = Number(currentParts.day) === d;
-                  return (
-                    <button
-                      key={`day-${d}`}
-                      data-selected={isSelected ? 'true' : 'false'}
-                      type="button"
-                      onClick={() => handlePartChange('day', d)}
-                      className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
-                        isSelected
-                          ? 'bg-brand-gold text-[#141914]'
-                          : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
-                      }`}
-                    >
-                      <span>{isPersian ? toPersianDigits(d) : d}</span>
-                      {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914]" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <AnimatePresence>
+              {openDropdown === 'day' && (
+                <motion.div
+                  ref={listRef}
+                  initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 max-h-64 overflow-y-auto space-y-0.5 overscroll-contain origin-top"
+                >
+                  {days.map((d) => {
+                    const isSelected = Number(currentParts.day) === d;
+                    return (
+                      <button
+                        key={`day-${d}`}
+                        data-selected={isSelected ? 'true' : 'false'}
+                        type="button"
+                        onClick={() => handlePartChange('day', d)}
+                        className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
+                          isSelected
+                            ? 'bg-brand-gold text-[#141914]'
+                            : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
+                        }`}
+                      >
+                        <span>{isPersian ? toPersianDigits(d) : d}</span>
+                        {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914]" />}
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -326,32 +333,38 @@ export function BirthDatePicker({
             </button>
 
             {/* Custom Month Dropdown Menu */}
-            {openDropdown === 'month' && (
-              <div
-                ref={listRef}
-                className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 max-h-64 overflow-y-auto space-y-0.5 overscroll-contain"
-              >
-                {months.map((m) => {
-                  const isSelected = Number(currentParts.month) === m.index;
-                  return (
-                    <button
-                      key={`month-${m.index}`}
-                      data-selected={isSelected ? 'true' : 'false'}
-                      type="button"
-                      onClick={() => handlePartChange('month', m.index)}
-                      className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
-                        isSelected
-                          ? 'bg-brand-gold text-[#141914]'
-                          : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
-                      }`}
-                    >
-                      <span>{m.name}</span>
-                      {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914]" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <AnimatePresence>
+              {openDropdown === 'month' && (
+                <motion.div
+                  ref={listRef}
+                  initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 max-h-64 overflow-y-auto space-y-0.5 overscroll-contain origin-top"
+                >
+                  {months.map((m) => {
+                    const isSelected = Number(currentParts.month) === m.index;
+                    return (
+                      <button
+                        key={`month-${m.index}`}
+                        data-selected={isSelected ? 'true' : 'false'}
+                        type="button"
+                        onClick={() => handlePartChange('month', m.index)}
+                        className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
+                          isSelected
+                            ? 'bg-brand-gold text-[#141914]'
+                            : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
+                        }`}
+                      >
+                        <span>{m.name}</span>
+                        {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914]" />}
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -382,32 +395,38 @@ export function BirthDatePicker({
             </button>
 
             {/* Custom Year Dropdown Menu */}
-            {openDropdown === 'year' && (
-              <div
-                ref={listRef}
-                className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 max-h-64 overflow-y-auto space-y-0.5 overscroll-contain"
-              >
-                {years.map((y) => {
-                  const isSelected = Number(currentParts.year) === y;
-                  return (
-                    <button
-                      key={`year-${y}`}
-                      data-selected={isSelected ? 'true' : 'false'}
-                      type="button"
-                      onClick={() => handlePartChange('year', y)}
-                      className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
-                        isSelected
-                          ? 'bg-brand-gold text-[#141914]'
-                          : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
-                      }`}
-                    >
-                      <span>{isPersian ? toPersianDigits(y) : y}</span>
-                      {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914]" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <AnimatePresence>
+              {openDropdown === 'year' && (
+                <motion.div
+                  ref={listRef}
+                  initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                  transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 max-h-64 overflow-y-auto space-y-0.5 overscroll-contain origin-top"
+                >
+                  {years.map((y) => {
+                    const isSelected = Number(currentParts.year) === y;
+                    return (
+                      <button
+                        key={`year-${y}`}
+                        data-selected={isSelected ? 'true' : 'false'}
+                        type="button"
+                        onClick={() => handlePartChange('year', y)}
+                        className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
+                          isSelected
+                            ? 'bg-brand-gold text-[#141914]'
+                            : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
+                        }`}
+                      >
+                        <span>{isPersian ? toPersianDigits(y) : y}</span>
+                        {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914]" />}
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

@@ -55,6 +55,7 @@ import { formatToman, toPersianDigits, toEnglishDigits, toast } from '@/common/u
 import { formatDisplayBirthDate, parseIsoDate, gregorianToJalali } from '@/common/utils/date';
 import { IRAN_PROVINCES } from '@/common/constants/iranProvinces';
 import { BirthDatePicker } from '@/components/common/BirthDatePicker';
+import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -1025,126 +1026,24 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     {/* EDIT TAB 3: SHIPPING ADDRESS */}
                     {selectedEditTab === 'shipping' && (
                       <div className="space-y-5">
-                        {/* Province & City with official HeroUI Select */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <Select
-                            label={isPersian ? 'استان' : 'Province'}
-                            labelPlacement="outside-top"
-                            placeholder={isPersian ? 'انتخاب استان...' : 'Select Province...'}
-                            selectedKeys={formData.province ? new Set([formData.province]) : new Set([])}
-                            onSelectionChange={(keys) => {
-                              const selected = Array.from(keys)[0] as string;
-                              setFormData((prev) => ({
-                                ...prev,
-                                province: selected || '',
-                                city: '',
-                              }));
-                            }}
-                            variant="bordered"
-                            dir={isPersian ? 'rtl' : 'ltr'}
-                            classNames={selectClassNames}
-                            renderValue={(items) => (
-                              <div className="flex items-center gap-1.5 overflow-hidden w-full justify-start" dir="rtl">
-                                {items.map((item) => (
-                                  <Chip
-                                    key={item.key}
-                                    size="sm"
-                                    variant="flat"
-                                    className="rounded-full bg-brand-gold/15 dark:bg-brand-gold/25 text-brand-text font-black text-xs h-7 px-3 border border-brand-gold/40 flex items-center shrink-0"
-                                  >
-                                    {item.textValue}
-                                  </Chip>
-                                ))}
-                              </div>
-                            )}
-                            popoverProps={{
-                              dir: isPersian ? 'rtl' : 'ltr',
-                              className: 'z-[10005]',
-                              motionProps: {
-                                initial: { opacity: 0, scale: 0.97, y: -8 },
-                                animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
-                                exit: { opacity: 0, scale: 0.97, y: -8, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } },
-                              },
-                            }}
-                            listboxProps={{
-                              dir: isPersian ? 'rtl' : 'ltr',
-                              className: 'p-1',
-                            }}
-                          >
-                            {IRAN_PROVINCES.map((prov) => (
-                              <SelectItem
-                                key={prov.name}
-                                textValue={prov.name}
-                                className="text-xs font-bold text-right rounded-xl my-0.5 text-brand-text"
-                              >
-                                {prov.name}
-                              </SelectItem>
-                            ))}
-                          </Select>
-
-                          <Select
-                            label={isPersian ? 'شهر' : 'City'}
-                            labelPlacement="outside-top"
-                            placeholder={
-                              formData.province
-                                ? isPersian
-                                  ? 'انتخاب شهر...'
-                                  : 'Select City...'
-                                : isPersian
-                                ? 'ابتدا استان را انتخاب کنید'
-                                : 'Select province first'
-                            }
-                            isDisabled={!formData.province || !selectedProvinceObj?.cities.length}
-                            selectedKeys={formData.city ? new Set([formData.city]) : new Set([])}
-                            onSelectionChange={(keys) => {
-                              const selected = Array.from(keys)[0] as string;
-                              setFormData((prev) => ({
-                                ...prev,
-                                city: selected || '',
-                              }));
-                            }}
-                            variant="bordered"
-                            dir={isPersian ? 'rtl' : 'ltr'}
-                            classNames={selectClassNames}
-                            renderValue={(items) => (
-                              <div className="flex items-center gap-1.5 overflow-hidden w-full justify-start" dir="rtl">
-                                {items.map((item) => (
-                                  <Chip
-                                    key={item.key}
-                                    size="sm"
-                                    variant="flat"
-                                    className="rounded-full bg-brand-gold/15 dark:bg-brand-gold/25 text-brand-text font-black text-xs h-7 px-3 border border-brand-gold/40 flex items-center shrink-0"
-                                  >
-                                    {item.textValue}
-                                  </Chip>
-                                ))}
-                              </div>
-                            )}
-                            popoverProps={{
-                              dir: isPersian ? 'rtl' : 'ltr',
-                              className: 'z-[10005]',
-                              motionProps: {
-                                initial: { opacity: 0, scale: 0.97, y: -8 },
-                                animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
-                                exit: { opacity: 0, scale: 0.97, y: -8, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } },
-                              },
-                            }}
-                            listboxProps={{
-                              dir: isPersian ? 'rtl' : 'ltr',
-                              className: 'p-1',
-                            }}
-                          >
-                            {(selectedProvinceObj?.cities || []).map((cityName) => (
-                              <SelectItem
-                                key={cityName}
-                                textValue={cityName}
-                                className="text-xs font-bold text-right rounded-xl my-0.5 text-brand-text"
-                              >
-                                {cityName}
-                              </SelectItem>
-                            ))}
-                          </Select>
-                        </div>
+                        {/* Province & City Select (matching BirthDatePicker custom dropdown) */}
+                        <ProvinceCitySelect
+                          province={formData.province}
+                          city={formData.city}
+                          onChangeProvince={(prov) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              province: prov,
+                              city: '',
+                            }));
+                          }}
+                          onChangeCity={(cityName) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              city: cityName,
+                            }));
+                          }}
+                        />
 
                         {/* Full Address */}
                         <Textarea
