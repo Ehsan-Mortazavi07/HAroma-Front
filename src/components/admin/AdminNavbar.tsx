@@ -42,11 +42,11 @@ import { useTranslation } from '@/common/i18n';
 const floatingPanelVariants = {
   hidden: {
     opacity: 0,
-    y: -6,
-    scale: 0.96,
+    y: -14,
+    scale: 0.985,
     transition: {
-      duration: 0.16,
-      ease: [0.16, 1, 0.3, 1] as const,
+      duration: 0.22,
+      ease: 'easeInOut' as const,
     },
   },
   visible: {
@@ -54,17 +54,17 @@ const floatingPanelVariants = {
     y: 0,
     scale: 1,
     transition: {
-      duration: 0.2,
-      ease: [0.16, 1, 0.3, 1] as const,
+      duration: 0.32,
+      ease: 'easeOut' as const,
     },
   },
   exit: {
     opacity: 0,
-    y: -6,
-    scale: 0.96,
+    y: -12,
+    scale: 0.985,
     transition: {
-      duration: 0.15,
-      ease: [0.16, 1, 0.3, 1] as const,
+      duration: 0.2,
+      ease: 'easeInOut' as const,
     },
   },
 };
@@ -282,7 +282,7 @@ export function AdminNavbar() {
                       initial="hidden"
                       animate="visible"
                       exit="exit"
-                      className="fixed sm:absolute inset-x-3 sm:inset-auto top-[76px] sm:top-full left-0 sm:left-0 mt-0 sm:mt-3.5 w-auto sm:w-68 max-w-[calc(100vw-24px)] sm:max-w-none mx-auto sm:mx-0 bg-[#1c231c]/95 dark:bg-[#151a15]/95 backdrop-blur-3xl border border-[#2e3a2e] rounded-3xl p-4 shadow-2xl z-50 overflow-hidden text-right"
+                      className="fixed sm:absolute inset-x-3 sm:inset-auto top-[76px] sm:top-full left-0 sm:left-0 mt-0 sm:mt-3.5 w-auto sm:w-68 max-w-[calc(100vw-24px)] sm:max-w-none mx-auto sm:mx-0 bg-[#1c231c]/95 dark:bg-[#151a15]/95 backdrop-blur-3xl border border-[#2e3a2e] rounded-3xl p-4 shadow-2xl z-50 overflow-hidden text-right origin-top"
                     >
                       {isAuthenticated && user ? (
                         <>
