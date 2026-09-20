@@ -111,8 +111,8 @@ const modalMotionProps = {
 };
 
 const inputWrapperClass =
-  'bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] rounded-2xl h-11 hover:border-brand-gold/60 focus-within:!border-brand-gold shadow-2xs transition-all';
-const inputLabelClass = 'text-xs font-bold text-brand-text mb-1 block';
+  'h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors';
+const inputLabelClass = 'text-xs font-bold text-brand-text mb-1.5 block text-right';
 
 
 export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
@@ -722,11 +722,15 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             labelPlacement="outside-top"
                             isRequired
                             value={formData.fullName}
-                            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                            onValueChange={(val) => setFormData((prev) => ({ ...prev, fullName: val }))}
                             placeholder={isPersian ? 'مثال: علیرضا محمدی' : 'e.g. John Doe'}
+                            startContent={<UserIcon className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
+                            variant="bordered"
+                            radius="lg"
                             classNames={{
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
+                              innerWrapper: 'gap-3',
                               input: 'text-xs font-bold text-brand-text',
                             }}
                           />
@@ -736,16 +740,18 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             labelPlacement="outside-top"
                             isRequired
                             value={formData.username}
-                            onChange={(e) =>
-                              setFormData({ ...formData, username: e.target.value.toLowerCase() })
+                            onValueChange={(val) =>
+                              setFormData((prev) => ({ ...prev, username: val.toLowerCase() }))
                             }
-                            startContent={<span className="text-brand-text-muted text-xs font-mono">@</span>}
+                            startContent={<span className="text-brand-bronze dark:text-brand-gold text-xs font-mono font-bold me-3">@</span>}
                             placeholder="username"
-                            dir="ltr"
+                            variant="bordered"
+                            radius="lg"
                             classNames={{
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
-                              input: 'text-xs font-mono font-bold text-brand-text',
+                              innerWrapper: 'gap-3',
+                              input: 'text-xs font-mono font-bold text-brand-text text-start',
                             }}
                           />
 
@@ -755,31 +761,37 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             isRequired
                             type="email"
                             value={formData.email}
-                            onChange={(e) =>
-                              setFormData({ ...formData, email: e.target.value.toLowerCase() })
+                            onValueChange={(val) =>
+                              setFormData((prev) => ({ ...prev, email: val.toLowerCase() }))
                             }
-                            startContent={<Mail className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            startContent={<Mail className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                             placeholder="user@domain.com"
-                            dir="ltr"
+                            variant="bordered"
+                            radius="lg"
                             classNames={{
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
-                              input: 'text-xs font-mono font-semibold text-brand-text',
+                              innerWrapper: 'gap-3',
+                              input: 'text-xs font-mono font-semibold text-brand-text text-start',
                             }}
                           />
 
                           <Input
                             label={isPersian ? 'شماره تلفن همراه' : 'Mobile Phone'}
                             labelPlacement="outside-top"
+                            type="tel"
+                            maxLength={11}
                             value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            startContent={<Phone className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            onValueChange={(val) => setFormData((prev) => ({ ...prev, phone: toEnglishDigits(val) }))}
+                            startContent={<Phone className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                             placeholder="09123456789"
-                            dir="ltr"
+                            variant="bordered"
+                            radius="lg"
                             classNames={{
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
-                              input: 'text-xs font-mono font-semibold text-brand-text',
+                              innerWrapper: 'gap-3',
+                              input: 'text-xs font-mono font-semibold text-brand-text text-start',
                             }}
                           />
                         </div>
@@ -888,14 +900,16 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             label={isPersian ? 'لینک تصویر آواتار (URL)' : 'Avatar Image URL'}
                             labelPlacement="outside-top"
                             value={formData.avatar}
-                            onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
+                            onValueChange={(val) => setFormData((prev) => ({ ...prev, avatar: val }))}
                             placeholder="https://example.com/avatar.jpg"
-                            dir="ltr"
-                            startContent={<UserIcon className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            startContent={<UserIcon className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
+                            variant="bordered"
+                            radius="lg"
                             classNames={{
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
-                              input: 'text-xs font-mono text-brand-text',
+                              innerWrapper: 'gap-3',
+                              input: 'text-xs font-mono text-brand-text text-start',
                             }}
                           />
                         </div>
@@ -929,28 +943,32 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           </div>
 
                           <Input
-                            labelPlacement="outside-top"
+                            aria-label={isPersian ? 'تنظیم کلمه عبور جدید' : 'Set New Password'}
                             type={showPassword ? 'text' : 'password'}
                             value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                            onValueChange={(val) => setFormData((prev) => ({ ...prev, password: val }))}
                             placeholder={
                               isPersian
                                 ? 'کلمه عبور جدید را وارد کنید (حداقل ۶ کاراکتر)...'
                                 : 'Enter new password (min 6 characters)...'
                             }
-                            dir="ltr"
+                            startContent={<Lock className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                             endContent={
                               <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="text-brand-text-muted hover:text-brand-text cursor-pointer p-1"
+                                className="text-brand-text-muted hover:text-brand-text cursor-pointer p-1 ms-2"
+                                aria-label="Toggle password visibility"
                               >
                                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                               </button>
                             }
+                            variant="bordered"
+                            radius="lg"
                             classNames={{
                               inputWrapper: inputWrapperClass,
-                              input: 'text-xs font-mono font-semibold text-brand-text',
+                              innerWrapper: 'gap-3',
+                              input: 'text-xs font-mono font-semibold text-brand-text text-start',
                             }}
                           />
                         </div>
@@ -1075,25 +1093,35 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                         />
 
                         {/* Full Address */}
-                        <Textarea
-                          dir={isPersian ? 'rtl' : 'ltr'}
-                          label={isPersian ? 'نشانی دقیق پستی (خیابان، کوچه، بن‌بست)' : 'Street Address'}
-                          labelPlacement="outside-top"
-                          value={formData.address}
-                          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                          minRows={3}
-                          placeholder={
-                            isPersian
-                              ? 'مثال: بلوار کشاورز، خیابان ۱۶ آذر، کوچه بهار، ساختمان شماره ۵'
-                              : 'Street address details...'
-                          }
-                          classNames={{
-                            label: inputLabelClass,
-                            inputWrapper:
-                              'bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] rounded-2xl hover:border-brand-gold/60 focus-within:!border-brand-gold p-3 shadow-2xs',
-                            input: 'text-xs font-medium text-brand-text leading-relaxed text-right',
-                          }}
-                        />
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                            <label className="text-xs font-bold text-brand-text">
+                              {isPersian ? 'نشانی دقیق پستی (خیابان، کوچه، بن‌بست)' : 'Street Address'}
+                            </label>
+                          </div>
+                          <Textarea
+                            aria-label={isPersian ? 'نشانی دقیق پستی (خیابان، کوچه، بن‌بست)' : 'Street Address'}
+                            value={formData.address}
+                            onValueChange={(val) => setFormData((prev) => ({ ...prev, address: val }))}
+                            disableAutosize
+                            rows={3}
+                            placeholder={
+                              isPersian
+                                ? 'مثال: بلوار کشاورز، خیابان ۱۶ آذر، کوچه بهار، ساختمان شماره ۵'
+                                : 'Street address details...'
+                            }
+                            variant="bordered"
+                            radius="lg"
+                            classNames={{
+                              inputWrapper:
+                                'p-3.5 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors h-24 min-h-[96px] !resize-none',
+                              innerWrapper: 'items-start h-full',
+                              input:
+                                'text-xs font-medium text-brand-text leading-relaxed text-right !resize-none resize-none overflow-y-auto pt-0',
+                            }}
+                          />
+                        </div>
 
                         {/* Postal Code, Building, Unit */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -1101,14 +1129,17 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             label={isPersian ? 'کد پستی ۱۰ رقمی' : 'Postal Code'}
                             labelPlacement="outside-top"
                             value={formData.postalCode}
-                            onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                            onValueChange={(val) => setFormData((prev) => ({ ...prev, postalCode: toEnglishDigits(val) }))}
                             placeholder="1234567890"
-                            dir="ltr"
-                            startContent={<Hash className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            maxLength={10}
+                            startContent={<Hash className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
+                            variant="bordered"
+                            radius="lg"
                             classNames={{
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
-                              input: 'text-xs font-mono font-bold text-brand-text',
+                              innerWrapper: 'gap-3',
+                              input: 'text-xs font-mono font-bold text-brand-text text-start',
                             }}
                           />
 
@@ -1116,14 +1147,17 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             label={isPersian ? 'پلاک' : 'Building / No'}
                             labelPlacement="outside-top"
                             value={formData.buildingNumber}
-                            onChange={(e) =>
-                              setFormData({ ...formData, buildingNumber: e.target.value })
+                            onValueChange={(val) =>
+                              setFormData((prev) => ({ ...prev, buildingNumber: val }))
                             }
                             placeholder={isPersian ? 'مثال: ۲۴' : 'e.g. 24'}
-                            startContent={<Building className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            startContent={<Building className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
+                            variant="bordered"
+                            radius="lg"
                             classNames={{
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
+                              innerWrapper: 'gap-3',
                               input: 'text-xs font-bold text-brand-text',
                             }}
                           />
@@ -1132,11 +1166,15 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             label={isPersian ? 'واحد' : 'Unit'}
                             labelPlacement="outside-top"
                             value={formData.unit}
-                            onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                            onValueChange={(val) => setFormData((prev) => ({ ...prev, unit: val }))}
                             placeholder={isPersian ? 'مثال: ۳' : 'e.g. 3'}
+                            startContent={<Home className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
+                            variant="bordered"
+                            radius="lg"
                             classNames={{
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
+                              innerWrapper: 'gap-3',
                               input: 'text-xs font-bold text-brand-text',
                             }}
                           />
@@ -1161,14 +1199,17 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             label={isPersian ? 'نام و نام خانوادگی تحویل‌گیرنده' : 'Recipient Full Name'}
                             labelPlacement="outside-top"
                             value={formData.recipientName}
-                            onChange={(e) =>
-                              setFormData({ ...formData, recipientName: e.target.value })
+                            onValueChange={(val) =>
+                              setFormData((prev) => ({ ...prev, recipientName: val }))
                             }
                             placeholder={isPersian ? 'نام شخص دریافت‌کننده' : 'Recipient Name'}
-                            startContent={<UserIcon className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            startContent={<UserIcon className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
+                            variant="bordered"
+                            radius="lg"
                             classNames={{
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
+                              innerWrapper: 'gap-3',
                               input: 'text-xs font-bold text-brand-text',
                             }}
                           />
@@ -1176,17 +1217,21 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           <Input
                             label={isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone Number'}
                             labelPlacement="outside-top"
+                            type="tel"
+                            maxLength={11}
                             value={formData.recipientPhone}
-                            onChange={(e) =>
-                              setFormData({ ...formData, recipientPhone: e.target.value })
+                            onValueChange={(val) =>
+                              setFormData((prev) => ({ ...prev, recipientPhone: toEnglishDigits(val) }))
                             }
                             placeholder="09123456789"
-                            dir="ltr"
-                            startContent={<Phone className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                            startContent={<Phone className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
+                            variant="bordered"
+                            radius="lg"
                             classNames={{
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
-                              input: 'text-xs font-mono font-bold text-brand-text',
+                              innerWrapper: 'gap-3',
+                              input: 'text-xs font-mono font-bold text-brand-text text-start',
                             }}
                           />
                         </div>
@@ -1196,40 +1241,52 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           labelPlacement="outside-top"
                           type="email"
                           value={formData.recipientEmail}
-                          onChange={(e) =>
-                            setFormData({ ...formData, recipientEmail: e.target.value })
+                          onValueChange={(val) =>
+                            setFormData((prev) => ({ ...prev, recipientEmail: val.toLowerCase() }))
                           }
                           placeholder="recipient@domain.com"
-                          dir="ltr"
-                          startContent={<Mail className="w-4 h-4 text-brand-text-muted shrink-0" />}
+                          startContent={<Mail className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
+                          variant="bordered"
+                          radius="lg"
                           classNames={{
                             label: inputLabelClass,
                             inputWrapper: inputWrapperClass,
-                            input: 'text-xs font-mono font-semibold text-brand-text',
+                            innerWrapper: 'gap-3',
+                            input: 'text-xs font-mono font-semibold text-brand-text text-start',
                           }}
                         />
 
-                        <Textarea
-                          dir={isPersian ? 'rtl' : 'ltr'}
-                          label={isPersian ? 'توضیحات و یادداشت تحویل' : 'Delivery / Address Notes'}
-                          labelPlacement="outside-top"
-                          value={formData.addressNotes}
-                          onChange={(e) =>
-                            setFormData({ ...formData, addressNotes: e.target.value })
-                          }
-                          minRows={3}
-                          placeholder={
-                            isPersian
-                              ? 'مثال: زنگ دوم سمت راست، لطفاً قبل از مراجعه تماس گرفته شود.'
-                              : 'Special instructions for courier...'
-                          }
-                          classNames={{
-                            label: inputLabelClass,
-                            inputWrapper:
-                              'bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] rounded-2xl hover:border-brand-gold/60 focus-within:!border-brand-gold p-3 shadow-2xs',
-                            input: 'text-xs font-medium text-brand-text leading-relaxed text-right',
-                          }}
-                        />
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <FileText className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                            <label className="text-xs font-bold text-brand-text">
+                              {isPersian ? 'توضیحات و یادداشت تحویل' : 'Delivery / Address Notes'}
+                            </label>
+                          </div>
+                          <Textarea
+                            aria-label={isPersian ? 'توضیحات و یادداشت تحویل' : 'Delivery / Address Notes'}
+                            value={formData.addressNotes}
+                            onValueChange={(val) =>
+                              setFormData((prev) => ({ ...prev, addressNotes: val }))
+                            }
+                            disableAutosize
+                            rows={3}
+                            placeholder={
+                              isPersian
+                                ? 'مثال: زنگ دوم سمت راست، لطفاً قبل از مراجعه تماس گرفته شود.'
+                                : 'Special instructions for courier...'
+                            }
+                            variant="bordered"
+                            radius="lg"
+                            classNames={{
+                              inputWrapper:
+                                'p-3.5 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors h-24 min-h-[96px] !resize-none',
+                              innerWrapper: 'items-start h-full',
+                              input:
+                                'text-xs font-medium text-brand-text leading-relaxed text-right !resize-none resize-none overflow-y-auto pt-0',
+                            }}
+                          />
+                        </div>
                       </div>
                     )}
                   </motion.div>
