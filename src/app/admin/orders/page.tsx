@@ -118,17 +118,35 @@ export default function AdminOrdersPage() {
     setModalOpen(true);
   };
 
-  const handleUpdateStatus = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpdateStatus = async (e?: any) => {
+    if (e && typeof e?.preventDefault === 'function') {
+      e.preventDefault();
+    }
     if (!selectedOrder) return;
+
+    const orderId = selectedOrder._id || (selectedOrder as any).id;
+    if (!orderId) {
+      toast.error(isPersian ? 'شناسه سفارش نامعتبر است.' : 'Invalid order ID.');
+      return;
+    }
+
+    if (!newStatus) {
+      toast.error(isPersian ? 'لطفاً وضعیت سفارش را انتخاب کنید.' : 'Please select an order status.');
+      return;
+    }
 
     setSubmitting(true);
     try {
-      await adminApi.updateOrderStatus(selectedOrder._id, newStatus, trackingCode.trim());
+      await adminApi.updateOrderStatus(
+        orderId,
+        newStatus,
+        trackingCode ? trackingCode.trim() : undefined,
+      );
       toast.success(isPersian ? 'وضعیت سفارش با موفقیت به‌روزرسانی شد.' : 'Order status updated successfully.');
       setModalOpen(false);
       loadOrders();
     } catch (err: any) {
+      console.error('Failed to update order status:', err);
       toast.error(err?.response?.data?.message || (isPersian ? 'خطا در تغییر وضعیت سفارش.' : 'Failed to update order status.'));
     } finally {
       setSubmitting(false);
@@ -621,6 +639,12 @@ export default function AdminOrdersPage() {
                         labelPlacement="outside-top"
                         value={trackingCode}
                         onValueChange={setTrackingCode}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleUpdateStatus();
+                          }
+                        }}
                         placeholder="مثال: ۱۲۳۴۵۶۷۸۹۰۱۲۳۴"
                         variant="bordered"
                         radius="lg"
@@ -646,7 +670,7 @@ export default function AdminOrdersPage() {
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
                 <Button
-                  onPress={handleUpdateStatus as any}
+                  onPress={() => handleUpdateStatus()}
                   isLoading={submitting}
                   radius="full"
                   className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
