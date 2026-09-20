@@ -25,8 +25,23 @@ import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 
 export default function AdminVipPlansPage() {
-  const { isPersian } = useTranslation();
+  const { isPersian, isRTL } = useTranslation();
   const [plans, setPlans] = useState<IVipPlan[]>([]);
+
+  const vipInputClassNames = {
+    label: `text-xs font-bold text-brand-text mb-1.5 block ${isRTL ? 'text-right' : 'text-left'}`,
+    inputWrapper:
+      'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold hover:!border-[#d4be9b] rounded-2xl shadow-xs transition-colors',
+    input: 'text-xs font-semibold text-brand-text text-start',
+  };
+
+  const vipTextareaClassNames = {
+    label: `text-xs font-bold text-brand-text mb-1.5 block ${isRTL ? 'text-right' : 'text-left'}`,
+    inputWrapper:
+      'p-3.5 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold hover:!border-[#d4be9b] rounded-2xl shadow-xs transition-colors min-h-[84px] !resize-none',
+    input: 'text-xs font-medium text-brand-text text-start',
+  };
+
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<IVipPlan | null>(null);
@@ -384,7 +399,7 @@ export default function AdminVipPlansPage() {
           footer: "border-t border-brand-border pt-3 px-6 pb-5",
         }}
       >
-        <ModalContent>
+        <ModalContent dir={isRTL ? 'rtl' : 'ltr'}>
           {(onClose) => (
             <>
               <ModalHeader className="font-black text-base">
@@ -403,12 +418,7 @@ export default function AdminVipPlansPage() {
                     onValueChange={setTitle}
                     placeholder={isPersian ? 'مثال: اشتراک طلایی ۱ ماهه' : 'e.g. 1-Month Gold VIP'}
                     variant="bordered"
-                    radius="full"
-                    classNames={{
-                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-semibold text-brand-text",
-                      label: "text-xs font-bold text-brand-text mb-1",
-                    }}
+                    classNames={vipInputClassNames}
                   />
 
                   <Input
@@ -417,12 +427,11 @@ export default function AdminVipPlansPage() {
                     value={titleEn}
                     onValueChange={setTitleEn}
                     placeholder="e.g. 1-Month Gold VIP"
+                    dir="ltr"
                     variant="bordered"
-                    radius="full"
                     classNames={{
-                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-semibold text-brand-text",
-                      label: "text-xs font-bold text-brand-text mb-1",
+                      ...vipInputClassNames,
+                      input: 'text-xs font-semibold text-brand-text text-left font-sans',
                     }}
                   />
                 </div>
@@ -430,32 +439,26 @@ export default function AdminVipPlansPage() {
                 <Textarea
                   label={isPersian ? 'توضیحات کوتاه' : 'Short Description'}
                   labelPlacement="outside-top"
-                  rows={2}
+                  minRows={2}
+                  maxRows={4}
                   value={description}
                   onValueChange={setDescription}
                   placeholder={isPersian ? 'توضیح کوتاه در مورد مزایای این پلن...' : 'Short description...'}
                   variant="bordered"
-                  radius="lg"
-                  classNames={{
-                    inputWrapper: "p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs",
-                    input: "text-xs font-semibold text-brand-text",
-                    label: "text-xs font-bold text-brand-text mb-1",
-                  }}
+                  classNames={vipTextareaClassNames}
                 />
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Input
-                    label={isPersian ? 'قیمت (تومان)' : 'Price'}
+                    label={isPersian ? 'قیمت (تومان)' : 'Price (Toman)'}
                     labelPlacement="outside-top"
                     type="number"
                     value={String(price)}
                     onValueChange={(v) => setPrice(Number(v) || 0)}
                     variant="bordered"
-                    radius="full"
                     classNames={{
-                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text mb-1",
+                      ...vipInputClassNames,
+                      input: 'text-xs font-bold text-brand-text text-start font-mono',
                     }}
                   />
 
@@ -466,11 +469,9 @@ export default function AdminVipPlansPage() {
                     value={String(durationDays)}
                     onValueChange={(v) => setDurationDays(Number(v) || 0)}
                     variant="bordered"
-                    radius="full"
                     classNames={{
-                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text mb-1",
+                      ...vipInputClassNames,
+                      input: 'text-xs font-bold text-brand-text text-start font-mono',
                     }}
                   />
 
@@ -481,18 +482,16 @@ export default function AdminVipPlansPage() {
                     value={String(discountPercent)}
                     onValueChange={(v) => setDiscountPercent(Number(v) || 0)}
                     variant="bordered"
-                    radius="full"
                     classNames={{
-                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text mb-1",
+                      ...vipInputClassNames,
+                      input: 'text-xs font-bold text-brand-text text-start font-mono',
                     }}
                   />
                 </div>
 
                 {/* Perks List */}
                 <div>
-                  <label className="block font-bold text-xs text-brand-text mb-1.5">
+                  <label className={vipInputClassNames.label}>
                     {isPersian ? 'مزایای پلن (سفارشی)' : 'Plan Perks'}
                   </label>
                   <div className="flex gap-2 mb-2">
@@ -501,18 +500,19 @@ export default function AdminVipPlansPage() {
                       onValueChange={setPerkInput}
                       placeholder={isPersian ? 'مثال: ارسال رایگان، هدیه تستر' : 'e.g. Free shipping, 2 tester vials'}
                       variant="bordered"
-                      radius="full"
                       className="flex-1"
-                      classNames={{
-                        inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                        input: "text-xs font-semibold text-brand-text",
+                      classNames={vipInputClassNames}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addPerk();
+                        }
                       }}
                     />
                     <Button
                       onPress={addPerk}
-                      radius="full"
                       variant="flat"
-                      className="h-11 px-5 bg-brand-surface-elevated text-brand-bronze dark:text-brand-gold border border-brand-border font-bold text-xs rounded-full cursor-pointer"
+                      className="h-12 px-5 bg-brand-surface-elevated text-brand-bronze dark:text-brand-gold border border-brand-border hover:border-brand-gold/80 hover:text-brand-gold font-bold text-xs rounded-2xl cursor-pointer transition-colors shrink-0"
                     >
                       {isPersian ? 'افزودن' : 'Add'}
                     </Button>
@@ -521,8 +521,8 @@ export default function AdminVipPlansPage() {
                   {perks.length > 0 && (
                     <div className="space-y-1.5 p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border">
                       {perks.map((p, idx) => (
-                        <div key={idx} className="flex items-center justify-between text-xs font-semibold text-brand-text">
-                          <span>• {p}</span>
+                        <div key={idx} className="flex items-center justify-between text-xs font-semibold text-brand-text gap-2">
+                          <span className="text-start flex-1">• {p}</span>
                           <Button
                             isIconOnly
                             size="sm"
@@ -531,7 +531,7 @@ export default function AdminVipPlansPage() {
                             onPress={() => removePerk(idx)}
                             className="text-rose-500 hover:text-rose-700 min-w-6 w-6 h-6 cursor-pointer"
                           >
-                            <X className="w-3 h-3" />
+                            <X className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                       ))}
@@ -540,7 +540,7 @@ export default function AdminVipPlansPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                  <div className="p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between">
+                  <div className="p-3.5 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between">
                     <SmoothSwitch isSelected={isPopular} onValueChange={setIsPopular}>
                       <span className="text-xs font-bold text-brand-text">
                         {isPersian ? 'برچسب محبوب‌ترین' : 'Popular Badge'}
@@ -548,7 +548,7 @@ export default function AdminVipPlansPage() {
                     </SmoothSwitch>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between">
+                  <div className="p-3.5 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between">
                     <SmoothSwitch isSelected={isActive} onValueChange={setIsActive}>
                       <span className="text-xs font-bold text-brand-text">
                         {isPersian ? 'پلن فعال باشد' : 'Plan is Active'}
@@ -561,17 +561,15 @@ export default function AdminVipPlansPage() {
               <ModalFooter>
                 <Button
                   variant="flat"
-                  radius="full"
                   onPress={onClose}
-                  className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-full cursor-pointer transition-all active:scale-95 px-5"
+                  className="bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 text-brand-text font-bold text-xs rounded-2xl cursor-pointer transition-all active:scale-95 px-5 h-11"
                 >
                   {isPersian ? 'انصراف' : 'Cancel'}
                 </Button>
                 <Button
                   isLoading={submitting}
-                  radius="full"
                   onPress={() => handleSubmit()}
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95 px-6"
+                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-2xl cursor-pointer transition-all active:scale-95 px-6 h-11"
                 >
                   {isPersian ? 'ذخیره پلن VIP' : 'Save VIP Plan'}
                 </Button>

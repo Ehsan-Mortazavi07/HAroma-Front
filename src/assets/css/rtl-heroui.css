@@ -243,6 +243,56 @@ html[dir="rtl"] input[data-slot="input"] {
 }
 
 /* ==========================================================================
+   HeroUI Input & Textarea - Brand Gold Focus, Selected & Hover States
+   ========================================================================== */
+[data-slot="input-wrapper"] {
+  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* Hover state when unselected */
+[data-slot="input-wrapper"]:hover,
+[data-slot="input-wrapper"][data-hover="true"],
+.group[data-hover="true"] [data-slot="input-wrapper"] {
+  border-color: rgba(191, 162, 122, 0.8) !important;
+}
+
+/* Selected / Focused state */
+[data-slot="input-wrapper"]:focus-within,
+[data-slot="input-wrapper"][data-focus="true"],
+.group[data-focus="true"] [data-slot="input-wrapper"],
+.group[data-focus-visible="true"] [data-slot="input-wrapper"] {
+  border-color: #bfa27a !important;
+  box-shadow: 0 0 0 1px rgba(191, 162, 122, 0.25) !important;
+}
+
+/* Hover state while Selected / Focused */
+[data-slot="input-wrapper"]:focus-within:hover,
+[data-slot="input-wrapper"][data-focus="true"]:hover,
+[data-slot="input-wrapper"][data-focus="true"][data-hover="true"],
+.group[data-focus="true"]:hover [data-slot="input-wrapper"],
+.group[data-focus="true"][data-hover="true"] [data-slot="input-wrapper"] {
+  border-color: #d4be9b !important;
+  box-shadow: 0 0 0 1px rgba(191, 162, 122, 0.45) !important;
+}
+
+/* Invalid / Error state */
+[data-slot="input-wrapper"][data-invalid="true"],
+.group[data-invalid="true"] [data-slot="input-wrapper"] {
+  border-color: #f43f5e !important;
+  box-shadow: 0 0 0 1px rgba(244, 63, 94, 0.25) !important;
+}
+
+/* Disabled state */
+[data-slot="input-wrapper"][data-disabled="true"],
+.group[data-disabled="true"] [data-slot="input-wrapper"] {
+  opacity: 0.6 !important;
+  pointer-events: none !important;
+}
+
+
+/* ==========================================================================
    HeroUI Select - Smooth Dropdown Animation (CSS-based, reliable across versions)
    ========================================================================== */
 
