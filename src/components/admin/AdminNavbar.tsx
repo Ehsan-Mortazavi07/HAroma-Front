@@ -12,6 +12,7 @@ import {
   Button,
   Chip,
   Avatar,
+  Tooltip,
 } from '@heroui/react';
 import {
   User,
@@ -23,9 +24,16 @@ import {
   LogOut,
   ShieldCheck,
   ChevronDown,
+  PanelRightClose,
+  PanelRightOpen,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { logout } from '@/stores/auth/authSlice';
+import { useAdminSidebar } from './AdminSidebarContext';
 import { PATHS } from '@/common/constants/PATHS';
 import { BrandLogo } from '../common/BrandLogo';
 import { ThemeToggle } from '../common/ThemeToggle';
@@ -66,7 +74,8 @@ export function AdminNavbar() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
-  const { isPersian } = useTranslation();
+  const { isPersian, isRTL } = useTranslation();
+  const { isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar } = useAdminSidebar();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const navbarRef = useRef<HTMLDivElement>(null);
@@ -109,8 +118,61 @@ export function AdminNavbar() {
               'h-16 sm:h-[68px] px-3 sm:px-6 rounded-[32px] bg-[#1c231c]/90 dark:bg-[#181f18]/90 backdrop-blur-xl border border-[#2e3a2e] shadow-2xl flex items-center justify-between select-none max-w-full gap-2 sm:gap-4',
           }}
         >
-          {/* Right Section: Brand Logo + Admin Badge */}
-          <NavbarContent justify="start" className="gap-2 sm:gap-3 shrink-0">
+          {/* Right Section: Sidebar Toggle + Brand Logo + Admin Badge */}
+          <NavbarContent justify="start" className="gap-2 sm:gap-3 shrink-0 items-center">
+            {/* Sidebar Toggle Button (Desktop & Mobile) */}
+            <Tooltip
+              content={
+                isCollapsed
+                  ? isPersian ? 'باز کردن منوی کناری' : 'Expand Sidebar'
+                  : isPersian ? 'جمع کردن منوی کناری' : 'Collapse Sidebar'
+              }
+              placement="bottom"
+              delay={300}
+              classNames={{
+                content:
+                  'bg-[#1c231c] text-[#f7f4ee] border border-brand-gold/40 text-xs font-bold px-3 py-1.5 rounded-xl shadow-xl z-50',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                    toggleMobileSidebar();
+                  } else {
+                    toggleSidebar();
+                  }
+                }}
+                className="w-10 h-10 rounded-2xl bg-[#242c24] hover:bg-[#2e3a2e] text-brand-gold border border-[#3e4c3e] hover:border-brand-gold/60 transition-all cursor-pointer shadow-xs shrink-0 flex items-center justify-center select-none group"
+                aria-label={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+              >
+                {/* Mobile icon */}
+                <span className="lg:hidden flex items-center justify-center">
+                  {isMobileOpen ? (
+                    <X className="w-4 h-4 text-brand-gold" />
+                  ) : (
+                    <Menu className="w-4 h-4 text-brand-gold" />
+                  )}
+                </span>
+                {/* Desktop icon */}
+                <span className="hidden lg:flex items-center justify-center">
+                  {isRTL ? (
+                    isCollapsed ? (
+                      <PanelRightOpen className="w-4 h-4 text-brand-gold group-hover:scale-110 transition-transform" />
+                    ) : (
+                      <PanelRightClose className="w-4 h-4 text-brand-gold group-hover:scale-110 transition-transform" />
+                    )
+                  ) : (
+                    isCollapsed ? (
+                      <PanelLeftOpen className="w-4 h-4 text-brand-gold group-hover:scale-110 transition-transform" />
+                    ) : (
+                      <PanelLeftClose className="w-4 h-4 text-brand-gold group-hover:scale-110 transition-transform" />
+                    )
+                  )}
+                </span>
+              </button>
+            </Tooltip>
+
             <NavbarBrand className="shrink-0 grow-0 flex items-center gap-2.5">
               <Link href={PATHS.ADMIN_DASHBOARD} className="flex items-center gap-2">
                 <BrandLogo size="md" variant="dark" simple={true} hideTextOnMobile={false} />

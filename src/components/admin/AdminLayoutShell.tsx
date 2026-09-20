@@ -3,13 +3,15 @@
 import React, { useEffect } from 'react';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminGuardClient } from './AdminGuardClient';
+import { useAdminSidebar } from './AdminSidebarContext';
 import { useTranslation } from '@/common/i18n';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 
 export function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   const { isPersian, isRTL } = useTranslation();
   const pathname = usePathname();
+  const { isCollapsed } = useAdminSidebar();
 
   useEffect(() => {
     document.title = isPersian
@@ -23,14 +25,18 @@ export function AdminLayoutShell({ children }: { children: React.ReactNode }) {
         className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 pb-12 transition-colors"
         dir={isRTL ? 'rtl' : 'ltr'}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Admin Sidebar matching ProfilePage sidebar layout */}
-          <aside className="lg:col-span-3 xl:col-span-3">
+        <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
+          {/* Admin Sidebar with smooth width transition */}
+          <aside
+            className={`shrink-0 w-full transition-[width] duration-300 ease-in-out ${
+              isCollapsed ? 'lg:w-[76px]' : 'lg:w-72 xl:w-80'
+            }`}
+          >
             <AdminSidebar />
           </aside>
 
           {/* Admin Main Content Area */}
-          <div className="lg:col-span-9 xl:col-span-9 min-w-0">
+          <div className="flex-1 min-w-0 w-full">
             <motion.main
               key={pathname}
               initial={{ opacity: 0 }}
