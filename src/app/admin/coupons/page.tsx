@@ -28,6 +28,7 @@ import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
+import { AdminPriceInput } from '@/components/admin/AdminPriceInput';
 
 export default function AdminCouponsPage() {
   const { isPersian } = useTranslation();
@@ -371,53 +372,30 @@ export default function AdminCouponsPage() {
                     }}
                   />
 
-                  <Input
+                  <AdminPriceInput
                     label={isPersian ? 'یا مبلغ ثابت (تومان)' : 'Or Fixed Amount (Toman)'}
-                    labelPlacement="outside-top"
-                    type="number"
-                    value={String(discountAmount)}
-                    onValueChange={(v) => setDiscountAmount(Number(v) || 0)}
-                    variant="bordered"
-                    radius="full"
-                    classNames={{
-                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text mb-1",
-                    }}
+                    value={discountAmount}
+                    onValueChange={setDiscountAmount}
+                    placeholder={isPersian ? 'مثال: ۵۰,۰۰۰' : 'e.g. 50,000'}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
-                    label={isPersian ? 'حداقل خرید (تومان)' : 'Min Purchase'}
-                    labelPlacement="outside-top"
-                    type="number"
-                    value={String(minPurchase)}
-                    onValueChange={(v) => setMinPurchase(Number(v) || 0)}
-                    variant="bordered"
-                    radius="full"
-                    classNames={{
-                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text mb-1",
-                    }}
+                  <AdminPriceInput
+                    label={isPersian ? 'حداقل خرید (تومان)' : 'Min Purchase (Toman)'}
+                    value={minPurchase}
+                    onValueChange={setMinPurchase}
+                    placeholder={isPersian ? 'مثال: ۵۰۰,۰۰۰' : 'e.g. 500,000'}
                   />
 
-                  <Input
-                    label={isPersian ? 'سقف تخفیف (تومان)' : 'Max Discount'}
-                    labelPlacement="outside-top"
-                    type="number"
-                    value={String(maxDiscount)}
-                    onValueChange={(v) => setMaxDiscount(Number(v) || 0)}
-                    variant="bordered"
-                    radius="full"
-                    classNames={{
-                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text mb-1",
-                    }}
+                  <AdminPriceInput
+                    label={isPersian ? 'سقف تخفیف (تومان)' : 'Max Discount (Toman)'}
+                    value={maxDiscount}
+                    onValueChange={setMaxDiscount}
+                    placeholder={isPersian ? 'اختیاری (مثال: ۱۰۰,۰۰۰)' : 'Optional'}
                   />
                 </div>
+
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                   <Input

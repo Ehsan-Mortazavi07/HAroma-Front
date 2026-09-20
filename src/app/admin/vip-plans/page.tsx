@@ -23,6 +23,7 @@ import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
+import { AdminPriceInput } from '@/components/admin/AdminPriceInput';
 
 export default function AdminVipPlansPage() {
   const { isPersian, isRTL } = useTranslation();
@@ -449,18 +450,14 @@ export default function AdminVipPlansPage() {
                 />
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <Input
+                  <AdminPriceInput
                     label={isPersian ? 'قیمت (تومان)' : 'Price (Toman)'}
-                    labelPlacement="outside-top"
-                    type="number"
-                    value={String(price)}
-                    onValueChange={(v) => setPrice(Number(v) || 0)}
-                    variant="bordered"
-                    classNames={{
-                      ...vipInputClassNames,
-                      input: 'text-xs font-bold text-brand-text text-start font-mono',
-                    }}
+                    isRequired
+                    value={price}
+                    onValueChange={setPrice}
+                    placeholder={isPersian ? 'مثال: ۳۹۰,۰۰۰' : 'e.g. 390,000'}
                   />
+
 
                   <Input
                     label={isPersian ? 'مدت (روز)' : 'Days'}

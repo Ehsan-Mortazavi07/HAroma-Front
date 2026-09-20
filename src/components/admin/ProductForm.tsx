@@ -43,6 +43,8 @@ import { DynamicAttributeBuilder } from './DynamicAttributeBuilder';
 import { ProductVariantManager } from './ProductVariantManager';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { AdminPriceInput } from '@/components/admin/AdminPriceInput';
+
 
 interface ProductFormProps {
   initialProduct?: IProduct;
@@ -378,39 +380,23 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 text-xs">
-                  <Input
+                  <AdminPriceInput
                     label={isPersian ? 'قیمت پایه (تومان) *' : 'Base Retail Price (Toman) *'}
-                    labelPlacement="outside-top"
-                    type="number"
                     isRequired
-                    value={String(values.price)}
+                    value={values.price}
                     onValueChange={(val) => setFieldValue('price', val)}
                     isInvalid={Boolean(errors.price && touched.price)}
                     errorMessage={errors.price && touched.price ? String(errors.price) : undefined}
-                    variant="bordered"
-                    radius="full"
-                    classNames={{
-                      inputWrapper: 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
-                      input: 'font-bold text-[#1d241d] dark:text-[#f7f4ee]',
-                      label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
-                    }}
+                    placeholder={isPersian ? 'مثال: ۲,۵۰۰,۰۰۰' : 'e.g. 2,500,000'}
                   />
 
-                  <Input
+                  <AdminPriceInput
                     label={isPersian ? 'قیمت تخفیف‌خورده (اختیاری)' : 'Discount Price (Optional)'}
-                    labelPlacement="outside-top"
-                    type="number"
-                    value={String(values.discountPrice || '')}
-                    onValueChange={(val) => setFieldValue('discountPrice', val)}
+                    value={values.discountPrice}
+                    onValueChange={(val) => setFieldValue('discountPrice', val || '')}
                     placeholder={isPersian ? 'در صورت وجود تخفیف' : 'Leave empty if regular price'}
-                    variant="bordered"
-                    radius="full"
-                    classNames={{
-                      inputWrapper: 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
-                      input: 'font-bold text-[#1d241d] dark:text-[#f7f4ee]',
-                      label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
-                    }}
                   />
+
 
                   <Input
                     label={isPersian ? 'تعداد موجودی کل انبار' : 'Total Stock Count'}

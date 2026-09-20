@@ -35,6 +35,18 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
+  /* Remove native browser number input spinners (up/down stepper arrows) globally */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield !important;
+    appearance: textfield !important;
+  }
+
   :root {
     /* Hatef Aroma Official Brand Tokens (Light Mode) */
     --brand-bg: #f8f5f0;           /* Warm Champagne Cream */

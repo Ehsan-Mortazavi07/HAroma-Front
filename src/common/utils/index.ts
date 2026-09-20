@@ -61,6 +61,29 @@ export function formatPrice(amount: number | undefined | null, isPersian = true)
   return `${amount.toLocaleString('en-US')} Toman`;
 }
 
+export function numberToPersianWords(num: number | undefined | null): string {
+  if (!num || isNaN(num) || num <= 0) return '';
+
+  const billions = Math.floor(num / 1_000_000_000);
+  const remainderAfterBillions = num % 1_000_000_000;
+
+  const millions = Math.floor(remainderAfterBillions / 1_000_000);
+  const remainderAfterMillions = remainderAfterBillions % 1_000_000;
+
+  const thousands = Math.floor(remainderAfterMillions / 1_000);
+  const remainderAfterThousands = remainderAfterMillions % 1_000;
+
+  const parts: string[] = [];
+  if (billions > 0) parts.push(`${toPersianDigits(billions.toLocaleString('en-US'))} میلیارد`);
+  if (millions > 0) parts.push(`${toPersianDigits(millions.toLocaleString('en-US'))} میلیون`);
+  if (thousands > 0) parts.push(`${toPersianDigits(thousands.toLocaleString('en-US'))} هزار`);
+  if (remainderAfterThousands > 0) parts.push(toPersianDigits(remainderAfterThousands.toLocaleString('en-US')));
+
+  if (parts.length === 0) return '';
+  return parts.join(' و ') + ' تومان';
+}
+
+
 export function getLocalizedVariantTitle(title?: string, isPersian = true): string {
   if (!title) return '';
   if (isPersian) return title;

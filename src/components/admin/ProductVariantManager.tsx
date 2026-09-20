@@ -25,6 +25,8 @@ import { IProductVariant, IVariantTemplate } from '@/common/interfaces';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { adminApi } from '@/common/api/admin';
 import { useTranslation } from '@/common/i18n';
+import { AdminPriceInput } from '@/components/admin/AdminPriceInput';
+
 
 interface ProductVariantManagerProps {
   variants: IProductVariant[];
@@ -291,43 +293,27 @@ export function ProductVariantManager({
 
                   {/* Price Input */}
                   <div className="sm:col-span-3">
-                    <Input
+                    <AdminPriceInput
                       label={isPersian ? 'قیمت اصلی (تومان) *' : 'Price (Toman) *'}
-                      labelPlacement="outside-top"
-                      type="number"
                       isRequired
-                      value={String(variant.price)}
-                      onValueChange={(val) => handleUpdateVariant(idx, 'price', Number(val))}
-                      variant="bordered"
-                      radius="full"
-                      classNames={{
-                        inputWrapper: 'h-11 px-3.5 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                        input: 'font-bold text-xs text-brand-text',
-                        label: 'text-xs font-bold text-brand-text mb-1',
-                      }}
+                      value={variant.price}
+                      onValueChange={(val) => handleUpdateVariant(idx, 'price', val)}
                     />
                   </div>
 
                   {/* Discount Price Input */}
                   <div className="sm:col-span-2">
-                    <Input
+                    <AdminPriceInput
                       label={isPersian ? 'قیمت تخفیف' : 'Discount Price'}
-                      labelPlacement="outside-top"
-                      type="number"
-                      value={String(variant.discountPrice || '')}
+                      value={variant.discountPrice}
                       onValueChange={(val) =>
-                        handleUpdateVariant(idx, 'discountPrice', val ? Number(val) : null)
+                        handleUpdateVariant(idx, 'discountPrice', val ? val : null)
                       }
                       placeholder={isPersian ? 'بدون تخفیف' : 'No discount'}
-                      variant="bordered"
-                      radius="full"
-                      classNames={{
-                        inputWrapper: 'h-11 px-3.5 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                        input: 'font-bold text-xs text-brand-text',
-                        label: 'text-xs font-bold text-brand-text mb-1',
-                      }}
                     />
                   </div>
+
+
 
                   {/* Stock Count Input */}
                   <div className="sm:col-span-2">

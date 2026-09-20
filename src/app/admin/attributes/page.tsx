@@ -29,6 +29,7 @@ import { toast, toPersianDigits, formatToman, translateAttributeValue } from '@/
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
+import { AdminPriceInput } from '@/components/admin/AdminPriceInput';
 
 export default function AdminAttributesPage() {
   const { isPersian } = useTranslation();
@@ -791,39 +792,22 @@ export default function AdminAttributesPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
+                  <AdminPriceInput
                     label={isPersian ? 'قیمت پیشنهادی پیش‌فرض (تومان)' : 'Default Price (Toman)'}
-                    labelPlacement="outside-top"
                     isRequired
-                    type="number"
-                    value={String(tplPrice)}
-                    onValueChange={(v) => setTplPrice(v === '' ? '' : Number(v))}
-                    placeholder="1500000"
-                    variant="bordered"
-                    radius="full"
-                    classNames={{
-                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text mb-1",
-                    }}
+                    value={tplPrice}
+                    onValueChange={(val) => setTplPrice(val)}
+                    placeholder={isPersian ? 'مثال: ۱,۵۰۰,۰۰۰' : 'e.g. 1,500,000'}
                   />
 
-                  <Input
+                  <AdminPriceInput
                     label={isPersian ? 'قیمت تخفیف پیش‌فرض (اختیاری)' : 'Default Discount Price'}
-                    labelPlacement="outside-top"
-                    type="number"
-                    value={String(tplDiscountPrice)}
-                    onValueChange={(v) => setTplDiscountPrice(v === '' ? '' : Number(v))}
-                    placeholder="1290000"
-                    variant="bordered"
-                    radius="full"
-                    classNames={{
-                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text mb-1",
-                    }}
+                    value={tplDiscountPrice}
+                    onValueChange={(val) => setTplDiscountPrice(val ? val : '')}
+                    placeholder={isPersian ? 'مثال: ۱,۲۹۰,۰۰۰' : 'e.g. 1,290,000'}
                   />
                 </div>
+
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Input
