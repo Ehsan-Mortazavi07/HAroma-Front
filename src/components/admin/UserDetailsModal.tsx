@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   ModalContent,
@@ -15,8 +15,6 @@ import {
   Skeleton,
   Input,
   Textarea,
-  Select,
-  SelectItem,
 } from '@heroui/react';
 import {
   User as UserIcon,
@@ -37,6 +35,7 @@ import {
   Trash2,
   ExternalLink,
   ChevronLeft,
+  ChevronDown,
   Pencil,
   Eye,
   Lock,
@@ -115,17 +114,6 @@ const inputWrapperClass =
   'bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] rounded-2xl h-11 hover:border-brand-gold/60 focus-within:!border-brand-gold shadow-2xs transition-all';
 const inputLabelClass = 'text-xs font-bold text-brand-text mb-1 block';
 
-const selectClassNames = {
-  base: 'w-full',
-  label: 'text-xs font-bold text-brand-text mb-1 block text-right',
-  trigger:
-    'h-11 !px-3 !pl-10 !pr-3 bg-brand-surface-elevated/70 dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] hover:border-brand-gold/60 rounded-2xl shadow-2xs text-xs font-bold text-brand-text transition-colors data-[disabled=true]:opacity-50 relative flex items-center justify-between',
-  innerWrapper: 'w-full flex items-center justify-start gap-2',
-  value: 'text-xs font-bold text-brand-text !text-right w-full',
-  selectorIcon: '!absolute !left-3 !right-auto top-1/2 -translate-y-1/2 w-4 h-4 text-brand-text-muted transition-transform duration-200 shrink-0 pointer-events-none',
-  popoverContent:
-    'bg-brand-surface dark:bg-[#182118] border border-brand-border dark:border-[#2a362a] text-brand-text rounded-2xl shadow-2xl z-[10005] p-1.5 max-h-64 overflow-y-auto',
-};
 
 export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   isOpen,
@@ -151,6 +139,20 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [currentUserData, setCurrentUserData] = useState<IUser | null>(user);
+  const roleDropdownRef = useRef<HTMLDivElement>(null);
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+
+  // Close role dropdown on click outside
+  useEffect(() => {
+    if (!isRoleDropdownOpen) return;
+    const handlePointerDown = (event: PointerEvent | MouseEvent | TouchEvent) => {
+      if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target as Node)) {
+        setIsRoleDropdownOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [isRoleDropdownOpen]);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -782,78 +784,105 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           />
                         </div>
 
-                        {/* HeroUI Select for User Role */}
+                        {/* Custom Role Dropdown (matching BirthDatePicker & ProvinceCitySelect) */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <Select
-                            label={isPersian ? 'نقش کاربری در سامانه' : 'System Role'}
-                            labelPlacement="outside-top"
-                            selectedKeys={new Set([formData.role])}
-                            onSelectionChange={(keys) => {
-                              const selected = Array.from(keys)[0] as UserRole;
-                              if (selected) {
-                                setFormData((prev) => ({ ...prev, role: selected }));
-                              }
-                            }}
-                            variant="bordered"
-                            dir={isPersian ? 'rtl' : 'ltr'}
-                            classNames={selectClassNames}
-                            renderValue={(items) => (
-                              <div className="flex items-center gap-1.5 overflow-hidden w-full justify-start" dir="rtl">
-                                {items.map((item) => (
-                                  <Chip
-                                    key={item.key}
-                                    size="sm"
-                                    variant="flat"
-                                    className="rounded-full bg-brand-gold/15 dark:bg-brand-gold/25 text-brand-text font-black text-xs h-7 px-3 border border-brand-gold/40 flex items-center shrink-0"
+                          <div ref={roleDropdownRef} className="space-y-1.5 relative">
+                            <label className="block text-xs font-bold text-brand-text">
+                              {isPersian ? 'نقش کاربری در سامانه' : 'System Role'}
+                            </label>
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() => setIsRoleDropdownOpen((prev) => !prev)}
+                                className={`w-full h-12 px-4 rounded-2xl bg-brand-surface border transition-all flex items-center justify-between gap-2 text-right cursor-pointer select-none ${
+                                  isRoleDropdownOpen
+                                    ? 'border-brand-gold ring-2 ring-brand-gold/20 shadow-sm'
+                                    : 'border-brand-border hover:border-brand-gold/70'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 truncate">
+                                  {formData.role === 'admin' ? (
+                                    <ShieldAlert className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0" />
+                                  ) : formData.role === 'editor' ? (
+                                    <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                                  ) : (
+                                    <UserIcon className="w-4 h-4 text-neutral-400 shrink-0" />
+                                  )}
+                                  <span className="text-xs font-bold text-brand-text truncate">
+                                    {formData.role === 'admin'
+                                      ? (isPersian ? 'مدیر ارشد (Super Admin)' : 'Super Admin')
+                                      : formData.role === 'editor'
+                                      ? (isPersian ? 'ویراستار محتوا' : 'Content Editor')
+                                      : (isPersian ? 'کاربر عادی' : 'Standard User')}
+                                  </span>
+                                </div>
+                                <ChevronDown
+                                  className={`w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 transition-transform duration-200 ${
+                                    isRoleDropdownOpen ? 'rotate-180 text-brand-gold' : 'opacity-70'
+                                  }`}
+                                />
+                              </button>
+
+                              <AnimatePresence>
+                                {isRoleDropdownOpen && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                                    className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 space-y-1 overscroll-contain origin-top"
                                   >
-                                    {item.textValue}
-                                  </Chip>
-                                ))}
-                              </div>
-                            )}
-                            popoverProps={{
-                              dir: isPersian ? 'rtl' : 'ltr',
-                              className: 'z-[10005]',
-                              motionProps: {
-                                initial: { opacity: 0, scale: 0.97, y: -8 },
-                                animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
-                                exit: { opacity: 0, scale: 0.97, y: -8, transition: { duration: 0.18, ease: [0.4, 0, 1, 1] } },
-                              },
-                            }}
-                            listboxProps={{
-                              dir: isPersian ? 'rtl' : 'ltr',
-                              className: 'p-1',
-                            }}
-                          >
-                            <SelectItem
-                              key="user"
-                              textValue={isPersian ? 'کاربر عادی' : 'Standard User'}
-                              startContent={<UserIcon className="w-4 h-4 text-neutral-400" />}
-                              className="text-xs font-bold text-right rounded-xl my-0.5 text-brand-text"
-                            >
-                              {isPersian ? 'کاربر عادی (مشتری فروشگاه)' : 'Standard User (Customer)'}
-                            </SelectItem>
-                            <SelectItem
-                              key="editor"
-                              textValue={isPersian ? 'ویراستار محتوا' : 'Content Editor'}
-                              startContent={<ShieldCheck className="w-4 h-4 text-emerald-500" />}
-                              className="text-xs font-bold text-right rounded-xl my-0.5 text-brand-text"
-                            >
-                              {isPersian
-                                ? 'ویراستار محتوا (دسترسی به محصولات و سفارشات)'
-                                : 'Content Editor (Products & Orders)'}
-                            </SelectItem>
-                            <SelectItem
-                              key="admin"
-                              textValue={isPersian ? 'مدیر ارشد (Super Admin)' : 'Super Admin'}
-                              startContent={<ShieldAlert className="w-4 h-4 text-brand-bronze dark:text-brand-gold" />}
-                              className="text-xs font-bold text-right rounded-xl my-0.5 text-brand-text"
-                            >
-                              {isPersian
-                                ? 'مدیر ارشد (دسترسی کامل به تمامی بخش‌های سیستم)'
-                                : 'Super Admin (Full Access)'}
-                            </SelectItem>
-                          </Select>
+                                    {[
+                                      {
+                                        key: 'user' as UserRole,
+                                        title: isPersian ? 'کاربر عادی (مشتری فروشگاه)' : 'Standard User (Customer)',
+                                        icon: UserIcon,
+                                        iconColor: 'text-neutral-400',
+                                      },
+                                      {
+                                        key: 'editor' as UserRole,
+                                        title: isPersian ? 'ویراستار محتوا (دسترسی به محصولات و سفارشات)' : 'Content Editor (Products & Orders)',
+                                        icon: ShieldCheck,
+                                        iconColor: 'text-emerald-500',
+                                      },
+                                      {
+                                        key: 'admin' as UserRole,
+                                        title: isPersian ? 'مدیر ارشد (Super Admin - دسترسی کامل)' : 'Super Admin (Full Access)',
+                                        icon: ShieldAlert,
+                                        iconColor: 'text-brand-bronze dark:text-brand-gold',
+                                      },
+                                    ].map((item) => {
+                                      const isSelected = formData.role === item.key;
+                                      const Icon = item.icon;
+                                      return (
+                                        <button
+                                          key={item.key}
+                                          type="button"
+                                          onClick={() => {
+                                            setFormData((prev) => ({ ...prev, role: item.key }));
+                                            setIsRoleDropdownOpen(false);
+                                          }}
+                                          className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
+                                            isSelected
+                                              ? 'bg-brand-gold text-[#141914]'
+                                              : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
+                                          }`}
+                                        >
+                                          <div className="flex items-center gap-2.5 truncate">
+                                            <Icon
+                                              className={`w-4 h-4 shrink-0 ${isSelected ? 'text-[#141914]' : item.iconColor}`}
+                                            />
+                                            <span className="truncate">{item.title}</span>
+                                          </div>
+                                          {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#141914] shrink-0" />}
+                                        </button>
+                                      );
+                                    })}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          </div>
 
                           <Input
                             label={isPersian ? 'لینک تصویر آواتار (URL)' : 'Avatar Image URL'}
