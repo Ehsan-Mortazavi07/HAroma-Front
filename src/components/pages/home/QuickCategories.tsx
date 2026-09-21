@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Card, CardBody } from '@heroui/react';
+import { Card, CardBody, Button } from '@heroui/react';
 import {
   Sparkles,
   Heart,
@@ -21,6 +21,7 @@ import {
 import { ICategory } from '@/common/interfaces';
 import { useTranslation } from '@/common/i18n';
 import { PATHS } from '@/common/constants/PATHS';
+import { useDraggableScroll } from '@/common/hooks/useDraggableScroll';
 
 interface QuickCategoriesProps {
   categories: ICategory[];
@@ -28,14 +29,16 @@ interface QuickCategoriesProps {
 
 export function QuickCategories({ categories }: QuickCategoriesProps) {
   const { t, isPersian, isRTL } = useTranslation();
-  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const handleScroll = (direction: 'next' | 'prev') => {
-    if (!scrollRef.current) return;
-    const distance = 280;
-    const factor = isRTL ? (direction === 'next' ? -1 : 1) : (direction === 'next' ? 1 : -1);
-    scrollRef.current.scrollBy({ left: factor * distance, behavior: 'smooth' });
-  };
+  const {
+    scrollRef,
+    isDragging,
+    scrollProgress,
+    canScrollPrev,
+    canScrollNext,
+    handleScroll,
+    dragHandlers,
+  } = useDraggableScroll({ isRTL, friction: 0.92 });
 
   const getIcon = (slug: string) => {
     switch (slug) {
@@ -77,24 +80,32 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Scroll Navigation Controls for Desktop */}
+          {/* Scroll Navigation Controls with HeroUI Buttons */}
           <div className="hidden sm:flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => handleScroll('prev')}
-              className="w-8 h-8 rounded-full bg-brand-surface border border-brand-border hover:border-brand-gold/60 text-brand-text flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-2xs cursor-pointer"
-              aria-label="قبلی"
+            <Button
+              isIconOnly
+              radius="full"
+              variant="flat"
+              size="sm"
+              aria-label={isPersian ? 'قبلی' : 'Previous'}
+              isDisabled={!canScrollPrev}
+              onPress={() => handleScroll('prev')}
+              className="w-8 h-8 min-w-8 bg-brand-surface border border-brand-border/80 hover:border-brand-gold hover:bg-brand-surface-elevated text-brand-text disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
             >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => handleScroll('next')}
-              className="w-8 h-8 rounded-full bg-brand-surface border border-brand-border hover:border-brand-gold/60 text-brand-text flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-2xs cursor-pointer"
-              aria-label="بعدی"
+              {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </Button>
+            <Button
+              isIconOnly
+              radius="full"
+              variant="flat"
+              size="sm"
+              aria-label={isPersian ? 'بعدی' : 'Next'}
+              isDisabled={!canScrollNext}
+              onPress={() => handleScroll('next')}
+              className="w-8 h-8 min-w-8 bg-brand-surface border border-brand-border/80 hover:border-brand-gold hover:bg-brand-surface-elevated text-brand-text disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
+              {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            </Button>
           </div>
 
           <Link
@@ -107,27 +118,31 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
         </div>
       </div>
 
-      {/* Horizontal Scrollable Categories Track */}
+      {/* Horizontal Draggable & Scrollable Categories Track */}
       <div
         ref={scrollRef}
-        className="flex items-stretch gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory py-2 px-0.5 scroll-smooth"
+        {...dragHandlers}
+        style={{ touchAction: 'pan-y' }}
+        className={`flex items-stretch gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory py-2 px-0.5 scroll-smooth transition-colors select-none ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
       >
         {categories.map((cat) => (
           <div key={cat._id} className="shrink-0 w-28 sm:w-32 lg:w-36 snap-start">
             <motion.div
               whileHover={{ y: -4, scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 24, mass: 0.8 }}
               className="h-full"
             >
               <Card
                 as={Link}
                 href={`/products?category=${cat.slug}`}
                 isPressable
-                className="w-full h-full bg-brand-surface border border-brand-border/70 hover:border-brand-gold/80 shadow-2xs hover:shadow-md transition-all text-center rounded-2xl"
+                className="w-full h-full bg-brand-surface border border-brand-border/70 hover:border-brand-gold/80 shadow-2xs hover:shadow-md transition-all text-center rounded-2xl select-none"
               >
-                <CardBody className="flex flex-col items-center justify-center p-3 sm:p-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-center mb-2 shadow-2xs">
+                <CardBody className="flex flex-col items-center justify-center p-3 sm:p-4 select-none">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-center mb-2 shadow-2xs pointer-events-none">
                     {getIcon(cat.slug)}
                   </div>
                   <span className="font-bold text-xs sm:text-sm text-brand-text truncate max-w-full">
@@ -146,18 +161,18 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
         <div className="shrink-0 w-28 sm:w-32 lg:w-36 snap-start">
           <motion.div
             whileHover={{ y: -4, scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 24, mass: 0.8 }}
             className="h-full"
           >
             <Card
               as={Link}
               href={PATHS.PRODUCTS}
               isPressable
-              className="w-full h-full bg-brand-surface-elevated border border-brand-gold/40 hover:border-brand-gold shadow-2xs hover:shadow-md transition-all text-center rounded-2xl"
+              className="w-full h-full bg-brand-surface-elevated border border-brand-gold/40 hover:border-brand-gold shadow-2xs hover:shadow-md transition-all text-center rounded-2xl select-none"
             >
-              <CardBody className="flex flex-col items-center justify-center p-3 sm:p-4">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-brand-gold text-[#141914] flex items-center justify-center mb-2 shadow-sm border border-brand-bronze-light/30">
+              <CardBody className="flex flex-col items-center justify-center p-3 sm:p-4 select-none">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-brand-gold text-[#141914] flex items-center justify-center mb-2 shadow-sm border border-brand-bronze-light/30 pointer-events-none">
                   {isRTL ? <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" /> : <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />}
                 </div>
                 <span className="font-black text-xs sm:text-sm text-[#141914] dark:text-brand-gold truncate max-w-full">
@@ -170,6 +185,14 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
             </Card>
           </motion.div>
         </div>
+      </div>
+
+      {/* Subtle Luxury Scroll Progress Bar */}
+      <div className="w-full bg-brand-border/30 h-1 rounded-full overflow-hidden mt-2.5">
+        <div
+          className="h-full bg-gradient-to-r from-brand-gold/70 via-amber-400 to-brand-gold rounded-full transition-all duration-150 ease-out"
+          style={{ width: `${Math.max(10, scrollProgress)}%` }}
+        />
       </div>
     </section>
   );

@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Sparkles, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Card, CardBody } from '@heroui/react';
+import { Card, CardBody, Button } from '@heroui/react';
 import { IProduct } from '@/common/interfaces';
 import { ProductCard } from '@/components/common/ProductCard';
 import { PATHS } from '@/common/constants/PATHS';
 import { useTranslation } from '@/common/i18n';
+import { useDraggableScroll } from '@/common/hooks/useDraggableScroll';
 
 interface YouMightNeedSectionProps {
   products: IProduct[];
@@ -16,14 +16,16 @@ interface YouMightNeedSectionProps {
 
 export function YouMightNeedSection({ products }: YouMightNeedSectionProps) {
   const { t, isPersian, isRTL } = useTranslation();
-  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const handleScroll = (direction: 'next' | 'prev') => {
-    if (!scrollRef.current) return;
-    const distance = 300;
-    const factor = isRTL ? (direction === 'next' ? -1 : 1) : (direction === 'next' ? 1 : -1);
-    scrollRef.current.scrollBy({ left: factor * distance, behavior: 'smooth' });
-  };
+  const {
+    scrollRef,
+    isDragging,
+    scrollProgress,
+    canScrollPrev,
+    canScrollNext,
+    handleScroll,
+    dragHandlers,
+  } = useDraggableScroll({ isRTL, friction: 0.92 });
 
   return (
     <section className="w-full">
@@ -52,24 +54,32 @@ export function YouMightNeedSection({ products }: YouMightNeedSectionProps) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Scroll Navigation Controls for Desktop */}
+          {/* Scroll Navigation Controls with HeroUI Buttons */}
           <div className="hidden sm:flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => handleScroll('prev')}
-              className="w-8 h-8 rounded-full bg-brand-surface border border-brand-border hover:border-brand-gold/60 text-brand-text flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-2xs cursor-pointer"
-              aria-label="قبلی"
+            <Button
+              isIconOnly
+              radius="full"
+              variant="flat"
+              size="sm"
+              aria-label={isPersian ? 'قبلی' : 'Previous'}
+              isDisabled={!canScrollPrev}
+              onPress={() => handleScroll('prev')}
+              className="w-8 h-8 min-w-8 bg-brand-surface border border-brand-border/80 hover:border-brand-gold hover:bg-brand-surface-elevated text-brand-text disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
             >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => handleScroll('next')}
-              className="w-8 h-8 rounded-full bg-brand-surface border border-brand-border hover:border-brand-gold/60 text-brand-text flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-2xs cursor-pointer"
-              aria-label="بعدی"
+              {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </Button>
+            <Button
+              isIconOnly
+              radius="full"
+              variant="flat"
+              size="sm"
+              aria-label={isPersian ? 'بعدی' : 'Next'}
+              isDisabled={!canScrollNext}
+              onPress={() => handleScroll('next')}
+              className="w-8 h-8 min-w-8 bg-brand-surface border border-brand-border/80 hover:border-brand-gold hover:bg-brand-surface-elevated text-brand-text disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
+              {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            </Button>
           </div>
 
           <Link
@@ -82,30 +92,34 @@ export function YouMightNeedSection({ products }: YouMightNeedSectionProps) {
         </div>
       </div>
 
-      {/* Horizontal Scrollable Products Carousel */}
+      {/* Horizontal Draggable & Scrollable Products Carousel */}
       <div
         ref={scrollRef}
-        className="flex items-stretch gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto scrollbar-none snap-x snap-mandatory py-2.5 px-0.5 scroll-smooth"
+        {...dragHandlers}
+        style={{ touchAction: 'pan-y' }}
+        className={`flex items-stretch gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto scrollbar-none snap-x snap-mandatory py-2.5 px-0.5 scroll-smooth transition-colors select-none ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
       >
         {products.map((product) => (
           <div
             key={product._id}
-            className="shrink-0 w-[215px] sm:w-[245px] md:w-[270px] snap-start h-auto flex flex-col"
+            className="shrink-0 w-[215px] sm:w-[245px] md:w-[270px] snap-start h-auto flex flex-col select-none"
           >
             <ProductCard product={product} />
           </div>
         ))}
 
         {/* Explore All Card at the end */}
-        <div className="shrink-0 w-[180px] sm:w-[210px] snap-start h-auto flex flex-col justify-center">
+        <div className="shrink-0 w-[180px] sm:w-[210px] snap-start h-auto flex flex-col justify-center select-none">
           <Card
             as={Link}
             href={PATHS.PRODUCTS}
             isPressable
-            className="w-full h-full min-h-[300px] sm:min-h-[340px] flex flex-col items-center justify-center p-6 text-center rounded-2xl sm:rounded-3xl bg-brand-surface-elevated border border-brand-gold/40 hover:border-brand-gold shadow-2xs hover:shadow-md transition-all group"
+            className="w-full h-full min-h-[300px] sm:min-h-[340px] flex flex-col items-center justify-center p-6 text-center rounded-2xl sm:rounded-3xl bg-brand-surface-elevated border border-brand-gold/40 hover:border-brand-gold shadow-2xs hover:shadow-md transition-all group select-none"
           >
-            <CardBody className="p-0 flex flex-col items-center justify-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-brand-gold text-[#141914] flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+            <CardBody className="p-0 flex flex-col items-center justify-center gap-3 select-none">
+              <div className="w-12 h-12 rounded-full bg-brand-gold text-[#141914] flex items-center justify-center shadow-md group-hover:scale-110 transition-transform pointer-events-none">
                 {isRTL ? <ArrowLeft className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
               </div>
               <span className="font-black text-sm text-brand-text dark:text-brand-gold">
@@ -117,6 +131,14 @@ export function YouMightNeedSection({ products }: YouMightNeedSectionProps) {
             </CardBody>
           </Card>
         </div>
+      </div>
+
+      {/* Subtle Luxury Scroll Progress Bar */}
+      <div className="w-full bg-brand-border/30 h-1 rounded-full overflow-hidden mt-3 sm:mt-4">
+        <div
+          className="h-full bg-gradient-to-r from-brand-gold/70 via-amber-400 to-brand-gold rounded-full transition-all duration-150 ease-out"
+          style={{ width: `${Math.max(8, scrollProgress)}%` }}
+        />
       </div>
     </section>
   );

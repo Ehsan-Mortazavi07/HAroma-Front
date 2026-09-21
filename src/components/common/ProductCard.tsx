@@ -93,17 +93,19 @@ export function ProductCard({ product }: ProductCardProps) {
         <Link
           href={PATHS.PRODUCT(product.slug)}
           className="block relative w-full h-40 sm:h-52 rounded-xl sm:rounded-2xl overflow-hidden bg-brand-surface-elevated mb-2.5 sm:mb-3"
+          draggable={false}
         >
           <Image
             src={imgSrc}
             alt={isPersian ? product.title : product.titleEn || product.title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out"
+            className="object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out pointer-events-none select-none"
             onError={() => setImgSrc(fallbackImage)}
+            draggable={false}
           />
           {/* Soft Gold Shimmer on hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-brand-olive/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out" />
+          <div className="absolute inset-0 bg-gradient-to-t from-brand-olive/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-out pointer-events-none" />
         </Link>
 
         {/* Content */}
