@@ -33,11 +33,11 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
   });
 
   return (
-    <section className="mb-14">
+    <section className="w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 sm:mb-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-gold flex items-center justify-center border border-brand-gold/30 shadow-md">
+          <div className="w-10 h-10 rounded-2xl bg-brand-surface-elevated text-brand-gold flex items-center justify-center border border-brand-gold/30 shadow-xs">
             <Award className="w-5 h-5 text-brand-gold" />
           </div>
           <div>
@@ -60,7 +60,7 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none" role="tablist" aria-label={t.home.bestSellers}>
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-3 mb-5 sm:mb-6 scrollbar-none" role="tablist" aria-label={t.home.bestSellers}>
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -71,10 +71,10 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
               role="tab"
               aria-selected={isActive}
               onPress={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 text-xs font-bold whitespace-nowrap transition-all duration-200 ease-out h-9 ${
+              className={`px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold whitespace-nowrap transition-all duration-200 ease-out h-8 sm:h-9 ${
                 isActive
-                  ? 'bg-brand-gold text-[#141914] shadow-sm font-black'
-                  : 'bg-brand-surface text-brand-text-muted hover:bg-brand-surface-elevated border border-brand-border'
+                  ? 'bg-brand-gold text-[#141914] shadow-xs font-black'
+                  : 'bg-brand-surface text-brand-text-muted hover:bg-brand-surface-elevated border border-brand-border/70'
               }`}
             >
               {tab.label}
@@ -83,7 +83,7 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
         })}
       </div>
 
-      {/* Products Grid */}
+      {/* Products Grid: 2 columns on mobile, 3 on tablet, 4 on desktop */}
       {filteredProducts.length === 0 ? (
         <Card className="p-8 text-center bg-brand-surface rounded-3xl border border-brand-border text-brand-text-muted text-xs">
           <CardBody className="p-0">
@@ -91,7 +91,7 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
           </CardBody>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
           {filteredProducts.map((product) => (
             <ProductCard key={product._id} product={product} />
           ))}

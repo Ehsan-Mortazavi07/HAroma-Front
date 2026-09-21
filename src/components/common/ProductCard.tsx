@@ -76,12 +76,12 @@ export function ProductCard({ product }: ProductCardProps) {
       transition={{ type: 'spring', stiffness: 260, damping: 20 }}
       className="h-full"
     >
-      <Card className="h-full group relative flex flex-col justify-between bg-brand-surface rounded-3xl p-4 border border-brand-border/60 shadow-xs hover:shadow-2xl hover:border-brand-gold/80 transition-all duration-300 ease-out">
+      <Card className="h-full group relative flex flex-col justify-between bg-brand-surface rounded-2xl sm:rounded-3xl p-3 sm:p-4 border border-brand-border/60 shadow-2xs hover:shadow-xl hover:border-brand-gold/80 transition-all duration-300 ease-out">
         {/* Badges */}
-        <div className="absolute top-3 right-3 z-10 flex flex-col gap-1.5 items-start">
+        <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-10 flex flex-col gap-1.5 items-start">
           {product.isVipOnly && <VipBadge size="sm" text={t.common.vipOnly} />}
           {hasDiscount && (
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-brand-bronze text-[#f7f4ee] shadow-sm border border-brand-gold/40">
+            <span className="px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-extrabold bg-brand-bronze text-[#f7f4ee] shadow-sm border border-brand-gold/40">
               {isPersian
                 ? `${toPersianDigits(discountPercent)}٪ تخفیف`
                 : `${discountPercent}% OFF`}
@@ -92,13 +92,13 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* Top Media */}
         <Link
           href={PATHS.PRODUCT(product.slug)}
-          className="block relative w-full h-48 sm:h-52 rounded-2xl overflow-hidden bg-brand-surface-elevated mb-3"
+          className="block relative w-full h-40 sm:h-52 rounded-xl sm:rounded-2xl overflow-hidden bg-brand-surface-elevated mb-2.5 sm:mb-3"
         >
           <Image
             src={imgSrc}
             alt={isPersian ? product.title : product.titleEn || product.title}
             fill
-            sizes="(max-width: 768px) 100vw, 300px"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out"
             onError={() => setImgSrc(fallbackImage)}
           />
@@ -110,7 +110,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="flex-1 flex flex-col justify-between space-y-2">
           <div>
             {/* Brand/Category & Volume */}
-            <div className="flex items-center justify-between text-[11px] font-bold text-brand-text-muted mb-1">
+            <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-brand-text-muted mb-1">
               <span className="truncate">
                 {brandName ? (
                   <span className="text-brand-bronze dark:text-brand-gold font-extrabold">{brandName}</span>
@@ -124,7 +124,7 @@ export function ProductCard({ product }: ProductCardProps) {
             {/* Product Title */}
             <Link
               href={PATHS.PRODUCT(product.slug)}
-              className="font-bold text-sm text-brand-text hover:text-brand-bronze dark:hover:text-brand-gold transition-colors line-clamp-2 leading-snug"
+              className="font-bold text-xs sm:text-sm text-brand-text hover:text-brand-bronze dark:hover:text-brand-gold transition-colors line-clamp-2 min-h-[34px] sm:min-h-[40px] leading-snug"
             >
               {isPersian ? product.title : product.titleEn || product.title}
             </Link>
@@ -134,26 +134,26 @@ export function ProductCard({ product }: ProductCardProps) {
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-1 text-xs text-amber-500">
               <Star className="w-3.5 h-3.5 fill-current" />
-              <span className="font-extrabold text-[11px] text-brand-text">
+              <span className="font-extrabold text-[10px] sm:text-[11px] text-brand-text">
                 {isPersian ? toPersianDigits(product.rating || 4.8) : (product.rating || 4.8)}
               </span>
             </div>
 
-            <div className="text-[11px] font-bold text-brand-bronze dark:text-brand-gold">
+            <div className="text-[10px] sm:text-[11px] font-bold text-brand-bronze dark:text-brand-gold">
               {product.inStock ? t.common.inStock : t.common.outOfStock}
             </div>
           </div>
 
           {/* Pricing & Cart Action */}
-          <div className="pt-2 border-t border-brand-border flex items-center justify-between gap-2">
+          <div className="pt-2 border-t border-brand-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             {/* Price */}
             <div className="flex flex-col">
               {hasDiscount && (
-                <span className="text-[11px] text-brand-text-muted line-through">
+                <span className="text-[10px] sm:text-[11px] text-brand-text-muted line-through">
                   {formatToman(product.price, isPersian)}
                 </span>
               )}
-              <span className="font-black text-sm text-brand-text dark:text-brand-gold">
+              <span className="font-black text-xs sm:text-sm text-brand-text dark:text-brand-gold">
                 {hasDiscount
                   ? formatToman(product.discountPrice, isPersian)
                   : formatToman(product.price, isPersian)}
@@ -161,7 +161,9 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
 
             {/* Add to Cart / Counter */}
-            <QuantityCounter product={product} />
+            <div className="w-full sm:w-auto shrink-0">
+              <QuantityCounter product={product} size="sm" />
+            </div>
           </div>
         </div>
       </Card>

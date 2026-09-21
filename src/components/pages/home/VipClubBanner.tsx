@@ -36,7 +36,7 @@ export function VipClubBanner() {
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="relative overflow-hidden rounded-3xl bg-[#181f18] text-[#f7f4ee] p-8 sm:p-12 mb-16 shadow-2xl border border-brand-gold/30 group"
+      className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#181f18] text-[#f7f4ee] p-6 sm:p-10 lg:p-12 shadow-2xl border border-brand-gold/30 group w-full"
     >
       {/* Interactive Cursor-Tracking Golden Spotlight */}
       <div
@@ -93,7 +93,7 @@ export function VipClubBanner() {
         </div>
 
         <div className="lg:col-span-4 flex justify-center">
-          <div className="relative w-48 h-48 sm:w-60 sm:h-60 rounded-full bg-[#202620] border-2 border-brand-gold/40 p-4 flex items-center justify-center shadow-2xl">
+          <div className="relative w-40 h-40 sm:w-52 sm:h-52 lg:w-60 lg:h-60 rounded-full bg-[#202620] border-2 border-brand-gold/40 p-3 sm:p-4 flex items-center justify-center shadow-2xl">
             <div className="relative w-full h-full rounded-full overflow-hidden">
               <Image
                 src="https://images.unsplash.com/photo-1547887537-6158d64c35b3?q=80&w=600&auto=format&fit=crop"

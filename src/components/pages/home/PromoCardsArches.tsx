@@ -67,8 +67,27 @@ export function PromoCardsArches() {
   ];
 
   return (
-    <section className="mb-14">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <section className="w-full">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5 sm:mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-brand-surface-elevated text-brand-gold flex items-center justify-center border border-brand-gold/30 shadow-xs">
+            <Sparkles className="w-5 h-5 text-brand-gold" />
+          </div>
+          <div>
+            <h2 className="text-xl sm:text-2xl font-black text-brand-text">
+              {isPersian ? 'خدمات و امتیازات ویژه' : 'Exclusive Privileges'}
+            </h2>
+            <p className="text-xs text-brand-text-muted">
+              {isPersian
+                ? 'از بسته‌بندی‌های کادویی لوکس تا مشاوره تخصصی و ارسال ایمن'
+                : 'Luxury gift packaging, expert advice & secure delivery'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {promoCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -77,9 +96,9 @@ export function PromoCardsArches() {
               as={Link}
               href={card.href}
               isPressable
-              className={`group flex flex-col justify-between rounded-3xl p-0 border shadow-xs hover:shadow-xl hover:border-brand-gold hover:-translate-y-1 transition-all duration-300 ease-out ${card.bgClass}`}
+              className={`group flex flex-col justify-between rounded-2xl sm:rounded-3xl p-0 border shadow-2xs hover:shadow-xl hover:border-brand-gold hover:-translate-y-1 transition-all duration-300 ease-out ${card.bgClass}`}
             >
-              <CardBody className="p-6 flex flex-col justify-between h-full">
+              <CardBody className="p-4 sm:p-5 lg:p-6 flex flex-col justify-between h-full">
                 {/* Header */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -90,23 +109,24 @@ export function PromoCardsArches() {
                     >
                       {card.tag}
                     </Chip>
-                    <div className={`w-9 h-9 rounded-2xl flex items-center justify-center shadow-xs ${card.iconBg}`}>
+                    <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xs ${card.iconBg}`}>
                       <Icon className="w-4 h-4" />
                     </div>
                   </div>
 
-                  <h3 className="font-black text-base mb-1.5 line-clamp-1">{card.title}</h3>
+                  <h3 className="font-black text-sm sm:text-base mb-1.5 line-clamp-1">{card.title}</h3>
                   <p className="text-xs text-brand-text-muted line-clamp-2 leading-relaxed">
                     {card.subtitle}
                   </p>
                 </div>
 
                 {/* Arch Media Container */}
-                <div className="mt-5 relative w-full h-36 rounded-2xl overflow-hidden bg-brand-surface-elevated border border-brand-border">
+                <div className="mt-4 sm:mt-5 relative w-full h-32 sm:h-36 rounded-xl sm:rounded-2xl overflow-hidden bg-brand-surface-elevated border border-brand-border">
                   <Image
                     src={card.image}
                     alt={card.title}
                     fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent flex items-end p-3">

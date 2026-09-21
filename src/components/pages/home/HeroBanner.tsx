@@ -34,7 +34,7 @@ export function HeroBanner() {
           spotlightRef.current.style.background = `radial-gradient(600px circle at 70% 35%, rgba(212, 190, 155, 0.14), transparent 70%)`;
         }
       }}
-      className="relative overflow-hidden rounded-3xl bg-[#181f18] text-[#f7f4ee] p-6 sm:p-10 lg:p-14 mb-10 shadow-2xl border border-brand-gold/30 group"
+      className="relative overflow-hidden rounded-3xl bg-[#181f18] text-[#f7f4ee] p-5 sm:p-8 lg:p-12 shadow-2xl border border-brand-gold/30 group"
     >
       {/* Interactive Cursor-Tracking Golden Spotlight - Hardware Accelerated without React Re-renders */}
       <div
@@ -106,7 +106,7 @@ export function HeroBanner() {
 
         {/* Right Hero Image Card */}
         <div className="lg:col-span-5 relative flex justify-center">
-          <div className="relative w-full max-w-sm h-80 sm:h-96 rounded-3xl overflow-hidden shadow-2xl border border-brand-gold/30">
+          <div className="relative w-full max-w-sm h-64 sm:h-80 lg:h-96 rounded-3xl overflow-hidden shadow-2xl border border-brand-gold/30">
             <Image
               src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop"
               alt="Hatef Aroma Niche Perfume"

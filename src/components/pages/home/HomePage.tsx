@@ -3,6 +3,7 @@
 import React from 'react';
 import { IProduct, ICategory, IPageSection } from '@/common/interfaces';
 import { HeroBanner } from './HeroBanner';
+import { TrustFeaturesBar } from './TrustFeaturesBar';
 import { QuickCategories } from './QuickCategories';
 import { YouMightNeedSection } from './YouMightNeedSection';
 import { PromoCardsArches } from './PromoCardsArches';
@@ -34,8 +35,9 @@ export function HomePage({
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen space-y-12 sm:space-y-16 pb-16 pt-2 sm:pt-4">
       {isSectionVisible('hero_banner') && <HeroBanner />}
+      <TrustFeaturesBar />
       {isSectionVisible('quick_categories') && <QuickCategories categories={categories} />}
       {isSectionVisible('featured_perfumes') && (
         <YouMightNeedSection products={displayFeatured.slice(0, 8)} />
