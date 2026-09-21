@@ -66,6 +66,7 @@ export interface UserDetailsModalProps {
   initialMode?: 'view' | 'edit';
   isPersian?: boolean;
   isAdmin?: boolean;
+  isSelf?: boolean;
   onUserUpdated?: (updatedUser: IUser) => void;
   onToggleVip?: (userId: string, currentVip: boolean) => void | Promise<void>;
   onRoleChange?: (userId: string, newRole: string) => void | Promise<void>;
@@ -101,10 +102,10 @@ const modalMotionProps = {
     exit: {
       scale: 0.96,
       opacity: 0,
-      y: 10,
+      y: 12,
       transition: {
         duration: 0.2,
-        ease: [0.16, 1, 0.3, 1] as const,
+        ease: [0.4, 0, 1, 1] as const,
       },
     },
   },
@@ -123,6 +124,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   initialMode = 'view',
   isPersian = true,
   isAdmin = true,
+  isSelf = false,
   onUserUpdated,
   onToggleVip,
   onRoleChange,
@@ -1761,7 +1763,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 /* View Mode Footer */
                 <>
                   <div className="flex items-center gap-2">
-                    {isAdmin && onDeleteUser && (
+                    {isAdmin && !isSelf && onDeleteUser && (
                       <Button
                         size="sm"
                         color="danger"
@@ -1775,6 +1777,19 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                       >
                         {isPersian ? 'حذف حساب کاربر' : 'Delete Account'}
                       </Button>
+                    )}
+                    {isSelf && (
+                      <Chip
+                        size="sm"
+                        variant="flat"
+                        classNames={{
+                          base: "bg-brand-gold/15 border border-brand-gold/30 px-3 py-1",
+                          content: "text-brand-bronze dark:text-brand-gold text-xs font-black flex items-center gap-1",
+                        }}
+                        startContent={<UserIcon className="w-3.5 h-3.5 text-brand-gold shrink-0" />}
+                      >
+                        {isPersian ? 'حساب کاربری شما (محافظت‌شده)' : 'Your Account (Protected)'}
+                      </Chip>
                     )}
                   </div>
 

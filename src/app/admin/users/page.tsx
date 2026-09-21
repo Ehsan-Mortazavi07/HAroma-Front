@@ -269,15 +269,30 @@ export default function AdminUsersPage() {
   } | null>(null);
   const [isBulkConfirmLoading, setIsBulkConfirmLoading] = useState(false);
 
+  const isCurrentUser = (user?: IUser | null) => {
+    if (!user || !currentUser) return false;
+    if (currentUser._id && user._id === currentUser._id) return true;
+    if (currentUser.username && user.username && user.username.toLowerCase() === currentUser.username.toLowerCase()) return true;
+    if (currentUser.email && user.email && user.email.toLowerCase() === currentUser.email.toLowerCase()) return true;
+    if (currentUser.phone && user.phone && user.phone === currentUser.phone) return true;
+    return false;
+  };
+
+  const selectableUsers = users.filter((u) => !isCurrentUser(u));
+  const isAllSelected = selectableUsers.length > 0 && selectedIds.length === selectableUsers.length;
+  const isIndeterminate = selectedIds.length > 0 && selectedIds.length < selectableUsers.length;
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(users.map((u) => u._id));
+      setSelectedIds(selectableUsers.map((u) => u._id));
     } else {
       setSelectedIds([]);
     }
   };
 
   const handleSelectRow = (id: string) => {
+    const target = users.find((u) => u._id === id);
+    if (target && isCurrentUser(target)) return;
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
@@ -332,14 +347,26 @@ export default function AdminUsersPage() {
       );
       return;
     }
-    if (selectedIds.length === 0) return;
+    const cleanIds = selectedIds.filter((id) => {
+      const u = users.find((item) => item._id === id);
+      return u ? !isCurrentUser(u) : currentUser ? id !== currentUser._id : true;
+    });
+
+    if (cleanIds.length === 0) {
+      toast.error(
+        isPersian
+          ? 'هیچ کاربری برای حذف انتخاب نشده است (حساب کاربری شما محافظت شده است).'
+          : 'No deletable user accounts selected (your account is protected).',
+      );
+      return;
+    }
 
     setBulkConfirmConfig({
       title: isPersian ? 'حذف گروهی کاربران' : 'Bulk Delete Users',
       description: isPersian ? (
         <div>
           <p>
-            آیا از حذف گروهی <strong className="text-brand-text font-black">{toPersianDigits(selectedIds.length)}</strong> حساب کاربری اطمینان کامل دارید؟
+            آیا از حذف گروهی <strong className="text-brand-text font-black">{toPersianDigits(cleanIds.length)}</strong> حساب کاربری اطمینان کامل دارید؟
           </p>
           <p className="mt-2 text-xs text-rose-500 font-medium">
             این عملیات غیرقابل بازگشت است و حساب‌های انتخاب شده حذف خواهند شد.
@@ -348,7 +375,7 @@ export default function AdminUsersPage() {
       ) : (
         <div>
           <p>
-            Are you sure you want to delete <strong className="text-brand-text font-bold">{selectedIds.length}</strong> user accounts?
+            Are you sure you want to delete <strong className="text-brand-text font-bold">{cleanIds.length}</strong> user accounts?
           </p>
           <p className="mt-2 text-xs text-rose-500 font-medium">
             This action cannot be undone.
@@ -359,11 +386,11 @@ export default function AdminUsersPage() {
       action: async () => {
         setBulkActionLoading(true);
         try {
-          await adminApi.bulkDeleteUsers(selectedIds);
+          await adminApi.bulkDeleteUsers(cleanIds);
           toast.success(
             isPersian
-              ? `${toPersianDigits(selectedIds.length)} کاربر با موفقیت حذف شدند.`
-              : `${selectedIds.length} users deleted successfully.`,
+              ? `${toPersianDigits(cleanIds.length)} کاربر با موفقیت حذف شدند.`
+              : `${cleanIds.length} users deleted successfully.`,
           );
           setSelectedIds([]);
           loadUsers();
@@ -391,9 +418,6 @@ export default function AdminUsersPage() {
       setIsBulkConfirmLoading(false);
     }
   };
-
-  const isAllSelected = users.length > 0 && selectedIds.length === users.length;
-  const isIndeterminate = selectedIds.length > 0 && selectedIds.length < users.length;
 
   const handleOpenDetails = (user: IUser) => {
     setSelectedUserForDetails(user);
@@ -516,6 +540,15 @@ export default function AdminUsersPage() {
         isPersian
           ? 'حذف کاربر تنها برای مدیر کل سیستم مجاز است.'
           : 'Deleting users is restricted to Super Admins.',
+      );
+      return;
+    }
+    const target = users.find((u) => u._id === userId);
+    if ((target && isCurrentUser(target)) || (currentUser && userId === currentUser._id)) {
+      toast.error(
+        isPersian
+          ? 'امکان حذف حساب کاربری خودتان وجود ندارد.'
+          : 'You cannot delete your own account.',
       );
       return;
     }
@@ -764,6 +797,7 @@ export default function AdminUsersPage() {
                         <div className="flex items-center justify-center">
                           <SmoothCheckbox
                             isSelected={isSelected}
+                            isDisabled={isCurrentUser(user)}
                             onValueChange={() => handleSelectRow(user._id)}
                             size="sm"
                             ariaLabel={user.fullName || user.username}
@@ -908,7 +942,19 @@ export default function AdminUsersPage() {
                           </Button>
                         )}
 
-                        {isAdmin ? (
+                        {isCurrentUser(user) ? (
+                          <Chip
+                            size="sm"
+                            variant="flat"
+                            classNames={{
+                              base: "bg-brand-gold/15 border border-brand-gold/30 px-2.5 py-1",
+                              content: "text-brand-bronze dark:text-brand-gold text-[11px] font-black flex items-center gap-1",
+                            }}
+                            startContent={<UserIcon className="w-3 h-3 text-brand-gold shrink-0" />}
+                          >
+                            {isPersian ? 'حساب شما' : 'Your Account'}
+                          </Chip>
+                        ) : isAdmin ? (
                           <Button
                             isIconOnly
                             size="sm"
@@ -943,6 +989,7 @@ export default function AdminUsersPage() {
         isOpen={detailsModalOpen}
         onOpenChange={setDetailsModalOpen}
         user={selectedUserForDetails}
+        isSelf={selectedUserForDetails ? isCurrentUser(selectedUserForDetails) : false}
         initialMode={detailsModalMode}
         isPersian={isPersian}
         isAdmin={isAdmin}
