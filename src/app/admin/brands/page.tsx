@@ -16,13 +16,15 @@ import {
   ModalFooter,
   Skeleton,
 } from '@heroui/react';
-import { Award, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Award, Plus, Edit2, Trash2, Check, X, Eye, EyeOff } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { IBrand } from '@/common/interfaces';
 import { toast, toPersianDigits } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
+import { useAppSelector } from '@/stores/hooks';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -51,10 +53,27 @@ const inputClassNames = {
 
 export default function AdminBrandsPage() {
   const { isPersian, isRTL } = useTranslation();
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isAdmin = currentUser?.role === 'admin';
+
   const [brands, setBrands] = useState<IBrand[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<IBrand | null>(null);
+
+  // Multi-selection & Bulk action state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
+  // Bulk Confirm Modal state
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+  const [bulkConfirmConfig, setBulkConfirmConfig] = useState<{
+    title: string;
+    description: React.ReactNode;
+    confirmText: string;
+    action: () => Promise<void>;
+  } | null>(null);
+  const [isBulkConfirmLoading, setIsBulkConfirmLoading] = useState(false);
 
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -88,6 +107,118 @@ export default function AdminBrandsPage() {
   useEffect(() => {
     loadBrands();
   }, []);
+
+  // Selection handlers
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(brands.map((b) => b._id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleBulkStatusChange = async (nextActive: boolean) => {
+    if (selectedIds.length === 0) return;
+    setBulkActionLoading(true);
+    setBrands((prev) =>
+      prev.map((b) => (selectedIds.includes(b._id) ? { ...b, isActive: nextActive } : b)),
+    );
+    try {
+      await adminApi.bulkUpdateBrandsStatus(selectedIds, nextActive);
+      toast.success(
+        nextActive
+          ? isPersian
+            ? `${toPersianDigits(selectedIds.length)} برند با موفقیت فعال گردید.`
+            : `${selectedIds.length} brands activated.`
+          : isPersian
+          ? `${toPersianDigits(selectedIds.length)} برند با موفقیت غیرفعال گردید.`
+          : `${selectedIds.length} brands deactivated.`,
+      );
+      setSelectedIds([]);
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message ||
+          (isPersian ? 'خطا در تغییر وضعیت گروهی برندها.' : 'Failed to update brands status.'),
+      );
+      loadBrands();
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (!isAdmin) {
+      toast.error(isPersian ? 'حذف برندها منحصراً برای مدیر کل مجاز است.' : 'Restricted to admin.');
+      return;
+    }
+    if (selectedIds.length === 0) return;
+
+    setBulkConfirmConfig({
+      title: isPersian ? 'حذف گروهی برندها' : 'Bulk Delete Brands',
+      description: isPersian ? (
+        <div>
+          <p>
+            آیا از حذف گروهی <strong className="text-brand-text font-black">{toPersianDigits(selectedIds.length)}</strong> برند انتخاب شده اطمینان کامل دارید؟
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            محصولات متعلق به این برندها بدون برند خواهند شد یا باید مجدداً برند آنها تعیین شود.
+          </p>
+        </div>
+      ) : (
+        <div>
+          <p>
+            Are you sure you want to delete <strong className="text-brand-text font-bold">{selectedIds.length}</strong> selected brands?
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            Products assigned to these brands will become unassigned.
+          </p>
+        </div>
+      ),
+      confirmText: isPersian ? 'بله، حذف گروهی' : 'Yes, Delete All',
+      action: async () => {
+        setBulkActionLoading(true);
+        try {
+          await adminApi.bulkDeleteBrands(selectedIds);
+          toast.success(
+            isPersian
+              ? `${toPersianDigits(selectedIds.length)} برند با موفقیت حذف گردید.`
+              : `${selectedIds.length} brands deleted successfully.`,
+          );
+          setSelectedIds([]);
+          loadBrands();
+        } catch (err: any) {
+          toast.error(
+            err?.response?.data?.message ||
+              (isPersian ? 'خطا در حذف گروهی برندها.' : 'Failed to delete brands.'),
+          );
+        } finally {
+          setBulkActionLoading(false);
+        }
+      },
+    });
+    setBulkConfirmOpen(true);
+  };
+
+  const executeBulkConfirmAction = async () => {
+    if (!bulkConfirmConfig) return;
+    setIsBulkConfirmLoading(true);
+    try {
+      await bulkConfirmConfig.action();
+      setBulkConfirmOpen(false);
+      setBulkConfirmConfig(null);
+    } finally {
+      setIsBulkConfirmLoading(false);
+    }
+  };
+
+  const isAllSelected = brands.length > 0 && selectedIds.length === brands.length;
+  const isIndeterminate = selectedIds.length > 0 && selectedIds.length < brands.length;
 
   const openCreateModal = () => {
     setEditingBrand(null);
@@ -226,6 +357,29 @@ export default function AdminBrandsPage() {
         </Button>
       </motion.div>
 
+      {/* Selection Toolbar / Counter */}
+      {brands.length > 0 && !loading && (
+        <div className="flex items-center justify-between px-4 py-2 bg-brand-surface/60 rounded-2xl border border-brand-border/60">
+          <div className="flex items-center gap-2.5">
+            <SmoothCheckbox
+              isSelected={isAllSelected}
+              isIndeterminate={isIndeterminate}
+              onValueChange={handleSelectAll}
+              size="sm"
+              ariaLabel={isPersian ? 'انتخاب همه برندها' : 'Select all brands'}
+            />
+            <span className="text-xs font-bold text-brand-text">
+              {isPersian ? 'انتخاب همه برندها' : 'Select All Brands'}
+            </span>
+          </div>
+          <span className="text-xs font-semibold text-brand-text-muted">
+            {isPersian
+              ? `${toPersianDigits(brands.length)} برند ثبت شده`
+              : `${brands.length} total brands`}
+          </span>
+        </div>
+      )}
+
       {/* Brands Grid / Cards */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
@@ -259,19 +413,33 @@ export default function AdminBrandsPage() {
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"
         >
           <AnimatePresence>
-            {brands.map((b) => (
-              <motion.div key={b._id} variants={cardVariants} layout>
-                <Card className="bg-brand-surface p-5 rounded-3xl border border-brand-border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-colors h-full">
-                  <CardBody className="p-0 flex flex-col justify-between h-full space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="w-12 h-12 rounded-2xl bg-brand-surface-elevated flex items-center justify-center border border-brand-border text-brand-bronze overflow-hidden shadow-xs">
-                          {b.logo ? (
-                            <img src={b.logo} alt={b.name} className="w-full h-full object-contain p-1.5" />
-                          ) : (
-                            <Award className="w-6 h-6" />
-                          )}
-                        </div>
+            {brands.map((b) => {
+              const isSelected = selectedIds.includes(b._id);
+              return (
+                <motion.div key={b._id} variants={cardVariants} layout>
+                  <Card className={`bg-brand-surface p-5 rounded-3xl border shadow-xs flex flex-col justify-between space-y-4 transition-all h-full ${
+                    isSelected
+                      ? 'border-brand-gold ring-2 ring-brand-gold/25 bg-brand-gold/5'
+                      : 'border-brand-border hover:border-brand-gold/60'
+                  }`}>
+                    <CardBody className="p-0 flex flex-col justify-between h-full space-y-4">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <SmoothCheckbox
+                              isSelected={isSelected}
+                              onValueChange={() => handleSelectRow(b._id)}
+                              size="sm"
+                              ariaLabel={b.name}
+                            />
+                            <div className="w-12 h-12 rounded-2xl bg-brand-surface-elevated flex items-center justify-center border border-brand-border text-brand-bronze overflow-hidden shadow-xs">
+                              {b.logo ? (
+                                <img src={b.logo} alt={b.name} className="w-full h-full object-contain p-1.5" />
+                              ) : (
+                                <Award className="w-6 h-6" />
+                              )}
+                            </div>
+                          </div>
 
                         <div className="flex items-center gap-2">
                           {b.isFeatured && (
@@ -354,7 +522,8 @@ export default function AdminBrandsPage() {
                   </CardBody>
                 </Card>
               </motion.div>
-            ))}
+            );
+          })}
           </AnimatePresence>
         </motion.div>
       )}
@@ -543,6 +712,138 @@ export default function AdminBrandsPage() {
         icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
         isLoading={isDeleting}
         onConfirm={handleConfirmDelete}
+      />
+
+      {/* Zero-Layout-Shift Fixed Floating Bulk Action Island */}
+      <AnimatePresence>
+        {selectedIds.length > 0 && (
+          <div className="fixed bottom-4 sm:bottom-7 inset-x-0 z-50 flex justify-center pointer-events-none px-3 sm:px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 36, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 28, scale: 0.94 }}
+              transition={{
+                duration: 0.35,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="pointer-events-auto bg-[#141a14]/98 dark:bg-[#121812]/98 backdrop-blur-2xl border border-brand-gold/40 shadow-2xl shadow-black/70 rounded-2xl sm:rounded-full p-2.5 sm:p-2 sm:ps-3.5 sm:pe-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 text-[#f7f4ee] w-[calc(100vw-1.5rem)] max-w-md sm:w-auto sm:max-w-none"
+            >
+              {/* Mobile Top Header: Count + Close Button */}
+              <div className="flex sm:hidden items-center justify-between px-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-brand-gold shrink-0 animate-pulse" />
+                  <span className="text-xs font-black text-brand-gold">
+                    {isPersian
+                      ? `${toPersianDigits(selectedIds.length)} برند انتخاب شده`
+                      : `${selectedIds.length} brands selected`}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds([])}
+                  className="text-neutral-400 hover:text-[#f7f4ee] active:scale-95 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer py-0.5 px-2 rounded-lg hover:bg-white/10"
+                  aria-label={isPersian ? 'لغو انتخاب' : 'Cancel selection'}
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>{isPersian ? 'انصراف' : 'Cancel'}</span>
+                </button>
+              </div>
+
+              {/* Desktop Count Badge */}
+              <div className="hidden sm:flex items-center gap-2 shrink-0">
+                <span className="px-3 py-1 rounded-full bg-brand-gold text-[#141914] font-black text-xs shadow-xs flex items-center gap-1.5 shrink-0">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>
+                    {isPersian
+                      ? `${toPersianDigits(selectedIds.length)} برند انتخاب شده`
+                      : `${selectedIds.length} selected`}
+                  </span>
+                </span>
+                <span className="w-px h-5 bg-white/15 shrink-0" />
+              </div>
+
+              {/* Action Buttons: Responsive Grid on Mobile, Flex on Desktop */}
+              <div
+                className={`grid ${
+                  isAdmin ? 'grid-cols-3' : 'grid-cols-2'
+                } sm:flex sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto`}
+              >
+                <Button
+                  size="sm"
+                  radius="full"
+                  variant="flat"
+                  isLoading={bulkActionLoading}
+                  onPress={() => handleBulkStatusChange(true)}
+                  className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  {!bulkActionLoading && <Eye className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                  <span className="truncate">
+                    <span className="sm:hidden">{isPersian ? 'فعال‌سازی' : 'Activate'}</span>
+                    <span className="hidden sm:inline">{isPersian ? 'فعال‌سازی' : 'Activate'}</span>
+                  </span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  radius="full"
+                  variant="flat"
+                  isLoading={bulkActionLoading}
+                  onPress={() => handleBulkStatusChange(false)}
+                  className="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  {!bulkActionLoading && <EyeOff className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                  <span className="truncate">
+                    <span className="sm:hidden">{isPersian ? 'غیرفعال' : 'Deactivate'}</span>
+                    <span className="hidden sm:inline">{isPersian ? 'غیرفعال‌سازی' : 'Deactivate'}</span>
+                  </span>
+                </Button>
+
+                {isAdmin && (
+                  <Button
+                    size="sm"
+                    radius="full"
+                    variant="flat"
+                    isLoading={bulkActionLoading}
+                    onPress={handleBulkDelete}
+                    className="bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                  >
+                    {!bulkActionLoading && <Trash2 className="w-3.5 h-3.5 text-rose-400 shrink-0" />}
+                    <span className="truncate">
+                      <span className="sm:hidden">{isPersian ? 'حذف' : 'Delete'}</span>
+                      <span className="hidden sm:inline">{isPersian ? 'حذف همگانی' : 'Bulk Delete'}</span>
+                    </span>
+                  </Button>
+                )}
+
+                {/* Desktop Deselect Button */}
+                <Button
+                  size="sm"
+                  radius="full"
+                  variant="light"
+                  onPress={() => setSelectedIds([])}
+                  className="hidden sm:flex text-neutral-400 hover:text-[#f7f4ee] hover:bg-white/10 font-bold text-xs cursor-pointer rounded-full h-8 px-2.5 transition-all items-center gap-1 shrink-0"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>{isPersian ? 'انصراف' : 'Deselect'}</span>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Admin Confirm Modal for Bulk Action */}
+      <AdminConfirmModal
+        isOpen={bulkConfirmOpen}
+        onOpenChange={setBulkConfirmOpen}
+        title={bulkConfirmConfig?.title || ''}
+        description={bulkConfirmConfig?.description || null}
+        confirmText={bulkConfirmConfig?.confirmText || (isPersian ? 'بله، حذف' : 'Yes, Delete')}
+        cancelText={isPersian ? 'انصراف' : 'Cancel'}
+        confirmColor="danger"
+        icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
+        isLoading={isBulkConfirmLoading}
+        onConfirm={executeBulkConfirmAction}
       />
     </div>
   );

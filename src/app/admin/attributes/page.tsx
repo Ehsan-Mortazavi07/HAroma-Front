@@ -22,18 +22,28 @@ import {
   Trash2,
   X,
   Layers,
+  Check,
 } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { IAttribute, IVariantTemplate } from '@/common/interfaces';
 import { toast, toPersianDigits, formatToman, translateAttributeValue } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { AdminPriceInput } from '@/components/admin/AdminPriceInput';
+import { useAppSelector } from '@/stores/hooks';
 
 export default function AdminAttributesPage() {
   const { isPersian } = useTranslation();
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isAdmin = currentUser?.role === 'admin';
+
   const [activeTab, setActiveTab] = useState<'variants' | 'attributes'>('variants');
+
+  // Multi-selection state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
   // Dynamic Attributes State
   const [attributes, setAttributes] = useState<IAttribute[]>([]);
@@ -340,6 +350,90 @@ export default function AdminAttributesPage() {
     }
   };
 
+  // Multi-selection handlers
+  const currentItems = activeTab === 'variants' ? variantTemplates : attributes;
+  const isAllSelected = currentItems.length > 0 && selectedIds.length === currentItems.length;
+  const isIndeterminate = selectedIds.length > 0 && selectedIds.length < currentItems.length;
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(currentItems.map((item) => item._id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleBulkDelete = () => {
+    if (!isAdmin) {
+      toast.error(isPersian ? 'حذف منحصراً برای مدیر کل مجاز است.' : 'Restricted to admin.');
+      return;
+    }
+    if (selectedIds.length === 0) return;
+
+    const isVariants = activeTab === 'variants';
+    setDeleteConfig({
+      title: isVariants
+        ? (isPersian ? 'حذف گروهی الگوهای تنوع' : 'Bulk Delete Variant Templates')
+        : (isPersian ? 'حذف گروهی ویژگی‌های داینامیک' : 'Bulk Delete Attributes'),
+      description: isPersian ? (
+        <div>
+          <p>
+            آیا از حذف گروهی <strong className="text-brand-text font-black">{toPersianDigits(selectedIds.length)}</strong> {isVariants ? 'الگوی تنوع' : 'ویژگی'} انتخاب شده اطمینان کامل دارید؟
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            این موارد به طور کامل از سیستم حذف خواهند شد.
+          </p>
+        </div>
+      ) : (
+        <div>
+          <p>
+            Are you sure you want to delete <strong className="text-brand-text font-bold">{selectedIds.length}</strong> selected {isVariants ? 'templates' : 'attributes'}?
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            These items will be permanently removed.
+          </p>
+        </div>
+      ),
+      confirmText: isPersian ? 'بله، حذف همگانی' : 'Yes, Delete All',
+      action: async () => {
+        setBulkActionLoading(true);
+        try {
+          if (isVariants) {
+            await adminApi.bulkDeleteVariantTemplates(selectedIds);
+            toast.success(
+              isPersian
+                ? `${toPersianDigits(selectedIds.length)} الگوی تنوع با موفقیت حذف گردید.`
+                : `${selectedIds.length} variant templates deleted.`,
+            );
+            loadVariantTemplates();
+          } else {
+            await adminApi.bulkDeleteAttributes(selectedIds);
+            toast.success(
+              isPersian
+                ? `${toPersianDigits(selectedIds.length)} ویژگی با موفقیت حذف گردید.`
+                : `${selectedIds.length} attributes deleted.`,
+            );
+            loadAttributes();
+          }
+          setSelectedIds([]);
+        } catch (err: any) {
+          toast.error(
+            err?.response?.data?.message || (isPersian ? 'خطا در حذف گروهی.' : 'Failed to bulk delete.'),
+          );
+        } finally {
+          setBulkActionLoading(false);
+        }
+      },
+    });
+    setDeleteConfirmOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -392,7 +486,10 @@ export default function AdminAttributesPage() {
           <Button
             variant={activeTab === 'variants' ? 'solid' : 'light'}
             radius="full"
-            onPress={() => setActiveTab('variants')}
+            onPress={() => {
+              setActiveTab('variants');
+              setSelectedIds([]);
+            }}
             className={`flex-1 h-11 text-xs font-black cursor-pointer rounded-full ${
               activeTab === 'variants'
                 ? 'bg-brand-gold text-[#141914] shadow-sm'
@@ -411,7 +508,10 @@ export default function AdminAttributesPage() {
           <Button
             variant={activeTab === 'attributes' ? 'solid' : 'light'}
             radius="full"
-            onPress={() => setActiveTab('attributes')}
+            onPress={() => {
+              setActiveTab('attributes');
+              setSelectedIds([]);
+            }}
             className={`flex-1 h-11 text-xs font-black cursor-pointer rounded-full ${
               activeTab === 'attributes'
                 ? 'bg-brand-gold text-[#141914] shadow-sm'
@@ -440,6 +540,29 @@ export default function AdminAttributesPage() {
       {/* TAB 1: VARIANT TEMPLATES GRID */}
       {activeTab === 'variants' && (
         <div>
+          {/* Selection Toolbar / Counter */}
+          {variantTemplates.length > 0 && !loadingTemplates && (
+            <div className="flex items-center justify-between px-4 py-2 mb-4 bg-brand-surface/60 rounded-2xl border border-brand-border/60">
+              <div className="flex items-center gap-2.5">
+                <SmoothCheckbox
+                  isSelected={isAllSelected}
+                  isIndeterminate={isIndeterminate}
+                  onValueChange={handleSelectAll}
+                  size="sm"
+                  ariaLabel={isPersian ? 'انتخاب همه الگوهای تنوع' : 'Select all templates'}
+                />
+                <span className="text-xs font-bold text-brand-text">
+                  {isPersian ? 'انتخاب همه الگوهای تنوع' : 'Select All Variant Templates'}
+                </span>
+              </div>
+              <span className="text-xs font-semibold text-brand-text-muted">
+                {isPersian
+                  ? `${toPersianDigits(variantTemplates.length)} الگوی تنوع ثبت شده`
+                  : `${variantTemplates.length} total templates`}
+              </span>
+            </div>
+          )}
+
           {loadingTemplates ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
@@ -482,31 +605,45 @@ export default function AdminAttributesPage() {
               }}
             >
               <AnimatePresence>
-                {variantTemplates.map((tpl) => (
-                  <motion.div
-                    key={tpl._id}
-                    variants={{
-                      hidden: { opacity: 0, y: 20, scale: 0.97 },
-                      visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring' as const, stiffness: 360, damping: 28 } },
-                    }}
-                    layout
-                  >
-                    <Card
-                      className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-colors group h-full"
+                {variantTemplates.map((tpl) => {
+                  const isSelected = selectedIds.includes(tpl._id);
+                  return (
+                    <motion.div
+                      key={tpl._id}
+                      variants={{
+                        hidden: { opacity: 0, y: 20, scale: 0.97 },
+                        visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring' as const, stiffness: 360, damping: 28 } },
+                      }}
+                      layout
                     >
-                      <CardBody className="p-0 space-y-4 flex flex-col justify-between h-full">
-                        <div className="space-y-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <h3 className="font-black text-base text-brand-text">
-                                {isPersian ? tpl.title : tpl.titleEn || tpl.title}
-                              </h3>
-                              {tpl.titleEn && (
-                                <span className="text-xs text-brand-text-muted font-sans">
-                                  {tpl.titleEn}
-                                </span>
-                              )}
-                            </div>
+                      <Card
+                        className={`bg-brand-surface rounded-3xl p-6 border shadow-xs flex flex-col justify-between space-y-4 transition-all group h-full ${
+                          isSelected
+                            ? 'border-brand-gold ring-2 ring-brand-gold/30 bg-brand-gold/5'
+                            : 'border-brand-border hover:border-brand-gold/60'
+                        }`}
+                      >
+                        <CardBody className="p-0 space-y-4 flex flex-col justify-between h-full">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2.5">
+                                <SmoothCheckbox
+                                  isSelected={isSelected}
+                                  onValueChange={() => handleSelectRow(tpl._id)}
+                                  size="sm"
+                                  ariaLabel={tpl.title}
+                                />
+                                <div>
+                                  <h3 className="font-black text-base text-brand-text">
+                                    {isPersian ? tpl.title : tpl.titleEn || tpl.title}
+                                  </h3>
+                                  {tpl.titleEn && (
+                                    <span className="text-xs text-brand-text-muted font-sans">
+                                      {tpl.titleEn}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
 
                             <div className="flex items-center gap-1">
                               <Button
@@ -581,7 +718,8 @@ export default function AdminAttributesPage() {
                       </CardBody>
                     </Card>
                   </motion.div>
-                ))}
+                );
+              })}
               </AnimatePresence>
             </motion.div>
           )}
@@ -591,6 +729,29 @@ export default function AdminAttributesPage() {
       {/* TAB 2: DYNAMIC ATTRIBUTES GRID */}
       {activeTab === 'attributes' && (
         <div>
+          {/* Selection Toolbar / Counter */}
+          {attributes.length > 0 && !loadingAttrs && (
+            <div className="flex items-center justify-between px-4 py-2 mb-4 bg-brand-surface/60 rounded-2xl border border-brand-border/60">
+              <div className="flex items-center gap-2.5">
+                <SmoothCheckbox
+                  isSelected={isAllSelected}
+                  isIndeterminate={isIndeterminate}
+                  onValueChange={handleSelectAll}
+                  size="sm"
+                  ariaLabel={isPersian ? 'انتخاب همه ویژگی‌ها' : 'Select all attributes'}
+                />
+                <span className="text-xs font-bold text-brand-text">
+                  {isPersian ? 'انتخاب همه ویژگی‌های تخصصی' : 'Select All Attributes'}
+                </span>
+              </div>
+              <span className="text-xs font-semibold text-brand-text-muted">
+                {isPersian
+                  ? `${toPersianDigits(attributes.length)} ویژگی ثبت شده`
+                  : `${attributes.length} total attributes`}
+              </span>
+            </div>
+          )}
+
           {loadingAttrs ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
@@ -628,29 +789,43 @@ export default function AdminAttributesPage() {
               }}
             >
               <AnimatePresence>
-                {attributes.map((attr) => (
-                  <motion.div
-                    key={attr._id}
-                    variants={{
-                      hidden: { opacity: 0, y: 20, scale: 0.97 },
-                      visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring' as const, stiffness: 360, damping: 28 } },
-                    }}
-                    layout
-                  >
-                    <Card
-                      className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-colors group h-full"
+                {attributes.map((attr) => {
+                  const isSelected = selectedIds.includes(attr._id);
+                  return (
+                    <motion.div
+                      key={attr._id}
+                      variants={{
+                        hidden: { opacity: 0, y: 20, scale: 0.97 },
+                        visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring' as const, stiffness: 360, damping: 28 } },
+                      }}
+                      layout
                     >
-                      <CardBody className="p-0 space-y-4 flex flex-col justify-between h-full">
-                        <div className="space-y-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <h3 className="font-black text-base text-brand-text">
-                                {isPersian ? attr.name : attr.nameEn || attr.name}
-                              </h3>
-                              <span className="text-xs font-mono font-bold text-brand-bronze dark:text-brand-gold">
-                                {attr.key}
-                              </span>
-                            </div>
+                      <Card
+                        className={`bg-brand-surface rounded-3xl p-6 border shadow-xs flex flex-col justify-between space-y-4 transition-all group h-full ${
+                          isSelected
+                            ? 'border-brand-gold ring-2 ring-brand-gold/30 bg-brand-gold/5'
+                            : 'border-brand-border hover:border-brand-gold/60'
+                        }`}
+                      >
+                        <CardBody className="p-0 space-y-4 flex flex-col justify-between h-full">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2.5">
+                                <SmoothCheckbox
+                                  isSelected={isSelected}
+                                  onValueChange={() => handleSelectRow(attr._id)}
+                                  size="sm"
+                                  ariaLabel={attr.name}
+                                />
+                                <div>
+                                  <h3 className="font-black text-base text-brand-text">
+                                    {isPersian ? attr.name : attr.nameEn || attr.name}
+                                  </h3>
+                                  <span className="text-xs font-mono font-bold text-brand-bronze dark:text-brand-gold">
+                                    {attr.key}
+                                  </span>
+                                </div>
+                              </div>
 
                             <div className="flex items-center gap-1">
                               <Button
@@ -723,7 +898,8 @@ export default function AdminAttributesPage() {
                       </CardBody>
                     </Card>
                   </motion.div>
-                ))}
+                );
+              })}
               </AnimatePresence>
             </motion.div>
           )}
@@ -1066,6 +1242,87 @@ export default function AdminAttributesPage() {
         isLoading={isDeletingItem}
         onConfirm={executeDeleteAction}
       />
+
+      {/* Zero-Layout-Shift Fixed Floating Bulk Action Island */}
+      <AnimatePresence>
+        {selectedIds.length > 0 && (
+          <div className="fixed bottom-4 sm:bottom-7 inset-x-0 z-50 flex justify-center pointer-events-none px-3 sm:px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 36, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 28, scale: 0.94 }}
+              transition={{
+                duration: 0.35,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="pointer-events-auto bg-[#141a14]/98 dark:bg-[#121812]/98 backdrop-blur-2xl border border-brand-gold/40 shadow-2xl shadow-black/70 rounded-2xl sm:rounded-full p-2.5 sm:p-2 sm:ps-3.5 sm:pe-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 text-[#f7f4ee] w-[calc(100vw-1.5rem)] max-w-md sm:w-auto sm:max-w-none"
+            >
+              {/* Mobile Top Header: Count + Close Button */}
+              <div className="flex sm:hidden items-center justify-between px-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-brand-gold shrink-0 animate-pulse" />
+                  <span className="text-xs font-black text-brand-gold">
+                    {isPersian
+                      ? `${toPersianDigits(selectedIds.length)} مورد انتخاب شده`
+                      : `${selectedIds.length} items selected`}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds([])}
+                  className="text-neutral-400 hover:text-[#f7f4ee] active:scale-95 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer py-0.5 px-2 rounded-lg hover:bg-white/10"
+                  aria-label={isPersian ? 'لغو انتخاب' : 'Cancel selection'}
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>{isPersian ? 'انصراف' : 'Cancel'}</span>
+                </button>
+              </div>
+
+              {/* Desktop Count Badge */}
+              <div className="hidden sm:flex items-center gap-2 shrink-0">
+                <span className="px-3 py-1 rounded-full bg-brand-gold text-[#141914] font-black text-xs shadow-xs flex items-center gap-1.5 shrink-0">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>
+                    {isPersian
+                      ? `${toPersianDigits(selectedIds.length)} مورد انتخاب شده`
+                      : `${selectedIds.length} selected`}
+                  </span>
+                </span>
+                <span className="w-px h-5 bg-white/15 shrink-0" />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
+                {isAdmin && (
+                  <Button
+                    size="sm"
+                    radius="full"
+                    variant="flat"
+                    isLoading={bulkActionLoading}
+                    onPress={handleBulkDelete}
+                    className="flex-1 sm:flex-initial bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                  >
+                    {!bulkActionLoading && <Trash2 className="w-3.5 h-3.5 text-rose-400 shrink-0" />}
+                    <span>{isPersian ? 'حذف همگانی موارد انتخاب شده' : 'Bulk Delete Selected'}</span>
+                  </Button>
+                )}
+
+                {/* Desktop Deselect Button */}
+                <Button
+                  size="sm"
+                  radius="full"
+                  variant="light"
+                  onPress={() => setSelectedIds([])}
+                  className="hidden sm:flex text-neutral-400 hover:text-[#f7f4ee] hover:bg-white/10 font-bold text-xs cursor-pointer rounded-full h-8 px-2.5 transition-all items-center gap-1 shrink-0"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>{isPersian ? 'انصراف' : 'Deselect'}</span>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

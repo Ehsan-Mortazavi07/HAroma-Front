@@ -52,6 +52,14 @@ export const adminApi = {
     const res = await axiosInstance.delete(`/admin/categories/${id}`);
     return res.data;
   },
+  bulkUpdateCategoriesStatus: async (ids: string[], isActive: boolean) => {
+    const res = await axiosInstance.patch('/admin/categories/bulk/status', { ids, isActive });
+    return res.data;
+  },
+  bulkDeleteCategories: async (ids: string[]) => {
+    const res = await axiosInstance.post('/admin/categories/bulk/delete', { ids });
+    return res.data;
+  },
 
   // Brands CRUD
   getBrands: async (params?: Record<string, any>) => {
@@ -72,6 +80,14 @@ export const adminApi = {
   },
   deleteBrand: async (id: string) => {
     const res = await axiosInstance.delete(`/admin/brands/${id}`);
+    return res.data;
+  },
+  bulkUpdateBrandsStatus: async (ids: string[], isActive: boolean) => {
+    const res = await axiosInstance.patch('/admin/brands/bulk/status', { ids, isActive });
+    return res.data;
+  },
+  bulkDeleteBrands: async (ids: string[]) => {
+    const res = await axiosInstance.post('/admin/brands/bulk/delete', { ids });
     return res.data;
   },
 
@@ -96,6 +112,10 @@ export const adminApi = {
     const res = await axiosInstance.delete(`/admin/attributes/${id}`);
     return res.data;
   },
+  bulkDeleteAttributes: async (ids: string[]) => {
+    const res = await axiosInstance.post('/admin/attributes/bulk/delete', { ids });
+    return res.data;
+  },
 
   // Variant Templates (Standalone Volume/Size Presets)
   getVariantTemplates: async () => {
@@ -112,6 +132,10 @@ export const adminApi = {
   },
   deleteVariantTemplate: async (id: string) => {
     const res = await axiosInstance.delete(`/admin/variant-templates/${id}`);
+    return res.data;
+  },
+  bulkDeleteVariantTemplates: async (ids: string[]) => {
+    const res = await axiosInstance.post('/admin/variant-templates/bulk/delete', { ids });
     return res.data;
   },
 
@@ -148,12 +172,20 @@ export const adminApi = {
     const res = await axiosInstance.patch(`/admin/users/${id}/vip`, { isVip, durationDays });
     return res.data;
   },
+  bulkUpdateUsersVip: async (ids: string[], isVip: boolean, durationDays?: number) => {
+    const res = await axiosInstance.patch('/admin/users/bulk/vip', { ids, isVip, durationDays });
+    return res.data;
+  },
   getUserOrders: async (userId: string, params?: Record<string, any>) => {
     const res = await axiosInstance.get('/admin/orders', { params: { ...params, userId } });
     return res.data;
   },
   deleteUser: async (id: string) => {
     const res = await axiosInstance.delete(`/admin/users/${id}`);
+    return res.data;
+  },
+  bulkDeleteUsers: async (ids: string[]) => {
+    const res = await axiosInstance.post('/admin/users/bulk/delete', { ids });
     return res.data;
   },
 
@@ -174,6 +206,14 @@ export const adminApi = {
     const res = await axiosInstance.patch(`/admin/orders/${id}/status`, { status, trackingCode });
     return res.data;
   },
+  bulkUpdateOrdersStatus: async (ids: string[], status: string) => {
+    const res = await axiosInstance.patch('/admin/orders/bulk/status', { ids, status });
+    return res.data;
+  },
+  bulkDeleteOrders: async (ids: string[]) => {
+    const res = await axiosInstance.post('/admin/orders/bulk/delete', { ids });
+    return res.data;
+  },
 
   // Coupons CRUD
   getCoupons: async (params?: Record<string, any>) => {
@@ -192,6 +232,14 @@ export const adminApi = {
     const res = await axiosInstance.delete(`/admin/coupons/${id}`);
     return res.data;
   },
+  bulkUpdateCouponsStatus: async (ids: string[], isActive: boolean) => {
+    const res = await axiosInstance.patch('/admin/coupons/bulk/status', { ids, isActive });
+    return res.data;
+  },
+  bulkDeleteCoupons: async (ids: string[]) => {
+    const res = await axiosInstance.post('/admin/coupons/bulk/delete', { ids });
+    return res.data;
+  },
 
   // VIP Plans CRUD
   getVipPlans: async () => {
@@ -208,6 +256,14 @@ export const adminApi = {
   },
   deleteVipPlan: async (id: string) => {
     const res = await axiosInstance.delete(`/admin/vip-plans/${id}`);
+    return res.data;
+  },
+  bulkUpdateVipPlansStatus: async (ids: string[], isActive: boolean) => {
+    const res = await axiosInstance.patch('/admin/vip-plans/bulk/status', { ids, isActive });
+    return res.data;
+  },
+  bulkDeleteVipPlans: async (ids: string[]) => {
+    const res = await axiosInstance.post('/admin/vip-plans/bulk/delete', { ids });
     return res.data;
   },
 

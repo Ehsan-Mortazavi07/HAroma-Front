@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Card,
   CardBody,
@@ -35,6 +35,8 @@ import {
   Eye,
   Pencil,
   UserPlus,
+  Check,
+  X,
 } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { IUser } from '@/common/interfaces';
@@ -42,6 +44,7 @@ import { toPersianDigits, toast } from '@/common/utils';
 import { formatDisplayBirthDate } from '@/common/utils/date';
 import { useTranslation } from '@/common/i18n';
 import { useAppSelector } from '@/stores/hooks';
+import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { UserDetailsModal } from '@/components/admin/UserDetailsModal';
 import { CreateUserModal } from '@/components/admin/CreateUserModal';
@@ -251,6 +254,146 @@ export default function AdminUsersPage() {
 
   // Create User Modal State
   const [createUserModalOpen, setCreateUserModalOpen] = useState(false);
+
+  // Multi-selection & Bulk action state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
+  // Bulk Confirm Modal state
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+  const [bulkConfirmConfig, setBulkConfirmConfig] = useState<{
+    title: string;
+    description: React.ReactNode;
+    confirmText: string;
+    action: () => Promise<void>;
+  } | null>(null);
+  const [isBulkConfirmLoading, setIsBulkConfirmLoading] = useState(false);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(users.map((u) => u._id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleBulkToggleVip = async (isVip: boolean) => {
+    if (!isAdmin) {
+      toast.error(
+        isPersian
+          ? 'تغییر وضعیت VIP کاربران تنها برای مدیر کل مجاز است.'
+          : 'Altering VIP status is restricted to Super Admins.',
+      );
+      return;
+    }
+    if (selectedIds.length === 0) return;
+    setBulkActionLoading(true);
+
+    // Optimistic UI update
+    setUsers((prev) =>
+      prev.map((u) => (selectedIds.includes(u._id) ? { ...u, isVip } : u)),
+    );
+
+    try {
+      await adminApi.bulkUpdateUsersVip(selectedIds, isVip);
+      toast.success(
+        isVip
+          ? isPersian
+            ? `عضویت VIP برای ${toPersianDigits(selectedIds.length)} کاربر با موفقیت فعال گردید 👑`
+            : `VIP granted for ${selectedIds.length} users.`
+          : isPersian
+          ? `عضویت VIP برای ${toPersianDigits(selectedIds.length)} کاربر با موفقیت لغو گردید.`
+          : `VIP revoked for ${selectedIds.length} users.`,
+      );
+      setSelectedIds([]);
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message ||
+          (isPersian ? 'خطا در تغییر وضعیت VIP گروهی.' : 'Failed to update VIP status.'),
+      );
+      loadUsers();
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (!isAdmin) {
+      toast.error(
+        isPersian
+          ? 'حذف کاربران منحصراً برای مدیر کل مجاز است.'
+          : 'Deleting users is restricted to Super Admins.',
+      );
+      return;
+    }
+    if (selectedIds.length === 0) return;
+
+    setBulkConfirmConfig({
+      title: isPersian ? 'حذف گروهی کاربران' : 'Bulk Delete Users',
+      description: isPersian ? (
+        <div>
+          <p>
+            آیا از حذف گروهی <strong className="text-brand-text font-black">{toPersianDigits(selectedIds.length)}</strong> حساب کاربری اطمینان کامل دارید؟
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            این عملیات غیرقابل بازگشت است و حساب‌های انتخاب شده حذف خواهند شد.
+          </p>
+        </div>
+      ) : (
+        <div>
+          <p>
+            Are you sure you want to delete <strong className="text-brand-text font-bold">{selectedIds.length}</strong> user accounts?
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            This action cannot be undone.
+          </p>
+        </div>
+      ),
+      confirmText: isPersian ? 'بله، حذف گروهی کاربران' : 'Yes, Delete All Users',
+      action: async () => {
+        setBulkActionLoading(true);
+        try {
+          await adminApi.bulkDeleteUsers(selectedIds);
+          toast.success(
+            isPersian
+              ? `${toPersianDigits(selectedIds.length)} کاربر با موفقیت حذف شدند.`
+              : `${selectedIds.length} users deleted successfully.`,
+          );
+          setSelectedIds([]);
+          loadUsers();
+        } catch (err: any) {
+          toast.error(
+            err?.response?.data?.message ||
+              (isPersian ? 'خطا در حذف گروهی کاربران.' : 'Failed to delete users.'),
+          );
+        } finally {
+          setBulkActionLoading(false);
+        }
+      },
+    });
+    setBulkConfirmOpen(true);
+  };
+
+  const executeBulkConfirmAction = async () => {
+    if (!bulkConfirmConfig) return;
+    setIsBulkConfirmLoading(true);
+    try {
+      await bulkConfirmConfig.action();
+      setBulkConfirmOpen(false);
+      setBulkConfirmConfig(null);
+    } finally {
+      setIsBulkConfirmLoading(false);
+    }
+  };
+
+  const isAllSelected = users.length > 0 && selectedIds.length === users.length;
+  const isIndeterminate = selectedIds.length > 0 && selectedIds.length < users.length;
 
   const handleOpenDetails = (user: IUser) => {
     setSelectedUserForDetails(user);
@@ -593,6 +736,17 @@ export default function AdminUsersPage() {
               }}
             >
               <TableHeader>
+                <TableColumn className="w-10 text-center">
+                  <div className="flex items-center justify-center">
+                    <SmoothCheckbox
+                      isSelected={isAllSelected}
+                      isIndeterminate={isIndeterminate}
+                      onValueChange={handleSelectAll}
+                      size="sm"
+                      ariaLabel={isPersian ? 'انتخاب همه' : 'Select all'}
+                    />
+                  </div>
+                </TableColumn>
                 <TableColumn>{isPersian ? 'کاربر' : 'User Profile'}</TableColumn>
                 <TableColumn>{isPersian ? 'اطلاعات تماس' : 'Contact'}</TableColumn>
                 <TableColumn>{isPersian ? 'تاریخ تولد (شمسی / میلادی)' : 'Birth Date'}</TableColumn>
@@ -602,9 +756,22 @@ export default function AdminUsersPage() {
                 <TableColumn className="text-center">{isPersian ? 'عملیات' : 'Actions'}</TableColumn>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user._id}>
-                    <TableCell>
+                {users.map((user) => {
+                  const isSelected = selectedIds.includes(user._id);
+                  return (
+                    <TableRow key={user._id} className={isSelected ? 'bg-brand-gold/10' : ''}>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center">
+                          <SmoothCheckbox
+                            isSelected={isSelected}
+                            onValueChange={() => handleSelectRow(user._id)}
+                            size="sm"
+                            ariaLabel={user.fullName || user.username}
+                          />
+                        </div>
+                      </TableCell>
+
+                      <TableCell>
                       <div
                         onClick={() => handleOpenDetails(user)}
                         className="flex items-center gap-3 cursor-pointer group select-none"
@@ -762,7 +929,8 @@ export default function AdminUsersPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -828,6 +996,137 @@ export default function AdminUsersPage() {
         icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
         isLoading={isDeleting}
         onConfirm={handleConfirmDelete}
+      />
+
+      {/* Zero-Layout-Shift Fixed Floating Bulk Action Island */}
+      <AnimatePresence>
+        {selectedIds.length > 0 && (
+          <div className="fixed bottom-4 sm:bottom-7 inset-x-0 z-50 flex justify-center pointer-events-none px-3 sm:px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 36, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 28, scale: 0.94 }}
+              transition={{
+                duration: 0.35,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="pointer-events-auto bg-[#141a14]/98 dark:bg-[#121812]/98 backdrop-blur-2xl border border-brand-gold/40 shadow-2xl shadow-black/70 rounded-2xl sm:rounded-full p-2.5 sm:p-2 sm:ps-3.5 sm:pe-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 text-[#f7f4ee] w-[calc(100vw-1.5rem)] max-w-md sm:w-auto sm:max-w-none"
+            >
+              {/* Mobile Top Header: Count + Close Button */}
+              <div className="flex sm:hidden items-center justify-between px-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-brand-gold shrink-0 animate-pulse" />
+                  <span className="text-xs font-black text-brand-gold">
+                    {isPersian
+                      ? `${toPersianDigits(selectedIds.length)} کاربر انتخاب شده`
+                      : `${selectedIds.length} users selected`}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds([])}
+                  className="text-neutral-400 hover:text-[#f7f4ee] active:scale-95 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer py-0.5 px-2 rounded-lg hover:bg-white/10"
+                  aria-label={isPersian ? 'لغو انتخاب' : 'Cancel selection'}
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>{isPersian ? 'انصراف' : 'Cancel'}</span>
+                </button>
+              </div>
+
+              {/* Desktop Count Badge */}
+              <div className="hidden sm:flex items-center gap-2 shrink-0">
+                <span className="px-3 py-1 rounded-full bg-brand-gold text-[#141914] font-black text-xs shadow-xs flex items-center gap-1.5 shrink-0">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>
+                    {isPersian
+                      ? `${toPersianDigits(selectedIds.length)} کاربر انتخاب شده`
+                      : `${selectedIds.length} selected`}
+                  </span>
+                </span>
+                <span className="w-px h-5 bg-white/15 shrink-0" />
+              </div>
+
+              {/* Action Buttons: Responsive Grid on Mobile, Flex on Desktop */}
+              <div
+                className={`grid ${
+                  isAdmin ? 'grid-cols-3' : 'grid-cols-2'
+                } sm:flex sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto`}
+              >
+                <Button
+                  size="sm"
+                  radius="full"
+                  variant="flat"
+                  isLoading={bulkActionLoading}
+                  onPress={() => handleBulkToggleVip(true)}
+                  className="bg-brand-gold/20 hover:bg-brand-gold/30 text-amber-300 border border-brand-gold/40 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  {!bulkActionLoading && <Crown className="w-3.5 h-3.5 text-brand-gold shrink-0" />}
+                  <span className="truncate">
+                    <span className="sm:hidden">{isPersian ? 'اعطای VIP' : 'Grant VIP'}</span>
+                    <span className="hidden sm:inline">{isPersian ? 'ارتقا به VIP' : 'Grant VIP'}</span>
+                  </span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  radius="full"
+                  variant="flat"
+                  isLoading={bulkActionLoading}
+                  onPress={() => handleBulkToggleVip(false)}
+                  className="bg-white/10 hover:bg-white/15 text-neutral-300 border border-white/20 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <span className="truncate">
+                    <span className="sm:hidden">{isPersian ? 'لغو VIP' : 'Revoke VIP'}</span>
+                    <span className="hidden sm:inline">{isPersian ? 'لغو عضویت VIP' : 'Revoke VIP'}</span>
+                  </span>
+                </Button>
+
+                {isAdmin && (
+                  <Button
+                    size="sm"
+                    radius="full"
+                    variant="flat"
+                    isLoading={bulkActionLoading}
+                    onPress={handleBulkDelete}
+                    className="bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                  >
+                    {!bulkActionLoading && <Trash2 className="w-3.5 h-3.5 text-rose-400 shrink-0" />}
+                    <span className="truncate">
+                      <span className="sm:hidden">{isPersian ? 'حذف' : 'Delete'}</span>
+                      <span className="hidden sm:inline">{isPersian ? 'حذف همگانی' : 'Bulk Delete'}</span>
+                    </span>
+                  </Button>
+                )}
+
+                {/* Desktop Deselect Button */}
+                <Button
+                  size="sm"
+                  radius="full"
+                  variant="light"
+                  onPress={() => setSelectedIds([])}
+                  className="hidden sm:flex text-neutral-400 hover:text-[#f7f4ee] hover:bg-white/10 font-bold text-xs cursor-pointer rounded-full h-8 px-2.5 transition-all items-center gap-1 shrink-0"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>{isPersian ? 'انصراف' : 'Deselect'}</span>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Bulk Delete Confirm Modal */}
+      <AdminConfirmModal
+        isOpen={bulkConfirmOpen}
+        onOpenChange={setBulkConfirmOpen}
+        title={bulkConfirmConfig?.title || ''}
+        description={bulkConfirmConfig?.description || null}
+        confirmText={bulkConfirmConfig?.confirmText || (isPersian ? 'بله، حذف' : 'Yes, Delete')}
+        cancelText={isPersian ? 'انصراف' : 'Cancel'}
+        confirmColor="danger"
+        icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
+        isLoading={isBulkConfirmLoading}
+        onConfirm={executeBulkConfirmAction}
       />
     </div>
   );

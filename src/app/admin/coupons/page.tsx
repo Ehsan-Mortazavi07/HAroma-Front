@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Card,
   CardBody,
@@ -21,21 +21,49 @@ import {
   ModalFooter,
   Skeleton,
 } from '@heroui/react';
-import { Ticket, Plus, Edit2, Trash2 } from 'lucide-react';
+import {
+  Ticket,
+  Plus,
+  Edit2,
+  Trash2,
+  Eye,
+  EyeOff,
+  Check,
+  X,
+} from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { ICoupon } from '@/common/interfaces';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { AdminPriceInput } from '@/components/admin/AdminPriceInput';
+import { useAppSelector } from '@/stores/hooks';
 
 export default function AdminCouponsPage() {
   const { isPersian } = useTranslation();
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isAdmin = currentUser?.role === 'admin';
+
   const [coupons, setCoupons] = useState<ICoupon[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<ICoupon | null>(null);
+
+  // Multi-selection & Bulk action state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
+  // Bulk Confirm Modal state
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+  const [bulkConfirmConfig, setBulkConfirmConfig] = useState<{
+    title: string;
+    description: React.ReactNode;
+    confirmText: string;
+    action: () => Promise<void>;
+  } | null>(null);
+  const [isBulkConfirmLoading, setIsBulkConfirmLoading] = useState(false);
 
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -67,6 +95,119 @@ export default function AdminCouponsPage() {
   useEffect(() => {
     loadCoupons();
   }, []);
+
+  // Selection handlers
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(coupons.map((c) => c._id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleBulkStatusChange = async (nextActive: boolean) => {
+    if (selectedIds.length === 0) return;
+    setBulkActionLoading(true);
+    // Optimistic UI update
+    setCoupons((prev) =>
+      prev.map((c) => (selectedIds.includes(c._id) ? { ...c, isActive: nextActive } : c)),
+    );
+    try {
+      await adminApi.bulkUpdateCouponsStatus(selectedIds, nextActive);
+      toast.success(
+        nextActive
+          ? isPersian
+            ? `${toPersianDigits(selectedIds.length)} کد تخفیف با موفقیت فعال گردید.`
+            : `${selectedIds.length} coupons activated.`
+          : isPersian
+          ? `${toPersianDigits(selectedIds.length)} کد تخفیف با موفقیت غیرفعال گردید.`
+          : `${selectedIds.length} coupons deactivated.`,
+      );
+      setSelectedIds([]);
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message ||
+          (isPersian ? 'خطا در تغییر وضعیت گروهی کدهای تخفیف.' : 'Failed to update coupons status.'),
+      );
+      loadCoupons();
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (!isAdmin) {
+      toast.error(isPersian ? 'حذف کدهای تخفیف منحصراً برای مدیر کل مجاز است.' : 'Restricted to admin.');
+      return;
+    }
+    if (selectedIds.length === 0) return;
+
+    setBulkConfirmConfig({
+      title: isPersian ? 'حذف گروهی کدهای تخفیف' : 'Bulk Delete Coupons',
+      description: isPersian ? (
+        <div>
+          <p>
+            آیا از حذف گروهی <strong className="text-brand-text font-black">{toPersianDigits(selectedIds.length)}</strong> کد تخفیف انتخاب شده اطمینان کامل دارید؟
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            این کدها از سیستم حذف خواهند شد و دیگر قابل استفاده توسط مشتریان نخواهند بود.
+          </p>
+        </div>
+      ) : (
+        <div>
+          <p>
+            Are you sure you want to delete <strong className="text-brand-text font-bold">{selectedIds.length}</strong> selected coupons?
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            These coupons will be permanently removed.
+          </p>
+        </div>
+      ),
+      confirmText: isPersian ? 'بله، حذف گروهی' : 'Yes, Delete All',
+      action: async () => {
+        setBulkActionLoading(true);
+        try {
+          await adminApi.bulkDeleteCoupons(selectedIds);
+          toast.success(
+            isPersian
+              ? `${toPersianDigits(selectedIds.length)} کد تخفیف با موفقیت حذف گردید.`
+              : `${selectedIds.length} coupons deleted successfully.`,
+          );
+          setSelectedIds([]);
+          loadCoupons();
+        } catch (err: any) {
+          toast.error(
+            err?.response?.data?.message ||
+              (isPersian ? 'خطا در حذف گروهی کدهای تخفیف.' : 'Failed to delete coupons.'),
+          );
+        } finally {
+          setBulkActionLoading(false);
+        }
+      },
+    });
+    setBulkConfirmOpen(true);
+  };
+
+  const executeBulkConfirmAction = async () => {
+    if (!bulkConfirmConfig) return;
+    setIsBulkConfirmLoading(true);
+    try {
+      await bulkConfirmConfig.action();
+      setBulkConfirmOpen(false);
+      setBulkConfirmConfig(null);
+    } finally {
+      setIsBulkConfirmLoading(false);
+    }
+  };
+
+  const isAllSelected = coupons.length > 0 && selectedIds.length === coupons.length;
+  const isIndeterminate = selectedIds.length > 0 && selectedIds.length < coupons.length;
 
   const openCreateModal = () => {
     setEditingCoupon(null);
@@ -233,6 +374,17 @@ export default function AdminCouponsPage() {
               }}
             >
               <TableHeader>
+                <TableColumn className="w-10 text-center">
+                  <div className="flex items-center justify-center">
+                    <SmoothCheckbox
+                      isSelected={isAllSelected}
+                      isIndeterminate={isIndeterminate}
+                      onValueChange={handleSelectAll}
+                      size="sm"
+                      ariaLabel={isPersian ? 'انتخاب همه' : 'Select all'}
+                    />
+                  </div>
+                </TableColumn>
                 <TableColumn>{isPersian ? 'کد اختصاصی' : 'Code'}</TableColumn>
                 <TableColumn>{isPersian ? 'میزان تخفیف' : 'Discount'}</TableColumn>
                 <TableColumn>{isPersian ? 'حداقل خرید' : 'Min Purchase'}</TableColumn>
@@ -242,73 +394,87 @@ export default function AdminCouponsPage() {
                 <TableColumn className="text-center">{isPersian ? 'عملیات' : 'Actions'}</TableColumn>
               </TableHeader>
               <TableBody>
-                {coupons.map((coupon) => (
-                  <TableRow key={coupon._id}>
-                    <TableCell className="font-mono font-black text-sm text-brand-bronze dark:text-brand-gold">
-                      {coupon.code}
-                    </TableCell>
+                {coupons.map((coupon) => {
+                  const isSelected = selectedIds.includes(coupon._id);
+                  return (
+                    <TableRow key={coupon._id} className={isSelected ? 'bg-brand-gold/10' : ''}>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center">
+                          <SmoothCheckbox
+                            isSelected={isSelected}
+                            onValueChange={() => handleSelectRow(coupon._id)}
+                            size="sm"
+                            ariaLabel={coupon.code}
+                          />
+                        </div>
+                      </TableCell>
 
-                    <TableCell className="font-bold text-brand-text">
-                      {coupon.discountPercent
-                        ? isPersian ? `${toPersianDigits(coupon.discountPercent)}٪ درصدی` : `${coupon.discountPercent}%`
-                        : formatToman(coupon.discountAmount, isPersian)}
-                    </TableCell>
+                      <TableCell className="font-mono font-black text-sm text-brand-bronze dark:text-brand-gold">
+                        {coupon.code}
+                      </TableCell>
 
-                    <TableCell className="text-brand-text-muted">
-                      {formatToman(coupon.minPurchase, isPersian)}
-                    </TableCell>
+                      <TableCell className="font-bold text-brand-text">
+                        {coupon.discountPercent
+                          ? isPersian ? `${toPersianDigits(coupon.discountPercent)}٪ درصدی` : `${coupon.discountPercent}%`
+                          : formatToman(coupon.discountAmount, isPersian)}
+                      </TableCell>
 
-                    <TableCell className="text-brand-text-muted">
-                      {coupon.maxDiscount ? formatToman(coupon.maxDiscount, isPersian) : (isPersian ? 'بدون سقف' : 'No Limit')}
-                    </TableCell>
+                      <TableCell className="text-brand-text-muted">
+                        {formatToman(coupon.minPurchase, isPersian)}
+                      </TableCell>
 
-                    <TableCell className="text-brand-text-muted">
-                      {isPersian
-                        ? `${toPersianDigits(coupon.usedCount || 0)} از ${toPersianDigits(coupon.usageLimit)}`
-                        : `${coupon.usedCount || 0} of ${coupon.usageLimit}`}
-                    </TableCell>
+                      <TableCell className="text-brand-text-muted">
+                        {coupon.maxDiscount ? formatToman(coupon.maxDiscount, isPersian) : (isPersian ? 'بدون سقف' : 'No Limit')}
+                      </TableCell>
 
-                    <TableCell>
-                      <SmoothSwitch
-                        size="sm"
-                        isSelected={coupon.isActive}
-                        onValueChange={(val) => handleToggleStatus(coupon, val)}
-                      >
-                        <span className={`text-[11px] font-bold ${coupon.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-brand-text-muted'}`}>
-                          {coupon.isActive ? (isPersian ? 'فعال' : 'Active') : (isPersian ? 'غیرفعال' : 'Inactive')}
-                        </span>
-                      </SmoothSwitch>
-                    </TableCell>
+                      <TableCell className="text-brand-text-muted">
+                        {isPersian
+                          ? `${toPersianDigits(coupon.usedCount || 0)} از ${toPersianDigits(coupon.usageLimit)}`
+                          : `${coupon.usedCount || 0} of ${coupon.usageLimit}`}
+                      </TableCell>
 
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          isIconOnly
+                      <TableCell>
+                        <SmoothSwitch
                           size="sm"
-                          radius="full"
-                          variant="light"
-                          onPress={() => openEditModal(coupon)}
-                          className="text-brand-text hover:bg-brand-surface-elevated cursor-pointer"
-                          aria-label={isPersian ? 'ویرایش' : 'Edit'}
+                          isSelected={coupon.isActive}
+                          onValueChange={(val) => handleToggleStatus(coupon, val)}
                         >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </Button>
+                          <span className={`text-[11px] font-bold ${coupon.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-brand-text-muted'}`}>
+                            {coupon.isActive ? (isPersian ? 'فعال' : 'Active') : (isPersian ? 'غیرفعال' : 'Inactive')}
+                          </span>
+                        </SmoothSwitch>
+                      </TableCell>
 
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          radius="full"
-                          variant="light"
-                          onPress={() => handleDeleteClick(coupon._id, coupon.code)}
-                          className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
-                          aria-label={isPersian ? 'حذف' : 'Delete'}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            radius="full"
+                            variant="light"
+                            onPress={() => openEditModal(coupon)}
+                            className="text-brand-text hover:bg-brand-surface-elevated cursor-pointer"
+                            aria-label={isPersian ? 'ویرایش' : 'Edit'}
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </Button>
+
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            radius="full"
+                            variant="light"
+                            onPress={() => handleDeleteClick(coupon._id, coupon.code)}
+                            className="text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer"
+                            aria-label={isPersian ? 'حذف' : 'Delete'}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
@@ -480,6 +646,138 @@ export default function AdminCouponsPage() {
         icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
         isLoading={isDeleting}
         onConfirm={handleConfirmDelete}
+      />
+
+      {/* Zero-Layout-Shift Fixed Floating Bulk Action Island */}
+      <AnimatePresence>
+        {selectedIds.length > 0 && (
+          <div className="fixed bottom-4 sm:bottom-7 inset-x-0 z-50 flex justify-center pointer-events-none px-3 sm:px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 36, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 28, scale: 0.94 }}
+              transition={{
+                duration: 0.35,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="pointer-events-auto bg-[#141a14]/98 dark:bg-[#121812]/98 backdrop-blur-2xl border border-brand-gold/40 shadow-2xl shadow-black/70 rounded-2xl sm:rounded-full p-2.5 sm:p-2 sm:ps-3.5 sm:pe-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 text-[#f7f4ee] w-[calc(100vw-1.5rem)] max-w-md sm:w-auto sm:max-w-none"
+            >
+              {/* Mobile Top Header: Count + Close Button */}
+              <div className="flex sm:hidden items-center justify-between px-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-brand-gold shrink-0 animate-pulse" />
+                  <span className="text-xs font-black text-brand-gold">
+                    {isPersian
+                      ? `${toPersianDigits(selectedIds.length)} کد تخفیف انتخاب شده`
+                      : `${selectedIds.length} coupons selected`}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds([])}
+                  className="text-neutral-400 hover:text-[#f7f4ee] active:scale-95 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer py-0.5 px-2 rounded-lg hover:bg-white/10"
+                  aria-label={isPersian ? 'لغو انتخاب' : 'Cancel selection'}
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>{isPersian ? 'انصراف' : 'Cancel'}</span>
+                </button>
+              </div>
+
+              {/* Desktop Count Badge */}
+              <div className="hidden sm:flex items-center gap-2 shrink-0">
+                <span className="px-3 py-1 rounded-full bg-brand-gold text-[#141914] font-black text-xs shadow-xs flex items-center gap-1.5 shrink-0">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>
+                    {isPersian
+                      ? `${toPersianDigits(selectedIds.length)} کد تخفیف انتخاب شده`
+                      : `${selectedIds.length} selected`}
+                  </span>
+                </span>
+                <span className="w-px h-5 bg-white/15 shrink-0" />
+              </div>
+
+              {/* Action Buttons: Responsive Grid on Mobile, Flex on Desktop */}
+              <div
+                className={`grid ${
+                  isAdmin ? 'grid-cols-3' : 'grid-cols-2'
+                } sm:flex sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto`}
+              >
+                <Button
+                  size="sm"
+                  radius="full"
+                  variant="flat"
+                  isLoading={bulkActionLoading}
+                  onPress={() => handleBulkStatusChange(true)}
+                  className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  {!bulkActionLoading && <Eye className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                  <span className="truncate">
+                    <span className="sm:hidden">{isPersian ? 'فعال‌سازی' : 'Activate'}</span>
+                    <span className="hidden sm:inline">{isPersian ? 'فعال‌سازی' : 'Activate'}</span>
+                  </span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  radius="full"
+                  variant="flat"
+                  isLoading={bulkActionLoading}
+                  onPress={() => handleBulkStatusChange(false)}
+                  className="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  {!bulkActionLoading && <EyeOff className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                  <span className="truncate">
+                    <span className="sm:hidden">{isPersian ? 'غیرفعال' : 'Deactivate'}</span>
+                    <span className="hidden sm:inline">{isPersian ? 'غیرفعال‌سازی' : 'Deactivate'}</span>
+                  </span>
+                </Button>
+
+                {isAdmin && (
+                  <Button
+                    size="sm"
+                    radius="full"
+                    variant="flat"
+                    isLoading={bulkActionLoading}
+                    onPress={handleBulkDelete}
+                    className="bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                  >
+                    {!bulkActionLoading && <Trash2 className="w-3.5 h-3.5 text-rose-400 shrink-0" />}
+                    <span className="truncate">
+                      <span className="sm:hidden">{isPersian ? 'حذف' : 'Delete'}</span>
+                      <span className="hidden sm:inline">{isPersian ? 'حذف همگانی' : 'Bulk Delete'}</span>
+                    </span>
+                  </Button>
+                )}
+
+                {/* Desktop Deselect Button */}
+                <Button
+                  size="sm"
+                  radius="full"
+                  variant="light"
+                  onPress={() => setSelectedIds([])}
+                  className="hidden sm:flex text-neutral-400 hover:text-[#f7f4ee] hover:bg-white/10 font-bold text-xs cursor-pointer rounded-full h-8 px-2.5 transition-all items-center gap-1 shrink-0"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>{isPersian ? 'انصراف' : 'Deselect'}</span>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Admin Confirm Modal for Bulk Action */}
+      <AdminConfirmModal
+        isOpen={bulkConfirmOpen}
+        onOpenChange={setBulkConfirmOpen}
+        title={bulkConfirmConfig?.title || ''}
+        description={bulkConfirmConfig?.description || null}
+        confirmText={bulkConfirmConfig?.confirmText || (isPersian ? 'بله، حذف' : 'Yes, Delete')}
+        cancelText={isPersian ? 'انصراف' : 'Cancel'}
+        confirmColor="danger"
+        icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
+        isLoading={isBulkConfirmLoading}
+        onConfirm={executeBulkConfirmAction}
       />
     </div>
   );

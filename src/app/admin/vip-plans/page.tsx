@@ -16,17 +16,22 @@ import {
   ModalFooter,
   Skeleton,
 } from '@heroui/react';
-import { Crown, Plus, Edit2, Trash2, X, Check } from 'lucide-react';
+import { Crown, Plus, Edit2, Trash2, X, Check, Eye, EyeOff } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { IVipPlan } from '@/common/interfaces';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { AdminPriceInput } from '@/components/admin/AdminPriceInput';
+import { useAppSelector } from '@/stores/hooks';
 
 export default function AdminVipPlansPage() {
   const { isPersian, isRTL } = useTranslation();
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isAdmin = currentUser?.role === 'admin';
+
   const [plans, setPlans] = useState<IVipPlan[]>([]);
 
   const vipInputClassNames = {
@@ -46,6 +51,20 @@ export default function AdminVipPlansPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<IVipPlan | null>(null);
+
+  // Multi-selection & Bulk action state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
+  // Bulk Confirm Modal state
+  const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
+  const [bulkConfirmConfig, setBulkConfirmConfig] = useState<{
+    title: string;
+    description: React.ReactNode;
+    confirmText: string;
+    action: () => Promise<void>;
+  } | null>(null);
+  const [isBulkConfirmLoading, setIsBulkConfirmLoading] = useState(false);
 
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -81,6 +100,118 @@ export default function AdminVipPlansPage() {
   useEffect(() => {
     loadPlans();
   }, []);
+
+  // Selection handlers
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(plans.map((p) => p._id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleBulkStatusChange = async (nextActive: boolean) => {
+    if (selectedIds.length === 0) return;
+    setBulkActionLoading(true);
+    setPlans((prev) =>
+      prev.map((p) => (selectedIds.includes(p._id) ? { ...p, isActive: nextActive } : p)),
+    );
+    try {
+      await adminApi.bulkUpdateVipPlansStatus(selectedIds, nextActive);
+      toast.success(
+        nextActive
+          ? isPersian
+            ? `${toPersianDigits(selectedIds.length)} پلن VIP با موفقیت فعال گردید.`
+            : `${selectedIds.length} VIP plans activated.`
+          : isPersian
+          ? `${toPersianDigits(selectedIds.length)} پلن VIP با موفقیت غیرفعال گردید.`
+          : `${selectedIds.length} VIP plans deactivated.`,
+      );
+      setSelectedIds([]);
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message ||
+          (isPersian ? 'خطا در تغییر وضعیت گروهی پلن‌های VIP.' : 'Failed to update VIP plans status.'),
+      );
+      loadPlans();
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (!isAdmin) {
+      toast.error(isPersian ? 'حذف پلن‌ها منحصراً برای مدیر کل مجاز است.' : 'Restricted to admin.');
+      return;
+    }
+    if (selectedIds.length === 0) return;
+
+    setBulkConfirmConfig({
+      title: isPersian ? 'حذف گروهی پلن‌های VIP' : 'Bulk Delete VIP Plans',
+      description: isPersian ? (
+        <div>
+          <p>
+            آیا از حذف گروهی <strong className="text-brand-text font-black">{toPersianDigits(selectedIds.length)}</strong> پلن VIP انتخاب شده اطمینان کامل دارید؟
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            کاربران با اشتراک فعال تا پایان مهلت اعتبار خود دسترسی خواهند داشت اما خرید این پلن‌ها دیگر ممکن نخواهد بود.
+          </p>
+        </div>
+      ) : (
+        <div>
+          <p>
+            Are you sure you want to delete <strong className="text-brand-text font-bold">{selectedIds.length}</strong> selected VIP plans?
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            Users with active subscriptions will retain access until expiration, but new purchases will be disabled.
+          </p>
+        </div>
+      ),
+      confirmText: isPersian ? 'بله، حذف گروهی' : 'Yes, Delete All',
+      action: async () => {
+        setBulkActionLoading(true);
+        try {
+          await adminApi.bulkDeleteVipPlans(selectedIds);
+          toast.success(
+            isPersian
+              ? `${toPersianDigits(selectedIds.length)} پلن VIP با موفقیت حذف گردید.`
+              : `${selectedIds.length} VIP plans deleted successfully.`,
+          );
+          setSelectedIds([]);
+          loadPlans();
+        } catch (err: any) {
+          toast.error(
+            err?.response?.data?.message ||
+              (isPersian ? 'خطا در حذف گروهی پلن‌های VIP.' : 'Failed to delete VIP plans.'),
+          );
+        } finally {
+          setBulkActionLoading(false);
+        }
+      },
+    });
+    setBulkConfirmOpen(true);
+  };
+
+  const executeBulkConfirmAction = async () => {
+    if (!bulkConfirmConfig) return;
+    setIsBulkConfirmLoading(true);
+    try {
+      await bulkConfirmConfig.action();
+      setBulkConfirmOpen(false);
+      setBulkConfirmConfig(null);
+    } finally {
+      setIsBulkConfirmLoading(false);
+    }
+  };
+
+  const isAllSelected = plans.length > 0 && selectedIds.length === plans.length;
+  const isIndeterminate = selectedIds.length > 0 && selectedIds.length < plans.length;
 
   const openCreateModal = () => {
     setEditingPlan(null);
@@ -241,6 +372,29 @@ export default function AdminVipPlansPage() {
         </Button>
       </motion.div>
 
+      {/* Selection Toolbar / Counter */}
+      {plans.length > 0 && !loading && (
+        <div className="flex items-center justify-between px-4 py-2 bg-brand-surface/60 rounded-2xl border border-brand-border/60">
+          <div className="flex items-center gap-2.5">
+            <SmoothCheckbox
+              isSelected={isAllSelected}
+              isIndeterminate={isIndeterminate}
+              onValueChange={handleSelectAll}
+              size="sm"
+              ariaLabel={isPersian ? 'انتخاب همه پلن‌ها' : 'Select all plans'}
+            />
+            <span className="text-xs font-bold text-brand-text">
+              {isPersian ? 'انتخاب همه پلن‌های VIP' : 'Select All VIP Plans'}
+            </span>
+          </div>
+          <span className="text-xs font-semibold text-brand-text-muted">
+            {isPersian
+              ? `${toPersianDigits(plans.length)} پلن تعریف شده`
+              : `${plans.length} total plans`}
+          </span>
+        </div>
+      )}
+
       {/* Plans Grid */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -268,33 +422,47 @@ export default function AdminVipPlansPage() {
           }}
         >
           <AnimatePresence>
-            {plans.map((plan) => (
-              <motion.div
-                key={plan._id}
-                variants={{
-                  hidden: { opacity: 0, y: 20, scale: 0.97 },
-                  visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring' as const, stiffness: 360, damping: 28 } },
-                }}
-                layout
-                className="overflow-visible"
-              >
-              <Card
-                className={`relative bg-brand-surface rounded-3xl p-6 border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-colors group h-full overflow-visible ${
-                  plan.isPopular ? 'border-brand-gold/80 ring-1 ring-brand-gold/40' : 'border-brand-border'
-                }`}
-              >
-                {plan.isPopular && (
-                  <div className="absolute -top-3 right-6 px-3 py-0.5 rounded-full bg-brand-gold text-[#141914] text-[10px] font-black uppercase tracking-wider shadow-sm whitespace-nowrap">
-                    {isPersian ? 'محبوب‌ترین انتخاب' : 'Most Popular'}
-                  </div>
-                )}
+            {plans.map((plan) => {
+              const isSelected = selectedIds.includes(plan._id);
+              return (
+                <motion.div
+                  key={plan._id}
+                  variants={{
+                    hidden: { opacity: 0, y: 20, scale: 0.97 },
+                    visible: { opacity: 1, y: 0, scale: 1, transition: { type: 'spring' as const, stiffness: 360, damping: 28 } },
+                  }}
+                  layout
+                  className="overflow-visible"
+                >
+                <Card
+                  className={`relative bg-brand-surface rounded-3xl p-6 border shadow-xs flex flex-col justify-between space-y-4 hover:border-brand-gold transition-all group h-full overflow-visible ${
+                    isSelected
+                      ? 'border-brand-gold ring-2 ring-brand-gold/30 bg-brand-gold/5'
+                      : plan.isPopular
+                      ? 'border-brand-gold/80 ring-1 ring-brand-gold/40'
+                      : 'border-brand-border'
+                  }`}
+                >
+                  {plan.isPopular && (
+                    <div className="absolute -top-3 right-6 px-3 py-0.5 rounded-full bg-brand-gold text-[#141914] text-[10px] font-black uppercase tracking-wider shadow-sm whitespace-nowrap">
+                      {isPersian ? 'محبوب‌ترین انتخاب' : 'Most Popular'}
+                    </div>
+                  )}
 
-                <CardBody className="p-0 flex flex-col justify-between h-full space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="w-10 h-10 rounded-2xl bg-brand-gold/20 flex items-center justify-center border border-brand-gold/30 text-brand-bronze dark:text-brand-gold shadow-xs">
-                        <Crown className="w-5 h-5 fill-current" />
-                      </div>
+                  <CardBody className="p-0 flex flex-col justify-between h-full space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <SmoothCheckbox
+                            isSelected={isSelected}
+                            onValueChange={() => handleSelectRow(plan._id)}
+                            size="sm"
+                            ariaLabel={plan.title}
+                          />
+                          <div className="w-10 h-10 rounded-2xl bg-brand-gold/20 flex items-center justify-center border border-brand-gold/30 text-brand-bronze dark:text-brand-gold shadow-xs">
+                            <Crown className="w-5 h-5 fill-current" />
+                          </div>
+                        </div>
                       <span className="px-2.5 py-1 rounded-xl text-xs font-black bg-brand-surface-elevated text-brand-text border border-brand-border">
                         {isPersian ? `${toPersianDigits(plan.durationDays)} روزه` : `${plan.durationDays} Days`}
                       </span>
@@ -380,7 +548,8 @@ export default function AdminVipPlansPage() {
                 </CardBody>
               </Card>
               </motion.div>
-            ))}
+            );
+          })}
           </AnimatePresence>
         </motion.div>
       )}
@@ -608,6 +777,138 @@ export default function AdminVipPlansPage() {
         icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
         isLoading={isDeleting}
         onConfirm={handleConfirmDelete}
+      />
+
+      {/* Zero-Layout-Shift Fixed Floating Bulk Action Island */}
+      <AnimatePresence>
+        {selectedIds.length > 0 && (
+          <div className="fixed bottom-4 sm:bottom-7 inset-x-0 z-50 flex justify-center pointer-events-none px-3 sm:px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 36, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 28, scale: 0.94 }}
+              transition={{
+                duration: 0.35,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="pointer-events-auto bg-[#141a14]/98 dark:bg-[#121812]/98 backdrop-blur-2xl border border-brand-gold/40 shadow-2xl shadow-black/70 rounded-2xl sm:rounded-full p-2.5 sm:p-2 sm:ps-3.5 sm:pe-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 text-[#f7f4ee] w-[calc(100vw-1.5rem)] max-w-md sm:w-auto sm:max-w-none"
+            >
+              {/* Mobile Top Header: Count + Close Button */}
+              <div className="flex sm:hidden items-center justify-between px-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-brand-gold shrink-0 animate-pulse" />
+                  <span className="text-xs font-black text-brand-gold">
+                    {isPersian
+                      ? `${toPersianDigits(selectedIds.length)} پلن VIP انتخاب شده`
+                      : `${selectedIds.length} VIP plans selected`}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds([])}
+                  className="text-neutral-400 hover:text-[#f7f4ee] active:scale-95 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer py-0.5 px-2 rounded-lg hover:bg-white/10"
+                  aria-label={isPersian ? 'لغو انتخاب' : 'Cancel selection'}
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>{isPersian ? 'انصراف' : 'Cancel'}</span>
+                </button>
+              </div>
+
+              {/* Desktop Count Badge */}
+              <div className="hidden sm:flex items-center gap-2 shrink-0">
+                <span className="px-3 py-1 rounded-full bg-brand-gold text-[#141914] font-black text-xs shadow-xs flex items-center gap-1.5 shrink-0">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>
+                    {isPersian
+                      ? `${toPersianDigits(selectedIds.length)} پلن VIP انتخاب شده`
+                      : `${selectedIds.length} selected`}
+                  </span>
+                </span>
+                <span className="w-px h-5 bg-white/15 shrink-0" />
+              </div>
+
+              {/* Action Buttons: Responsive Grid on Mobile, Flex on Desktop */}
+              <div
+                className={`grid ${
+                  isAdmin ? 'grid-cols-3' : 'grid-cols-2'
+                } sm:flex sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto`}
+              >
+                <Button
+                  size="sm"
+                  radius="full"
+                  variant="flat"
+                  isLoading={bulkActionLoading}
+                  onPress={() => handleBulkStatusChange(true)}
+                  className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  {!bulkActionLoading && <Eye className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                  <span className="truncate">
+                    <span className="sm:hidden">{isPersian ? 'فعال‌سازی' : 'Activate'}</span>
+                    <span className="hidden sm:inline">{isPersian ? 'فعال‌سازی' : 'Activate'}</span>
+                  </span>
+                </Button>
+
+                <Button
+                  size="sm"
+                  radius="full"
+                  variant="flat"
+                  isLoading={bulkActionLoading}
+                  onPress={() => handleBulkStatusChange(false)}
+                  className="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  {!bulkActionLoading && <EyeOff className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                  <span className="truncate">
+                    <span className="sm:hidden">{isPersian ? 'غیرفعال' : 'Deactivate'}</span>
+                    <span className="hidden sm:inline">{isPersian ? 'غیرفعال‌سازی' : 'Deactivate'}</span>
+                  </span>
+                </Button>
+
+                {isAdmin && (
+                  <Button
+                    size="sm"
+                    radius="full"
+                    variant="flat"
+                    isLoading={bulkActionLoading}
+                    onPress={handleBulkDelete}
+                    className="bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                  >
+                    {!bulkActionLoading && <Trash2 className="w-3.5 h-3.5 text-rose-400 shrink-0" />}
+                    <span className="truncate">
+                      <span className="sm:hidden">{isPersian ? 'حذف' : 'Delete'}</span>
+                      <span className="hidden sm:inline">{isPersian ? 'حذف همگانی' : 'Bulk Delete'}</span>
+                    </span>
+                  </Button>
+                )}
+
+                {/* Desktop Deselect Button */}
+                <Button
+                  size="sm"
+                  radius="full"
+                  variant="light"
+                  onPress={() => setSelectedIds([])}
+                  className="hidden sm:flex text-neutral-400 hover:text-[#f7f4ee] hover:bg-white/10 font-bold text-xs cursor-pointer rounded-full h-8 px-2.5 transition-all items-center gap-1 shrink-0"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>{isPersian ? 'انصراف' : 'Deselect'}</span>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Admin Confirm Modal for Bulk Action */}
+      <AdminConfirmModal
+        isOpen={bulkConfirmOpen}
+        onOpenChange={setBulkConfirmOpen}
+        title={bulkConfirmConfig?.title || ''}
+        description={bulkConfirmConfig?.description || null}
+        confirmText={bulkConfirmConfig?.confirmText || (isPersian ? 'بله، حذف' : 'Yes, Delete')}
+        cancelText={isPersian ? 'انصراف' : 'Cancel'}
+        confirmColor="danger"
+        icon={<Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />}
+        isLoading={isBulkConfirmLoading}
+        onConfirm={executeBulkConfirmAction}
       />
     </div>
   );
