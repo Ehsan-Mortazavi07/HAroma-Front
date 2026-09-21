@@ -19,7 +19,6 @@ import {
   TableRow,
   TableCell,
   Skeleton,
-  Checkbox,
 } from '@heroui/react';
 import {
   Package,
@@ -38,6 +37,7 @@ import { PATHS } from '@/common/constants/PATHS';
 import { VipBadge } from '@/components/common/VipBadge';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { useAppSelector } from '@/stores/hooks';
 import { toast, toPersianDigits, formatToman } from '@/common/utils';
@@ -332,6 +332,7 @@ export default function AdminProductsPage() {
   };
 
   const isAllSelected = products.length > 0 && selectedIds.length === products.length;
+  const isIndeterminate = selectedIds.length > 0 && selectedIds.length < products.length;
 
   return (
     <div className="space-y-6">
@@ -530,11 +531,12 @@ export default function AdminProductsPage() {
               <TableHeader>
                 <TableColumn className="w-10 text-center">
                   <div className="flex items-center justify-center">
-                    <Checkbox
+                    <SmoothCheckbox
                       isSelected={isAllSelected}
+                      isIndeterminate={isIndeterminate}
                       onValueChange={handleSelectAll}
                       size="sm"
-                      aria-label={isPersian ? 'انتخاب همه' : 'Select all'}
+                      ariaLabel={isPersian ? 'انتخاب همه' : 'Select all'}
                     />
                   </div>
                 </TableColumn>
@@ -573,11 +575,11 @@ export default function AdminProductsPage() {
                     >
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center">
-                          <Checkbox
+                          <SmoothCheckbox
                             isSelected={isSelected}
                             onValueChange={() => handleSelectRow(product._id)}
                             size="sm"
-                            aria-label={product.title}
+                            ariaLabel={product.title}
                           />
                         </div>
                       </TableCell>
