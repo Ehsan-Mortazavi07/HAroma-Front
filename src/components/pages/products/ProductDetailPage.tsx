@@ -32,6 +32,7 @@ import { addToCart, updateQuantity, removeFromCart } from '@/stores/cart/cartSli
 import { VipBadge } from '@/components/common/VipBadge';
 import { ProductCard } from '@/components/common/ProductCard';
 import { useTranslation } from '@/common/i18n';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ProductDetailPageProps {
   product: IProduct;
@@ -661,78 +662,110 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
             </div>
           )}
 
-          {/* Inline Action Buttons */}
+          {/* Inline Action Buttons (Zero Layout Shift with Fluid Motion) */}
           <div className="pt-2 sm:pt-4 border-t border-brand-border/60">
-            {cartQuantity > 0 ? (
-              <div className="w-full flex items-center justify-between gap-3 sm:gap-4 px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-2xl sm:rounded-full bg-brand-surface-elevated border border-brand-border/60 shadow-xs">
-                {/* Stepper Controller */}
-                <div className="flex items-center gap-1 sm:gap-1.5 bg-brand-surface border border-brand-border/60 rounded-full p-1 shadow-2xs">
-                  <Button
-                    isIconOnly
-                    size="sm"
-                    radius="full"
-                    variant="light"
-                    onPress={handleIncrement}
-                    isDisabled={activeStockCount !== undefined && cartQuantity >= activeStockCount}
-                    className="w-8 h-8 sm:w-9 sm:h-9 min-w-8 sm:min-w-9 rounded-full text-brand-bronze dark:text-brand-gold active:scale-90 transition-transform"
-                    aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
+            <div className="relative w-full h-12 sm:h-14">
+              <AnimatePresence mode="wait" initial={false}>
+                {cartQuantity > 0 ? (
+                  <motion.div
+                    key="stepper-active-bar"
+                    initial={{ opacity: 0, y: 5, scale: 0.985 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -5, scale: 0.985 }}
+                    transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                    className="w-full h-full flex items-center justify-between gap-3 px-3 sm:px-5 rounded-xl sm:rounded-full bg-brand-surface-elevated border border-brand-border/80 shadow-xs"
                   >
-                    <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
-                  </Button>
+                    {/* Stepper Controller */}
+                    <div className="flex items-center gap-1 sm:gap-1.5 bg-brand-surface border border-brand-border/60 rounded-full p-0.5 sm:p-1 shadow-2xs">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        radius="full"
+                        variant="light"
+                        onPress={handleIncrement}
+                        isDisabled={activeStockCount !== undefined && cartQuantity >= activeStockCount}
+                        className="w-7 h-7 sm:w-8 sm:h-8 min-w-7 sm:min-w-8 rounded-full text-brand-bronze dark:text-brand-gold hover:bg-brand-gold/15 active:scale-90 transition-transform"
+                        aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
+                      >
+                        <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
+                      </Button>
 
-                  <span className="min-w-[28px] sm:min-w-[32px] text-center font-black text-sm sm:text-base text-brand-text select-none">
-                    {isPersian ? toPersianDigits(cartQuantity) : cartQuantity}
-                  </span>
+                      <motion.span
+                        key={cartQuantity}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.15 }}
+                        className="min-w-[28px] sm:min-w-[32px] text-center font-black text-sm sm:text-base text-brand-text select-none"
+                      >
+                        {isPersian ? toPersianDigits(cartQuantity) : cartQuantity}
+                      </motion.span>
 
-                  <Button
-                    isIconOnly
-                    size="sm"
-                    radius="full"
-                    variant="light"
-                    onPress={handleDecrement}
-                    className="w-8 h-8 sm:w-9 sm:h-9 min-w-8 sm:min-w-9 rounded-full text-brand-text-muted hover:text-brand-text active:scale-90 transition-transform"
-                    aria-label={
-                      cartQuantity === 1
-                        ? (isPersian ? 'حذف از سبد خرید' : 'Remove from cart')
-                        : (isPersian ? 'کاهش تعداد' : 'Decrease quantity')
-                    }
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        radius="full"
+                        variant="light"
+                        onPress={handleDecrement}
+                        className="w-7 h-7 sm:w-8 sm:h-8 min-w-7 sm:min-w-8 rounded-full text-brand-text-muted hover:text-rose-500 hover:bg-rose-500/10 active:scale-90 transition-transform"
+                        aria-label={
+                          cartQuantity === 1
+                            ? (isPersian ? 'حذف از سبد خرید' : 'Remove from cart')
+                            : (isPersian ? 'کاهش تعداد' : 'Decrease quantity')
+                        }
+                      >
+                        {cartQuantity === 1 ? (
+                          <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                        ) : (
+                          <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Center Reassurance Pill on Desktop */}
+                    <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-brand-bronze dark:text-brand-gold">
+                      <span className="flex h-2 w-2 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                      </span>
+                      <span>{isPersian ? 'در سبد خرید شما ثبت شد' : 'Added to your cart'}</span>
+                    </div>
+
+                    {/* View Cart & Checkout Button */}
+                    <Button
+                      as={Link}
+                      href={PATHS.CART}
+                      size="sm"
+                      radius="full"
+                      endContent={<ChevronLeft className="w-4 h-4 rtl:rotate-0 ltr:rotate-180" />}
+                      className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs px-3.5 sm:px-5 h-8 sm:h-9 shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer shrink-0"
+                    >
+                      {t.cart.viewCart || (isPersian ? 'مشاهده سبد خرید' : 'View Cart')}
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="add-to-cart-wrapper"
+                    initial={{ opacity: 0, y: 5, scale: 0.985 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -5, scale: 0.985 }}
+                    transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                    className="w-full h-full"
                   >
-                    {cartQuantity === 1 ? (
-                      <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                    ) : (
-                      <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
-                    )}
-                  </Button>
-                </div>
-
-                {/* Cart Status & View Cart Link */}
-                <div className="flex flex-col items-start leading-tight">
-                  <span className="text-[10px] sm:text-[11px] font-bold text-brand-bronze dark:text-brand-gold flex items-center gap-1">
-                    <Check className="w-3 h-3 stroke-[2.5]" />
-                    <span>{t.productDetail.inYourCart || (isPersian ? 'در سبد شما' : 'In your cart')}</span>
-                  </span>
-                  <Link
-                    href={PATHS.CART}
-                    className="text-xs font-black text-brand-text hover:text-brand-gold flex items-center gap-0.5 mt-0.5 sm:mt-1 transition-colors hover:underline"
-                  >
-                    <span>{t.cart.viewCart || (isPersian ? 'مشاهده سبد خرید' : 'View Cart')}</span>
-                    <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-0 ltr:rotate-180" />
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <Button
-                size="lg"
-                radius="full"
-                color="warning"
-                onPress={handleAddToCart}
-                isDisabled={!isAvailable}
-                startContent={<Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />}
-                className="w-full h-12 sm:h-14 font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 text-xs sm:text-sm cursor-pointer rounded-xl sm:rounded-full transition-all duration-300 hover:scale-[1.01] active:scale-[0.98]"
-              >
-                {t.productDetail.addToCart}
-              </Button>
-            )}
+                    <Button
+                      size="lg"
+                      radius="full"
+                      color="warning"
+                      onPress={handleAddToCart}
+                      isDisabled={!isAvailable}
+                      startContent={<Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />}
+                      className="w-full h-full font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-md hover:shadow-lg shadow-brand-gold/25 text-xs sm:text-sm cursor-pointer rounded-xl sm:rounded-full transition-all duration-300 hover:scale-[1.005] active:scale-[0.98]"
+                    >
+                      {t.productDetail.addToCart}
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Trust Highlights */}
@@ -803,60 +836,83 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
 
           {/* Quick Action / Stepper Button */}
           <div className="flex items-center shrink-0">
-            {cartQuantity > 0 ? (
-              <div className="flex items-center gap-1.5 bg-brand-surface-elevated border border-brand-border/80 rounded-full p-1 shadow-2xs">
-                <Button
-                  isIconOnly
-                  size="sm"
-                  radius="full"
-                  variant="light"
-                  onPress={handleIncrement}
-                  isDisabled={activeStockCount !== undefined && cartQuantity >= activeStockCount}
-                  className="w-7 h-7 min-w-7 rounded-full text-brand-bronze dark:text-brand-gold active:scale-90"
-                  aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
+            <AnimatePresence mode="wait" initial={false}>
+              {cartQuantity > 0 ? (
+                <motion.div
+                  key="mobile-stepper"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.18 }}
+                  className="flex items-center gap-1.5 bg-brand-surface-elevated border border-brand-border/80 rounded-full p-1 shadow-2xs"
                 >
-                  <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                </Button>
-                <span className="min-w-[20px] text-center font-black text-xs text-brand-text select-none">
-                  {isPersian ? toPersianDigits(cartQuantity) : cartQuantity}
-                </span>
-                <Button
-                  isIconOnly
-                  size="sm"
-                  radius="full"
-                  variant="light"
-                  onPress={handleDecrement}
-                  className="w-7 h-7 min-w-7 rounded-full text-brand-text-muted hover:text-brand-text active:scale-90"
-                  aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    radius="full"
+                    variant="light"
+                    onPress={handleIncrement}
+                    isDisabled={activeStockCount !== undefined && cartQuantity >= activeStockCount}
+                    className="w-7 h-7 min-w-7 rounded-full text-brand-bronze dark:text-brand-gold active:scale-90"
+                    aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
+                  >
+                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                  </Button>
+                  <motion.span
+                    key={cartQuantity}
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.12 }}
+                    className="min-w-[20px] text-center font-black text-xs text-brand-text select-none"
+                  >
+                    {isPersian ? toPersianDigits(cartQuantity) : cartQuantity}
+                  </motion.span>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    radius="full"
+                    variant="light"
+                    onPress={handleDecrement}
+                    className="w-7 h-7 min-w-7 rounded-full text-brand-text-muted hover:text-brand-text active:scale-90"
+                    aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
+                  >
+                    {cartQuantity === 1 ? (
+                      <Trash2 className="w-3 h-3 text-rose-500" />
+                    ) : (
+                      <Minus className="w-3 h-3 stroke-[2.5]" />
+                    )}
+                  </Button>
+                  <Button
+                    as={Link}
+                    href={PATHS.CART}
+                    size="sm"
+                    radius="full"
+                    className="bg-brand-gold text-[#141914] font-black text-[11px] px-2.5 h-7 min-w-0 shadow-2xs"
+                  >
+                    {t.cart.viewCart || (isPersian ? 'سبد' : 'Cart')}
+                  </Button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="mobile-add-btn"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.18 }}
                 >
-                  {cartQuantity === 1 ? (
-                    <Trash2 className="w-3 h-3 text-rose-500" />
-                  ) : (
-                    <Minus className="w-3 h-3 stroke-[2.5]" />
-                  )}
-                </Button>
-                <Button
-                  as={Link}
-                  href={PATHS.CART}
-                  size="sm"
-                  radius="full"
-                  className="bg-brand-gold text-[#141914] font-black text-[11px] px-2.5 h-7 min-w-0 shadow-2xs"
-                >
-                  {t.cart.viewCart || (isPersian ? 'سبد' : 'Cart')}
-                </Button>
-              </div>
-            ) : (
-              <Button
-                size="md"
-                radius="full"
-                onPress={handleAddToCart}
-                isDisabled={!isAvailable}
-                startContent={<ShoppingBag className="w-4 h-4" />}
-                className="h-10 px-4 font-black bg-brand-gold text-[#141914] shadow-md shadow-brand-gold/20 text-xs rounded-full cursor-pointer"
-              >
-                {t.productDetail.addToCart}
-              </Button>
-            )}
+                  <Button
+                    size="md"
+                    radius="full"
+                    onPress={handleAddToCart}
+                    isDisabled={!isAvailable}
+                    startContent={<ShoppingBag className="w-4 h-4" />}
+                    className="h-10 px-4 font-black bg-brand-gold text-[#141914] shadow-md shadow-brand-gold/20 text-xs rounded-full cursor-pointer active:scale-95 transition-transform"
+                  >
+                    {t.productDetail.addToCart}
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
