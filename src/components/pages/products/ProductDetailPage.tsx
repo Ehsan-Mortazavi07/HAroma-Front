@@ -731,16 +731,13 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                     </div>
 
                     {/* View Cart & Checkout Button */}
-                    <Button
-                      as={Link}
+                    <Link
                       href={PATHS.CART}
-                      size="sm"
-                      radius="full"
-                      endContent={<ChevronLeft className="w-4 h-4 rtl:rotate-0 ltr:rotate-180" />}
-                      className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs px-3.5 sm:px-5 h-8 sm:h-9 shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer shrink-0"
+                      className="inline-flex items-center justify-center gap-1.5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs px-3.5 sm:px-5 h-8 sm:h-9 rounded-full shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer shrink-0"
                     >
-                      {t.cart.viewCart || (isPersian ? 'مشاهده سبد خرید' : 'View Cart')}
-                    </Button>
+                      <span>{t.cart.viewCart || (isPersian ? 'مشاهده سبد خرید' : 'View Cart')}</span>
+                      <ChevronLeft className="w-4 h-4 rtl:rotate-0 ltr:rotate-180" />
+                    </Link>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -882,15 +879,12 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                       <Minus className="w-3 h-3 stroke-[2.5]" />
                     )}
                   </Button>
-                  <Button
-                    as={Link}
+                  <Link
                     href={PATHS.CART}
-                    size="sm"
-                    radius="full"
-                    className="bg-brand-gold text-[#141914] font-black text-[11px] px-2.5 h-7 min-w-0 shadow-2xs"
+                    className="inline-flex items-center justify-center bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-[11px] px-3 h-7 min-w-0 rounded-full shadow-2xs active:scale-95 transition-transform"
                   >
                     {t.cart.viewCart || (isPersian ? 'سبد' : 'Cart')}
-                  </Button>
+                  </Link>
                 </motion.div>
               ) : (
                 <motion.div

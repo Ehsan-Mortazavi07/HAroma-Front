@@ -10,7 +10,12 @@ const loadCartFromStorage = (): ICartItem[] => {
   if (typeof window === 'undefined') return [];
   try {
     const data = localStorage.getItem(CART_KEY);
-    return data ? JSON.parse(data) : [];
+    if (!data) return [];
+    const parsed = JSON.parse(data);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (item) => item && item.product && typeof item.product === 'object' && (item.product._id || item.product.title),
+    );
   } catch {
     return [];
   }
