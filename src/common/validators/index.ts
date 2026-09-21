@@ -3,7 +3,7 @@ import * as Yup from 'yup';
 export const getSignInSchema = (isPersian = true) =>
   Yup.object().shape({
     identifier: Yup.string().required(
-      isPersian ? 'نام کاربری یا ایمیل الزامی است.' : 'Username or email is required.',
+      isPersian ? 'نام کاربری، شماره موبایل یا ایمیل الزامی است.' : 'Username, phone or email is required.',
     ),
     password: Yup.string()
       .min(6, isPersian ? 'رمز عبور باید حداقل ۶ کاراکتر باشد.' : 'Password must be at least 6 characters.')
@@ -20,7 +20,7 @@ export const getSignUpSchema = (isPersian = true) =>
     ),
     email: Yup.string()
       .email(isPersian ? 'فرمت ایمیل نامعتبر است.' : 'Invalid email address format.')
-      .required(isPersian ? 'ایمیل الزامی است.' : 'Email is required.'),
+      .optional(),
     password: Yup.string()
       .min(6, isPersian ? 'رمز عبور باید حداقل ۶ کاراکتر باشد.' : 'Password must be at least 6 characters.')
       .required(isPersian ? 'رمز عبور الزامی است.' : 'Password is required.'),

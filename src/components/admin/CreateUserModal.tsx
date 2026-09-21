@@ -209,17 +209,13 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
       return;
     }
 
-    if (!formData.email.trim()) {
-      toast.error(isPersian ? 'آدرس ایمیل الزامی است.' : 'Email address is required.');
-      setSelectedTab('identity');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email.trim())) {
-      toast.error(isPersian ? 'فرمت ایمیل نامعتبر است.' : 'Invalid email format.');
-      setSelectedTab('identity');
-      return;
+    if (formData.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        toast.error(isPersian ? 'فرمت ایمیل نامعتبر است.' : 'Invalid email format.');
+        setSelectedTab('identity');
+        return;
+      }
     }
 
     if (!formData.password) {
@@ -239,36 +235,42 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     }
 
     const cleanPhone = formData.phone ? toEnglishDigits(formData.phone).trim() : '';
-    if (cleanPhone && !/^09\d{9}$/.test(cleanPhone)) {
-      toast.error(
-        isPersian
-          ? 'شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود.'
-          : 'Phone number must be an 11-digit Iranian mobile number (09...).',
-      );
-      setSelectedTab('identity');
-      return;
+    if (cleanPhone) {
+      const iranMobileRegex = /^09\d{9}$/;
+      if (!iranMobileRegex.test(cleanPhone)) {
+        toast.error(
+          isPersian
+            ? 'شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود.'
+            : 'Mobile phone must be 11 digits starting with 09.',
+        );
+        setSelectedTab('identity');
+        return;
+      }
     }
 
     const cleanPostal = formData.postalCode ? toEnglishDigits(formData.postalCode).trim() : '';
-    if (cleanPostal && !/^\d{10}$/.test(cleanPostal)) {
+    if (cleanPostal && cleanPostal.length !== 10) {
       toast.error(
         isPersian
-          ? 'کد پستی باید دقیقاً ۱۰ رقم عددی باشد.'
+          ? 'کد پستی باید دقیقاً ۱۰ رقم باشد.'
           : 'Postal code must be exactly 10 digits.',
       );
       setSelectedTab('address');
       return;
     }
 
-    const cleanRecPhone = formData.recipientPhone ? toEnglishDigits(formData.recipientPhone).trim() : '';
-    if (cleanRecPhone && !/^09\d{9}$/.test(cleanRecPhone)) {
-      toast.error(
-        isPersian
-          ? 'شماره تماس تحویل‌گیرنده باید ۱۱ رقم بوده و با ۰۹ شروع شود.'
-          : 'Recipient phone must be an 11-digit mobile number.',
-      );
-      setSelectedTab('address');
-      return;
+    const cleanRecipientPhone = formData.recipientPhone ? toEnglishDigits(formData.recipientPhone).trim() : '';
+    if (cleanRecipientPhone) {
+      const iranMobileRegex = /^09\d{9}$/;
+      if (!iranMobileRegex.test(cleanRecipientPhone)) {
+        toast.error(
+          isPersian
+            ? 'شماره تماس تحویل‌گیرنده باید ۱۱ رقم بوده و با ۰۹ شروع شود.'
+            : 'Recipient phone must be 11 digits starting with 09.',
+        );
+        setSelectedTab('address');
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -276,11 +278,14 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
       const payload: any = {
         fullName: formData.fullName.trim(),
         username: formData.username.trim().toLowerCase(),
-        email: formData.email.trim().toLowerCase(),
         password: formData.password,
         role: formData.role,
         isVip: formData.isVip,
       };
+
+      if (formData.email.trim()) {
+        payload.email = formData.email.trim().toLowerCase();
+      }
 
       if (cleanPhone) payload.phone = cleanPhone;
       if (formData.isVip && formData.vipExpiresAt) payload.vipExpiresAt = formData.vipExpiresAt;
@@ -294,7 +299,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
       if (formData.buildingNumber.trim()) payload.buildingNumber = formData.buildingNumber.trim();
       if (formData.unit.trim()) payload.unit = formData.unit.trim();
       if (formData.recipientName.trim()) payload.recipientName = formData.recipientName.trim();
-      if (cleanRecPhone) payload.recipientPhone = cleanRecPhone;
+      if (cleanRecipientPhone) payload.recipientPhone = cleanRecipientPhone;
       if (formData.recipientEmail?.trim()) payload.recipientEmail = formData.recipientEmail.trim().toLowerCase();
       if (formData.addressNotes.trim()) payload.addressNotes = formData.addressNotes.trim();
 
@@ -465,8 +470,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     <Input
                       label={
                         <span className="flex items-center gap-1">
-                          <span>{isPersian ? 'آدرس ایمیل' : 'Email Address'}</span>
-                          <span className="text-rose-500 font-bold">*</span>
+                          <span>{isPersian ? 'آدرس ایمیل (اختیاری)' : 'Email Address (Optional)'}</span>
                         </span>
                       }
                       labelPlacement="outside-top"
@@ -477,7 +481,6 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                       startContent={<Mail className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                       variant="bordered"
                       radius="lg"
-                      isRequired
                       classNames={{
                         label: inputLabelClass,
                         inputWrapper: inputWrapperClass,

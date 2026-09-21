@@ -104,7 +104,7 @@ export function SignInPage() {
                     name="identifier"
                     type="text"
                     aria-label={t.auth.identifier}
-                    placeholder={isPersian ? 'admin یا ایمیل' : 'admin or admin@hatefaroma.com'}
+                    placeholder={isPersian ? 'نام کاربری، شماره موبایل یا ایمیل' : 'Username, phone or email'}
                     value={values.identifier}
                     onChange={handleChange}
                     onBlur={handleBlur}

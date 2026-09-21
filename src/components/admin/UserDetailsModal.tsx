@@ -342,9 +342,12 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       return;
     }
 
-    if (!formData.email.trim()) {
-      toast.error(isPersian ? 'آدرس ایمیل الزامی است.' : 'Email is required.');
-      return;
+    if (formData.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        toast.error(isPersian ? 'فرمت ایمیل نامعتبر است.' : 'Invalid email format.');
+        return;
+      }
     }
 
     const cleanPhone = formData.phone ? toEnglishDigits(formData.phone).trim() : '';
@@ -391,7 +394,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       const payload: any = {
         fullName: formData.fullName.trim(),
         username: formData.username.trim().toLowerCase(),
-        email: formData.email.trim().toLowerCase(),
+        email: formData.email.trim() ? formData.email.trim().toLowerCase() : '',
         phone: cleanPhone,
         role: formData.role,
         isVip: formData.isVip,
@@ -758,9 +761,8 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           />
 
                           <Input
-                            label={isPersian ? 'آدرس ایمیل' : 'Email Address'}
+                            label={isPersian ? 'آدرس ایمیل (اختیاری)' : 'Email Address (Optional)'}
                             labelPlacement="outside-top"
-                            isRequired
                             type="email"
                             value={formData.email}
                             onValueChange={(val) =>

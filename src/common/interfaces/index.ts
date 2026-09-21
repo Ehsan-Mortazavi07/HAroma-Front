@@ -4,7 +4,7 @@ export interface IUser {
   _id: string;
   fullName: string;
   username: string;
-  email: string;
+  email?: string;
   phone?: string;
   role: UserRole;
   isVip: boolean;

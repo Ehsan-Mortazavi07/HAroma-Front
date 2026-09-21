@@ -35,7 +35,7 @@ export function SignUpPage() {
       const res = await axiosInstance.post('/auth/register', {
         fullName: values.fullName,
         username: values.username,
-        email: values.email,
+        email: values.email?.trim() ? values.email.trim().toLowerCase() : undefined,
         password: values.password,
         confirmPassword: values.confirmPassword,
       });
@@ -145,7 +145,7 @@ export function SignUpPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-brand-text mb-1.5">
-                    {t.auth.email}
+                    {isPersian ? 'ایمیل (اختیاری)' : 'Email (Optional)'}
                   </label>
                   <Input
                     name="email"
