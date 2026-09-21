@@ -40,12 +40,12 @@ export function HomePage({
       <TrustFeaturesBar />
       {isSectionVisible('quick_categories') && <QuickCategories categories={categories} />}
       {isSectionVisible('featured_perfumes') && (
-        <YouMightNeedSection products={displayFeatured.slice(0, 8)} />
+        <YouMightNeedSection products={displayFeatured.slice(0, 20)} />
       )}
       {isSectionVisible('promo_cards') && <PromoCardsArches />}
       {isSectionVisible('weekly_bestsellers') && (
         <WeeklyBestSellers
-          products={bestSellers.length > 0 ? bestSellers : displayFeatured.slice(0, 8)}
+          products={bestSellers.length > 0 ? bestSellers : displayFeatured.slice(0, 12)}
         />
       )}
       {isSectionVisible('vip_club_banner') && <VipClubBanner />}

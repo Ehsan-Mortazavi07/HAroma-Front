@@ -12,8 +12,8 @@ export const revalidate = 60; // ISR 60s
 export default async function Page() {
   const [categories, featuredProducts, bestSellers, sections] = await Promise.all([
     getCategories(),
-    getFeaturedProducts(),
-    getBestSellerProducts(),
+    getFeaturedProducts(16),
+    getBestSellerProducts(16),
     getPageSections(),
   ]);
 

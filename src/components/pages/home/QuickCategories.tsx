@@ -17,6 +17,9 @@ import {
   Layers,
   ChevronLeft,
   ChevronRight,
+  Flame,
+  Compass,
+  Wind,
 } from 'lucide-react';
 import { ICategory } from '@/common/interfaces';
 import { useTranslation } from '@/common/i18n';
@@ -56,6 +59,16 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
         return <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-[#bfa27a]" />;
       case 'vip-niche':
         return <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-[#d4be9b]" />;
+      case 'decants-samples':
+        return <Flame className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" />;
+      case 'travel-sprays':
+        return <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-[#bfa27a]" />;
+      case 'oriental-oud':
+        return <Crown className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />;
+      case 'candles-diffusers':
+        return <Flame className="w-5 h-5 sm:w-6 sm:h-6 text-[#d4be9b]" />;
+      case 'hair-mist':
+        return <Wind className="w-5 h-5 sm:w-6 sm:h-6 text-[#a69c8e]" />;
       default:
         return <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#bfa27a]" />;
     }

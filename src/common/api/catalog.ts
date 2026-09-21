@@ -34,7 +34,7 @@ export const getProductBySlug = async (slug: string): Promise<IProduct | null> =
   }
 };
 
-export const getFeaturedProducts = async (limit = 8): Promise<IProduct[]> => {
+export const getFeaturedProducts = async (limit = 16): Promise<IProduct[]> => {
   try {
     const res = await axiosInstance.get('/products/featured', { params: { limit } });
     return res.data || [];
