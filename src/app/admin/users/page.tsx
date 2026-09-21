@@ -416,16 +416,7 @@ export default function AdminUsersPage() {
           </p>
         </div>
 
-        {isAdmin ? (
-          <Button
-            radius="full"
-            onPress={() => setCreateUserModalOpen(true)}
-            className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 flex items-center gap-2 cursor-pointer self-start sm:self-auto rounded-full transition-all active:scale-95 shrink-0"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>{isPersian ? 'افزودن کاربر جدید' : 'Add New User'}</span>
-          </Button>
-        ) : (
+        {!isAdmin && (
           <Chip
             variant="flat"
             classNames={{
@@ -484,74 +475,88 @@ export default function AdminUsersPage() {
             }}
           />
 
-          {/* HeroUI Minimal, Curved, Fluid Role Filter Dropdown */}
-          {(() => {
-            const currentFilter = ROLE_FILTER_OPTIONS.find((opt) => opt.key === (roleFilter || 'all')) || ROLE_FILTER_OPTIONS[0];
-            return (
-              <Dropdown
-                placement="bottom-end"
-                offset={8}
-                shouldBlockScroll={false}
-                onOpenChange={setIsRoleFilterOpen}
-                motionProps={softDropdownMotionProps}
-                classNames={{
-                  base: "p-0",
-                  content: "min-w-[200px] p-1.5 bg-brand-surface/98 dark:bg-[#161c16]/98 backdrop-blur-2xl border border-brand-border dark:border-[#2e3a2e] text-brand-text rounded-2xl shadow-xl z-50 will-change-transform",
-                }}
-              >
-                <DropdownTrigger>
-                  <Button
-                    radius="full"
-                    variant="bordered"
-                    className="h-11 px-4 bg-brand-surface-elevated/80 hover:bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/70 text-brand-text text-xs font-bold rounded-full transition-all duration-200 shadow-xs active:scale-98 flex items-center justify-between gap-3 min-w-[185px] cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <Filter className="w-3.5 h-3.5 text-brand-gold shrink-0" />
-                      <span className="truncate">{isPersian ? currentFilter.labelFa : currentFilter.labelEn}</span>
-                    </div>
-                    <ChevronDown
-                      className={`w-3.5 h-3.5 text-brand-text-muted transition-transform duration-300 ease-out shrink-0 ${
-                        isRoleFilterOpen ? 'rotate-180 text-brand-gold' : ''
-                      }`}
-                    />
-                  </Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                  aria-label={isPersian ? 'فیلتر نقش کاربری' : 'Role Filter'}
-                  onAction={(key) => {
-                    const selected = key as string;
-                    setRoleFilter(selected === 'all' || !selected ? '' : selected);
-                    setPage(1);
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto justify-end">
+            {/* HeroUI Minimal, Curved, Fluid Role Filter Dropdown */}
+            {(() => {
+              const currentFilter = ROLE_FILTER_OPTIONS.find((opt) => opt.key === (roleFilter || 'all')) || ROLE_FILTER_OPTIONS[0];
+              return (
+                <Dropdown
+                  placement="bottom-end"
+                  offset={8}
+                  shouldBlockScroll={false}
+                  onOpenChange={setIsRoleFilterOpen}
+                  motionProps={softDropdownMotionProps}
+                  classNames={{
+                    base: "p-0",
+                    content: "min-w-[200px] p-1.5 bg-brand-surface/98 dark:bg-[#161c16]/98 backdrop-blur-2xl border border-brand-border dark:border-[#2e3a2e] text-brand-text rounded-2xl shadow-xl z-50 will-change-transform",
                   }}
-                  className="p-1"
                 >
-                  {ROLE_FILTER_OPTIONS.map((opt) => {
-                    const isSelected = (roleFilter || 'all') === opt.key;
-                    const OptIcon = opt.icon;
-                    return (
-                      <DropdownItem
-                        key={opt.key}
-                        textValue={isPersian ? opt.labelFa : opt.labelEn}
-                        className={`rounded-xl py-2 px-3 text-xs font-medium transition-all duration-150 cursor-pointer flex items-center justify-between ${
-                          isSelected
-                            ? 'bg-brand-gold/15 text-brand-gold font-bold'
-                            : 'text-brand-text hover:bg-brand-surface-elevated'
+                  <DropdownTrigger>
+                    <Button
+                      radius="full"
+                      variant="bordered"
+                      className="h-11 px-4 bg-brand-surface-elevated/80 hover:bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/70 text-brand-text text-xs font-bold rounded-full transition-all duration-200 shadow-xs active:scale-98 flex items-center justify-between gap-3 min-w-[185px] cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <Filter className="w-3.5 h-3.5 text-brand-gold shrink-0" />
+                        <span className="truncate">{isPersian ? currentFilter.labelFa : currentFilter.labelEn}</span>
+                      </div>
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 text-brand-text-muted transition-transform duration-300 ease-out shrink-0 ${
+                          isRoleFilterOpen ? 'rotate-180 text-brand-gold' : ''
                         }`}
-                        startContent={<OptIcon className={`w-4 h-4 shrink-0 ${opt.iconColor}`} />}
-                        endContent={
-                          isSelected ? (
-                            <span className="w-1.5 h-1.5 rounded-full bg-brand-gold shrink-0 mr-auto" />
-                          ) : null
-                        }
-                      >
-                        <span className="truncate">{isPersian ? opt.labelFa : opt.labelEn}</span>
-                      </DropdownItem>
-                    );
-                  })}
-                </DropdownMenu>
-              </Dropdown>
-            );
-          })()}
+                      />
+                    </Button>
+                  </DropdownTrigger>
+                  <DropdownMenu
+                    aria-label={isPersian ? 'فیلتر نقش کاربری' : 'Role Filter'}
+                    onAction={(key) => {
+                      const selected = key as string;
+                      setRoleFilter(selected === 'all' || !selected ? '' : selected);
+                      setPage(1);
+                    }}
+                    className="p-1"
+                  >
+                    {ROLE_FILTER_OPTIONS.map((opt) => {
+                      const isSelected = (roleFilter || 'all') === opt.key;
+                      const OptIcon = opt.icon;
+                      return (
+                        <DropdownItem
+                          key={opt.key}
+                          textValue={isPersian ? opt.labelFa : opt.labelEn}
+                          className={`rounded-xl py-2 px-3 text-xs font-medium transition-all duration-150 cursor-pointer flex items-center justify-between ${
+                            isSelected
+                              ? 'bg-brand-gold/15 text-brand-gold font-bold'
+                              : 'text-brand-text hover:bg-brand-surface-elevated'
+                          }`}
+                          startContent={<OptIcon className={`w-4 h-4 shrink-0 ${opt.iconColor}`} />}
+                          endContent={
+                            isSelected ? (
+                              <span className="w-1.5 h-1.5 rounded-full bg-brand-gold shrink-0 mr-auto" />
+                            ) : null
+                          }
+                        >
+                          <span className="truncate">{isPersian ? opt.labelFa : opt.labelEn}</span>
+                        </DropdownItem>
+                      );
+                    })}
+                  </DropdownMenu>
+                </Dropdown>
+              );
+            })()}
+
+            {/* Add New User Button */}
+            {isAdmin && (
+              <Button
+                radius="full"
+                onPress={() => setCreateUserModalOpen(true)}
+                className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 flex items-center gap-2 cursor-pointer rounded-full transition-all active:scale-95 shrink-0"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>{isPersian ? 'افزودن کاربر جدید' : 'Add New User'}</span>
+              </Button>
+            )}
+          </div>
         </CardBody>
       </Card>
       </motion.div>
