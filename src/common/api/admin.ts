@@ -214,6 +214,10 @@ export const adminApi = {
     const res = await axiosInstance.post('/admin/orders/bulk/delete', { ids });
     return res.data;
   },
+  deleteOrder: async (id: string) => {
+    const res = await axiosInstance.delete(`/admin/orders/${id}`);
+    return res.data;
+  },
 
   // Coupons CRUD
   getCoupons: async (params?: Record<string, any>) => {

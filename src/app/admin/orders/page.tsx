@@ -273,6 +273,57 @@ export default function AdminOrdersPage() {
     setConfirmModalOpen(true);
   };
 
+  // Single order delete (Admin only)
+  const handleDeleteOrder = (id: string, orderNumber: string) => {
+    if (!isAdmin) {
+      toast.error(
+        isPersian ? 'حذف سفارش منحصراً برای مدیر کل مجاز است.' : 'Restricted to admin.',
+      );
+      return;
+    }
+
+    setConfirmConfig({
+      title: isPersian ? 'حذف سفارش' : 'Delete Order',
+      description: isPersian ? (
+        <div>
+          <p>
+            آیا از حذف سفارش <strong className="text-brand-text font-black">{orderNumber}</strong> اطمینان دارید؟
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            این عملیات غیرقابل بازگشت است و سفارش به طور کامل از دیتابیس پاک خواهد شد.
+          </p>
+        </div>
+      ) : (
+        <div>
+          <p>
+            Are you sure you want to delete order <strong className="text-brand-text font-bold">{orderNumber}</strong>?
+          </p>
+          <p className="mt-2 text-xs text-rose-500 font-medium">
+            This action is permanent and will remove the order from the database.
+          </p>
+        </div>
+      ),
+      confirmText: isPersian ? 'بله، حذف سفارش' : 'Yes, Delete Order',
+      action: async () => {
+        try {
+          await adminApi.deleteOrder(id);
+          toast.success(isPersian ? 'سفارش با موفقیت حذف گردید.' : 'Order deleted successfully.');
+          setSelectedIds((prev) => prev.filter((item) => item !== id));
+          if (modalOpen && selectedOrder?._id === id) {
+            setModalOpen(false);
+          }
+          loadOrders();
+        } catch (err: any) {
+          toast.error(
+            err?.response?.data?.message ||
+              (isPersian ? 'خطا در حذف سفارش.' : 'Failed to delete order.'),
+          );
+        }
+      },
+    });
+    setConfirmModalOpen(true);
+  };
+
   const executeConfirmAction = async () => {
     if (!confirmConfig) return;
     setIsConfirmLoading(true);
@@ -609,16 +660,31 @@ export default function AdminOrdersPage() {
                     </TableCell>
 
                     <TableCell className="text-center">
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        radius="full"
-                        onPress={() => openOrderModal(order)}
-                        className="h-8 px-3 rounded-xl bg-brand-surface-elevated text-brand-text hover:bg-brand-border/60 border border-brand-border font-bold text-[11px] cursor-pointer"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold" />
-                        <span>{isPersian ? 'بررسی' : 'Inspect'}</span>
-                      </Button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          radius="full"
+                          onPress={() => openOrderModal(order)}
+                          className="h-8 px-3 rounded-xl bg-brand-surface-elevated text-brand-text hover:bg-brand-border/60 border border-brand-border font-bold text-[11px] cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold" />
+                          <span>{isPersian ? 'بررسی' : 'Inspect'}</span>
+                        </Button>
+                        {isAdmin && (
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="light"
+                            radius="full"
+                            onPress={() => handleDeleteOrder(order._id, order.orderNumber)}
+                            className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 transition-colors"
+                            aria-label={isPersian ? 'حذف سفارش' : 'Delete order'}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                   );
@@ -820,23 +886,37 @@ export default function AdminOrdersPage() {
                 )}
               </ModalBody>
 
-              <ModalFooter>
-                <Button
-                  variant="flat"
-                  radius="full"
-                  onPress={onClose}
-                  className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-full cursor-pointer"
-                >
-                  {isPersian ? 'انصراف' : 'Cancel'}
-                </Button>
-                <Button
-                  onPress={() => handleUpdateStatus()}
-                  isLoading={submitting}
-                  radius="full"
-                  className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
-                >
-                  {isPersian ? 'ثبت و ارسال پیامک به مشتری' : 'Update & Notify Customer'}
-                </Button>
+              <ModalFooter className="flex items-center justify-between">
+                {isAdmin && selectedOrder ? (
+                  <Button
+                    variant="light"
+                    color="danger"
+                    radius="full"
+                    onPress={() => handleDeleteOrder(selectedOrder._id, selectedOrder.orderNumber)}
+                    className="text-rose-500 hover:bg-rose-500/10 font-bold text-xs"
+                    startContent={<Trash2 className="w-4 h-4" />}
+                  >
+                    {isPersian ? 'حذف سفارش' : 'Delete Order'}
+                  </Button>
+                ) : <div />}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="flat"
+                    radius="full"
+                    onPress={onClose}
+                    className="bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-full cursor-pointer"
+                  >
+                    {isPersian ? 'انصراف' : 'Cancel'}
+                  </Button>
+                  <Button
+                    onPress={() => handleUpdateStatus()}
+                    isLoading={submitting}
+                    radius="full"
+                    className="bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md rounded-full cursor-pointer transition-all active:scale-95"
+                  >
+                    {isPersian ? 'ثبت و ارسال پیامک به مشتری' : 'Update & Notify Customer'}
+                  </Button>
+                </div>
               </ModalFooter>
             </>
           )}
