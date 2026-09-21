@@ -8,6 +8,7 @@ import {
   CardBody,
   Button,
   Skeleton,
+  Pagination,
 } from '@heroui/react';
 import { Filter, SlidersHorizontal, Sparkles, X, Check, ChevronDown } from 'lucide-react';
 import { IProduct, ICategory, IBrand } from '@/common/interfaces';
@@ -55,9 +56,13 @@ interface ProductsPageProps {
     total: number;
     page?: number;
     pageSize?: number;
+    totalPages?: number;
   };
   initialProducts?: IProduct[];
   initialTotal?: number;
+  initialPage?: number;
+  pageSize?: number;
+  initialTotalPages?: number;
   categories: ICategory[];
 }
 
@@ -110,6 +115,9 @@ export function ProductsPage({
   initialData,
   initialProducts,
   initialTotal,
+  initialPage = 1,
+  pageSize = 12,
+  initialTotalPages = 1,
   categories,
 }: ProductsPageProps) {
   const router = useRouter();
@@ -121,6 +129,12 @@ export function ProductsPage({
   );
   const [total, setTotal] = useState(
     initialTotal !== undefined ? initialTotal : initialData?.total || 0,
+  );
+  const [currentPage, setCurrentPage] = useState<number>(
+    initialPage || Number(searchParams.get('page')) || 1,
+  );
+  const [totalPages, setTotalPages] = useState<number>(
+    initialTotalPages || Math.ceil((initialTotal || initialData?.total || 0) / pageSize) || 1,
   );
   const [loading, setLoading] = useState(false);
   const [brands, setBrands] = useState<IBrand[]>([]);
@@ -175,6 +189,8 @@ export function ProductsPage({
     loadBrands();
   }, []);
 
+  const isFirstMount = useRef(true);
+
   // Sync state when URL searchParams change (e.g. from Footer / Navbar / Breadcrumbs)
   useEffect(() => {
     const urlCat = searchParams.get('category') || '';
@@ -183,6 +199,7 @@ export function ProductsPage({
     const urlStock = searchParams.get('inStockOnly') === 'true' || searchParams.get('inStock') === 'true';
     const urlVip = searchParams.get('isVipOnly') === 'true' || searchParams.get('vip') === 'true';
     const urlQ = searchParams.get('q') || '';
+    const urlPage = Math.max(1, Number(searchParams.get('page')) || 1);
 
     setSelectedCategory(urlCat);
     setSelectedBrand(urlBrand);
@@ -190,6 +207,7 @@ export function ProductsPage({
     setInStockOnly(urlStock);
     setIsVipOnly(urlVip);
     setSearchQuery(urlQ);
+    setCurrentPage(urlPage);
   }, [searchParams]);
 
   const updateFilterUrl = (key: string, value: string) => {
@@ -206,30 +224,40 @@ export function ProductsPage({
 
   const handleCategorySelect = (slug: string) => {
     setSelectedCategory(slug);
+    setCurrentPage(1);
     updateFilterUrl('category', slug);
+    updateFilterUrl('page', '');
   };
 
   const handleBrandSelect = (slug: string) => {
     setSelectedBrand(slug);
+    setCurrentPage(1);
     updateFilterUrl('brand', slug);
+    updateFilterUrl('page', '');
   };
 
   const handleSortSelect = (sortKey: string) => {
     setSelectedSort(sortKey);
+    setCurrentPage(1);
     updateFilterUrl('sort', sortKey);
+    updateFilterUrl('page', '');
   };
 
   const handleInStockToggle = (val: boolean) => {
     setInStockOnly(val);
+    setCurrentPage(1);
     updateFilterUrl('inStock', val ? 'true' : '');
+    updateFilterUrl('page', '');
   };
 
   const handleVipToggle = (val: boolean) => {
     setIsVipOnly(val);
+    setCurrentPage(1);
     updateFilterUrl('vip', val ? 'true' : '');
+    updateFilterUrl('page', '');
   };
 
-  const fetchFilteredProducts = async () => {
+  const fetchFilteredProducts = async (pageToFetch = currentPage) => {
     setLoading(true);
     try {
       const res = await catalogApi.getProducts({
@@ -239,9 +267,12 @@ export function ProductsPage({
         inStockOnly: inStockOnly || undefined,
         isVipOnly: isVipOnly || undefined,
         q: searchQuery || undefined,
+        page: pageToFetch,
+        pageSize,
       });
       setProducts(res.items || []);
       setTotal(res.total || 0);
+      setTotalPages(res.totalPages || Math.ceil((res.total || 0) / pageSize) || 1);
     } catch {
       // Keep existing
     } finally {
@@ -249,8 +280,19 @@ export function ProductsPage({
     }
   };
 
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    updateFilterUrl('page', newPage > 1 ? String(newPage) : '');
+    fetchFilteredProducts(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   useEffect(() => {
-    fetchFilteredProducts();
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+    fetchFilteredProducts(1);
   }, [selectedCategory, selectedBrand, selectedSort, inStockOnly, isVipOnly, searchQuery]);
 
   useEffect(() => {
@@ -773,6 +815,44 @@ export function ProductsPage({
                 </motion.div>
               ))}
             </motion.div>
+          )}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-10 pt-6 border-t border-brand-border/60">
+              <div className="text-xs font-bold text-brand-text-muted">
+                {isPersian
+                  ? `صفحه ${toPersianDigits(currentPage)} از ${toPersianDigits(totalPages)} (مجموع ${toPersianDigits(total)} محصول)`
+                  : `Page ${currentPage} of ${totalPages} (${total} total products)`}
+              </div>
+
+              <Pagination
+                total={totalPages}
+                page={currentPage}
+                onChange={handlePageChange}
+                showControls
+                color="warning"
+                radius="full"
+                size="md"
+                classNames={{
+                  wrapper: 'gap-1.5',
+                  item: 'bg-brand-surface text-brand-text font-bold text-xs hover:bg-brand-surface-elevated border border-brand-border/60 rounded-xl min-w-9 h-9',
+                  cursor: 'bg-brand-gold text-[#141914] font-black shadow-xs rounded-xl min-w-9 h-9',
+                  prev: 'bg-brand-surface text-brand-text border border-brand-border/60 rounded-xl min-w-9 h-9',
+                  next: 'bg-brand-surface text-brand-text border border-brand-border/60 rounded-xl min-w-9 h-9',
+                }}
+              />
+            </div>
+          )}
+
+          {totalPages <= 1 && total > 0 && (
+            <div className="flex items-center justify-center mt-10 pt-6 border-t border-brand-border/60">
+              <span className="text-xs font-bold text-brand-text-muted">
+                {isPersian
+                  ? `نمایش تمام ${toPersianDigits(products.length)} محصول در این صفحه`
+                  : `Showing all ${products.length} products on this page`}
+              </span>
+            </div>
           )}
         </main>
       </div>

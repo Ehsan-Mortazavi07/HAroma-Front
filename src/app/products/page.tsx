@@ -9,6 +9,7 @@ interface ProductsRouteProps {
     vip?: string;
     inStock?: string;
     sortBy?: string;
+    page?: string;
   }>;
 }
 
@@ -24,6 +25,8 @@ export default async function ProductsRoute({ searchParams }: ProductsRouteProps
   const isVipOnly = resolvedParams.vip === 'true';
   const inStock = resolvedParams.inStock === 'true';
   const sortBy = resolvedParams.sortBy || 'newest';
+  const page = Math.max(1, Number(resolvedParams.page) || 1);
+  const pageSize = 12;
 
   const [productsRes, categories] = await Promise.all([
     getProducts({
@@ -32,7 +35,8 @@ export default async function ProductsRoute({ searchParams }: ProductsRouteProps
       isVipOnly: isVipOnly ? true : undefined,
       inStock: inStock ? true : undefined,
       sortBy,
-      pageSize: 24,
+      page,
+      pageSize,
     }),
     getCategories(),
   ]);
@@ -42,6 +46,9 @@ export default async function ProductsRoute({ searchParams }: ProductsRouteProps
       initialProducts={productsRes.items}
       categories={categories}
       initialTotal={productsRes.total}
+      initialPage={page}
+      pageSize={pageSize}
+      initialTotalPages={productsRes.totalPages || Math.ceil((productsRes.total || 0) / pageSize) || 1}
     />
   );
 }
