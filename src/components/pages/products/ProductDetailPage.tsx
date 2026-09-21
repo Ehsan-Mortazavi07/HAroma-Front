@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Share2,
   ArrowRight,
+  ArrowLeft,
   Sparkles,
   Layers,
   Plus,
@@ -19,6 +20,8 @@ import {
   Trash2,
   Check,
   ChevronLeft,
+  ChevronRight,
+  ShoppingBag,
 } from 'lucide-react';
 import { Button, Chip } from '@heroui/react';
 import { IProduct, IProductVariant } from '@/common/interfaces';
@@ -276,6 +279,26 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
     }
   };
 
+  const handleShare = async () => {
+    if (typeof window !== 'undefined') {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: isPersian ? product.title : product.titleEn || product.title,
+            url: window.location.href,
+          });
+          return;
+        } catch {
+          // User cancelled or share failed
+        }
+      }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(window.location.href);
+        toast.success(isPersian ? 'لینک محصول با موفقیت کپی شد.' : 'Product link copied to clipboard.');
+      }
+    }
+  };
+
   const formatAttributeDisplay = (attr: { key?: string; name?: string; value: string; unit?: string }) => {
     const rawKey = attr.key || '';
     const name = isPersian ? (attr.name || rawKey) : (attributeKeyTranslations[rawKey] || attr.name || rawKey);
@@ -300,9 +323,28 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
   const isDescPersian = Boolean(activeDescription && /[\u0600-\u06FF]/.test(activeDescription));
 
   return (
-    <div className="min-h-screen py-6 sm:py-10">
-      {/* Breadcrumbs */}
-      <nav className="flex flex-wrap items-center gap-2 text-xs text-brand-text-muted mb-6">
+    <div className="min-h-screen py-3 sm:py-8 pb-28 sm:pb-12">
+      {/* Mobile Top Navigation Bar (Shown on small screens) */}
+      <div className="flex sm:hidden items-center justify-between gap-2 mb-3 px-1">
+        <Link
+          href={mainCategory ? `/products?category=${mainCategory.slug}` : PATHS.PRODUCTS}
+          className="inline-flex items-center gap-1 text-xs font-bold text-brand-text-muted hover:text-brand-gold transition-colors py-1"
+        >
+          <ArrowRight className="w-4 h-4 rtl:rotate-0 ltr:rotate-180 text-brand-gold" />
+          <span>{mainCategory ? (isPersian ? mainCategory.name : mainCategory.nameEn || mainCategory.name) : t.nav.products}</span>
+        </Link>
+
+        <button
+          onClick={handleShare}
+          aria-label={isPersian ? 'اشتراک‌گذاری' : 'Share'}
+          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-brand-surface border border-brand-border/60 text-brand-text-muted hover:text-brand-gold active:scale-90 transition-all cursor-pointer"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Desktop Breadcrumbs (Hidden on mobile) */}
+      <nav className="hidden sm:flex flex-wrap items-center gap-2 text-xs text-brand-text-muted mb-6">
         <Link href={PATHS.HOME} className="hover:text-brand-gold transition-colors">
           {t.nav.home}
         </Link>
@@ -328,24 +370,25 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
       </nav>
 
       {/* Main Product Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 bg-brand-surface p-6 sm:p-10 rounded-3xl border border-brand-border/60 shadow-xs mb-12 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 lg:gap-10 bg-brand-surface p-3.5 sm:p-7 lg:p-10 rounded-2xl sm:rounded-3xl border border-brand-border/60 shadow-xs mb-8 sm:mb-12 items-start">
         {/* Left Column: Image Gallery & Thumbnails */}
-        <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-24">
-          <div className="relative w-full h-80 sm:h-96 md:h-[450px] rounded-3xl overflow-hidden bg-brand-surface-elevated border border-brand-border/60">
+        <div className="lg:col-span-5 space-y-3 sm:space-y-4 lg:sticky lg:top-24">
+          <div className="relative w-full aspect-square sm:aspect-[4/3] md:h-[450px] rounded-2xl sm:rounded-3xl overflow-hidden bg-brand-surface-elevated/70 border border-brand-border/60">
             <Image
               src={images[selectedImageIndex]}
-              alt={product.title}
+              alt={isPersian ? product.title : product.titleEn || product.title}
               fill
               priority
-              className="object-cover object-center"
+              className="object-contain sm:object-cover p-2.5 sm:p-0 transition-transform duration-300"
             />
-            {/* Free Delivery Ribbon */}
-            <div className="absolute top-4 right-4 z-10">
+
+            {/* Fast Delivery Ribbon */}
+            <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 z-10">
               <Chip
                 size="sm"
                 variant="solid"
-                startContent={<Zap className="w-3.5 h-3.5 fill-current text-brand-gold" />}
-                className="bg-brand-olive text-brand-champagne text-xs font-bold shadow-md border border-brand-gold/30"
+                startContent={<Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current text-brand-gold" />}
+                className="bg-brand-olive text-brand-champagne text-[10px] sm:text-xs font-bold shadow-md border border-brand-gold/30 h-6 sm:h-7"
               >
                 {t.common.fastDelivery}
               </Chip>
@@ -353,40 +396,47 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
 
             {/* VIP Only Badge */}
             {product.isVipOnly && (
-              <div className="absolute top-4 left-4 z-10">
-                <VipBadge size="md" text={t.productDetail.vipExclusive} />
+              <div className="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 z-10">
+                <VipBadge size="sm" text={t.productDetail.vipExclusive} />
+              </div>
+            )}
+
+            {/* Mobile Image Index Counter */}
+            {images.length > 1 && (
+              <div className="absolute bottom-2.5 right-2.5 sm:hidden px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-sm text-[#f7f4ee] text-[10px] font-bold z-10">
+                {isPersian
+                  ? `${toPersianDigits(selectedImageIndex + 1)} / ${toPersianDigits(images.length)}`
+                  : `${selectedImageIndex + 1} / ${images.length}`}
               </div>
             )}
           </div>
 
-          {/* Thumbnails */}
+          {/* Thumbnails Strip */}
           {images.length > 1 && (
-            <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
+            <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-1 scrollbar-none">
               {images.map((img, idx) => (
-                <Button
+                <button
                   key={idx}
-                  isIconOnly
-                  onPress={() => setSelectedImageIndex(idx)}
-                  radius="lg"
+                  onClick={() => setSelectedImageIndex(idx)}
                   aria-label={`Thumbnail ${idx + 1}`}
-                  className={`relative w-18 h-18 min-w-18 p-0 rounded-2xl overflow-hidden bg-brand-surface-elevated shrink-0 border-2 transition-all ${
+                  className={`relative w-14 h-14 sm:w-18 sm:h-18 p-0 rounded-xl sm:rounded-2xl overflow-hidden bg-brand-surface-elevated shrink-0 border-2 transition-all cursor-pointer ${
                     selectedImageIndex === idx
-                      ? 'border-brand-gold shadow-md scale-105'
-                      : 'border-transparent opacity-70 hover:opacity-100'
+                      ? 'border-brand-gold shadow-md scale-105 ring-2 ring-brand-gold/30'
+                      : 'border-transparent opacity-65 hover:opacity-100'
                   }`}
                 >
                   <Image src={img} alt={`Thumbnail ${idx}`} fill className="object-cover" />
-                </Button>
+                </button>
               ))}
             </div>
           )}
         </div>
 
         {/* Right Column: Product Info & Actions */}
-        <div className="lg:col-span-7 space-y-6">
+        <div className="lg:col-span-7 space-y-4 sm:space-y-6">
           <div>
-            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="text-xs font-bold text-brand-bronze">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1.5">
+              <span className="text-[11px] sm:text-xs font-bold text-brand-bronze">
                 {mainCategory
                   ? isPersian
                     ? mainCategory.name
@@ -406,7 +456,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                 if (brandsList.length === 0) return null;
                 return (
                   <>
-                    <span className="text-brand-border">•</span>
+                    <span className="text-brand-border text-xs">•</span>
                     <div className="inline-flex flex-wrap items-center gap-1.5">
                       {brandsList.map((b) => (
                         <Chip
@@ -415,7 +465,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                           href={`/products?brand=${b.slug}`}
                           size="sm"
                           variant="flat"
-                          className="cursor-pointer bg-[#f0eae0] text-[#9f815b] dark:bg-[#242c24] dark:text-[#d4be9b] border border-[#bfa27a]/30 hover:border-[#bfa27a] font-bold text-xs"
+                          className="cursor-pointer bg-[#f0eae0] text-[#9f815b] dark:bg-[#242c24] dark:text-[#d4be9b] border border-[#bfa27a]/30 hover:border-[#bfa27a] font-bold text-[10px] sm:text-xs h-5 sm:h-6"
                         >
                           {isPersian ? b.name : b.nameEn || b.name}
                         </Chip>
@@ -425,31 +475,32 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                 );
               })()}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-brand-text leading-snug">
+
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-brand-text leading-snug">
               {isPersian ? product.title : product.titleEn || product.title}
             </h1>
             {product.titleEn && isPersian && (
-              <div className="text-sm font-semibold text-brand-text-muted mt-1 font-latin">
+              <div className="text-xs sm:text-sm font-semibold text-brand-text-muted mt-0.5 font-latin">
                 {product.titleEn}
               </div>
             )}
           </div>
 
-          {/* Ratings & Reviews */}
-          <div className="flex items-center gap-4 text-xs font-semibold">
-            <div className="flex items-center gap-1.5 text-amber-500">
-              <Star className="w-4 h-4 fill-current" />
-              <span className="font-extrabold text-sm">
+          {/* Ratings & Stock Status */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-semibold">
+            <div className="flex items-center gap-1 text-amber-500">
+              <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
+              <span className="font-extrabold text-xs sm:text-sm">
                 {isPersian ? toPersianDigits(product.rating || 5) : (product.rating || 5)}
               </span>
             </div>
-            <span className="text-brand-text-muted">
+            <span className="text-brand-text-muted text-[11px] sm:text-xs">
               ({isPersian ? toPersianDigits(product.reviewCount || 64) : (product.reviewCount || 64)}{' '}
-              {isPersian ? 'دیدگاه ثبت شده' : 'reviews'})
+              {isPersian ? 'دیدگاه' : 'reviews'})
             </span>
-            <span className="text-brand-border">|</span>
+            <span className="text-brand-border">•</span>
             <span
-              className={`font-bold ${
+              className={`text-[11px] sm:text-xs font-bold ${
                 isAvailable
                   ? 'text-brand-bronze'
                   : 'text-rose-600 dark:text-rose-400'
@@ -458,27 +509,28 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
               {isAvailable
                 ? isPersian
                   ? `${t.productDetail.inStock} (${toPersianDigits(activeStockCount || 10)} عدد)`
-                  : `In Stock at Hatef Aroma Vault (${activeStockCount || 10} units)`
+                  : `In Stock at Vault (${activeStockCount || 10} units)`
                 : t.common.outOfStock}
             </span>
           </div>
 
-          {/* Multi-Volume / Variant Selector */}
+          {/* Multi-Volume / Variant Selector (Mobile-Optimized Grid) */}
           {product.variants && product.variants.length > 0 && (
-            <div className="space-y-3 p-4 sm:p-5 rounded-3xl bg-brand-surface-elevated/80 border border-brand-border/60">
+            <div className="space-y-2.5 p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-brand-surface-elevated/80 border border-brand-border/60">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-black text-brand-text flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-brand-bronze" />
-                  <span>{isPersian ? 'انتخاب حجم / تنوع محصول:' : 'Select Volume / Bottle Size:'}</span>
+                  <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-bronze" />
+                  <span className="text-xs">{isPersian ? 'انتخاب حجم و مدل:' : 'Select Volume / Bottle:'}</span>
                 </span>
                 {selectedVariant && (
-                  <span className="text-brand-bronze font-black text-xs">
+                  <span className="text-brand-bronze font-black text-[11px] sm:text-xs truncate max-w-[150px]">
                     {getLocalizedVariantTitle(selectedVariant.title, isPersian)}
                   </span>
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2.5 pt-1">
+              {/* Grid on mobile (<640px) gives 50/50 equal width; flex-wrap on desktop */}
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-2.5 pt-1">
                 {product.variants.map((v) => {
                   const isSelected = selectedVariant?.id === v.id;
                   const isOutOfStock = v.stockCount <= 0 || !v.inStock;
@@ -486,22 +538,21 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                   const localizedTitle = getLocalizedVariantTitle(v.title, isPersian);
 
                   return (
-                    <Button
+                    <button
                       key={v.id}
-                      isDisabled={isOutOfStock}
-                      onPress={() => setSelectedVariant(v)}
-                      radius="lg"
-                      variant={isSelected ? 'solid' : 'bordered'}
-                      className={`h-auto py-3 px-4 flex flex-col items-center justify-between text-center gap-1 min-w-[130px] sm:min-w-[145px] cursor-pointer rounded-2xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${
+                      type="button"
+                      disabled={isOutOfStock}
+                      onClick={() => setSelectedVariant(v)}
+                      className={`relative w-full sm:w-auto min-h-[56px] sm:min-w-[135px] py-2 px-2.5 sm:py-3 sm:px-4 flex flex-col items-center justify-center text-center gap-0.5 rounded-xl sm:rounded-2xl border transition-all duration-200 cursor-pointer ${
                         isSelected
                           ? 'bg-brand-gold text-[#141914] border-brand-gold shadow-md font-black ring-2 ring-brand-gold/40'
                           : isOutOfStock
-                          ? 'opacity-40 line-through bg-[#f0eae0] dark:bg-[#181f18] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e]'
+                          ? 'opacity-40 line-through bg-[#f0eae0] dark:bg-[#181f18] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e] cursor-not-allowed'
                           : 'bg-white dark:bg-[#202620] text-[#1d241d] dark:text-[#f7f4ee] border-[#e6dcce] dark:border-[#344034] hover:border-brand-gold'
                       }`}
                     >
                       <span
-                        className={`leading-snug text-xs ${
+                        className={`leading-tight text-[11px] sm:text-xs ${
                           isSelected
                             ? 'text-[#141914] font-black'
                             : 'text-[#1d241d] dark:text-[#f7f4ee] font-bold'
@@ -510,7 +561,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                         {localizedTitle}
                       </span>
                       <span
-                        className={`text-xs font-extrabold whitespace-nowrap mt-0.5 ${
+                        className={`text-[11px] sm:text-xs font-extrabold whitespace-nowrap mt-0.5 ${
                           isSelected
                             ? 'text-[#141914]'
                             : 'text-[#9f815b] dark:text-[#d4be9b]'
@@ -518,7 +569,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                       >
                         {formatToman(vPrice, isPersian)}
                       </span>
-                    </Button>
+                    </button>
                   );
                 })}
               </div>
@@ -526,29 +577,29 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
           )}
 
           {/* Pricing Box */}
-          <div className="p-5 rounded-3xl bg-brand-surface-elevated border border-brand-border/60 flex items-baseline justify-between">
+          <div className="p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-brand-surface-elevated border border-brand-border/60 flex items-center justify-between gap-2">
             <div>
-              <span className="text-xs text-brand-text-muted block mb-1">
+              <span className="text-[11px] sm:text-xs text-brand-text-muted block mb-0.5 sm:mb-1">
                 {isPersian ? 'قیمت برای مصرف‌کننده:' : 'Retail Price:'}
               </span>
               {hasDiscount ? (
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-brand-text-muted line-through">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="text-xs sm:text-sm text-brand-text-muted line-through">
                     {formatToman(activePrice, isPersian)}
                   </span>
-                  <span className="text-2xl sm:text-3xl font-black text-brand-text">
+                  <span className="text-xl sm:text-3xl font-black text-brand-text">
                     {formatToman(activeDiscountPrice, isPersian)}
                   </span>
                 </div>
               ) : (
-                <span className="text-2xl sm:text-3xl font-black text-brand-text">
+                <span className="text-xl sm:text-3xl font-black text-brand-text">
                   {formatToman(activePrice, isPersian)}
                 </span>
               )}
             </div>
 
             {hasDiscount && (
-              <span className="px-3 py-1 rounded-full bg-brand-bronze text-brand-surface text-xs font-black">
+              <span className="px-2.5 py-1 sm:px-3 sm:py-1 rounded-full bg-brand-bronze text-[#f7f4ee] text-[11px] sm:text-xs font-black shrink-0 shadow-xs">
                 {isPersian
                   ? `${toPersianDigits(
                       Math.round(((activePrice - (activeDiscountPrice || 0)) / activePrice) * 100),
@@ -560,13 +611,13 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
             )}
           </div>
 
-          {/* Dynamic Attributes Table */}
+          {/* Dynamic Attributes Table (Specifications Grid) */}
           {product.attributes && product.attributes.length > 0 && (
             <div className="space-y-2">
               <h4 className="font-bold text-xs text-brand-text">
                 {t.productDetail.specifications}
               </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5">
                 {product.attributes.map((attr, idx) => {
                   const formatted = formatAttributeDisplay(attr);
                   const hasMultipleValues =
@@ -582,9 +633,9 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                   return (
                     <div
                       key={idx}
-                      className="p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border/60 text-xs flex flex-col justify-between transition-colors hover:border-brand-gold/50"
+                      className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-brand-surface-elevated border border-brand-border/60 text-xs flex flex-col justify-between transition-colors hover:border-brand-gold/50"
                     >
-                      <div className="text-[11px] text-brand-text-muted mb-1 font-medium">
+                      <div className="text-[10px] sm:text-[11px] text-brand-text-muted mb-1 font-medium truncate">
                         {formatted.name}
                       </div>
                       {hasMultipleValues && valList.length > 1 ? (
@@ -592,14 +643,14 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                           {valList.map((item, vIdx) => (
                             <span
                               key={vIdx}
-                              className="px-2 py-0.5 rounded-lg bg-brand-surface text-brand-text border border-brand-border text-[11px] font-bold"
+                              className="px-1.5 py-0.5 rounded-md bg-brand-surface text-brand-text border border-brand-border text-[10px] sm:text-[11px] font-bold"
                             >
                               {isPersian ? item : translateAttributeValue(item)}
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <div className="font-bold text-brand-text">
+                        <div className="font-bold text-brand-text text-[11px] sm:text-xs leading-snug line-clamp-2">
                           {formatted.value}
                         </div>
                       )}
@@ -610,12 +661,12 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="pt-4 border-t border-brand-border/60">
+          {/* Inline Action Buttons */}
+          <div className="pt-2 sm:pt-4 border-t border-brand-border/60">
             {cartQuantity > 0 ? (
-              <div className="w-full flex items-center justify-between gap-4 px-5 py-3 rounded-full bg-brand-surface-elevated border border-brand-border/60 shadow-xs">
+              <div className="w-full flex items-center justify-between gap-3 sm:gap-4 px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-2xl sm:rounded-full bg-brand-surface-elevated border border-brand-border/60 shadow-xs">
                 {/* Stepper Controller */}
-                <div className="flex items-center gap-1.5 bg-brand-surface border border-brand-border/60 rounded-full p-1 shadow-2xs">
+                <div className="flex items-center gap-1 sm:gap-1.5 bg-brand-surface border border-brand-border/60 rounded-full p-1 shadow-2xs">
                   <Button
                     isIconOnly
                     size="sm"
@@ -623,13 +674,13 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                     variant="light"
                     onPress={handleIncrement}
                     isDisabled={activeStockCount !== undefined && cartQuantity >= activeStockCount}
-                    className="w-9 h-9 min-w-9 rounded-full text-brand-bronze dark:text-brand-gold active:scale-90 transition-transform"
+                    className="w-8 h-8 sm:w-9 sm:h-9 min-w-8 sm:min-w-9 rounded-full text-brand-bronze dark:text-brand-gold active:scale-90 transition-transform"
                     aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
                   >
-                    <Plus className="w-4 h-4 stroke-[2.5]" />
+                    <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
                   </Button>
 
-                  <span className="min-w-[32px] text-center font-black text-base text-brand-text select-none">
+                  <span className="min-w-[28px] sm:min-w-[32px] text-center font-black text-sm sm:text-base text-brand-text select-none">
                     {isPersian ? toPersianDigits(cartQuantity) : cartQuantity}
                   </span>
 
@@ -639,7 +690,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                     radius="full"
                     variant="light"
                     onPress={handleDecrement}
-                    className="w-9 h-9 min-w-9 rounded-full text-brand-text-muted hover:text-brand-text active:scale-90 transition-transform"
+                    className="w-8 h-8 sm:w-9 sm:h-9 min-w-8 sm:min-w-9 rounded-full text-brand-text-muted hover:text-brand-text active:scale-90 transition-transform"
                     aria-label={
                       cartQuantity === 1
                         ? (isPersian ? 'حذف از سبد خرید' : 'Remove from cart')
@@ -647,22 +698,22 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                     }
                   >
                     {cartQuantity === 1 ? (
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5 text-rose-500" />
                     ) : (
-                      <Minus className="w-4 h-4 stroke-[2.5]" />
+                      <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
                     )}
                   </Button>
                 </div>
 
                 {/* Cart Status & View Cart Link */}
                 <div className="flex flex-col items-start leading-tight">
-                  <span className="text-[11px] font-bold text-brand-bronze dark:text-brand-gold flex items-center gap-1">
-                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span className="text-[10px] sm:text-[11px] font-bold text-brand-bronze dark:text-brand-gold flex items-center gap-1">
+                    <Check className="w-3 h-3 stroke-[2.5]" />
                     <span>{t.productDetail.inYourCart || (isPersian ? 'در سبد شما' : 'In your cart')}</span>
                   </span>
                   <Link
                     href={PATHS.CART}
-                    className="text-xs font-black text-brand-text hover:text-brand-gold flex items-center gap-0.5 mt-1 transition-colors hover:underline"
+                    className="text-xs font-black text-brand-text hover:text-brand-gold flex items-center gap-0.5 mt-0.5 sm:mt-1 transition-colors hover:underline"
                   >
                     <span>{t.cart.viewCart || (isPersian ? 'مشاهده سبد خرید' : 'View Cart')}</span>
                     <ChevronLeft className="w-3.5 h-3.5 rtl:rotate-0 ltr:rotate-180" />
@@ -676,8 +727,8 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                 color="warning"
                 onPress={handleAddToCart}
                 isDisabled={!isAvailable}
-                startContent={<Sparkles className="w-5 h-5" />}
-                className="w-full h-14 font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 text-sm cursor-pointer rounded-full transition-all duration-300 hover:scale-[1.01] active:scale-[0.98]"
+                startContent={<Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />}
+                className="w-full h-12 sm:h-14 font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 text-xs sm:text-sm cursor-pointer rounded-xl sm:rounded-full transition-all duration-300 hover:scale-[1.01] active:scale-[0.98]"
               >
                 {t.productDetail.addToCart}
               </Button>
@@ -685,14 +736,14 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
           </div>
 
           {/* Trust Highlights */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs text-brand-text-muted">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-brand-bronze" />
-              <span>{t.common.authenticityGuarantee}</span>
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-1 text-[11px] sm:text-xs text-brand-text-muted">
+            <div className="flex items-center gap-1.5 p-2 rounded-xl bg-brand-surface-elevated/50 sm:bg-transparent sm:p-0">
+              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-bronze shrink-0" />
+              <span className="truncate">{t.common.authenticityGuarantee}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-brand-bronze" />
-              <span>{t.common.returnGuarantee}</span>
+            <div className="flex items-center gap-1.5 p-2 rounded-xl bg-brand-surface-elevated/50 sm:bg-transparent sm:p-0">
+              <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-bronze shrink-0" />
+              <span className="truncate">{t.common.returnGuarantee}</span>
             </div>
           </div>
         </div>
@@ -700,33 +751,115 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
 
       {/* Description Tab */}
       {activeDescription && (
-        <div className="bg-brand-surface p-6 sm:p-10 rounded-3xl border border-brand-border mb-12 space-y-4">
-          <h3 className="text-lg sm:text-xl font-black text-brand-text">
+        <div className="bg-brand-surface p-4 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl border border-brand-border/60 mb-8 sm:mb-12 space-y-3 sm:space-y-4">
+          <h3 className="text-base sm:text-xl font-black text-brand-text">
             {isPersian ? 'توضیحات و هرم بویایی عطر' : 'Fragrance Profile & Review'}
           </h3>
           <div
             dir={isDescPersian ? 'rtl' : 'ltr'}
-            className={`text-sm text-brand-text-muted leading-relaxed space-y-2 ${
+            className={`text-xs sm:text-sm text-brand-text-muted leading-relaxed space-y-2 ${
               isDescPersian ? 'text-right' : 'text-left'
-            } [&_p]:mb-2 [&_h3]:text-sm sm:[&_h3]:text-base [&_h3]:font-black [&_h3]:text-brand-text [&_h3]:mt-4 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:mr-5 rtl:[&_ul]:mr-5 ltr:[&_ul]:ml-5 [&_ul]:space-y-1.5 [&_li]:text-xs sm:[&_li]:text-sm [&_strong]:text-brand-text`}
+            } [&_p]:mb-2 [&_h3]:text-xs sm:[&_h3]:text-base [&_h3]:font-black [&_h3]:text-brand-text [&_h3]:mt-3 sm:[&_h3]:mt-4 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:mr-4 rtl:[&_ul]:mr-4 ltr:[&_ul]:ml-4 [&_ul]:space-y-1 [&_li]:text-xs sm:[&_li]:text-sm [&_strong]:text-brand-text`}
             dangerouslySetInnerHTML={{ __html: activeDescription }}
           />
         </div>
       )}
 
-      {/* Related Products */}
+      {/* Related Products Grid (2 columns on mobile, 4 on desktop) */}
       {relatedProducts && relatedProducts.length > 0 && (
-        <div className="space-y-6">
-          <h3 className="text-xl font-black text-brand-text">
+        <div className="space-y-4 sm:space-y-6">
+          <h3 className="text-lg sm:text-xl font-black text-brand-text">
             {t.productDetail.relatedProducts}
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {relatedProducts.map((p) => (
               <ProductCard key={p._id} product={p} />
             ))}
           </div>
         </div>
       )}
+
+      {/* Mobile Sticky Bottom Action Bar (Floating Purchase Island) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-surface/95 backdrop-blur-lg border-t border-brand-border/80 px-4 py-2.5 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]">
+        <div className="max-w-md mx-auto flex items-center justify-between gap-3">
+          {/* Price & Selected Variant Summary */}
+          <div className="flex flex-col min-w-0">
+            {selectedVariant && (
+              <span className="text-[10px] text-brand-text-muted font-bold truncate max-w-[140px]">
+                {getLocalizedVariantTitle(selectedVariant.title, isPersian)}
+              </span>
+            )}
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-base font-black text-brand-text">
+                {formatToman(currentPrice, isPersian)}
+              </span>
+              {hasDiscount && (
+                <span className="text-[10px] text-brand-text-muted line-through">
+                  {formatToman(activePrice, isPersian)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Action / Stepper Button */}
+          <div className="flex items-center shrink-0">
+            {cartQuantity > 0 ? (
+              <div className="flex items-center gap-1.5 bg-brand-surface-elevated border border-brand-border/80 rounded-full p-1 shadow-2xs">
+                <Button
+                  isIconOnly
+                  size="sm"
+                  radius="full"
+                  variant="light"
+                  onPress={handleIncrement}
+                  isDisabled={activeStockCount !== undefined && cartQuantity >= activeStockCount}
+                  className="w-7 h-7 min-w-7 rounded-full text-brand-bronze dark:text-brand-gold active:scale-90"
+                  aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                </Button>
+                <span className="min-w-[20px] text-center font-black text-xs text-brand-text select-none">
+                  {isPersian ? toPersianDigits(cartQuantity) : cartQuantity}
+                </span>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  radius="full"
+                  variant="light"
+                  onPress={handleDecrement}
+                  className="w-7 h-7 min-w-7 rounded-full text-brand-text-muted hover:text-brand-text active:scale-90"
+                  aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
+                >
+                  {cartQuantity === 1 ? (
+                    <Trash2 className="w-3 h-3 text-rose-500" />
+                  ) : (
+                    <Minus className="w-3 h-3 stroke-[2.5]" />
+                  )}
+                </Button>
+                <Button
+                  as={Link}
+                  href={PATHS.CART}
+                  size="sm"
+                  radius="full"
+                  className="bg-brand-gold text-[#141914] font-black text-[11px] px-2.5 h-7 min-w-0 shadow-2xs"
+                >
+                  {t.cart.viewCart || (isPersian ? 'سبد' : 'Cart')}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="md"
+                radius="full"
+                onPress={handleAddToCart}
+                isDisabled={!isAvailable}
+                startContent={<ShoppingBag className="w-4 h-4" />}
+                className="h-10 px-4 font-black bg-brand-gold text-[#141914] shadow-md shadow-brand-gold/20 text-xs rounded-full cursor-pointer"
+              >
+                {t.productDetail.addToCart}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
