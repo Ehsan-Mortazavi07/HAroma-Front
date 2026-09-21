@@ -19,13 +19,11 @@ export function YouMightNeedSection({ products }: YouMightNeedSectionProps) {
 
   const {
     scrollRef,
-    isDragging,
-    scrollProgress,
     canScrollPrev,
     canScrollNext,
     handleScroll,
     dragHandlers,
-  } = useDraggableScroll({ isRTL, friction: 0.92 });
+  } = useDraggableScroll({ isRTL, friction: 0.88 });
 
   return (
     <section className="w-full">
@@ -63,7 +61,7 @@ export function YouMightNeedSection({ products }: YouMightNeedSectionProps) {
               size="sm"
               aria-label={isPersian ? 'قبلی' : 'Previous'}
               isDisabled={!canScrollPrev}
-              onPress={() => handleScroll('prev')}
+              onPress={() => handleScroll('prev', 290)}
               className="w-8 h-8 min-w-8 bg-brand-surface border border-brand-border/80 hover:border-brand-gold hover:bg-brand-surface-elevated text-brand-text disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
             >
               {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -75,7 +73,7 @@ export function YouMightNeedSection({ products }: YouMightNeedSectionProps) {
               size="sm"
               aria-label={isPersian ? 'بعدی' : 'Next'}
               isDisabled={!canScrollNext}
-              onPress={() => handleScroll('next')}
+              onPress={() => handleScroll('next', 290)}
               className="w-8 h-8 min-w-8 bg-brand-surface border border-brand-border/80 hover:border-brand-gold hover:bg-brand-surface-elevated text-brand-text disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
             >
               {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -97,9 +95,7 @@ export function YouMightNeedSection({ products }: YouMightNeedSectionProps) {
         ref={scrollRef}
         {...dragHandlers}
         style={{ touchAction: 'pan-y' }}
-        className={`flex items-stretch gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto scrollbar-none snap-x snap-mandatory py-2.5 px-0.5 scroll-smooth transition-colors select-none ${
-          isDragging ? 'cursor-grabbing' : 'cursor-grab'
-        }`}
+        className="flex items-stretch gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory py-2.5 px-0.5 select-none cursor-grab active:cursor-grabbing"
       >
         {products.map((product) => (
           <div
@@ -131,14 +127,6 @@ export function YouMightNeedSection({ products }: YouMightNeedSectionProps) {
             </CardBody>
           </Card>
         </div>
-      </div>
-
-      {/* Subtle Luxury Scroll Progress Bar */}
-      <div className="w-full bg-brand-border/30 h-1 rounded-full overflow-hidden mt-3 sm:mt-4">
-        <div
-          className="h-full bg-gradient-to-r from-brand-gold/70 via-amber-400 to-brand-gold rounded-full transition-all duration-150 ease-out"
-          style={{ width: `${Math.max(8, scrollProgress)}%` }}
-        />
       </div>
     </section>
   );

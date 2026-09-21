@@ -4,20 +4,19 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 
 interface UseDraggableScrollOptions {
   isRTL?: boolean;
-  speedMultiplier?: number;
   friction?: number;
 }
 
 export function useDraggableScroll({
   isRTL = true,
-  speedMultiplier = 1,
-  friction = 0.93,
+  friction = 0.88,
 }: UseDraggableScrollOptions = {}) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(true);
+
+  const prevCanPrev = useRef(false);
+  const prevCanNext = useRef(true);
 
   const isPointerDown = useRef(false);
   const startX = useRef(0);
@@ -29,39 +28,58 @@ export function useDraggableScroll({
   const hasDraggedRef = useRef(false);
   const momentumRaf = useRef<number | null>(null);
 
-  // Update progress and button enable/disable metrics
-  const updateScrollMetrics = useCallback(() => {
+  // Update button enabled states ONLY when state actually flips (0 re-renders during dragging)
+  const updateButtonsState = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
 
     const maxScroll = el.scrollWidth - el.clientWidth;
-    if (maxScroll <= 0) {
-      setScrollProgress(100);
-      setCanScrollPrev(false);
-      setCanScrollNext(false);
+    if (maxScroll <= 4) {
+      if (prevCanPrev.current) {
+        prevCanPrev.current = false;
+        setCanScrollPrev(false);
+      }
+      if (prevCanNext.current) {
+        prevCanNext.current = false;
+        setCanScrollNext(false);
+      }
       return;
     }
 
     const current = Math.abs(el.scrollLeft);
-    const progress = Math.min(100, Math.max(0, (current / maxScroll) * 100));
-    setScrollProgress(progress);
-    setCanScrollPrev(current > 8);
-    setCanScrollNext(current < maxScroll - 8);
+    const nextCanPrev = current > 12;
+    const nextCanNext = current < maxScroll - 12;
+
+    if (nextCanPrev !== prevCanPrev.current) {
+      prevCanPrev.current = nextCanPrev;
+      setCanScrollPrev(nextCanPrev);
+    }
+    if (nextCanNext !== prevCanNext.current) {
+      prevCanNext.current = nextCanNext;
+      setCanScrollNext(nextCanNext);
+    }
   }, []);
 
-  // Listen for scroll & resize events
+  // Setup passive listeners
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
-    updateScrollMetrics();
+    updateButtonsState();
 
+    let scrollTimeout: NodeJS.Timeout | null = null;
     const onScroll = () => {
-      updateScrollMetrics();
+      // Throttle button state updates to avoid unnecessary checks
+      if (!scrollTimeout) {
+        scrollTimeout = setTimeout(() => {
+          updateButtonsState();
+          scrollTimeout = null;
+        }, 80);
+      }
     };
 
     el.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', updateScrollMetrics);
+    window.addEventListener('resize', updateButtonsState);
 
     // Capture-phase click interceptor to stop unwanted navigation on drag
     const handleClickCapture = (e: MouseEvent) => {
@@ -75,17 +93,16 @@ export function useDraggableScroll({
 
     return () => {
       el.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', updateScrollMetrics);
+      window.removeEventListener('resize', updateButtonsState);
       el.removeEventListener('click', handleClickCapture, { capture: true });
-      if (momentumRaf.current) {
-        cancelAnimationFrame(momentumRaf.current);
-      }
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      if (momentumRaf.current) cancelAnimationFrame(momentumRaf.current);
     };
-  }, [updateScrollMetrics]);
+  }, [updateButtonsState]);
 
   // Programmatic scroll step for Prev/Next buttons
   const handleScroll = useCallback(
-    (direction: 'next' | 'prev', strideRatio = 0.7) => {
+    (direction: 'next' | 'prev', cardWidth = 320) => {
       const el = scrollRef.current;
       if (!el) return;
 
@@ -94,7 +111,7 @@ export function useDraggableScroll({
         momentumRaf.current = null;
       }
 
-      const distance = Math.max(260, el.clientWidth * strideRatio);
+      const distance = Math.min(cardWidth * 2, el.clientWidth * 0.85);
       const factor = isRTL ? (direction === 'next' ? -1 : 1) : (direction === 'next' ? 1 : -1);
       el.scrollBy({ left: factor * distance, behavior: 'smooth' });
     },
@@ -103,7 +120,6 @@ export function useDraggableScroll({
 
   // Drag Pointer Handlers
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    // Only primary mouse button or touch/pen
     if (e.button !== 0 && e.pointerType === 'mouse') return;
 
     const el = scrollRef.current;
@@ -123,43 +139,36 @@ export function useDraggableScroll({
     velocityX.current = 0;
   }, []);
 
-  const onPointerMove = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!isPointerDown.current) return;
-      const el = scrollRef.current;
-      if (!el) return;
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isPointerDown.current) return;
+    const el = scrollRef.current;
+    if (!el) return;
 
-      const deltaX = e.clientX - startX.current;
+    const deltaX = e.clientX - startX.current;
 
-      // Threshold check to avoid interfering with normal clicks
-      if (!hasMoved.current && Math.abs(deltaX) > 6) {
-        hasMoved.current = true;
-        setIsDragging(true);
-        try {
-          (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
-        } catch {
-          // ignore if unsupported
-        }
-        // Temporarily disable smooth scroll & snap so dragging tracks cursor with zero lag
-        el.style.scrollSnapType = 'none';
-        el.style.scrollBehavior = 'auto';
+    if (!hasMoved.current && Math.abs(deltaX) > 6) {
+      hasMoved.current = true;
+      try {
+        (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+      } catch {
+        // ignore
       }
+      el.style.scrollSnapType = 'none';
+    }
 
-      if (hasMoved.current) {
-        el.scrollLeft = initialScrollLeft.current - deltaX * speedMultiplier;
+    if (hasMoved.current) {
+      // 1:1 Instant DOM displacement - 0 React re-renders, 120fps smooth
+      el.scrollLeft = initialScrollLeft.current - deltaX;
 
-        // Calculate velocity for inertia momentum
-        const now = performance.now();
-        const dt = now - lastTime.current;
-        if (dt > 8) {
-          velocityX.current = (e.clientX - lastX.current) / dt;
-          lastX.current = e.clientX;
-          lastTime.current = now;
-        }
+      const now = performance.now();
+      const dt = now - lastTime.current;
+      if (dt > 10) {
+        velocityX.current = (e.clientX - lastX.current) / dt;
+        lastX.current = e.clientX;
+        lastTime.current = now;
       }
-    },
-    [speedMultiplier]
-  );
+    }
+  }, []);
 
   const finishDrag = useCallback(
     (e?: React.PointerEvent<HTMLDivElement>) => {
@@ -178,47 +187,41 @@ export function useDraggableScroll({
 
       if (hasMoved.current) {
         hasDraggedRef.current = true;
-        // Suppress clicks for 60ms after dragging
         setTimeout(() => {
           hasDraggedRef.current = false;
-        }, 60);
+        }, 50);
 
         // Momentum inertia glide on release
-        let momentumVelocity = velocityX.current * 16;
-        if (momentumVelocity > 32) momentumVelocity = 32;
-        if (momentumVelocity < -32) momentumVelocity = -32;
+        let momentumVelocity = velocityX.current * 14;
+        if (momentumVelocity > 24) momentumVelocity = 24;
+        if (momentumVelocity < -24) momentumVelocity = -24;
 
+        const frictionVal = friction || 0.88;
         const step = () => {
-          if (Math.abs(momentumVelocity) > 0.4 && scrollRef.current) {
+          if (Math.abs(momentumVelocity) > 0.5 && scrollRef.current) {
             scrollRef.current.scrollLeft -= momentumVelocity;
-            momentumVelocity *= friction;
+            momentumVelocity *= frictionVal;
             momentumRaf.current = requestAnimationFrame(step);
           } else {
-            setIsDragging(false);
             if (scrollRef.current) {
               scrollRef.current.style.scrollSnapType = '';
-              scrollRef.current.style.scrollBehavior = '';
             }
-            updateScrollMetrics();
+            updateButtonsState();
           }
         };
 
         if (Math.abs(momentumVelocity) > 0.8) {
           momentumRaf.current = requestAnimationFrame(step);
         } else {
-          setIsDragging(false);
           if (el) {
             el.style.scrollSnapType = '';
-            el.style.scrollBehavior = '';
           }
-          updateScrollMetrics();
+          updateButtonsState();
         }
         hasMoved.current = false;
-      } else {
-        setIsDragging(false);
       }
     },
-    [friction, updateScrollMetrics]
+    [friction, updateButtonsState]
   );
 
   const onPointerUp = useCallback(
@@ -235,15 +238,12 @@ export function useDraggableScroll({
     [finishDrag]
   );
 
-  // Prevent default HTML5 ghost image dragging
   const onDragStart = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   }, []);
 
   return {
     scrollRef,
-    isDragging,
-    scrollProgress,
     canScrollPrev,
     canScrollNext,
     handleScroll,

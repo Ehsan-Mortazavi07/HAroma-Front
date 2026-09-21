@@ -35,13 +35,11 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
 
   const {
     scrollRef,
-    isDragging,
-    scrollProgress,
     canScrollPrev,
     canScrollNext,
     handleScroll,
     dragHandlers,
-  } = useDraggableScroll({ isRTL, friction: 0.92 });
+  } = useDraggableScroll({ isRTL, friction: 0.88 });
 
   const getIcon = (slug: string) => {
     switch (slug) {
@@ -102,7 +100,7 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
               size="sm"
               aria-label={isPersian ? 'قبلی' : 'Previous'}
               isDisabled={!canScrollPrev}
-              onPress={() => handleScroll('prev')}
+              onPress={() => handleScroll('prev', 280)}
               className="w-8 h-8 min-w-8 bg-brand-surface border border-brand-border/80 hover:border-brand-gold hover:bg-brand-surface-elevated text-brand-text disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
             >
               {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -114,7 +112,7 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
               size="sm"
               aria-label={isPersian ? 'بعدی' : 'Next'}
               isDisabled={!canScrollNext}
-              onPress={() => handleScroll('next')}
+              onPress={() => handleScroll('next', 280)}
               className="w-8 h-8 min-w-8 bg-brand-surface border border-brand-border/80 hover:border-brand-gold hover:bg-brand-surface-elevated text-brand-text disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
             >
               {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -136,16 +134,14 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
         ref={scrollRef}
         {...dragHandlers}
         style={{ touchAction: 'pan-y' }}
-        className={`flex items-stretch gap-3 sm:gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory py-2 px-0.5 scroll-smooth transition-colors select-none ${
-          isDragging ? 'cursor-grabbing' : 'cursor-grab'
-        }`}
+        className="flex items-stretch gap-3 sm:gap-4 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory py-2 px-0.5 select-none cursor-grab active:cursor-grabbing"
       >
         {categories.map((cat) => (
           <div key={cat._id} className="shrink-0 w-28 sm:w-32 lg:w-36 snap-start">
             <motion.div
-              whileHover={{ y: -4, scale: 1.02 }}
+              whileHover={{ y: -3, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 24, mass: 0.8 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 26 }}
               className="h-full"
             >
               <Card
@@ -173,9 +169,9 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
         {/* See All Pill Card */}
         <div className="shrink-0 w-28 sm:w-32 lg:w-36 snap-start">
           <motion.div
-            whileHover={{ y: -4, scale: 1.02 }}
+            whileHover={{ y: -3, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 24, mass: 0.8 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 26 }}
             className="h-full"
           >
             <Card
@@ -198,14 +194,6 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
             </Card>
           </motion.div>
         </div>
-      </div>
-
-      {/* Subtle Luxury Scroll Progress Bar */}
-      <div className="w-full bg-brand-border/30 h-1 rounded-full overflow-hidden mt-2.5">
-        <div
-          className="h-full bg-gradient-to-r from-brand-gold/70 via-amber-400 to-brand-gold rounded-full transition-all duration-150 ease-out"
-          style={{ width: `${Math.max(10, scrollProgress)}%` }}
-        />
       </div>
     </section>
   );
