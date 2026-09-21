@@ -34,6 +34,7 @@ import {
   ChevronDown,
   Eye,
   Pencil,
+  UserPlus,
 } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { IUser } from '@/common/interfaces';
@@ -43,6 +44,7 @@ import { useTranslation } from '@/common/i18n';
 import { useAppSelector } from '@/stores/hooks';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { UserDetailsModal } from '@/components/admin/UserDetailsModal';
+import { CreateUserModal } from '@/components/admin/CreateUserModal';
 
 // Calm, elegant, ultra-smooth glide-down motion for select boxes and dropdowns
 const softDropdownMotionProps = {
@@ -247,6 +249,9 @@ export default function AdminUsersPage() {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [detailsModalMode, setDetailsModalMode] = useState<'view' | 'edit'>('view');
 
+  // Create User Modal State
+  const [createUserModalOpen, setCreateUserModalOpen] = useState(false);
+
   const handleOpenDetails = (user: IUser) => {
     setSelectedUserForDetails(user);
     setDetailsModalMode('view');
@@ -411,7 +416,16 @@ export default function AdminUsersPage() {
           </p>
         </div>
 
-        {!isAdmin && (
+        {isAdmin ? (
+          <Button
+            radius="full"
+            onPress={() => setCreateUserModalOpen(true)}
+            className="h-11 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 flex items-center gap-2 cursor-pointer self-start sm:self-auto rounded-full transition-all active:scale-95 shrink-0"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>{isPersian ? 'افزودن کاربر جدید' : 'Add New User'}</span>
+          </Button>
+        ) : (
           <Chip
             variant="flat"
             classNames={{
@@ -766,6 +780,15 @@ export default function AdminUsersPage() {
           setDetailsModalOpen(false);
           handleDeleteClick(userId, userName);
         }}
+      />
+
+      {/* Create New User Modal */}
+      <CreateUserModal
+        isOpen={createUserModalOpen}
+        onOpenChange={setCreateUserModalOpen}
+        onClose={() => setCreateUserModalOpen(false)}
+        onUserCreated={loadUsers}
+        isPersian={isPersian}
       />
 
       {/* HeroUI Delete Confirmation Modal */}
