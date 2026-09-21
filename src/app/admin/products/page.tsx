@@ -643,19 +643,40 @@ export default function AdminProductsPage() {
       {/* Floating Action Island (Fixed, Zero Layout Shift, Fluid Apple Spring Motion) */}
       <AnimatePresence>
         {selectedIds.length > 0 && (
-          <div className="fixed bottom-7 inset-x-0 z-50 flex justify-center pointer-events-none px-4">
+          <div className="fixed bottom-4 sm:bottom-7 inset-x-0 z-50 flex justify-center pointer-events-none px-3 sm:px-4">
             <motion.div
-              initial={{ opacity: 0, y: 32, scale: 0.94 }}
+              initial={{ opacity: 0, y: 36, scale: 0.94 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 24, scale: 0.94 }}
+              exit={{ opacity: 0, y: 28, scale: 0.94 }}
               transition={{
                 duration: 0.35,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="pointer-events-auto bg-[#141a14]/95 dark:bg-[#121812]/95 backdrop-blur-2xl border border-brand-gold/40 shadow-2xl shadow-black/60 rounded-full p-2 ps-3.5 pe-2 flex flex-wrap sm:flex-nowrap items-center gap-2.5 sm:gap-3 text-[#f7f4ee] max-w-full"
+              className="pointer-events-auto bg-[#141a14]/98 dark:bg-[#121812]/98 backdrop-blur-2xl border border-brand-gold/40 shadow-2xl shadow-black/70 rounded-2xl sm:rounded-full p-2.5 sm:p-2 sm:ps-3.5 sm:pe-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 text-[#f7f4ee] w-[calc(100vw-1.5rem)] max-w-md sm:w-auto sm:max-w-none"
             >
-              {/* Count Badge */}
-              <div className="flex items-center gap-2">
+              {/* Mobile Top Header: Count + Close Button */}
+              <div className="flex sm:hidden items-center justify-between px-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-brand-gold shrink-0 animate-pulse" />
+                  <span className="text-xs font-black text-brand-gold">
+                    {isPersian
+                      ? `${toPersianDigits(selectedIds.length)} محصول انتخاب شده`
+                      : `${selectedIds.length} items selected`}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds([])}
+                  className="text-neutral-400 hover:text-[#f7f4ee] active:scale-95 transition-all text-xs font-bold flex items-center gap-1 cursor-pointer py-0.5 px-2 rounded-lg hover:bg-white/10"
+                  aria-label={isPersian ? 'لغو انتخاب' : 'Cancel selection'}
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>{isPersian ? 'انصراف' : 'Cancel'}</span>
+                </button>
+              </div>
+
+              {/* Desktop Count Badge */}
+              <div className="hidden sm:flex items-center gap-2 shrink-0">
                 <span className="px-3 py-1 rounded-full bg-brand-gold text-[#141914] font-black text-xs shadow-xs flex items-center gap-1.5 shrink-0">
                   <Check className="w-3.5 h-3.5 stroke-[3]" />
                   <span>
@@ -664,21 +685,28 @@ export default function AdminProductsPage() {
                       : `${selectedIds.length} selected`}
                   </span>
                 </span>
-                <span className="w-px h-5 bg-white/15 shrink-0 hidden sm:block" />
+                <span className="w-px h-5 bg-white/15 shrink-0" />
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+              {/* Action Buttons: Responsive Grid on Mobile, Flex on Desktop */}
+              <div
+                className={`grid ${
+                  isAdmin ? 'grid-cols-3' : 'grid-cols-2'
+                } sm:flex sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto`}
+              >
                 <Button
                   size="sm"
                   radius="full"
                   variant="flat"
                   isLoading={bulkActionLoading}
                   onPress={() => handleBulkStatusChange(true)}
-                  className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-bold text-xs cursor-pointer rounded-full h-8 px-3.5 transition-all active:scale-95"
+                  className="bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
                 >
-                  {!bulkActionLoading && <Eye className="w-3.5 h-3.5 text-emerald-400" />}
-                  <span>{isPersian ? 'انتشار همگانی' : 'Bulk Publish'}</span>
+                  {!bulkActionLoading && <Eye className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+                  <span className="truncate">
+                    <span className="sm:hidden">{isPersian ? 'انتشار' : 'Publish'}</span>
+                    <span className="hidden sm:inline">{isPersian ? 'انتشار همگانی' : 'Bulk Publish'}</span>
+                  </span>
                 </Button>
 
                 <Button
@@ -687,10 +715,13 @@ export default function AdminProductsPage() {
                   variant="flat"
                   isLoading={bulkActionLoading}
                   onPress={() => handleBulkStatusChange(false)}
-                  className="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-bold text-xs cursor-pointer rounded-full h-8 px-3.5 transition-all active:scale-95"
+                  className="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
                 >
-                  {!bulkActionLoading && <EyeOff className="w-3.5 h-3.5 text-amber-400" />}
-                  <span>{isPersian ? 'عدم انتشار' : 'Bulk Unpublish'}</span>
+                  {!bulkActionLoading && <EyeOff className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                  <span className="truncate">
+                    <span className="sm:hidden">{isPersian ? 'عدم انتشار' : 'Unpublish'}</span>
+                    <span className="hidden sm:inline">{isPersian ? 'عدم انتشار' : 'Bulk Unpublish'}</span>
+                  </span>
                 </Button>
 
                 {isAdmin && (
@@ -700,19 +731,23 @@ export default function AdminProductsPage() {
                     variant="flat"
                     isLoading={bulkActionLoading}
                     onPress={handleBulkDelete}
-                    className="bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 font-bold text-xs cursor-pointer rounded-full h-8 px-3.5 transition-all active:scale-95"
+                    className="bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 font-bold text-xs cursor-pointer rounded-full h-8.5 sm:h-8 px-2.5 sm:px-3.5 transition-all active:scale-95 flex items-center justify-center gap-1.5"
                   >
-                    {!bulkActionLoading && <Trash2 className="w-3.5 h-3.5 text-rose-400" />}
-                    <span>{isPersian ? 'حذف همگانی' : 'Bulk Delete'}</span>
+                    {!bulkActionLoading && <Trash2 className="w-3.5 h-3.5 text-rose-400 shrink-0" />}
+                    <span className="truncate">
+                      <span className="sm:hidden">{isPersian ? 'حذف' : 'Delete'}</span>
+                      <span className="hidden sm:inline">{isPersian ? 'حذف همگانی' : 'Bulk Delete'}</span>
+                    </span>
                   </Button>
                 )}
 
+                {/* Desktop Deselect Button */}
                 <Button
                   size="sm"
                   radius="full"
                   variant="light"
                   onPress={() => setSelectedIds([])}
-                  className="text-neutral-400 hover:text-[#f7f4ee] hover:bg-white/10 font-bold text-xs cursor-pointer rounded-full h-8 px-2.5 transition-all flex items-center gap-1"
+                  className="hidden sm:flex text-neutral-400 hover:text-[#f7f4ee] hover:bg-white/10 font-bold text-xs cursor-pointer rounded-full h-8 px-2.5 transition-all items-center gap-1 shrink-0"
                 >
                   <X className="w-3.5 h-3.5" />
                   <span>{isPersian ? 'انصراف' : 'Deselect'}</span>
