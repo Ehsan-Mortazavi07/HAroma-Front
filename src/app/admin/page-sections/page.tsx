@@ -92,17 +92,20 @@ export default function AdminPageSectionsPage() {
       prev.map((s) => (s._id === sec._id ? { ...s, isVisible: nextVis } : s))
     );
     try {
-      await adminApi.updatePageSection(sec.sectionKey || sec._id, { isVisible: nextVis });
+      await adminApi.toggleSectionVisibility(sec.sectionKey || sec._id, nextVis);
       toast.success(
         isPersian
           ? `نمایش بخش «${sec.title}» ${nextVis ? 'فعال' : 'غیرفعال'} شد.`
           : `Section "${sec.title}" visibility toggled.`,
       );
-    } catch (err) {
+    } catch (err: any) {
       setSections((prev) =>
         prev.map((s) => (s._id === sec._id ? { ...s, isVisible: !nextVis } : s))
       );
-      toast.error(isPersian ? 'خطا در تغییر وضعیت نمایش.' : 'Failed to update visibility.');
+      toast.error(
+        err?.response?.data?.message ||
+        (isPersian ? 'خطا در تغییر وضعیت نمایش.' : 'Failed to update visibility.')
+      );
     }
   };
 
@@ -112,7 +115,7 @@ export default function AdminPageSectionsPage() {
       prev.map((s) => (s._id === sec._id ? { ...s, isVipOnly: nextVip } : s))
     );
     try {
-      await adminApi.updatePageSection(sec.sectionKey || sec._id, { isVipOnly: nextVip });
+      await adminApi.toggleSectionVip(sec.sectionKey || sec._id, nextVip);
       toast.success(
         nextVip
           ? isPersian
@@ -122,11 +125,14 @@ export default function AdminPageSectionsPage() {
             ? `بخش «${sec.title}» عمومی شد.`
             : `Section "${sec.title}" is now public.`,
       );
-    } catch (err) {
+    } catch (err: any) {
       setSections((prev) =>
         prev.map((s) => (s._id === sec._id ? { ...s, isVipOnly: !nextVip } : s))
       );
-      toast.error(isPersian ? 'خطا در تغییر دسترسی VIP.' : 'Failed to update VIP access.');
+      toast.error(
+        err?.response?.data?.message ||
+        (isPersian ? 'خطا در تغییر دسترسی VIP.' : 'Failed to update VIP access.')
+      );
     }
   };
 
