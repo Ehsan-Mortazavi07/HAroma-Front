@@ -43,7 +43,7 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
   onClose,
   title,
   description,
-  confirmText = 'بله، حذف کن',
+  confirmText = 'بله، حذف',
   cancelText = 'انصراف',
   confirmColor = 'danger',
   icon,
@@ -79,8 +79,9 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
       globalLastTriggerRect ||
       ((document.activeElement as HTMLElement)?.closest?.('button') || (document.activeElement as HTMLElement))?.getBoundingClientRect?.();
 
-    const menuWidth = 205;
-    const menuEstimatedHeight = 240;
+    // Horizontal dimensions (X > Y)
+    const menuWidth = 310;
+    const menuEstimatedHeight = 125;
 
     if (!rect || (rect.width === 0 && rect.height === 0)) {
       setCoords({
@@ -92,16 +93,17 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
     }
 
     let isFlipped = false;
-    let top = rect.bottom + 6;
+    let top = rect.bottom + 8;
 
-    // If near bottom of screen, flip above the button
+    // If near bottom of viewport, flip above the button
     if (top + menuEstimatedHeight > window.innerHeight - 12) {
-      top = Math.max(12, rect.top - menuEstimatedHeight - 6);
+      top = Math.max(12, rect.top - menuEstimatedHeight - 8);
       isFlipped = true;
     }
 
-    // Horizontal placement:
-    // In RTL, align right edge of menu with right edge of button
+    // Horizontal alignment:
+    // In RTL, align right edge of menu to right edge of button if space permits;
+    // Otherwise align left edge with button left
     let left: number;
     if (rect.right - menuWidth >= 12) {
       left = rect.right - menuWidth;
@@ -156,12 +158,12 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
             onClick={handleClose}
           />
 
-          {/* Anchored Popover Menu (Y > X) */}
+          {/* Anchored Horizontal Popover Menu (X > Y) with ultra-smooth Apple easing */}
           <motion.div
             initial={{
               opacity: 0,
-              y: coords.isFlipped ? 8 : -8,
-              scale: 0.94,
+              y: coords.isFlipped ? 12 : -12,
+              scale: 0.96,
             }}
             animate={{
               opacity: 1,
@@ -170,76 +172,77 @@ export const AdminConfirmModal: React.FC<AdminConfirmModalProps> = ({
             }}
             exit={{
               opacity: 0,
-              y: coords.isFlipped ? 6 : -6,
-              scale: 0.94,
+              y: coords.isFlipped ? 8 : -8,
+              scale: 0.97,
             }}
             transition={{
-              duration: 0.22,
+              duration: 0.32,
               ease: [0.16, 1, 0.3, 1],
             }}
             style={{
               position: 'fixed',
               top: coords.top,
               left: coords.left,
-              width: 205,
+              width: 310,
               zIndex: 99999,
               transformOrigin: coords.isFlipped ? 'bottom center' : 'top center',
             }}
-            className="admin-confirm-popover-card bg-brand-surface dark:bg-[#182018] border border-brand-border dark:border-[#2e3a2e] text-brand-text rounded-2xl shadow-2xl shadow-black/35 p-3 flex flex-col items-center text-center select-none"
+            className="admin-confirm-popover-card bg-brand-surface/95 dark:bg-[#182018]/95 backdrop-blur-xl border border-brand-border dark:border-[#2e3a2e] text-brand-text rounded-2xl shadow-2xl shadow-black/25 p-3.5 flex flex-col justify-between select-none transform-gpu will-change-transform"
             dir="rtl"
           >
-            {/* Top Warning Badge */}
-            <div
-              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mb-2 border ${
-                isDanger
-                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 shadow-xs'
-                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 shadow-xs'
-              }`}
-            >
-              {icon || (
-                isDanger ? (
-                  <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                )
-              )}
-            </div>
-
-            {/* Title */}
-            <h4 className="font-black text-xs text-brand-text text-center tracking-tight leading-snug mb-1">
-              {title}
-            </h4>
-
-            {/* Description / Target item */}
-            <div className="text-[11px] text-brand-text-muted text-center leading-relaxed px-0.5 mb-3 w-full space-y-1 [&_p]:text-center [&_strong]:text-brand-text [&_strong]:font-black [&_.text-rose-500]:text-[10px] [&_.text-rose-500]:mt-1 [&_.text-rose-500]:leading-tight">
-              {typeof description === 'string' ? <p>{description}</p> : description}
-            </div>
-
-            {/* Vertical Actions (Stacked Column - Y > X) */}
-            <div className="w-full flex flex-col gap-1.5 pt-1 border-t border-brand-border/60">
-              <Button
-                size="sm"
-                radius="lg"
-                color={confirmColor}
-                isLoading={isLoading}
-                onPress={onConfirm}
-                className={`w-full h-8 font-black text-xs cursor-pointer shadow-sm active:scale-95 transition-all rounded-xl ${
+            {/* Top Row: Icon + Title & Description (Side-by-side) */}
+            <div className="flex items-start gap-2.5 w-full text-right">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border mt-0.5 ${
                   isDanger
-                    ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20'
-                    : ''
+                    ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 shadow-xs'
+                    : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 shadow-xs'
                 }`}
               >
-                {confirmText}
-              </Button>
+                {icon || (
+                  isDanger ? (
+                    <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  )
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <h4 className="font-black text-xs text-brand-text tracking-tight leading-snug truncate">
+                  {title}
+                </h4>
+                <div className="text-[11px] text-brand-text-muted leading-relaxed mt-0.5 space-y-0.5 line-clamp-2 [&_strong]:text-brand-text [&_strong]:font-black [&_.text-rose-500]:text-[10px]">
+                  {typeof description === 'string' ? <p>{description}</p> : description}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Row: Actions (Side-by-side Horizontally) */}
+            <div className="flex items-center justify-end gap-2 w-full mt-3 pt-2.5 border-t border-brand-border/60">
               <Button
                 size="sm"
                 radius="lg"
                 variant="flat"
                 isDisabled={isLoading}
                 onPress={handleClose}
-                className="w-full h-7.5 font-bold text-[11px] bg-brand-surface-elevated/70 hover:bg-brand-surface-elevated text-brand-text border border-brand-border/60 cursor-pointer rounded-xl active:scale-95 transition-all"
+                className="h-8 px-3.5 font-bold text-xs bg-brand-surface-elevated/70 hover:bg-brand-surface-elevated text-brand-text border border-brand-border/60 cursor-pointer rounded-xl active:scale-95 transition-all"
               >
                 {cancelText}
+              </Button>
+              <Button
+                size="sm"
+                radius="lg"
+                color={confirmColor}
+                isLoading={isLoading}
+                onPress={onConfirm}
+                className={`h-8 px-4 font-black text-xs cursor-pointer shadow-sm active:scale-95 transition-all rounded-xl ${
+                  isDanger
+                    ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20'
+                    : ''
+                }`}
+              >
+                {confirmText}
               </Button>
             </div>
           </motion.div>
