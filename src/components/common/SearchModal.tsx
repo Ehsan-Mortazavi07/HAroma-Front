@@ -345,59 +345,75 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ type: 'spring', damping: 26, stiffness: 360 }}
-            className="relative w-full max-w-2xl h-[650px] max-h-[88vh] bg-[#fcfbf9]/98 dark:bg-[#151a15]/98 backdrop-blur-3xl border border-[#e6dcce] dark:border-[#2e3a2e] rounded-[32px] p-5 sm:p-7 shadow-2xl z-10 flex flex-col overflow-hidden my-auto"
+            className="relative w-full max-w-2xl h-[650px] max-h-[88vh] bg-[#fcfbf9]/98 dark:bg-[#151a15]/98 backdrop-blur-3xl border border-[#e6dcce] dark:border-[#2e3a2e] rounded-[28px] sm:rounded-[32px] p-4 sm:p-7 shadow-2xl z-10 flex flex-col overflow-hidden my-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Top Search Input */}
-            <div className="relative w-full shrink-0">
-              <Input
-                ref={inputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleNavigateToAllResults();
+            {/* Mobile Pull Handle Indicator */}
+            <div className="w-10 h-1 rounded-full bg-[#e6dcce] dark:bg-[#3e4c3e] mx-auto mb-2.5 sm:hidden shrink-0 opacity-70" />
+
+            {/* Top Search Input Row & Minimal Close Button */}
+            <div className="relative w-full shrink-0 flex items-center gap-2 sm:gap-3">
+              <div className="relative flex-1 min-w-0">
+                <Input
+                  ref={inputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleNavigateToAllResults();
+                    }
+                  }}
+                  placeholder="نام محصول، برند یا رایحه موردنظر را بنویسید..."
+                  radius="full"
+                  size="lg"
+                  variant="flat"
+                  startContent={
+                    <Search className="w-4 h-4 sm:w-5 sm:h-5 text-[#73695c] dark:text-[#a69c8e] shrink-0 pointer-events-none mr-1" />
                   }
-                }}
-                placeholder="نام محصول، برند یا رایحه موردنظر را بنویسید..."
-                radius="full"
-                size="lg"
-                variant="flat"
-                startContent={
-                  <Search className="w-5 h-5 text-[#73695c] dark:text-[#a69c8e] shrink-0 pointer-events-none mr-1" />
-                }
-                endContent={
-                  <div className="flex items-center gap-1.5 shrink-0 pl-1">
-                    {searchQuery && (
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        radius="full"
-                        variant="light"
-                        onPress={() => setSearchQuery('')}
-                        className="w-7 h-7 min-w-7 text-[#73695c] dark:text-[#a69c8e] hover:text-[#1d241d] dark:hover:text-[#f7f4ee] hover:bg-[#e6dcce] dark:hover:bg-[#2e3a2e]"
-                        aria-label="پاک کردن متن"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
-                    <span className="hidden sm:inline-block text-[10px] text-[#73695c] dark:text-[#a69c8e] border border-[#e6dcce] dark:border-[#3e4c3e] bg-white/60 dark:bg-transparent rounded-md px-1.5 py-0.5 font-mono select-none">
-                      ESC
-                    </span>
-                  </div>
-                }
-                classNames={{
-                  base: 'w-full',
-                  mainWrapper: 'h-13 sm:h-14',
-                  inputWrapper:
-                    'bg-[#f0eae0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#3e4c3e] hover:border-[#9f815b]/60 dark:hover:border-[#bfa27a]/60 data-[focus=true]:border-[#9f815b] dark:data-[focus=true]:border-[#bfa27a] data-[focus=true]:bg-white dark:data-[focus=true]:bg-[#242c24] h-13 sm:h-14 px-4 transition-all shadow-inner rounded-full',
-                  input:
-                    '!border-none !outline-none !shadow-none !ring-0 !bg-transparent text-sm font-medium text-[#1d241d] dark:text-[#f7f4ee] placeholder:text-[#73695c] dark:placeholder:text-[#a69c8e] placeholder:font-normal focus:!outline-none focus:!ring-0 focus:!border-none [appearance:none] [-webkit-appearance:none] pr-2',
-                  innerWrapper: '!bg-transparent',
-                }}
-              />
+                  endContent={
+                    <div className="flex items-center gap-1.5 shrink-0 pl-1">
+                      {searchQuery && (
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          radius="full"
+                          variant="light"
+                          onPress={() => setSearchQuery('')}
+                          className="w-7 h-7 min-w-7 text-[#73695c] dark:text-[#a69c8e] hover:text-[#1d241d] dark:hover:text-[#f7f4ee] hover:bg-[#e6dcce] dark:hover:bg-[#2e3a2e]"
+                          aria-label="پاک کردن متن"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                      <span className="hidden sm:inline-block text-[10px] text-[#73695c] dark:text-[#a69c8e] border border-[#e6dcce] dark:border-[#3e4c3e] bg-white/60 dark:bg-transparent rounded-md px-1.5 py-0.5 font-mono select-none">
+                        ESC
+                      </span>
+                    </div>
+                  }
+                  classNames={{
+                    base: 'w-full',
+                    mainWrapper: 'h-12 sm:h-14',
+                    inputWrapper:
+                      'bg-[#f0eae0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#3e4c3e] hover:border-[#9f815b]/60 dark:hover:border-[#bfa27a]/60 data-[focus=true]:border-[#9f815b] dark:data-[focus=true]:border-[#bfa27a] data-[focus=true]:bg-white dark:data-[focus=true]:bg-[#242c24] h-12 sm:h-14 px-3.5 sm:px-4 transition-all shadow-inner rounded-full',
+                    input:
+                      '!border-none !outline-none !shadow-none !ring-0 !bg-transparent text-xs sm:text-sm font-medium text-[#1d241d] dark:text-[#f7f4ee] placeholder:text-[#73695c] dark:placeholder:text-[#a69c8e] placeholder:font-normal focus:!outline-none focus:!ring-0 focus:!border-none [appearance:none] [-webkit-appearance:none] pr-1 sm:pr-2',
+                    innerWrapper: '!bg-transparent',
+                  }}
+                />
+              </div>
+
+              {/* Minimal Luxury Close Button */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#f0eae0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#3e4c3e] text-[#73695c] dark:text-[#a69c8e] hover:text-[#1d241d] dark:hover:text-[#f7f4ee] hover:border-[#bfa27a]/60 active:scale-95 transition-all shrink-0 cursor-pointer shadow-xs group"
+                aria-label="بستن جست‌وجو"
+                title="بستن (Esc)"
+              >
+                <X className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" />
+              </button>
             </div>
 
             {/* Filter Chips Section («بخش») & Controls */}
