@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Card,
@@ -21,9 +22,11 @@ import { adminApi } from '@/common/api/admin';
 import { IBrand } from '@/common/interfaces';
 import { toast, toPersianDigits } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
+import { MEDIA_BASE_URL } from '@/common/constants/URL';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
+import { SingleImageUploader } from '@/components/admin/SingleImageUploader';
 import { useAppSelector } from '@/stores/hooks';
 
 const containerVariants = {
@@ -432,9 +435,20 @@ export default function AdminBrandsPage() {
                               size="sm"
                               ariaLabel={b.name}
                             />
-                            <div className="w-12 h-12 rounded-2xl bg-brand-surface-elevated flex items-center justify-center border border-brand-border text-brand-bronze overflow-hidden shadow-xs">
+                            <div className="w-12 h-12 rounded-2xl bg-brand-surface-elevated flex items-center justify-center border border-brand-border text-brand-bronze overflow-hidden shadow-xs relative shrink-0">
                               {b.logo ? (
-                                <img src={b.logo} alt={b.name} className="w-full h-full object-contain p-1.5" />
+                                <Image
+                                  src={
+                                    b.logo.startsWith('http://') || b.logo.startsWith('https://')
+                                      ? b.logo
+                                      : `${MEDIA_BASE_URL}${b.logo.startsWith('/') ? '' : '/'}${b.logo}`
+                                  }
+                                  alt={b.name}
+                                  fill
+                                  sizes="48px"
+                                  className="object-contain p-1.5"
+                                  unoptimized
+                                />
                               ) : (
                                 <Award className="w-6 h-6" />
                               )}
@@ -590,14 +604,14 @@ export default function AdminBrandsPage() {
                   />
 
                   <Input
-                    label={isPersian ? 'آدرس لوگوی برند (اختیاری)' : 'Brand Logo URL (Optional)'}
+                    label={isPersian ? 'اولویت نمایش' : 'Display Order'}
                     labelPlacement="outside-top"
-                    value={logo}
-                    onValueChange={setLogo}
-                    placeholder="https://..."
+                    type="number"
+                    value={String(order)}
+                    onValueChange={(val) => setOrder(Number(val) || 0)}
                     variant="bordered"
                     radius="full"
-                    classNames={{ ...inputClassNames, inputWrapper: `${inputClassNames.inputWrapper} font-mono` }}
+                    classNames={inputClassNames}
                   />
                 </div>
 
@@ -617,43 +631,44 @@ export default function AdminBrandsPage() {
                   }}
                 />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                  <Input
-                    label={isPersian ? 'اولویت نمایش' : 'Display Order'}
-                    labelPlacement="outside-top"
-                    type="number"
-                    value={String(order)}
-                    onValueChange={(val) => setOrder(Number(val) || 0)}
-                    variant="bordered"
-                    radius="full"
-                    classNames={inputClassNames}
-                  />
-
-                  <div className="flex items-center gap-4 pt-6">
-                    <div className="flex-1 p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between">
-                      <SmoothSwitch
-                        isSelected={isActive}
-                        onValueChange={setIsActive}
-                        isRtl={isRTL}
-                      >
-                        <span className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'برند فعال' : 'Active'}
-                        </span>
-                      </SmoothSwitch>
-                    </div>
-
-                    <div className="flex-1 p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between">
-                      <SmoothSwitch
-                        isSelected={isFeatured}
-                        onValueChange={setIsFeatured}
-                        isRtl={isRTL}
-                      >
-                        <span className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'برند منتخب' : 'Featured'}
-                        </span>
-                      </SmoothSwitch>
-                    </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between">
+                    <SmoothSwitch
+                      isSelected={isActive}
+                      onValueChange={setIsActive}
+                      isRtl={isRTL}
+                    >
+                      <span className="text-xs font-bold text-brand-text">
+                        {isPersian ? 'برند فعال' : 'Active'}
+                      </span>
+                    </SmoothSwitch>
                   </div>
+
+                  <div className="flex-1 p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between">
+                    <SmoothSwitch
+                      isSelected={isFeatured}
+                      onValueChange={setIsFeatured}
+                      isRtl={isRTL}
+                    >
+                      <span className="text-xs font-bold text-brand-text">
+                        {isPersian ? 'برند منتخب' : 'Featured'}
+                      </span>
+                    </SmoothSwitch>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-brand-border/60">
+                  <SingleImageUploader
+                    value={logo}
+                    onChange={setLogo}
+                    label={isPersian ? 'لوگوی رسمی خانه عطر / برند' : 'Brand Logo'}
+                    description={
+                      isPersian
+                        ? 'لوگوی رسمی برند را از سیستم آپلود نمایید (فرمت‌های PNG، WebP یا SVG با پس‌زمینه شفاف) یا لینک مستقیم آن را ثبت کنید.'
+                        : 'Upload the official brand emblem/logo from your device or enter a web URL.'
+                    }
+                    aspectRatio="square"
+                  />
                 </div>
               </ModalBody>
 

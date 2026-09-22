@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Card,
@@ -22,9 +23,11 @@ import { adminApi } from '@/common/api/admin';
 import { ICategory } from '@/common/interfaces';
 import { toast, toPersianDigits } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
+import { MEDIA_BASE_URL } from '@/common/constants/URL';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
+import { SingleImageUploader } from '@/components/admin/SingleImageUploader';
 import { useAppSelector } from '@/stores/hooks';
 
 const containerVariants = {
@@ -436,8 +439,23 @@ export default function AdminCategoriesPage() {
                               size="sm"
                               ariaLabel={cat.name}
                             />
-                            <div className="w-10 h-10 rounded-2xl bg-brand-surface-elevated flex items-center justify-center border border-brand-border text-brand-bronze shadow-xs">
-                              <Layers className="w-5 h-5" />
+                            <div className="w-11 h-11 rounded-2xl bg-brand-surface-elevated flex items-center justify-center border border-brand-border text-brand-bronze shadow-xs overflow-hidden relative shrink-0">
+                              {cat.image ? (
+                                <Image
+                                  src={
+                                    cat.image.startsWith('http://') || cat.image.startsWith('https://')
+                                      ? cat.image
+                                      : `${MEDIA_BASE_URL}${cat.image.startsWith('/') ? '' : '/'}${cat.image}`
+                                  }
+                                  alt={cat.name}
+                                  fill
+                                  sizes="44px"
+                                  className="object-cover p-1 rounded-xl"
+                                  unoptimized
+                                />
+                              ) : (
+                                <Layers className="w-5 h-5" />
+                              )}
                             </div>
                           </div>
                         <div className="flex items-center gap-2">
@@ -654,6 +672,20 @@ export default function AdminCategoriesPage() {
                       </SmoothSwitch>
                     </div>
                   </div>
+                </div>
+
+                <div className="pt-2 border-t border-brand-border/60">
+                  <SingleImageUploader
+                    value={image}
+                    onChange={setImage}
+                    label={isPersian ? 'تصویر / آیکون دسته‌بندی' : 'Category Image / Icon'}
+                    description={
+                      isPersian
+                        ? 'تصویر یا نماد اختصاصی دسته‌بندی را از سیستم آپلود کرده یا لینک اینترنتی آن را ثبت کنید تا در صفحه اصلی و اسلایدرها نمایش یابد.'
+                        : 'Upload a custom photo or logo for this category, or paste an image URL.'
+                    }
+                    aspectRatio="square"
+                  />
                 </div>
               </ModalBody>
 

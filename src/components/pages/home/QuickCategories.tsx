@@ -2,8 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Card, CardBody, Button } from '@heroui/react';
+import { MEDIA_BASE_URL } from '@/common/constants/URL';
 import {
   Sparkles,
   Heart,
@@ -151,8 +153,23 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
                 className="w-full h-full bg-brand-surface border border-brand-border/70 hover:border-brand-gold/80 shadow-2xs hover:shadow-md transition-all text-center rounded-2xl select-none"
               >
                 <CardBody className="flex flex-col items-center justify-center p-3 sm:p-4 select-none">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-center mb-2 shadow-2xs pointer-events-none">
-                    {getIcon(cat.slug)}
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-center mb-2 shadow-2xs pointer-events-none relative overflow-hidden shrink-0">
+                    {cat.image ? (
+                      <Image
+                        src={
+                          cat.image.startsWith('http://') || cat.image.startsWith('https://')
+                            ? cat.image
+                            : `${MEDIA_BASE_URL}${cat.image.startsWith('/') ? '' : '/'}${cat.image}`
+                        }
+                        alt={isPersian ? cat.name : cat.nameEn || cat.name}
+                        fill
+                        sizes="(max-width: 640px) 40px, 48px"
+                        className="object-cover p-1 rounded-xl sm:rounded-2xl"
+                        unoptimized
+                      />
+                    ) : (
+                      getIcon(cat.slug)
+                    )}
                   </div>
                   <span className="font-bold text-xs sm:text-sm text-brand-text truncate max-w-full">
                     {isPersian ? cat.name : cat.nameEn || cat.name}
