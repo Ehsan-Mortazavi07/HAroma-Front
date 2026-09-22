@@ -72,6 +72,7 @@ export default function AdminCouponsPage() {
 
   // Form
   const [code, setCode] = useState('');
+  const [codeTouched, setCodeTouched] = useState(false);
   const [discountPercent, setDiscountPercent] = useState<number>(10);
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [minPurchase, setMinPurchase] = useState<number>(200000);
@@ -212,6 +213,7 @@ export default function AdminCouponsPage() {
   const openCreateModal = () => {
     setEditingCoupon(null);
     setCode('');
+    setCodeTouched(false);
     setDiscountPercent(15);
     setDiscountAmount(0);
     setMinPurchase(300000);
@@ -224,6 +226,7 @@ export default function AdminCouponsPage() {
   const openEditModal = (c: ICoupon) => {
     setEditingCoupon(c);
     setCode(c.code);
+    setCodeTouched(false);
     setDiscountPercent(c.discountPercent || 0);
     setDiscountAmount(c.discountAmount || 0);
     setMinPurchase(c.minPurchase || 0);
@@ -235,8 +238,9 @@ export default function AdminCouponsPage() {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    setCodeTouched(true);
     if (!code.trim()) {
-      toast.error(isPersian ? 'کد تخفیف الزامی است.' : 'Coupon code is required.');
+      toast.error(isPersian ? 'وارد کردن کد تخفیف ضروری است.' : 'Coupon code is required.');
       return;
     }
 
@@ -506,21 +510,37 @@ export default function AdminCouponsPage() {
               </ModalHeader>
 
               <ModalBody className="space-y-4">
-                <Input
-                  label={isPersian ? 'کد تخفیف (لاتین و بدون فاصله)' : 'Coupon Code (Latin)'}
-                  labelPlacement="outside-top"
-                  isRequired
-                  value={code}
-                  onValueChange={(v) => setCode(v.toUpperCase())}
-                  placeholder="مثال: NOURUZ1405"
-                  variant="bordered"
-                  radius="full"
-                  classNames={{
-                    inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold font-mono font-bold uppercase rounded-full shadow-xs",
-                    input: "text-xs font-semibold text-brand-text",
-                    label: "text-xs font-bold text-brand-text mb-1",
-                  }}
-                />
+                <div>
+                  <Input
+                    label={isPersian ? 'کد تخفیف (لاتین و بدون فاصله)' : 'Coupon Code (Latin)'}
+                    labelPlacement="outside-top"
+                    isRequired
+                    value={code}
+                    onValueChange={(v) => {
+                      setCode(v.toUpperCase());
+                      if (!codeTouched) setCodeTouched(true);
+                    }}
+                    onBlur={() => setCodeTouched(true)}
+                    isInvalid={codeTouched && !code.trim()}
+                    placeholder="مثال: NOURUZ1405"
+                    variant="bordered"
+                    radius="full"
+                    classNames={{
+                      inputWrapper:
+                        codeTouched && !code.trim()
+                          ? 'h-11 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 font-mono font-bold uppercase rounded-full shadow-xs transition-colors'
+                          : 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold font-mono font-bold uppercase rounded-full shadow-xs transition-colors',
+                      input: 'text-xs font-semibold text-brand-text',
+                      label: 'text-xs font-bold text-brand-text mb-1',
+                    }}
+                  />
+                  {codeTouched && !code.trim() && (
+                    <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                      {isPersian ? 'این فیلد ضروری است (کد تخفیف).' : 'Coupon code is required.'}
+                    </p>
+                  )}
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input

@@ -108,12 +108,19 @@ export function SignInPage() {
                     radius="lg"
                     startContent={<User className="w-4 h-4 text-brand-bronze shrink-0" />}
                     isInvalid={Boolean(errors.identifier && touched.identifier)}
-                    errorMessage={errors.identifier && touched.identifier ? (errors.identifier as string) : undefined}
                     classNames={{
-                      inputWrapper: "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      inputWrapper: Boolean(errors.identifier && touched.identifier)
+                        ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                        : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
                       input: "text-xs font-semibold text-brand-text",
                     }}
                   />
+                  {errors.identifier && touched.identifier && (
+                    <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                      {String(errors.identifier)}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -158,12 +165,19 @@ export function SignInPage() {
                       </button>
                     }
                     isInvalid={Boolean(errors.password && touched.password)}
-                    errorMessage={errors.password && touched.password ? (errors.password as string) : undefined}
                     classNames={{
-                      inputWrapper: "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      inputWrapper: Boolean(errors.password && touched.password)
+                        ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                        : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
                       input: "text-xs font-mono font-semibold text-brand-text",
                     }}
                   />
+                  {errors.password && touched.password && (
+                    <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                      {String(errors.password)}
+                    </p>
+                  )}
                 </div>
 
                 <Button

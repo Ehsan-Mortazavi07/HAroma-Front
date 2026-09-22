@@ -73,6 +73,7 @@ export default function AdminVipPlansPage() {
 
   // Form State
   const [title, setTitle] = useState('');
+  const [titleTouched, setTitleTouched] = useState(false);
   const [titleEn, setTitleEn] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState<number>(390000);
@@ -216,6 +217,7 @@ export default function AdminVipPlansPage() {
   const openCreateModal = () => {
     setEditingPlan(null);
     setTitle('');
+    setTitleTouched(false);
     setTitleEn('');
     setDescription('');
     setPrice(490000);
@@ -235,6 +237,7 @@ export default function AdminVipPlansPage() {
   const openEditModal = (plan: IVipPlan) => {
     setEditingPlan(plan);
     setTitle(plan.title);
+    setTitleTouched(false);
     setTitleEn(plan.titleEn || '');
     setDescription(plan.description);
     setPrice(plan.price);
@@ -259,8 +262,9 @@ export default function AdminVipPlansPage() {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    setTitleTouched(true);
     if (!title.trim()) {
-      toast.error(isPersian ? 'عنوان پلن الزامی است.' : 'Plan title is required.');
+      toast.error(isPersian ? 'وارد کردن عنوان پلن ضروری است.' : 'Plan title is required.');
       return;
     }
 
@@ -580,16 +584,35 @@ export default function AdminVipPlansPage() {
 
               <ModalBody className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
-                    label={isPersian ? 'عنوان فارسی پلن' : 'Plan Title (Persian)'}
-                    labelPlacement="outside-top"
-                    isRequired
-                    value={title}
-                    onValueChange={setTitle}
-                    placeholder={isPersian ? 'مثال: اشتراک طلایی ۱ ماهه' : 'e.g. 1-Month Gold VIP'}
-                    variant="bordered"
-                    classNames={vipInputClassNames}
-                  />
+                  <div>
+                    <Input
+                      label={isPersian ? 'عنوان فارسی پلن' : 'Plan Title (Persian)'}
+                      labelPlacement="outside-top"
+                      isRequired
+                      value={title}
+                      onValueChange={(val) => {
+                        setTitle(val);
+                        if (!titleTouched) setTitleTouched(true);
+                      }}
+                      onBlur={() => setTitleTouched(true)}
+                      isInvalid={titleTouched && !title.trim()}
+                      placeholder={isPersian ? 'مثال: اشتراک طلایی ۱ ماهه' : 'e.g. 1-Month Gold VIP'}
+                      variant="bordered"
+                      classNames={{
+                        ...vipInputClassNames,
+                        inputWrapper:
+                          titleTouched && !title.trim()
+                            ? 'h-11 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-full shadow-xs transition-colors'
+                            : vipInputClassNames.inputWrapper,
+                      }}
+                    />
+                    {titleTouched && !title.trim() && (
+                      <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                        {isPersian ? 'این فیلد ضروری است (عنوان پلن).' : 'Plan title is required.'}
+                      </p>
+                    )}
+                  </div>
 
                   <Input
                     label={isPersian ? 'عنوان انگلیسی پلن' : 'Plan Title (English)'}

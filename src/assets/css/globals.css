@@ -349,3 +349,17 @@ textarea,
               border-color 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+/* High-contrast explicit error message and invalid styling */
+[data-slot="error-message"] {
+  color: #f43f5e !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  margin-top: 0.35rem !important;
+}
+
+[data-slot="input-wrapper"][data-invalid="true"] {
+  border-color: rgba(244, 63, 94, 0.8) !important;
+  background-color: rgba(244, 63, 94, 0.05) !important;
+}
+
+

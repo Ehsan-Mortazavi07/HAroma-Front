@@ -85,6 +85,7 @@ export default function AdminBrandsPage() {
 
   // Form State
   const [name, setName] = useState('');
+  const [nameTouched, setNameTouched] = useState(false);
   const [nameEn, setNameEn] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
@@ -226,6 +227,7 @@ export default function AdminBrandsPage() {
   const openCreateModal = () => {
     setEditingBrand(null);
     setName('');
+    setNameTouched(false);
     setNameEn('');
     setSlug('');
     setDescription('');
@@ -240,6 +242,7 @@ export default function AdminBrandsPage() {
   const openEditModal = (b: IBrand) => {
     setEditingBrand(b);
     setName(b.name);
+    setNameTouched(false);
     setNameEn(b.nameEn || '');
     setSlug(b.slug);
     setDescription(b.description || '');
@@ -253,8 +256,9 @@ export default function AdminBrandsPage() {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    setNameTouched(true);
     if (!name.trim()) {
-      toast.error(isPersian ? 'نام برند الزامی است.' : 'Brand name is required.');
+      toast.error(isPersian ? 'وارد کردن نام برند ضروری است.' : 'Brand name is required.');
       return;
     }
 
@@ -567,17 +571,36 @@ export default function AdminBrandsPage() {
 
               <ModalBody className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
-                    label={isPersian ? 'نام برند به فارسی' : 'Brand Name (Persian)'}
-                    labelPlacement="outside-top"
-                    isRequired
-                    value={name}
-                    onValueChange={setName}
-                    placeholder={isPersian ? 'مثال: کرید، تام فورد، زرجوف' : 'e.g. Creed, Xerjoff'}
-                    variant="bordered"
-                    radius="full"
-                    classNames={inputClassNames}
-                  />
+                  <div>
+                    <Input
+                      label={isPersian ? 'نام برند به فارسی' : 'Brand Name (Persian)'}
+                      labelPlacement="outside-top"
+                      isRequired
+                      value={name}
+                      onValueChange={(val) => {
+                        setName(val);
+                        if (!nameTouched) setNameTouched(true);
+                      }}
+                      onBlur={() => setNameTouched(true)}
+                      isInvalid={nameTouched && !name.trim()}
+                      placeholder={isPersian ? 'مثال: کرید، تام فورد، زرجوف' : 'e.g. Creed, Xerjoff'}
+                      variant="bordered"
+                      radius="full"
+                      classNames={{
+                        ...inputClassNames,
+                        inputWrapper:
+                          nameTouched && !name.trim()
+                            ? 'h-11 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-full shadow-xs transition-colors'
+                            : inputClassNames.inputWrapper,
+                      }}
+                    />
+                    {nameTouched && !name.trim() && (
+                      <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                        {isPersian ? 'این فیلد ضروری است (نام برند).' : 'Brand name is required.'}
+                      </p>
+                    )}
+                  </div>
 
                   <Input
                     label={isPersian ? 'نام برند به انگلیسی' : 'Brand Name (English)'}

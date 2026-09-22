@@ -86,6 +86,7 @@ export default function AdminCategoriesPage() {
 
   // Form State
   const [name, setName] = useState('');
+  const [nameTouched, setNameTouched] = useState(false);
   const [nameEn, setNameEn] = useState('');
   const [slug, setSlug] = useState('');
   const [parentId, setParentId] = useState<string>('');
@@ -227,6 +228,7 @@ export default function AdminCategoriesPage() {
   const openCreateModal = () => {
     setEditingCat(null);
     setName('');
+    setNameTouched(false);
     setNameEn('');
     setSlug('');
     setParentId('');
@@ -241,6 +243,7 @@ export default function AdminCategoriesPage() {
   const openEditModal = (cat: ICategory) => {
     setEditingCat(cat);
     setName(cat.name);
+    setNameTouched(false);
     setNameEn(cat.nameEn || '');
     setSlug(cat.slug);
     const pId =
@@ -260,8 +263,9 @@ export default function AdminCategoriesPage() {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    setNameTouched(true);
     if (!name.trim()) {
-      toast.error(isPersian ? 'نام دسته‌بندی الزامی است.' : 'Category name is required.');
+      toast.error(isPersian ? 'وارد کردن نام دسته‌بندی ضروری است.' : 'Category name is required.');
       return;
     }
 
@@ -572,17 +576,36 @@ export default function AdminCategoriesPage() {
 
               <ModalBody className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
-                    label={isPersian ? 'نام فارسی دسته‌بندی' : 'Category Name (Persian)'}
-                    labelPlacement="outside-top"
-                    isRequired
-                    value={name}
-                    onValueChange={setName}
-                    placeholder={isPersian ? 'مثال: عطر و ادکلن نیش' : 'e.g. Luxury Niche Perfumes'}
-                    variant="bordered"
-                    radius="full"
-                    classNames={inputClassNames}
-                  />
+                  <div>
+                    <Input
+                      label={isPersian ? 'نام فارسی دسته‌بندی' : 'Category Name (Persian)'}
+                      labelPlacement="outside-top"
+                      isRequired
+                      value={name}
+                      onValueChange={(val) => {
+                        setName(val);
+                        if (!nameTouched) setNameTouched(true);
+                      }}
+                      onBlur={() => setNameTouched(true)}
+                      isInvalid={nameTouched && !name.trim()}
+                      placeholder={isPersian ? 'مثال: عطر و ادکلن نیش' : 'e.g. Luxury Niche Perfumes'}
+                      variant="bordered"
+                      radius="full"
+                      classNames={{
+                        ...inputClassNames,
+                        inputWrapper:
+                          nameTouched && !name.trim()
+                            ? 'h-11 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-full shadow-xs transition-colors'
+                            : inputClassNames.inputWrapper,
+                      }}
+                    />
+                    {nameTouched && !name.trim() && (
+                      <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                        {isPersian ? 'این فیلد ضروری است (نام دسته‌بندی).' : 'Category name is required.'}
+                      </p>
+                    )}
+                  </div>
 
                   <Input
                     label={isPersian ? 'نام انگلیسی دسته‌بندی' : 'Category Name (English)'}

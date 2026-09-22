@@ -310,25 +310,36 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
-                  <Input
-                    label={isPersian ? 'عنوان فارسی محصول *' : 'Product Title (Persian) *'}
-                    labelPlacement="outside-top"
-                    isRequired
-                    value={values.title}
-                    onValueChange={(val) => setFieldValue('title', val)}
-                    placeholder={isPersian ? 'مثال: ادکلن کرید اونتوس مردانه' : 'e.g. Creed Aventus For Men'}
-                    isInvalid={Boolean(errors.title && touched.title)}
-                    errorMessage={errors.title && touched.title ? String(errors.title) : undefined}
-                    variant="bordered"
-                    radius="full"
-                    classNames={{
-                      inputWrapper: 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
-                      input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
-                      label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
-                    }}
-                  />
+                  <div>
+                    <Input
+                      name="title"
+                      label={isPersian ? 'عنوان فارسی محصول *' : 'Product Title (Persian) *'}
+                      labelPlacement="outside-top"
+                      isRequired
+                      value={values.title}
+                      onValueChange={(val) => setFieldValue('title', val)}
+                      placeholder={isPersian ? 'مثال: ادکلن کرید اونتوس مردانه' : 'e.g. Creed Aventus For Men'}
+                      isInvalid={Boolean(errors.title && touched.title)}
+                      variant="bordered"
+                      radius="full"
+                      classNames={{
+                        inputWrapper: Boolean(errors.title && touched.title)
+                          ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-full shadow-xs transition-colors'
+                          : 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs transition-colors',
+                        input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      }}
+                    />
+                    {errors.title && touched.title && (
+                      <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                        {String(errors.title)}
+                      </p>
+                    )}
+                  </div>
 
                   <Input
+                    name="titleEn"
                     label={isPersian ? 'عنوان انگلیسی محصول' : 'Product Title (English)'}
                     labelPlacement="outside-top"
                     value={values.titleEn}
@@ -337,7 +348,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                     variant="bordered"
                     radius="full"
                     classNames={{
-                      inputWrapper: 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                      inputWrapper: 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs transition-colors',
                       input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
                       label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
                     }}
@@ -345,21 +356,29 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
                   <div className="sm:col-span-2">
                     <Input
+                      name="slug"
                       label={isPersian ? 'نامک آدرس (Slug یکتا)' : 'URL Slug (Unique)'}
                       labelPlacement="outside-top"
                       value={values.slug}
                       onValueChange={(val) => setFieldValue('slug', val)}
                       placeholder="creed-aventus-edp"
                       isInvalid={Boolean(errors.slug && touched.slug)}
-                      errorMessage={errors.slug && touched.slug ? String(errors.slug) : undefined}
                       variant="bordered"
                       radius="full"
                       classNames={{
-                        inputWrapper: 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                        inputWrapper: Boolean(errors.slug && touched.slug)
+                          ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-full shadow-xs transition-colors'
+                          : 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs transition-colors',
                         input: 'font-mono text-xs text-[#1d241d] dark:text-[#f7f4ee]',
                         label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
                       }}
                     />
+                    {errors.slug && touched.slug && (
+                      <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                        {String(errors.slug)}
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardBody>
@@ -683,24 +702,33 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                       }}
                     />
 
-                    <Textarea
-                      label={isPersian ? 'توضیحات کامل و هرم بویایی فارسی *' : 'Persian Full Description & Olfactory Pyramid *'}
-                      labelPlacement="outside-top"
-                      rows={7}
-                      dir="rtl"
-                      value={values.description}
-                      onValueChange={(val) => setFieldValue('description', val)}
-                      placeholder="شرح کامل نت‌های ابتدایی، میانی، پایه، داستان عطر، هرم بویایی و راهنمای استفاده..."
-                      isInvalid={Boolean(errors.description && touched.description)}
-                      errorMessage={errors.description && touched.description ? String(errors.description) : undefined}
-                      variant="bordered"
-                      radius="lg"
-                      classNames={{
-                        inputWrapper: 'p-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-2xl shadow-xs',
-                        input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
-                        label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
-                      }}
-                    />
+                    <div>
+                      <Textarea
+                        label={isPersian ? 'توضیحات کامل و هرم بویایی فارسی *' : 'Persian Full Description & Olfactory Pyramid *'}
+                        labelPlacement="outside-top"
+                        rows={7}
+                        dir="rtl"
+                        value={values.description}
+                        onValueChange={(val) => setFieldValue('description', val)}
+                        placeholder="شرح کامل نت‌های ابتدایی، میانی، پایه، داستان عطر، هرم بویایی و راهنمای استفاده..."
+                        isInvalid={Boolean(errors.description && touched.description)}
+                        variant="bordered"
+                        radius="lg"
+                        classNames={{
+                          inputWrapper: Boolean(errors.description && touched.description)
+                            ? 'p-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors'
+                            : 'p-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-2xl shadow-xs transition-colors',
+                          input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                          label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                        }}
+                      />
+                      {errors.description && touched.description && (
+                        <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                          {String(errors.description)}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
 

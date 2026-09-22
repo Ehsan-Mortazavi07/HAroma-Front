@@ -56,18 +56,25 @@ export function CheckoutPage() {
     description: user?.addressNotes || '',
   });
 
+  const [addressTouched, setAddressTouched] = useState({
+    fullName: false,
+    phone: false,
+    addressDetail: false,
+  });
+
   // Sync address when user profile loads/changes
   React.useEffect(() => {
     if (user) {
       setDeliveryAddress((prev) => ({
+        ...prev,
         fullName: user.recipientName || user.fullName || prev.fullName,
         phone: user.recipientPhone || user.phone || prev.phone,
-        email: user.recipientEmail || user.email || prev.email || '',
+        email: user.recipientEmail || user.email || prev.email,
         province: user.province || prev.province,
         city: user.city || prev.city,
         postalCode: user.postalCode || prev.postalCode,
         addressDetail: user.address || prev.addressDetail,
-        description: user.addressNotes || prev.description || '',
+        description: user.addressNotes || prev.description,
       }));
     }
   }, [user]);
@@ -76,7 +83,7 @@ export function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod' | 'installment'>('online');
   const [isStoreReviewOpen, setIsStoreReviewOpen] = useState(true);
 
-  // Coupon State
+  // Promo Code / Coupons
   const [promoCode, setPromoCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
@@ -140,13 +147,29 @@ export function CheckoutPage() {
       return;
     }
 
+    setAddressTouched({ fullName: true, phone: true, addressDetail: true });
+
+    if (!deliveryAddress.fullName.trim()) {
+      toast.error(isPersian ? 'وارد کردن نام و نام خانوادگی ضروری است.' : 'Recipient full name is required.');
+      return;
+    }
+
     const cleanPhone = toEnglishDigits(deliveryAddress.phone).trim();
-    if (!cleanPhone || !/^09\d{9}$/.test(cleanPhone)) {
+    if (!cleanPhone) {
+      toast.error(isPersian ? 'وارد کردن شماره تماس ضروری است.' : 'Phone number is required.');
+      return;
+    }
+    if (!/^09\d{9}$/.test(cleanPhone)) {
       toast.error(
         isPersian
           ? 'شماره تماس باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثلاً ۰۹۱۲۳۴۵۶۷۸۹).'
           : 'Phone number must be 11 digits starting with 09.'
       );
+      return;
+    }
+
+    if (!deliveryAddress.addressDetail.trim()) {
+      toast.error(isPersian ? 'وارد کردن آدرس دقیق پستی ضروری است.' : 'Street address detail is required.');
       return;
     }
 
@@ -362,16 +385,27 @@ export function CheckoutPage() {
                     aria-label={t.checkout.fullName}
                     placeholder={isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
                     value={deliveryAddress.fullName}
-                    onValueChange={(val) =>
-                      setDeliveryAddress({ ...deliveryAddress, fullName: val })
-                    }
+                    onValueChange={(val) => {
+                      setDeliveryAddress({ ...deliveryAddress, fullName: val });
+                      if (!addressTouched.fullName) setAddressTouched((p) => ({ ...p, fullName: true }));
+                    }}
+                    onBlur={() => setAddressTouched((p) => ({ ...p, fullName: true }))}
+                    isInvalid={addressTouched.fullName && !deliveryAddress.fullName.trim()}
                     variant="bordered"
                     radius="lg"
                     classNames={{
-                      inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      inputWrapper: addressTouched.fullName && !deliveryAddress.fullName.trim()
+                        ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                        : "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
                       input: "text-xs font-semibold text-brand-text",
                     }}
                   />
+                  {addressTouched.fullName && !deliveryAddress.fullName.trim() && (
+                    <p className="text-[11px] font-bold text-rose-500 mt-1 flex items-center gap-1.5 animate-in fade-in duration-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                      {isPersian ? 'این فیلد ضروری است (نام و نام خانوادگی تحویل‌گیرنده).' : 'Recipient full name is required.'}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
@@ -387,19 +421,36 @@ export function CheckoutPage() {
                     dir="ltr"
                     maxLength={11}
                     value={deliveryAddress.phone}
-                    onValueChange={(val) =>
+                    onValueChange={(val) => {
                       setDeliveryAddress({
                         ...deliveryAddress,
                         phone: toEnglishDigits(val).replace(/\D/g, ''),
-                      })
-                    }
+                      });
+                      if (!addressTouched.phone) setAddressTouched((p) => ({ ...p, phone: true }));
+                    }}
+                    onBlur={() => setAddressTouched((p) => ({ ...p, phone: true }))}
+                    isInvalid={addressTouched.phone && (!deliveryAddress.phone.trim() || !/^09\d{9}$/.test(toEnglishDigits(deliveryAddress.phone).trim()))}
                     variant="bordered"
                     radius="lg"
                     classNames={{
-                      inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      inputWrapper: addressTouched.phone && (!deliveryAddress.phone.trim() || !/^09\d{9}$/.test(toEnglishDigits(deliveryAddress.phone).trim()))
+                        ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                        : "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
                       input: "text-xs font-semibold font-mono text-brand-text text-center",
                     }}
                   />
+                  {addressTouched.phone && !deliveryAddress.phone.trim() && (
+                    <p className="text-[11px] font-bold text-rose-500 mt-1 flex items-center gap-1.5 animate-in fade-in duration-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                      {isPersian ? 'این فیلد ضروری است (شماره تماس).' : 'Phone number is required.'}
+                    </p>
+                  )}
+                  {addressTouched.phone && deliveryAddress.phone.trim() && !/^09\d{9}$/.test(toEnglishDigits(deliveryAddress.phone).trim()) && (
+                    <p className="text-[11px] font-bold text-rose-500 mt-1 flex items-center gap-1.5 animate-in fade-in duration-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                      {isPersian ? 'شماره تماس باید ۱۱ رقم بوده و با ۰۹ شروع شود.' : 'Phone must be 11 digits starting with 09.'}
+                    </p>
+                  )}
                 </div>
 
                 <ProvinceCitySelect
@@ -423,9 +474,12 @@ export function CheckoutPage() {
                     minRows={3}
                     maxLength={500}
                     value={deliveryAddress.addressDetail}
-                    onValueChange={(val) =>
-                      setDeliveryAddress({ ...deliveryAddress, addressDetail: val })
-                    }
+                    onValueChange={(val) => {
+                      setDeliveryAddress({ ...deliveryAddress, addressDetail: val });
+                      if (!addressTouched.addressDetail) setAddressTouched((p) => ({ ...p, addressDetail: true }));
+                    }}
+                    onBlur={() => setAddressTouched((p) => ({ ...p, addressDetail: true }))}
+                    isInvalid={addressTouched.addressDetail && !deliveryAddress.addressDetail.trim()}
                     placeholder={
                       isPersian
                         ? 'نام خیابان، کوچه، پلاک، طبقه، واحد یا توضیحات تکمیلی...'
@@ -434,10 +488,18 @@ export function CheckoutPage() {
                     variant="bordered"
                     radius="lg"
                     classNames={{
-                      inputWrapper: "px-4 py-3 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      inputWrapper: addressTouched.addressDetail && !deliveryAddress.addressDetail.trim()
+                        ? "px-4 py-3 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                        : "px-4 py-3 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
                       input: "text-xs font-semibold text-brand-text leading-relaxed",
                     }}
                   />
+                  {addressTouched.addressDetail && !deliveryAddress.addressDetail.trim() && (
+                    <p className="text-[11px] font-bold text-rose-500 mt-1 flex items-center gap-1.5 animate-in fade-in duration-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                      {isPersian ? 'این فیلد ضروری است (آدرس دقیق پستی).' : 'Street address is required.'}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">

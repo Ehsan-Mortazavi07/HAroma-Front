@@ -5,7 +5,7 @@ import { Input, InputProps } from '@heroui/react';
 import { toEnglishDigits, toPersianDigits } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 
-export interface AdminPriceInputProps extends Omit<InputProps, 'value' | 'onChange' | 'onValueChange'> {
+export interface AdminPriceInputProps extends Omit<InputProps, 'value' | 'onChange' | 'onValueChange' | 'errorMessage'> {
   value: number | string | undefined | null;
   onValueChange?: (value: number) => void;
   onChange?: (e: any) => void;
@@ -14,6 +14,7 @@ export interface AdminPriceInputProps extends Omit<InputProps, 'value' | 'onChan
   currencyLabel?: string;
   min?: number;
   max?: number;
+  errorMessage?: React.ReactNode;
 }
 
 export const AdminPriceInput: React.FC<AdminPriceInputProps> = ({
@@ -85,35 +86,43 @@ export const AdminPriceInput: React.FC<AdminPriceInputProps> = ({
     }
   };
 
-  const defaultWrapperClass =
-    'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold hover:!border-[#d4be9b] rounded-2xl shadow-xs transition-colors';
+  const defaultWrapperClass = isInvalid
+    ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors'
+    : 'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold hover:!border-[#d4be9b] rounded-2xl shadow-xs transition-colors';
   const defaultInputClass = 'text-xs font-bold text-brand-text text-start font-mono';
   const defaultLabelClass = `text-xs font-bold text-brand-text mb-1.5 block ${
     isRTL ? 'text-right' : 'text-left'
   }`;
 
   return (
-    <Input
-      type="text"
-      inputMode="numeric"
-      variant="bordered"
-      label={label}
-      labelPlacement="outside-top"
-      placeholder={placeholder || (isPersian ? 'مثال: ۵۰۰,۰۰۰' : 'e.g. 500,000')}
-      value={displayValue}
-      onValueChange={handleInputChange}
-      isRequired={isRequired}
-      isInvalid={isInvalid}
-      errorMessage={errorMessage}
-      isDisabled={isDisabled}
-      className={className}
-      classNames={{
-        label: defaultLabelClass,
-        inputWrapper: defaultWrapperClass,
-        input: defaultInputClass,
-        ...classNames,
-      }}
-      {...rest}
-    />
+    <div>
+      <Input
+        type="text"
+        inputMode="numeric"
+        variant="bordered"
+        label={label}
+        labelPlacement="outside-top"
+        placeholder={placeholder || (isPersian ? 'مثال: ۵۰۰,۰۰۰' : 'e.g. 500,000')}
+        value={displayValue}
+        onValueChange={handleInputChange}
+        isRequired={isRequired}
+        isInvalid={isInvalid}
+        isDisabled={isDisabled}
+        className={className}
+        classNames={{
+          label: defaultLabelClass,
+          inputWrapper: defaultWrapperClass,
+          input: defaultInputClass,
+          ...classNames,
+        }}
+        {...rest}
+      />
+      {isInvalid && errorMessage && (
+        <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+          {errorMessage}
+        </p>
+      )}
+    </div>
   );
 };

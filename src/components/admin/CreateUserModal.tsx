@@ -128,6 +128,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
 }) => {
   const [selectedTab, setSelectedTab] = useState<string>('identity');
   const [formData, setFormData] = useState(defaultFormData);
+  const [touched, setTouched] = useState({ fullName: false, username: false, password: false });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -151,6 +152,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setFormData(defaultFormData);
+      setTouched({ fullName: false, username: false, password: false });
       setSelectedTab('identity');
       setShowPassword(false);
       setIsRoleDropdownOpen(false);
@@ -165,7 +167,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     }
     setFormData((prev) => ({ ...prev, password: pwd }));
     setShowPassword(true);
-    toast.success(isPersian ? 'رمز عبور تصادفی امن تولید شد.' : 'Strong random password generated.');
+    toast.success(isPersian ? 'کلمه عبور تصادفی ایجاد شد.' : 'Random secure password generated.');
   };
 
   const handleBirthDateChange = (isoDate: string) => {
@@ -197,14 +199,15 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   };
 
   const handleSubmit = async () => {
+    setTouched({ fullName: true, username: true, password: true });
     if (!formData.fullName.trim()) {
-      toast.error(isPersian ? 'نام و نام خانوادگی الزامی است.' : 'Full name is required.');
+      toast.error(isPersian ? 'وارد کردن نام و نام خانوادگی ضروری است.' : 'Full name is required.');
       setSelectedTab('identity');
       return;
     }
 
     if (!formData.username.trim()) {
-      toast.error(isPersian ? 'نام کاربری الزامی است.' : 'Username is required.');
+      toast.error(isPersian ? 'وارد کردن نام کاربری ضروری است.' : 'Username is required.');
       setSelectedTab('identity');
       return;
     }
@@ -219,7 +222,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     }
 
     if (!formData.password) {
-      toast.error(isPersian ? 'کلمه عبور الزامی است.' : 'Password is required.');
+      toast.error(isPersian ? 'وارد کردن کلمه عبور ضروری است.' : 'Password is required.');
       setSelectedTab('identity');
       return;
     }
@@ -421,51 +424,81 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                 <div className="space-y-6 pt-2">
                   {/* Grid for Name, Username, Email, Phone */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <Input
-                      label={
-                        <span className="flex items-center gap-1">
-                          <span>{isPersian ? 'نام و نام خانوادگی' : 'Full Name'}</span>
-                          <span className="text-rose-500 font-bold">*</span>
-                        </span>
-                      }
-                      labelPlacement="outside-top"
-                      value={formData.fullName}
-                      onValueChange={(val) => setFormData((prev) => ({ ...prev, fullName: val }))}
-                      placeholder={isPersian ? 'مثال: علیرضا محمدی' : 'e.g. John Doe'}
-                      startContent={<UserIcon className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
-                      variant="bordered"
-                      radius="lg"
-                      isRequired
-                      classNames={{
-                        label: inputLabelClass,
-                        inputWrapper: inputWrapperClass,
-                        innerWrapper: 'gap-3',
-                        input: 'text-xs font-bold text-brand-text',
-                      }}
-                    />
+                    <div>
+                      <Input
+                        label={
+                          <span className="flex items-center gap-1">
+                            <span>{isPersian ? 'نام و نام خانوادگی' : 'Full Name'}</span>
+                            <span className="text-rose-500 font-bold">*</span>
+                          </span>
+                        }
+                        labelPlacement="outside-top"
+                        value={formData.fullName}
+                        onValueChange={(val) => {
+                          setFormData((prev) => ({ ...prev, fullName: val }));
+                          if (!touched.fullName) setTouched((p) => ({ ...p, fullName: true }));
+                        }}
+                        onBlur={() => setTouched((p) => ({ ...p, fullName: true }))}
+                        isInvalid={touched.fullName && !formData.fullName.trim()}
+                        placeholder={isPersian ? 'مثال: علیرضا محمدی' : 'e.g. John Doe'}
+                        startContent={<UserIcon className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
+                        variant="bordered"
+                        radius="lg"
+                        isRequired
+                        classNames={{
+                          label: inputLabelClass,
+                          inputWrapper: touched.fullName && !formData.fullName.trim()
+                            ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                            : inputWrapperClass,
+                          innerWrapper: 'gap-3',
+                          input: 'text-xs font-bold text-brand-text',
+                        }}
+                      />
+                      {touched.fullName && !formData.fullName.trim() && (
+                        <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                          {isPersian ? 'این فیلد ضروری است (نام و نام خانوادگی).' : 'Full name is required.'}
+                        </p>
+                      )}
+                    </div>
 
-                    <Input
-                      label={
-                        <span className="flex items-center gap-1">
-                          <span>{isPersian ? 'نام کاربری یکتا' : 'Username'}</span>
-                          <span className="text-rose-500 font-bold">*</span>
-                        </span>
-                      }
-                      labelPlacement="outside-top"
-                      value={formData.username}
-                      onValueChange={(val) => setFormData((prev) => ({ ...prev, username: val }))}
-                      placeholder={isPersian ? 'مثال: alireza_m' : 'e.g. john_doe'}
-                      startContent={<Hash className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
-                      variant="bordered"
-                      radius="lg"
-                      isRequired
-                      classNames={{
-                        label: inputLabelClass,
-                        inputWrapper: inputWrapperClass,
-                        innerWrapper: 'gap-3',
-                        input: 'text-xs font-mono font-bold text-brand-text text-start',
-                      }}
-                    />
+                    <div>
+                      <Input
+                        label={
+                          <span className="flex items-center gap-1">
+                            <span>{isPersian ? 'نام کاربری یکتا' : 'Username'}</span>
+                            <span className="text-rose-500 font-bold">*</span>
+                          </span>
+                        }
+                        labelPlacement="outside-top"
+                        value={formData.username}
+                        onValueChange={(val) => {
+                          setFormData((prev) => ({ ...prev, username: val }));
+                          if (!touched.username) setTouched((p) => ({ ...p, username: true }));
+                        }}
+                        onBlur={() => setTouched((p) => ({ ...p, username: true }))}
+                        isInvalid={touched.username && !formData.username.trim()}
+                        placeholder={isPersian ? 'مثال: alireza_m' : 'e.g. john_doe'}
+                        startContent={<Hash className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
+                        variant="bordered"
+                        radius="lg"
+                        isRequired
+                        classNames={{
+                          label: inputLabelClass,
+                          inputWrapper: touched.username && !formData.username.trim()
+                            ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                            : inputWrapperClass,
+                          innerWrapper: 'gap-3',
+                          input: 'text-xs font-mono font-bold text-brand-text text-start',
+                        }}
+                      />
+                      {touched.username && !formData.username.trim() && (
+                        <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                          {isPersian ? 'این فیلد ضروری است (نام کاربری).' : 'Username is required.'}
+                        </p>
+                      )}
+                    </div>
 
                     <Input
                       label={
@@ -537,36 +570,51 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                       </Button>
                     </div>
 
-                    <Input
-                      aria-label={isPersian ? 'کلمه عبور' : 'Password'}
-                      type={showPassword ? 'text' : 'password'}
-                      value={formData.password}
-                      onValueChange={(val) => setFormData((prev) => ({ ...prev, password: val }))}
-                      placeholder={
-                        isPersian
-                          ? 'کلمه عبور را وارد کنید (حداقل ۶ کاراکتر)...'
-                          : 'Enter password (min 6 characters)...'
-                      }
-                      startContent={<Lock className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
-                      endContent={
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="text-brand-text-muted hover:text-brand-text cursor-pointer p-1 ms-2 transition-colors"
-                          aria-label="Toggle password visibility"
-                        >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      }
-                      variant="bordered"
-                      radius="lg"
-                      isRequired
-                      classNames={{
-                        inputWrapper: inputWrapperClass,
-                        innerWrapper: 'gap-3',
-                        input: 'text-xs font-mono font-semibold text-brand-text text-start',
-                      }}
-                    />
+                    <div>
+                      <Input
+                        aria-label={isPersian ? 'کلمه عبور' : 'Password'}
+                        type={showPassword ? 'text' : 'password'}
+                        value={formData.password}
+                        onValueChange={(val) => {
+                          setFormData((prev) => ({ ...prev, password: val }));
+                          if (!touched.password) setTouched((p) => ({ ...p, password: true }));
+                        }}
+                        onBlur={() => setTouched((p) => ({ ...p, password: true }))}
+                        isInvalid={touched.password && !formData.password}
+                        placeholder={
+                          isPersian
+                            ? 'کلمه عبور را وارد کنید (حداقل ۶ کاراکتر)...'
+                            : 'Enter password (min 6 characters)...'
+                        }
+                        startContent={<Lock className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
+                        endContent={
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="text-brand-text-muted hover:text-brand-text cursor-pointer p-1 ms-2 transition-colors"
+                            aria-label="Toggle password visibility"
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        }
+                        variant="bordered"
+                        radius="lg"
+                        isRequired
+                        classNames={{
+                          inputWrapper: touched.password && !formData.password
+                            ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                            : inputWrapperClass,
+                          innerWrapper: 'gap-3',
+                          input: 'text-xs font-mono font-semibold text-brand-text text-start',
+                        }}
+                      />
+                      {touched.password && !formData.password && (
+                        <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5 animate-in fade-in duration-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                          {isPersian ? 'این فیلد ضروری است (کلمه عبور).' : 'Password is required.'}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Role Selector & VIP Status */}
