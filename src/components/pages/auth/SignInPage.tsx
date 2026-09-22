@@ -68,13 +68,9 @@ export function SignInPage() {
     }
   };
 
-  const handleQuickLogin = (identifier: string, pass: string) => {
-    handleSubmit({ identifier, password: pass });
-  };
-
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
-      <Card className="w-full max-w-md bg-brand-surface rounded-3xl p-8 border border-brand-border shadow-2xl">
+    <div className="w-full flex items-center justify-center py-4 sm:py-6 px-4">
+      <Card className="w-full max-w-md bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-2xl">
         <CardBody className="p-0 space-y-6">
           <div className="text-center space-y-3">
             <div className="flex justify-center mb-2">
@@ -187,50 +183,7 @@ export function SignInPage() {
             )}
           </Formik>
 
-          {/* Quick Demo Logins Bar */}
-          <div className="pt-4 border-t border-brand-border space-y-2">
-            <div className="text-[11px] font-bold text-brand-text-muted text-center">
-              {t.auth.quickLoginTitle}
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                onPress={() => handleQuickLogin('admin', 'Admin@123456')}
-                size="sm"
-                radius="lg"
-                className="h-9 px-2.5 bg-brand-olive hover:bg-brand-olive/90 text-brand-gold text-[11px] font-bold border border-brand-gold/30 shadow-xs cursor-pointer"
-              >
-                {isPersian ? '👑 مدیر کل (Admin)' : '👑 Super Admin'}
-              </Button>
-              <Button
-                onPress={() => handleQuickLogin('editor', 'Editor@123456')}
-                size="sm"
-                radius="lg"
-                className="h-9 px-2.5 bg-brand-olive hover:bg-brand-olive/90 text-brand-gold text-[11px] font-bold border border-brand-gold/30 shadow-xs cursor-pointer"
-              >
-                {isPersian ? '✏️ ادیتور (Editor)' : '✏️ Product Editor'}
-              </Button>
-              <Button
-                onPress={() => handleQuickLogin('vipuser', 'Vip@123456')}
-                size="sm"
-                variant="flat"
-                radius="lg"
-                className="h-9 px-2.5 bg-brand-surface-elevated text-brand-bronze dark:text-brand-gold text-[11px] font-bold hover:bg-brand-champagne/40 border border-brand-border cursor-pointer"
-              >
-                {isPersian ? '⭐ کاربر VIP' : '⭐ VIP Member'}
-              </Button>
-              <Button
-                onPress={() => handleQuickLogin('normaluser', 'User@123456')}
-                size="sm"
-                variant="flat"
-                radius="lg"
-                className="h-9 px-2.5 bg-brand-surface-elevated text-brand-text-muted text-[11px] font-bold hover:bg-brand-champagne/40 border border-brand-border cursor-pointer"
-              >
-                {isPersian ? '👤 کاربر عادی' : '👤 Normal User'}
-              </Button>
-            </div>
-          </div>
-
-          <div className="text-center text-xs text-brand-text-muted pt-2">
+          <div className="text-center text-xs text-brand-text-muted pt-2 border-t border-brand-border/60">
             <span>{t.auth.noAccount} </span>
             <Link
               href={PATHS.SIGN_UP}

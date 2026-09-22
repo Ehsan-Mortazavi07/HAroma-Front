@@ -65,8 +65,8 @@ export function SignUpPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
-      <Card className="w-full max-w-md bg-brand-surface rounded-3xl p-8 border border-brand-border shadow-2xl">
+    <div className="w-full flex items-center justify-center py-4 sm:py-6 px-4">
+      <Card className="w-full max-w-md bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-2xl">
         <CardBody className="p-0 space-y-6">
           {/* Header with Brand Logo */}
           <div className="flex flex-col items-center text-center space-y-3">

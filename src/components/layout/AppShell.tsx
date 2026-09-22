@@ -10,6 +10,7 @@ import { Footer } from '@/components/common/Footer';
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin');
+  const isAuth = pathname?.startsWith('/auth');
 
   if (isAdmin) {
     return (
@@ -21,6 +22,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </AdminSidebarProvider>
+    );
+  }
+
+  if (isAuth) {
+    return (
+      <div className="min-h-screen h-screen flex flex-col bg-[#f8f5f0] dark:bg-[#141914] text-[#1d241d] dark:text-[#f7f4ee] overflow-hidden">
+        <Navbar />
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {children}
+        </main>
+      </div>
     );
   }
 
