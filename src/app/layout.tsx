@@ -52,8 +52,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fa" dir="rtl" className={`${vazir.variable} ${inter.variable}`} suppressHydrationWarning>
-      <body className="font-sans antialiased min-h-screen flex flex-col selection:bg-[#bfa27a] selection:text-[#1d241d]">
+    <html lang="fa" dir="rtl" className={`${vazir.variable} ${inter.variable} scrollbar-none`} suppressHydrationWarning>
+      <body className="font-sans antialiased min-h-screen flex flex-col selection:bg-[#bfa27a] selection:text-[#1d241d] scrollbar-none overflow-x-hidden">
         <ClientProvider>
           <AppShell>{children}</AppShell>
         </ClientProvider>
