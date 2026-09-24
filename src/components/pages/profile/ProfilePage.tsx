@@ -59,6 +59,7 @@ import {
   ModalBody,
   ModalFooter,
   Skeleton,
+  Checkbox,
 } from '@heroui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
@@ -74,6 +75,8 @@ import { ResetPasswordModal } from '@/components/common/ResetPasswordModal';
 import { IOrder, IUserAddress } from '@/common/interfaces';
 import axiosInstance from '@/common/axiosInstance';
 import { useTranslation } from '@/common/i18n';
+import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
+import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 
 const VALID_TABS = ['dashboard', 'orders', 'addresses', 'edit', 'vip'] as const;
 type TabType = (typeof VALID_TABS)[number];
@@ -213,6 +216,8 @@ export function ProfilePage() {
   const [savingAddress, setSavingAddress] = useState(false);
   const [deletingAddressId, setDeletingAddressId] = useState<string | null>(null);
   const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
+  const [addressToDelete, setAddressToDelete] = useState<IUserAddress | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     if (user?.addresses) {
@@ -362,11 +367,14 @@ export function ProfilePage() {
     }
   };
 
-  const handleDeleteAddress = async (addrId: string) => {
-    if (!confirm(isPersian ? 'آیا از حذف این نشانی اطمینان دارید؟' : 'Are you sure you want to delete this address?')) {
-      return;
-    }
+  const openDeleteModal = (addr: IUserAddress) => {
+    setAddressToDelete(addr);
+    setIsDeleteModalOpen(true);
+  };
 
+  const handleConfirmDeleteAddress = async () => {
+    if (!addressToDelete) return;
+    const addrId = addressToDelete._id;
     setDeletingAddressId(addrId);
     try {
       const res = await axiosInstance.delete(`/users/addresses/${addrId}`);
@@ -374,7 +382,9 @@ export function ProfilePage() {
         setAddresses(res.data.addresses);
       }
       dispatch(fetchProfile());
-      toast.success(res.data?.message || (isPersian ? 'نشانی حذف شد.' : 'Address deleted.'));
+      setIsDeleteModalOpen(false);
+      setAddressToDelete(null);
+      toast.success(res.data?.message || (isPersian ? 'نشانی با موفقیت حذف شد.' : 'Address deleted.'));
     } catch (err: any) {
       toast.error(getApiErrorMessage(err, isPersian));
     } finally {
@@ -1605,9 +1615,8 @@ export function ProfilePage() {
                             size="sm"
                             variant="flat"
                             radius="lg"
-                            isLoading={deletingAddressId === addr._id}
-                            onPress={() => handleDeleteAddress(addr._id)}
-                            startContent={deletingAddressId !== addr._id && <Trash2 className="w-3.5 h-3.5" />}
+                            onPress={() => openDeleteModal(addr)}
+                            startContent={<Trash2 className="w-3.5 h-3.5" />}
                             className="h-8 px-3 rounded-xl text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 transition-colors cursor-pointer"
                           >
                             {isPersian ? 'حذف' : 'Delete'}
@@ -2915,19 +2924,14 @@ export function ProfilePage() {
 
                   {/* Default Address Checkbox */}
                   <div className="sm:col-span-2 pt-2">
-                    <label className="inline-flex items-center gap-3 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={addressForm.isDefault}
-                        onChange={(e) => setAddressForm({ ...addressForm, isDefault: e.target.checked })}
-                        className="w-4 h-4 rounded-lg accent-[#c5a880] cursor-pointer"
-                      />
-                      <span className="text-xs font-bold text-brand-text">
-                        {isPersian
-                          ? 'این نشانی به عنوان نشانی پیش‌فرض سفارش‌ها ثبت شود'
-                          : 'Set this address as default delivery address'}
-                      </span>
-                    </label>
+                    <SmoothCheckbox
+                      isSelected={addressForm.isDefault}
+                      onValueChange={(val) => setAddressForm({ ...addressForm, isDefault: val })}
+                    >
+                      {isPersian
+                        ? 'این نشانی به عنوان نشانی پیش‌فرض سفارش‌ها ثبت شود'
+                        : 'Set this address as default delivery address'}
+                    </SmoothCheckbox>
                   </div>
                 </div>
               </ModalBody>
@@ -2960,6 +2964,40 @@ export function ProfilePage() {
           )}
         </ModalContent>
       </Modal>
+
+      {/* Delete Address Confirmation Modal (Reusing AdminConfirmModal) */}
+      <AdminConfirmModal
+        isOpen={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        title={isPersian ? 'حذف نشانی تحویل' : 'Delete Delivery Address'}
+        description={
+          isPersian ? (
+            <div>
+              <p>
+                آیا از حذف نشانی <strong className="text-brand-text font-black">«{addressToDelete?.title || addressToDelete?.address?.slice(0, 30) || 'انتخاب‌شده'}»</strong> اطمینان دارید؟
+              </p>
+              <p className="mt-1 text-xs text-rose-500 font-medium">
+                این عملیات غیرقابل بازگشت است.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p>
+                Are you sure you want to delete <strong className="text-brand-text font-bold">&quot;{addressToDelete?.title || 'Selected address'}&quot;</strong>?
+              </p>
+              <p className="mt-1 text-xs text-rose-500 font-medium">
+                This action is permanent and cannot be undone.
+              </p>
+            </div>
+          )
+        }
+        confirmText={isPersian ? 'بله، حذف نشانی' : 'Yes, Delete Address'}
+        cancelText={isPersian ? 'انصراف' : 'Cancel'}
+        confirmColor="danger"
+        icon={<Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400" />}
+        isLoading={Boolean(deletingAddressId)}
+        onConfirm={handleConfirmDeleteAddress}
+      />
     </div>
   );
 }

@@ -40,6 +40,7 @@ import {
   ModalBody,
   ModalFooter,
   Skeleton,
+  Checkbox,
 } from '@heroui/react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { clearCart } from '@/stores/cart/cartSlice';
@@ -51,6 +52,7 @@ import { useTranslation } from '@/common/i18n';
 import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import { IUserAddress } from '@/common/interfaces';
+import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 
 export function CheckoutPage() {
   const router = useRouter();
@@ -1401,19 +1403,14 @@ export function CheckoutPage() {
 
                   {/* Default Address Checkbox */}
                   <div className="sm:col-span-2 pt-2">
-                    <label className="inline-flex items-center gap-3 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={newAddressForm.isDefault}
-                        onChange={(e) => setNewAddressForm({ ...newAddressForm, isDefault: e.target.checked })}
-                        className="w-4 h-4 rounded-lg accent-[#c5a880] cursor-pointer"
-                      />
-                      <span className="text-xs font-bold text-brand-text">
-                        {isPersian
-                          ? 'این نشانی به عنوان نشانی پیش‌فرض حساب کاربری ثبت شود'
-                          : 'Set this address as default in profile'}
-                      </span>
-                    </label>
+                    <SmoothCheckbox
+                      isSelected={newAddressForm.isDefault}
+                      onValueChange={(val) => setNewAddressForm({ ...newAddressForm, isDefault: val })}
+                    >
+                      {isPersian
+                        ? 'این نشانی به عنوان نشانی پیش‌فرض حساب کاربری ثبت شود'
+                        : 'Set this address as default in profile'}
+                    </SmoothCheckbox>
                   </div>
                 </div>
               </ModalBody>
