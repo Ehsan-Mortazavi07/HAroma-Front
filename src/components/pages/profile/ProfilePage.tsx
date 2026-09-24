@@ -36,6 +36,9 @@ import {
   Building,
   Hash,
   FileText,
+  Smartphone,
+  RotateCcw,
+  Clock,
 } from 'lucide-react';
 import {
   Card,
@@ -109,6 +112,40 @@ export function ProfilePage() {
   const [showResetNewPassword, setShowResetNewPassword] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [maskedEmail, setMaskedEmail] = useState('');
+
+  // Phone Verification Modal State
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
+  const [verifyPhoneStep, setVerifyPhoneStep] = useState<'phone' | 'verify'>('phone');
+  const [verifyPhoneInput, setVerifyPhoneInput] = useState('');
+  const [verifyPhoneError, setVerifyPhoneError] = useState('');
+  const [verifyOtpCode, setVerifyOtpCode] = useState('');
+  const [verifyOtpCodeError, setVerifyOtpCodeError] = useState('');
+  const [verifyDevCode, setVerifyDevCode] = useState<string | null>(null);
+  const [verifyCountdown, setVerifyCountdown] = useState(0);
+  const [loadingSendVerifyOtp, setLoadingSendVerifyOtp] = useState(false);
+  const [loadingSubmitVerifyOtp, setLoadingSubmitVerifyOtp] = useState(false);
+
+  // Phone verification countdown timer
+  useEffect(() => {
+    if (verifyCountdown <= 0) return;
+    const timer = setInterval(() => {
+      setVerifyCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [verifyCountdown]);
+
+  const formatOtpTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return isPersian ? toPersianDigits(formatted) : formatted;
+  };
 
   useEffect(() => {
     if (user) {
@@ -356,6 +393,107 @@ export function ProfilePage() {
     }
   };
 
+  const handleOpenPhoneVerification = (targetPhone?: string) => {
+    const defaultNumber = targetPhone || phone || user?.phone || '';
+    setVerifyPhoneInput(defaultNumber);
+    setVerifyPhoneError('');
+    setVerifyOtpCode('');
+    setVerifyOtpCodeError('');
+    setVerifyDevCode(null);
+    setVerifyPhoneStep('phone');
+    setIsPhoneModalOpen(true);
+  };
+
+  const handleSendPhoneOtp = async () => {
+    const cleanNumber = toEnglishDigits(verifyPhoneInput.trim()).replace(/\D/g, '');
+
+    if (!cleanNumber) {
+      setVerifyPhoneError(isPersian ? 'شماره موبایل الزامی است.' : 'Phone number is required.');
+      return;
+    }
+
+    if (!cleanNumber.startsWith('09') || cleanNumber.length !== 11) {
+      setVerifyPhoneError(
+        isPersian
+          ? 'شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثال: ۰۹۱۲۳۴۵۶۷۸۹).'
+          : 'Phone number must be 11 digits starting with 09 (e.g. 09123456789).',
+      );
+      return;
+    }
+
+    setVerifyPhoneError('');
+    setLoadingSendVerifyOtp(true);
+    try {
+      const res = await axiosInstance.post('/auth/otp/send', {
+        phone: cleanNumber,
+      });
+
+      if (res.data?.devCode) {
+        setVerifyDevCode(res.data.devCode);
+      }
+      setVerifyCountdown(res.data?.expiresIn || 120);
+      setVerifyPhoneStep('verify');
+      setVerifyOtpCode('');
+      setVerifyOtpCodeError('');
+
+      toast.success(
+        isPersian
+          ? res.data.message || 'کد تایید یکبار مصرف ارسال شد.'
+          : 'Verification code generated successfully.',
+      );
+    } catch (err: any) {
+      const serverMsg = getApiErrorMessage(err);
+      toast.error(
+        serverMsg || (isPersian ? 'خطا در ارسال کد تایید یکبار مصرف.' : 'Failed to send verification code.'),
+      );
+    } finally {
+      setLoadingSendVerifyOtp(false);
+    }
+  };
+
+  const handleSubmitPhoneOtp = async () => {
+    const cleanPhone = toEnglishDigits(verifyPhoneInput.trim()).replace(/\D/g, '');
+    const cleanCode = toEnglishDigits(verifyOtpCode.trim()).replace(/\D/g, '');
+
+    if (!cleanCode) {
+      setVerifyOtpCodeError(isPersian ? 'کد تایید الزامی است.' : 'Verification code is required.');
+      return;
+    }
+
+    if (cleanCode.length < 4) {
+      setVerifyOtpCodeError(isPersian ? 'کد تایید وارد شده کوتاه است.' : 'Verification code is too short.');
+      return;
+    }
+
+    setVerifyOtpCodeError('');
+    setLoadingSubmitVerifyOtp(true);
+    try {
+      const res = await axiosInstance.post('/auth/otp/verify-phone', {
+        phone: cleanPhone,
+        code: cleanCode,
+      });
+
+      if (res.data?.user) {
+        dispatch(updateUser(res.data.user));
+        setPhone(res.data.user.phone || cleanPhone);
+      }
+
+      toast.success(
+        res.data?.message || (isPersian ? 'شماره موبایل با موفقیت تایید شد.' : 'Phone verified successfully.'),
+      );
+
+      setIsPhoneModalOpen(false);
+    } catch (err: any) {
+      const serverMsg = getApiErrorMessage(err);
+      setVerifyOtpCodeError(
+        serverMsg || (isPersian ? 'کد تایید وارد شده نامعتبر یا منقضی است.' : 'Invalid or expired code.'),
+      );
+      toast.error(serverMsg || (isPersian ? 'کد تایید نامعتبر است.' : 'Invalid code.'));
+    } finally {
+      setLoadingSubmitVerifyOtp(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'processing':
@@ -448,8 +586,8 @@ export function ProfilePage() {
                 <div className="text-xs text-brand-text-muted font-bold mt-0.5 truncate">
                   {user.phone ? toPersianDigits(user.phone) : user.email}
                 </div>
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  {user.isVip ? (
+                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  {user.isVip && (
                     <Chip
                       size="sm"
                       variant="flat"
@@ -461,18 +599,28 @@ export function ProfilePage() {
                     >
                       {isPersian ? 'عضو طلایی VIP' : 'Golden VIP'}
                     </Chip>
-                  ) : (
+                  )}
+                  {user.isPhoneVerified ? (
                     <Chip
                       size="sm"
                       variant="flat"
-                      startContent={<span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />}
+                      startContent={<ShieldCheck className="w-3 h-3 text-emerald-500 shrink-0" />}
                       classNames={{
                         base: "bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold h-5.5 rounded-xl px-2",
                         content: "px-0.5"
                       }}
                     >
-                      {isPersian ? 'کاربر تایید شده' : 'Verified User'}
+                      {isPersian ? 'موبایل تایید شده' : 'Phone Verified'}
                     </Chip>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenPhoneVerification()}
+                      className="inline-flex items-center gap-1 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[10px] font-bold h-5.5 rounded-xl px-2 transition-colors cursor-pointer"
+                    >
+                      <Sparkles className="w-3 h-3 shrink-0" />
+                      <span>{isPersian ? 'تایید شماره موبایل' : 'Verify Phone'}</span>
+                    </button>
                   )}
                 </div>
               </div>
@@ -1360,6 +1508,27 @@ export function ProfilePage() {
                           input: "text-xs font-bold text-brand-text text-start",
                         }}
                       />
+                      {user?.isPhoneVerified && phone === user.phone ? (
+                        <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                          <span>{isPersian ? 'این شماره موبایل تایید شده است.' : 'This phone number is verified.'}</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between mt-1.5 flex-wrap gap-2 pt-1">
+                          <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                            {isPersian ? 'شماره موبایل تایید نشده است' : 'Phone is not verified'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenPhoneVerification(phone)}
+                            className="text-[11px] font-black text-brand-gold bg-brand-surface-elevated hover:bg-brand-gold hover:text-[#141914] border border-brand-border px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+                          >
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            <span>{isPersian ? 'تایید شماره با کد یکبار مصرف (OTP)' : 'Verify Phone (OTP)'}</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1861,6 +2030,235 @@ export function ProfilePage() {
                     </Button>
                   </ModalFooter>
                 </form>
+              )}
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Phone Verification Modal */}
+      <Modal
+        isOpen={isPhoneModalOpen}
+        onOpenChange={setIsPhoneModalOpen}
+        placement="center"
+        backdrop="blur"
+        classNames={{
+          base: "bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl max-w-md mx-4",
+          header: "border-b border-brand-border pb-3",
+          body: "py-5",
+          footer: "border-t border-brand-border pt-3",
+          closeButton: "hover:bg-brand-surface-elevated text-brand-text-muted rounded-xl cursor-pointer",
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-brand-surface-elevated flex items-center justify-center text-brand-gold border border-brand-border shrink-0">
+                  <Smartphone className="w-4 h-4" />
+                </div>
+                <h3 className="font-black text-base text-brand-text">
+                  {isPersian ? 'تایید شماره موبایل' : 'Verify Mobile Number'}
+                </h3>
+              </ModalHeader>
+
+              {verifyPhoneStep === 'phone' ? (
+                <div>
+                  <ModalBody className="space-y-4">
+                    <p className="text-xs text-brand-text-muted leading-relaxed">
+                      {isPersian
+                        ? 'شماره موبایل خود را وارد نمایید تا کد تایید یکبار مصرف برای شما صادر شود:'
+                        : 'Enter your mobile number to receive a one-time verification code:'}
+                    </p>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5 h-5">
+                        <Smartphone className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                        <label className="text-xs font-bold text-brand-text">
+                          {isPersian ? 'شماره موبایل' : 'Mobile Number'}
+                        </label>
+                      </div>
+                      <Input
+                        type="tel"
+                        aria-label={isPersian ? 'شماره موبایل' : 'Mobile Number'}
+                        placeholder="09123456789"
+                        maxLength={11}
+                        value={verifyPhoneInput}
+                        onChange={(e) => {
+                          setVerifyPhoneInput(e.target.value);
+                          if (verifyPhoneError) setVerifyPhoneError('');
+                        }}
+                        variant="bordered"
+                        radius="lg"
+                        isInvalid={Boolean(verifyPhoneError)}
+                        classNames={{
+                          inputWrapper: Boolean(verifyPhoneError)
+                            ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                            : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                          input: "text-xs font-bold text-brand-text tracking-wider",
+                        }}
+                      />
+                      {verifyPhoneError && (
+                        <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                          {verifyPhoneError}
+                        </p>
+                      )}
+                    </div>
+                  </ModalBody>
+                  <ModalFooter className="flex gap-2">
+                    <Button
+                      type="button"
+                      onPress={handleSendPhoneOtp}
+                      isLoading={loadingSendVerifyOtp}
+                      radius="lg"
+                      className="flex-1 h-11 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs rounded-2xl shadow-md cursor-pointer"
+                    >
+                      {isPersian ? 'دریافت کد تایید' : 'Send Code'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="flat"
+                      radius="lg"
+                      onPress={onClose}
+                      className="h-11 px-5 bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-2xl cursor-pointer"
+                    >
+                      {isPersian ? 'انصراف' : 'Cancel'}
+                    </Button>
+                  </ModalFooter>
+                </div>
+              ) : (
+                <div>
+                  <ModalBody className="space-y-4">
+                    <div className="flex items-center justify-between p-3 bg-brand-surface-elevated rounded-2xl border border-brand-border">
+                      <div className="flex items-center gap-2">
+                        <Smartphone className="w-4 h-4 text-brand-gold shrink-0" />
+                        <div className="text-xs">
+                          <span className="text-brand-text-muted">
+                            {isPersian ? 'ارسال شده به: ' : 'Sent to: '}
+                          </span>
+                          <span className="font-bold font-mono text-brand-text tracking-wider">
+                            {isPersian ? toPersianDigits(verifyPhoneInput) : verifyPhoneInput}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVerifyPhoneStep('phone');
+                          setVerifyDevCode(null);
+                        }}
+                        className="text-[11px] font-bold text-brand-gold hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>{isPersian ? 'ویرایش شماره' : 'Edit'}</span>
+                      </button>
+                    </div>
+
+                    {verifyDevCode && (
+                      <div
+                        onClick={() => {
+                          setVerifyOtpCode(verifyDevCode);
+                          if (verifyOtpCodeError) setVerifyOtpCodeError('');
+                        }}
+                        className="p-3 bg-brand-gold/10 hover:bg-brand-gold/20 border border-brand-gold/30 rounded-2xl cursor-pointer transition-all flex items-center justify-between group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-brand-gold shrink-0 animate-pulse" />
+                          <span className="text-xs text-brand-text font-bold">
+                            {isPersian ? 'کد تایید تست سیستم:' : 'System Dev Code:'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono text-sm font-black tracking-widest text-brand-gold bg-brand-surface px-2.5 py-0.5 rounded-xl border border-brand-gold/20 group-hover:border-brand-gold">
+                            {isPersian ? toPersianDigits(verifyDevCode) : verifyDevCode}
+                          </span>
+                          <span className="text-[10px] text-brand-text-muted group-hover:text-brand-gold font-medium">
+                            ({isPersian ? 'کلیک جهت درج' : 'click to fill'})
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5 h-5">
+                        <KeyRound className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                        <label className="text-xs font-bold text-brand-text">
+                          {isPersian ? 'کد تایید ۵ رقمی' : '5-Digit Verification Code'}
+                        </label>
+                      </div>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        aria-label={isPersian ? 'کد تایید ۵ رقمی' : '5-Digit Verification Code'}
+                        placeholder={isPersian ? '۱۲۳۴۵' : '12345'}
+                        maxLength={6}
+                        value={verifyOtpCode}
+                        onChange={(e) => {
+                          setVerifyOtpCode(e.target.value);
+                          if (verifyOtpCodeError) setVerifyOtpCodeError('');
+                        }}
+                        variant="bordered"
+                        radius="lg"
+                        isInvalid={Boolean(verifyOtpCodeError)}
+                        classNames={{
+                          inputWrapper: Boolean(verifyOtpCodeError)
+                            ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                            : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                          input: "text-center font-mono font-bold text-brand-text tracking-[0.3em] text-base",
+                        }}
+                      />
+                      {verifyOtpCodeError && (
+                        <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                          {verifyOtpCodeError}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs pt-1">
+                      {verifyCountdown > 0 ? (
+                        <div className="flex items-center gap-1.5 text-brand-text-muted">
+                          <Clock className="w-3.5 h-3.5 text-brand-gold shrink-0" />
+                          <span>{isPersian ? 'زمان باقیمانده:' : 'Time remaining:'}</span>
+                          <span className="font-mono font-bold text-brand-gold">
+                            {formatOtpTimer(verifyCountdown)}
+                          </span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleSendPhoneOtp}
+                          disabled={loadingSendVerifyOtp}
+                          className="text-brand-gold hover:underline font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>{isPersian ? 'ارسال مجدد کد' : 'Resend code'}</span>
+                        </button>
+                      )}
+                    </div>
+                  </ModalBody>
+                  <ModalFooter className="flex gap-2">
+                    <Button
+                      type="button"
+                      onPress={handleSubmitPhoneOtp}
+                      isLoading={loadingSubmitVerifyOtp}
+                      radius="lg"
+                      className="flex-1 h-11 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs rounded-2xl shadow-md cursor-pointer"
+                    >
+                      {isPersian ? 'تایید و ذخیره شماره' : 'Verify & Save'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="flat"
+                      radius="lg"
+                      onPress={() => setVerifyPhoneStep('phone')}
+                      className="h-11 px-5 bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-2xl cursor-pointer"
+                    >
+                      {isPersian ? 'مرحله قبل' : 'Back'}
+                    </Button>
+                  </ModalFooter>
+                </div>
               )}
             </>
           )}

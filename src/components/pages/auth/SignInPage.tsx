@@ -1,16 +1,30 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Formik, Form } from 'formik';
-import { Card, CardBody, Input, Button } from '@heroui/react';
-import { Lock, User, Eye, EyeOff, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Card, CardBody, Input, Button, Tabs, Tab } from '@heroui/react';
+import {
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  ArrowRight,
+  Smartphone,
+  KeyRound,
+  RotateCcw,
+  Sparkles,
+  ShieldCheck,
+  Edit3,
+  Clock,
+} from 'lucide-react';
 import { useAppDispatch } from '@/stores/hooks';
 import { setAuth } from '@/stores/auth/authSlice';
 import { getSignInSchema } from '@/common/validators';
 import { PATHS } from '@/common/constants/PATHS';
-import { toast } from '@/common/utils';
+import { toast, toPersianDigits, toEnglishDigits, getApiErrorMessage } from '@/common/utils';
 import axiosInstance from '@/common/axiosInstance';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { useTranslation } from '@/common/i18n';
@@ -22,8 +36,25 @@ export function SignInPage() {
   const { t, isPersian, isRTL } = useTranslation();
   const redirectUrl = searchParams.get('redirect') || PATHS.HOME;
 
-  const [loading, setLoading] = useState(false);
+  // Active Login Method: 'otp' | 'password'
+  const [authMethod, setAuthMethod] = useState<'otp' | 'password'>('otp');
+
+  // Password Login State
+  const [loadingPassword, setLoadingPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // OTP Login State
+  const [otpStep, setOtpStep] = useState<'phone' | 'verify'>('phone');
+  const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpCodeError, setOtpCodeError] = useState('');
+  const [loadingSendOtp, setLoadingSendOtp] = useState(false);
+  const [loadingVerifyOtp, setLoadingVerifyOtp] = useState(false);
+  const [devCode, setDevCode] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(0);
+
+  const otpInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     document.title = isPersian
@@ -31,8 +62,144 @@ export function SignInPage() {
       : 'Sign In | HatefAroma';
   }, [isPersian]);
 
-  const handleSubmit = async (values: any) => {
-    setLoading(true);
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [countdown]);
+
+  // Format seconds to mm:ss
+  const formatTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return isPersian ? toPersianDigits(formatted) : formatted;
+  };
+
+  // Handle Send OTP
+  const handleSendOtp = async (targetPhone?: string) => {
+    const rawNumber = targetPhone || phone;
+    const cleanNumber = toEnglishDigits(rawNumber.trim()).replace(/\D/g, '');
+
+    if (!cleanNumber) {
+      setPhoneError(isPersian ? 'شماره موبایل الزامی است.' : 'Phone number is required.');
+      return;
+    }
+
+    if (!cleanNumber.startsWith('09') || cleanNumber.length !== 11) {
+      setPhoneError(
+        isPersian
+          ? 'شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثال: ۰۹۱۲۳۴۵۶۷۸۹).'
+          : 'Phone number must be 11 digits starting with 09 (e.g. 09123456789).',
+      );
+      return;
+    }
+
+    setPhoneError('');
+    setLoadingSendOtp(true);
+    try {
+      const res = await axiosInstance.post('/auth/otp/send', {
+        phone: cleanNumber,
+      });
+
+      if (res.data?.devCode) {
+        setDevCode(res.data.devCode);
+      }
+      setCountdown(res.data?.expiresIn || 120);
+      setOtpStep('verify');
+      setOtpCode('');
+      setOtpCodeError('');
+
+      toast.success(
+        isPersian
+          ? res.data.message || 'کد تایید یکبار مصرف ارسال شد.'
+          : 'Verification code generated successfully.',
+      );
+
+      // Focus on OTP input after short delay
+      setTimeout(() => {
+        otpInputRef.current?.focus();
+      }, 300);
+    } catch (err: any) {
+      const serverMsg = getApiErrorMessage(err);
+      toast.error(
+        serverMsg ||
+          (isPersian ? 'خطا در ارسال کد تایید یکبار مصرف.' : 'Failed to send verification code.'),
+      );
+    } finally {
+      setLoadingSendOtp(false);
+    }
+  };
+
+  // Handle Verify OTP
+  const handleVerifyOtp = async () => {
+    const cleanPhone = toEnglishDigits(phone.trim()).replace(/\D/g, '');
+    const cleanCode = toEnglishDigits(otpCode.trim()).replace(/\D/g, '');
+
+    if (!cleanCode) {
+      setOtpCodeError(isPersian ? 'کد تایید الزامی است.' : 'Verification code is required.');
+      return;
+    }
+
+    if (cleanCode.length < 4) {
+      setOtpCodeError(isPersian ? 'کد تایید وارد شده کوتاه است.' : 'Verification code is too short.');
+      return;
+    }
+
+    setOtpCodeError('');
+    setLoadingVerifyOtp(true);
+    try {
+      const res = await axiosInstance.post('/auth/otp/verify', {
+        phone: cleanPhone,
+        code: cleanCode,
+      });
+
+      dispatch(
+        setAuth({
+          user: res.data.user,
+          token: res.data.accessToken,
+        }),
+      );
+
+      toast.success(
+        res.data.isNewUser
+          ? isPersian
+            ? `ثبت‌نام و ورود با موفقیت انجام شد! خوش آمدید 🌿`
+            : 'Account registered and logged in successfully!'
+          : isPersian
+            ? `خوش آمدید، ${res.data.user.fullName}! 🌿`
+            : `Welcome back, ${res.data.user.fullName}!`,
+      );
+
+      if (res.data.user.role === 'admin' || res.data.user.role === 'editor') {
+        router.push(PATHS.ADMIN_DASHBOARD);
+      } else {
+        router.push(redirectUrl);
+      }
+    } catch (err: any) {
+      const serverMsg = getApiErrorMessage(err);
+      setOtpCodeError(
+        serverMsg ||
+          (isPersian ? 'کد تایید وارد شده نامعتبر یا منقضی است.' : 'Invalid or expired code.'),
+      );
+      toast.error(serverMsg || (isPersian ? 'کد تایید نامعتبر است.' : 'Invalid verification code.'));
+    } finally {
+      setLoadingVerifyOtp(false);
+    }
+  };
+
+  // Handle Password Login
+  const handlePasswordSubmit = async (values: any) => {
+    setLoadingPassword(true);
     try {
       const res = await axiosInstance.post('/auth/login', {
         identifier: values.identifier,
@@ -58,13 +225,12 @@ export function SignInPage() {
         router.push(redirectUrl);
       }
     } catch (err: any) {
-      const serverMsg = err?.response?.data?.message;
-      let errorMsg = isPersian
-        ? serverMsg || 'اطلاعات ورود اشتباه است.'
-        : 'Invalid username/email or password.';
-      toast.error(errorMsg);
+      const serverMsg = getApiErrorMessage(err);
+      toast.error(
+        serverMsg || (isPersian ? 'اطلاعات ورود اشتباه است.' : 'Invalid username/email or password.'),
+      );
     } finally {
-      setLoading(false);
+      setLoadingPassword(false);
     }
   };
 
@@ -72,6 +238,7 @@ export function SignInPage() {
     <div className="w-full flex items-center justify-center py-4 sm:py-6 px-4">
       <Card className="w-full max-w-md bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-2xl">
         <CardBody className="p-0 space-y-6">
+          {/* Header */}
           <div className="text-center space-y-3">
             <div className="flex justify-center mb-2">
               <BrandLogo size="md" />
@@ -80,123 +247,365 @@ export function SignInPage() {
               {t.auth.signInTitle}
             </h1>
             <p className="text-xs text-brand-text-muted">
-              {t.auth.signInSub}
+              {isPersian
+                ? 'برای تجربه خرید سریع و اختصاصی وارد حساب خود شوید'
+                : 'Sign in to access your luxury shopping experience'}
             </p>
           </div>
 
-          <Formik
-            initialValues={{ identifier: '', password: '' }}
-            validationSchema={getSignInSchema(isPersian)}
-            onSubmit={handleSubmit}
-            enableReinitialize
-          >
-            {({ values, errors, touched, handleChange, handleBlur }) => (
-              <Form className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-brand-text mb-1.5">
-                    {t.auth.identifier}
-                  </label>
-                  <Input
-                    name="identifier"
-                    type="text"
-                    aria-label={t.auth.identifier}
-                    placeholder={isPersian ? 'نام کاربری، شماره موبایل یا ایمیل' : 'Username, phone or email'}
-                    value={values.identifier}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    variant="bordered"
-                    radius="lg"
-                    startContent={<User className="w-4 h-4 text-brand-bronze shrink-0" />}
-                    isInvalid={Boolean(errors.identifier && touched.identifier)}
-                    classNames={{
-                      inputWrapper: Boolean(errors.identifier && touched.identifier)
-                        ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
-                        : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                      input: "text-xs font-semibold text-brand-text",
-                    }}
-                  />
-                  {errors.identifier && touched.identifier && (
-                    <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                      {String(errors.identifier)}
-                    </p>
-                  )}
-                </div>
+          {/* Authentication Method Selector */}
+          <div className="bg-brand-surface-elevated/80 p-1 rounded-2xl border border-brand-border flex gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMethod('otp');
+                setOtpStep('phone');
+              }}
+              className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                authMethod === 'otp'
+                  ? 'bg-brand-gold text-[#141914] shadow-md shadow-brand-gold/20 font-black'
+                  : 'text-brand-text-muted hover:text-brand-text'
+              }`}
+            >
+              <Smartphone className="w-4 h-4 shrink-0" />
+              <span>{isPersian ? 'کد یکبار مصرف' : 'OTP Login'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAuthMethod('password')}
+              className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                authMethod === 'password'
+                  ? 'bg-brand-gold text-[#141914] shadow-md shadow-brand-gold/20 font-black'
+                  : 'text-brand-text-muted hover:text-brand-text'
+              }`}
+            >
+              <Lock className="w-4 h-4 shrink-0" />
+              <span>{isPersian ? 'کلمه عبور' : 'Password'}</span>
+            </button>
+          </div>
 
-                <div>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <label className="text-xs font-bold text-brand-text">
-                      {t.auth.password}
+          {/* TAB 1: OTP AUTHENTICATION */}
+          {authMethod === 'otp' && (
+            <div className="space-y-4">
+              {otpStep === 'phone' ? (
+                /* Step 1: Input Phone */
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-brand-text mb-1.5">
+                      {isPersian ? 'شماره موبایل' : 'Mobile Number'}
                     </label>
-                    <Link
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        toast.info(
-                          isPersian
-                            ? 'جهت بازیابی رمز با شماره پشتیبانی تماس حاصل فرمایید.'
-                            : 'Please contact support for password recovery.',
-                        );
+                    <Input
+                      type="tel"
+                      aria-label={isPersian ? 'شماره موبایل' : 'Mobile Number'}
+                      placeholder={isPersian ? '۰۹۱۲۳۴۵۶۷۸۹' : '09123456789'}
+                      maxLength={11}
+                      value={phone}
+                      onChange={(e) => {
+                        setPhone(e.target.value);
+                        if (phoneError) setPhoneError('');
                       }}
-                      className="text-[11px] text-brand-bronze dark:text-brand-gold hover:underline"
-                    >
-                      {t.auth.forgotPassword}
-                    </Link>
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleSendOtp();
+                        }
+                      }}
+                      variant="bordered"
+                      radius="lg"
+                      startContent={<Smartphone className="w-4 h-4 text-brand-bronze shrink-0" />}
+                      isInvalid={Boolean(phoneError)}
+                      classNames={{
+                        inputWrapper: Boolean(phoneError)
+                          ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors'
+                          : 'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors',
+                        input: 'text-xs font-bold text-brand-text tracking-wider',
+                      }}
+                    />
+                    {phoneError && (
+                      <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                        {phoneError}
+                      </p>
+                    )}
+                    <p className="text-[11px] text-brand-text-muted mt-2 leading-relaxed">
+                      {isPersian
+                        ? 'در صورت نداشتن حساب، با تایید شماره حساب شما به صورت خودکار ایجاد می‌شود.'
+                        : 'If you do not have an account, one will be created automatically upon verification.'}
+                    </p>
                   </div>
-                  <Input
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    aria-label={t.auth.password}
-                    placeholder="••••••••"
-                    value={values.password}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    variant="bordered"
+
+                  <Button
+                    type="button"
+                    onPress={() => handleSendOtp()}
+                    isLoading={loadingSendOtp}
                     radius="lg"
-                    startContent={<Lock className="w-4 h-4 text-brand-bronze shrink-0" />}
-                    endContent={
+                    className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98 cursor-pointer mt-2"
+                  >
+                    {!loadingSendOtp && (
+                      <>
+                        <span>{isPersian ? 'ارسال کد تایید' : 'Send Verification Code'}</span>
+                        {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                /* Step 2: Verify Code */
+                <div className="space-y-4">
+                  {/* Phone Header with Edit button */}
+                  <div className="flex items-center justify-between p-3 bg-brand-surface-elevated rounded-2xl border border-brand-border">
+                    <div className="flex items-center gap-2">
+                      <Smartphone className="w-4 h-4 text-brand-gold shrink-0" />
+                      <div className="text-xs">
+                        <span className="text-brand-text-muted">
+                          {isPersian ? 'ارسال شده به: ' : 'Sent to: '}
+                        </span>
+                        <span className="font-bold font-mono text-brand-text tracking-wider">
+                          {isPersian ? toPersianDigits(phone) : phone}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOtpStep('phone');
+                        setDevCode(null);
+                      }}
+                      className="text-[11px] font-bold text-brand-gold hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>{isPersian ? 'ویرایش شماره' : 'Edit'}</span>
+                    </button>
+                  </div>
+
+                  {/* Dev Test Code Helper (Since no SMS gateway is used yet) */}
+                  {devCode && (
+                    <div
+                      onClick={() => {
+                        setOtpCode(devCode);
+                        if (otpCodeError) setOtpCodeError('');
+                      }}
+                      className="p-3 bg-brand-gold/10 hover:bg-brand-gold/20 border border-brand-gold/30 rounded-2xl cursor-pointer transition-all flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-brand-gold shrink-0 animate-pulse" />
+                        <span className="text-xs text-brand-text font-bold">
+                          {isPersian ? 'کد تایید تست سیستم:' : 'System Dev Code:'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-sm font-black tracking-widest text-brand-gold bg-brand-surface px-2.5 py-0.5 rounded-xl border border-brand-gold/20 group-hover:border-brand-gold">
+                          {isPersian ? toPersianDigits(devCode) : devCode}
+                        </span>
+                        <span className="text-[10px] text-brand-text-muted group-hover:text-brand-gold font-medium">
+                          ({isPersian ? 'کلیک جهت درج' : 'click to fill'})
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Code Input */}
+                  <div>
+                    <label className="block text-xs font-bold text-brand-text mb-1.5">
+                      {isPersian ? 'کد ۵ رقمی تایید' : '5-Digit Verification Code'}
+                    </label>
+                    <Input
+                      ref={otpInputRef}
+                      type="text"
+                      inputMode="numeric"
+                      aria-label={isPersian ? 'کد تایید ۵ رقمی' : '5-Digit Verification Code'}
+                      placeholder={isPersian ? '۱۲۳۴۵' : '12345'}
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(e) => {
+                        setOtpCode(e.target.value);
+                        if (otpCodeError) setOtpCodeError('');
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleVerifyOtp();
+                        }
+                      }}
+                      variant="bordered"
+                      radius="lg"
+                      startContent={<KeyRound className="w-4 h-4 text-brand-bronze shrink-0" />}
+                      isInvalid={Boolean(otpCodeError)}
+                      classNames={{
+                        inputWrapper: Boolean(otpCodeError)
+                          ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors'
+                          : 'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors',
+                        input: 'text-center font-mono font-bold text-brand-text tracking-[0.3em] text-base',
+                      }}
+                    />
+                    {otpCodeError && (
+                      <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                        {otpCodeError}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Countdown Timer & Resend */}
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    {countdown > 0 ? (
+                      <div className="flex items-center gap-1.5 text-brand-text-muted">
+                        <Clock className="w-3.5 h-3.5 text-brand-gold shrink-0" />
+                        <span>{isPersian ? 'زمان باقیمانده:' : 'Time remaining:'}</span>
+                        <span className="font-mono font-bold text-brand-gold">
+                          {formatTimer(countdown)}
+                        </span>
+                      </div>
+                    ) : (
                       <button
                         type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="focus:outline-none text-brand-text-muted hover:text-brand-text transition-colors cursor-pointer"
-                        aria-label="toggle password visibility"
+                        onClick={() => handleSendOtp(phone)}
+                        disabled={loadingSendOtp}
+                        className="text-brand-gold hover:underline font-bold flex items-center gap-1 cursor-pointer transition-colors"
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>{isPersian ? 'ارسال مجدد کد' : 'Resend code'}</span>
                       </button>
-                    }
-                    isInvalid={Boolean(errors.password && touched.password)}
-                    classNames={{
-                      inputWrapper: Boolean(errors.password && touched.password)
-                        ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
-                        : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                      input: "text-xs font-mono font-semibold text-brand-text",
-                    }}
-                  />
-                  {errors.password && touched.password && (
-                    <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                      {String(errors.password)}
-                    </p>
-                  )}
+                    )}
+                  </div>
+
+                  {/* Verify & Enter Button */}
+                  <Button
+                    type="button"
+                    onPress={handleVerifyOtp}
+                    isLoading={loadingVerifyOtp}
+                    radius="lg"
+                    className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98 cursor-pointer mt-2"
+                  >
+                    {!loadingVerifyOtp && (
+                      <>
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>{isPersian ? 'تایید و ورود به حساب' : 'Verify & Sign In'}</span>
+                      </>
+                    )}
+                  </Button>
                 </div>
+              )}
+            </div>
+          )}
 
-                <Button
-                  type="submit"
-                  isLoading={loading}
-                  radius="lg"
-                  className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98 cursor-pointer mt-2"
-                >
-                  {!loading && (
-                    <>
-                      <span>{t.auth.signInBtn}</span>
-                      {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-                    </>
-                  )}
-                </Button>
-              </Form>
-            )}
-          </Formik>
+          {/* TAB 2: PASSWORD AUTHENTICATION */}
+          {authMethod === 'password' && (
+            <Formik
+              initialValues={{ identifier: '', password: '' }}
+              validationSchema={getSignInSchema(isPersian)}
+              onSubmit={handlePasswordSubmit}
+              enableReinitialize
+            >
+              {({ values, errors, touched, handleChange, handleBlur }) => (
+                <Form className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-brand-text mb-1.5">
+                      {t.auth.identifier}
+                    </label>
+                    <Input
+                      name="identifier"
+                      type="text"
+                      aria-label={t.auth.identifier}
+                      placeholder={isPersian ? 'نام کاربری، شماره موبایل یا ایمیل' : 'Username, phone or email'}
+                      value={values.identifier}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      variant="bordered"
+                      radius="lg"
+                      startContent={<User className="w-4 h-4 text-brand-bronze shrink-0" />}
+                      isInvalid={Boolean(errors.identifier && touched.identifier)}
+                      classNames={{
+                        inputWrapper: Boolean(errors.identifier && touched.identifier)
+                          ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                          : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                        input: "text-xs font-semibold text-brand-text",
+                      }}
+                    />
+                    {errors.identifier && touched.identifier && (
+                      <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                        {String(errors.identifier)}
+                      </p>
+                    )}
+                  </div>
 
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="text-xs font-bold text-brand-text">
+                        {t.auth.password}
+                      </label>
+                      <Link
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toast.info(
+                            isPersian
+                              ? 'جهت بازیابی رمز با شماره پشتیبانی تماس حاصل فرمایید.'
+                              : 'Please contact support for password recovery.',
+                          );
+                        }}
+                        className="text-[11px] text-brand-bronze dark:text-brand-gold hover:underline"
+                      >
+                        {t.auth.forgotPassword}
+                      </Link>
+                    </div>
+                    <Input
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      aria-label={t.auth.password}
+                      placeholder="••••••••"
+                      value={values.password}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      variant="bordered"
+                      radius="lg"
+                      startContent={<Lock className="w-4 h-4 text-brand-bronze shrink-0" />}
+                      endContent={
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="focus:outline-none text-brand-text-muted hover:text-brand-text transition-colors cursor-pointer"
+                          aria-label="toggle password visibility"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      }
+                      isInvalid={Boolean(errors.password && touched.password)}
+                      classNames={{
+                        inputWrapper: Boolean(errors.password && touched.password)
+                          ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                          : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                        input: "text-xs font-mono font-semibold text-brand-text",
+                      }}
+                    />
+                    {errors.password && touched.password && (
+                      <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                        {String(errors.password)}
+                      </p>
+                    )}
+                  </div>
+
+                  <Button
+                    type="submit"
+                    isLoading={loadingPassword}
+                    radius="lg"
+                    className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98 cursor-pointer mt-2"
+                  >
+                    {!loadingPassword && (
+                      <>
+                        <span>{t.auth.signInBtn}</span>
+                        {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                      </>
+                    )}
+                  </Button>
+                </Form>
+              )}
+            </Formik>
+          )}
+
+          {/* Footer Register Link */}
           <div className="text-center text-xs text-brand-text-muted pt-2 border-t border-brand-border/60">
             <span>{t.auth.noAccount} </span>
             <Link
