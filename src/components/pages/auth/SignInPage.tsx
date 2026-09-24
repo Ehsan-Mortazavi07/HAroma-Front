@@ -28,6 +28,7 @@ import { toast, toPersianDigits, toEnglishDigits, getApiErrorMessage } from '@/c
 import axiosInstance from '@/common/axiosInstance';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/common/i18n';
 
 export function SignInPage() {
@@ -261,385 +262,434 @@ export function SignInPage() {
           </div>
 
           {/* Authentication Method Selector */}
-          <div className="bg-brand-surface-elevated/80 p-1 rounded-2xl border border-brand-border flex gap-1">
+          <div className="relative bg-brand-surface-elevated/90 p-1.5 rounded-2xl border border-brand-border flex gap-1 select-none">
             <button
               type="button"
               onClick={() => {
                 setAuthMethod('otp');
                 setOtpStep('phone');
               }}
-              className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`relative flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-colors duration-200 flex items-center justify-center gap-1.5 cursor-pointer z-0 ${
                 authMethod === 'otp'
-                  ? 'bg-brand-gold text-[#141914] shadow-md shadow-brand-gold/20 font-black'
+                  ? 'text-[#141914] font-black'
                   : 'text-brand-text-muted hover:text-brand-text'
               }`}
             >
-              <Smartphone className="w-4 h-4 shrink-0" />
-              <span>{isPersian ? 'کد یکبار مصرف' : 'OTP Login'}</span>
+              {authMethod === 'otp' && (
+                <motion.div
+                  layoutId="activeAuthMethodPill"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  className="absolute inset-0 bg-brand-gold rounded-xl shadow-md shadow-brand-gold/25"
+                />
+              )}
+              <span className="relative z-10 flex items-center justify-center gap-1.5">
+                <Smartphone className="w-4 h-4 shrink-0" />
+                <span>{isPersian ? 'کد یکبار مصرف' : 'OTP Login'}</span>
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setAuthMethod('password')}
-              className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`relative flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-colors duration-200 flex items-center justify-center gap-1.5 cursor-pointer z-0 ${
                 authMethod === 'password'
-                  ? 'bg-brand-gold text-[#141914] shadow-md shadow-brand-gold/20 font-black'
+                  ? 'text-[#141914] font-black'
                   : 'text-brand-text-muted hover:text-brand-text'
               }`}
             >
-              <Lock className="w-4 h-4 shrink-0" />
-              <span>{isPersian ? 'کلمه عبور' : 'Password'}</span>
+              {authMethod === 'password' && (
+                <motion.div
+                  layoutId="activeAuthMethodPill"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  className="absolute inset-0 bg-brand-gold rounded-xl shadow-md shadow-brand-gold/25"
+                />
+              )}
+              <span className="relative z-10 flex items-center justify-center gap-1.5">
+                <Lock className="w-4 h-4 shrink-0" />
+                <span>{isPersian ? 'کلمه عبور' : 'Password'}</span>
+              </span>
             </button>
           </div>
 
-          {/* TAB 1: OTP AUTHENTICATION */}
-          {authMethod === 'otp' && (
-            <div className="space-y-4">
-              {otpStep === 'phone' ? (
-                /* Step 1: Input Phone */
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-brand-text mb-1.5">
-                      {isPersian ? 'شماره موبایل' : 'Mobile Number'}
-                    </label>
-                    <Input
-                      type="tel"
-                      aria-label={isPersian ? 'شماره موبایل' : 'Mobile Number'}
-                      placeholder={isPersian ? '۰۹۱۲۳۴۵۶۷۸۹' : '09123456789'}
-                      maxLength={11}
-                      value={phone}
-                      onChange={(e) => {
-                        const digits = toEnglishDigits(e.target.value).replace(/\D/g, '').slice(0, 11);
-                        setPhone(digits);
-                        if (digits.length === 11 && digits.startsWith('09')) {
-                          setPhoneError('');
-                        } else if (phoneTouched && !digits) {
-                          setPhoneError(isPersian ? 'وارد کردن شماره موبایل ضروری است.' : 'Mobile number is required.');
-                        }
-                      }}
-                      onBlur={() => {
-                        setPhoneTouched(true);
-                        const clean = toEnglishDigits(phone.trim()).replace(/\D/g, '');
-                        if (!clean) {
-                          setPhoneError(isPersian ? 'وارد کردن شماره موبایل ضروری است.' : 'Mobile number is required.');
-                        } else if (!clean.startsWith('09') || clean.length !== 11) {
-                          setPhoneError(
-                            isPersian
-                              ? 'شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثال: ۰۹۱۲۳۴۵۶۷۸۹).'
-                              : 'Mobile number must be 11 digits starting with 09 (e.g. 09123456789).',
-                          );
-                        } else {
-                          setPhoneError('');
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleSendOtp();
-                        }
-                      }}
-                      variant="bordered"
-                      radius="lg"
-                      startContent={<Smartphone className="w-4 h-4 text-brand-bronze shrink-0" />}
-                      isInvalid={Boolean(phoneError)}
-                      classNames={{
-                        inputWrapper: Boolean(phoneError)
-                          ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors'
-                          : 'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors',
-                        input: 'text-xs font-bold text-brand-text tracking-wider',
-                      }}
-                    />
-                    <AnimatedFieldError
-                      error={phoneError}
-                      extra={
-                        phoneError && phoneError.includes('ثبت‌نام') ? (
-                          <Link
-                            href={PATHS.SIGN_UP}
-                            className="inline-flex items-center gap-1 text-xs font-bold text-brand-gold hover:underline mt-0.5"
-                          >
-                            <span>{isPersian ? '← ایجاد حساب کاربری جدید' : '← Create new account'}</span>
-                          </Link>
-                        ) : null
-                      }
-                    />
-                    <p className="text-[11px] text-brand-text-muted mt-2 leading-relaxed">
-                      {isPersian
-                        ? 'کد یکبار مصرف تنها برای شماره‌های ثبت‌نام شده در سایت ارسال خواهد شد.'
-                        : 'Verification code is only sent to accounts registered on the website.'}
-                    </p>
-                  </div>
-
-                  <Button
-                    type="button"
-                    onPress={() => handleSendOtp()}
-                    isLoading={loadingSendOtp}
-                    radius="lg"
-                    className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98 cursor-pointer mt-2"
-                  >
-                    {!loadingSendOtp && (
-                      <>
-                        <span>{isPersian ? 'ارسال کد تایید' : 'Send Verification Code'}</span>
-                        {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              ) : (
-                /* Step 2: Verify Code */
-                <div className="space-y-4">
-                  {/* Phone Header with Edit button */}
-                  <div className="flex items-center justify-between p-3 bg-brand-surface-elevated rounded-2xl border border-brand-border">
-                    <div className="flex items-center gap-2">
-                      <Smartphone className="w-4 h-4 text-brand-gold shrink-0" />
-                      <div className="text-xs">
-                        <span className="text-brand-text-muted">
-                          {isPersian ? 'ارسال شده به: ' : 'Sent to: '}
-                        </span>
-                        <span className="font-bold font-mono text-brand-text tracking-wider">
-                          {isPersian ? toPersianDigits(phone) : phone}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOtpStep('phone');
-                        setDevCode(null);
-                      }}
-                      className="text-[11px] font-bold text-brand-gold hover:underline flex items-center gap-1 cursor-pointer"
+          {/* TAB CONTENT PANELS WITH DIRECTIONAL SLIDE & BLUR ANIMATION */}
+          <AnimatePresence mode="wait" initial={false}>
+            {authMethod === 'otp' ? (
+              <motion.div
+                key="auth-tab-otp"
+                initial={{ opacity: 0, x: isRTL ? 16 : -16, filter: 'blur(4px)' }}
+                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, x: isRTL ? 16 : -16, filter: 'blur(4px)' }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="space-y-4"
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  {otpStep === 'phone' ? (
+                    /* Step 1: Input Phone */
+                    <motion.div
+                      key="otp-step-phone"
+                      initial={{ opacity: 0, x: isRTL ? 14 : -14 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: isRTL ? 14 : -14 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      className="space-y-4"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>{isPersian ? 'ویرایش شماره' : 'Edit'}</span>
-                    </button>
-                  </div>
-
-                  {/* Dev Test Code Helper (Since no SMS gateway is used yet) */}
-                  {devCode && (
-                    <div
-                      onClick={() => {
-                        setOtpCode(devCode);
-                        if (otpCodeError) setOtpCodeError('');
-                      }}
-                      className="p-3 bg-brand-gold/10 hover:bg-brand-gold/20 border border-brand-gold/30 rounded-2xl cursor-pointer transition-all flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-brand-gold shrink-0 animate-pulse" />
-                        <span className="text-xs text-brand-text font-bold">
-                          {isPersian ? 'کد تایید تست سیستم:' : 'System Dev Code:'}
-                        </span>
+                      <div>
+                        <label className="block text-xs font-bold text-brand-text mb-1.5">
+                          {isPersian ? 'شماره موبایل' : 'Mobile Number'}
+                        </label>
+                        <Input
+                          type="tel"
+                          aria-label={isPersian ? 'شماره موبایل' : 'Mobile Number'}
+                          placeholder={isPersian ? '۰۹۱۲۳۴۵۶۷۸۹' : '09123456789'}
+                          maxLength={11}
+                          value={phone}
+                          onChange={(e) => {
+                            const digits = toEnglishDigits(e.target.value).replace(/\D/g, '').slice(0, 11);
+                            setPhone(digits);
+                            if (digits.length === 11 && digits.startsWith('09')) {
+                              setPhoneError('');
+                            } else if (phoneTouched && !digits) {
+                              setPhoneError(isPersian ? 'وارد کردن شماره موبایل ضروری است.' : 'Mobile number is required.');
+                            }
+                          }}
+                          onBlur={() => {
+                            setPhoneTouched(true);
+                            const clean = toEnglishDigits(phone.trim()).replace(/\D/g, '');
+                            if (!clean) {
+                              setPhoneError(isPersian ? 'وارد کردن شماره موبایل ضروری است.' : 'Mobile number is required.');
+                            } else if (!clean.startsWith('09') || clean.length !== 11) {
+                              setPhoneError(
+                                isPersian
+                                  ? 'شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثال: ۰۹۱۲۳۴۵۶۷۸۹).'
+                                  : 'Mobile number must be 11 digits starting with 09 (e.g. 09123456789).',
+                              );
+                            } else {
+                              setPhoneError('');
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleSendOtp();
+                            }
+                          }}
+                          variant="bordered"
+                          radius="lg"
+                          startContent={<Smartphone className="w-4 h-4 text-brand-bronze shrink-0" />}
+                          isInvalid={Boolean(phoneError)}
+                          classNames={{
+                            inputWrapper: Boolean(phoneError)
+                              ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors'
+                              : 'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors',
+                            input: 'text-xs font-bold text-brand-text tracking-wider',
+                          }}
+                        />
+                        <AnimatedFieldError
+                          error={phoneError}
+                          extra={
+                            phoneError && phoneError.includes('ثبت‌نام') ? (
+                              <Link
+                                href={PATHS.SIGN_UP}
+                                className="inline-flex items-center gap-1 text-xs font-bold text-brand-gold hover:underline mt-0.5"
+                              >
+                                <span>{isPersian ? '← ایجاد حساب کاربری جدید' : '← Create new account'}</span>
+                              </Link>
+                            ) : null
+                          }
+                        />
+                        <p className="text-[11px] text-brand-text-muted mt-2 leading-relaxed">
+                          {isPersian
+                            ? 'کد یکبار مصرف تنها برای شماره‌های ثبت‌نام شده در سایت ارسال خواهد شد.'
+                            : 'Verification code is only sent to accounts registered on the website.'}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-sm font-black tracking-widest text-brand-gold bg-brand-surface px-2.5 py-0.5 rounded-xl border border-brand-gold/20 group-hover:border-brand-gold">
-                          {isPersian ? toPersianDigits(devCode) : devCode}
-                        </span>
-                        <span className="text-[10px] text-brand-text-muted group-hover:text-brand-gold font-medium">
-                          ({isPersian ? 'کلیک جهت درج' : 'click to fill'})
-                        </span>
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Code Input */}
-                  <div>
-                    <label className="block text-xs font-bold text-brand-text mb-1.5">
-                      {isPersian ? 'کد ۵ رقمی تایید' : '5-Digit Verification Code'}
-                    </label>
-                    <Input
-                      ref={otpInputRef}
-                      type="text"
-                      inputMode="numeric"
-                      aria-label={isPersian ? 'کد تایید ۵ رقمی' : '5-Digit Verification Code'}
-                      placeholder={isPersian ? '۱۲۳۴۵' : '12345'}
-                      maxLength={5}
-                      value={otpCode}
-                      onChange={(e) => {
-                        const digits = toEnglishDigits(e.target.value).replace(/\D/g, '').slice(0, 5);
-                        setOtpCode(digits);
-                        if (digits.length === 5) {
-                          setOtpCodeError('');
-                        }
-                      }}
-                      onBlur={() => {
-                        if (!otpCode.trim()) {
-                          setOtpCodeError(isPersian ? 'وارد کردن کد تایید ضروری است.' : 'Verification code is required.');
-                        } else if (otpCode.trim().length < 5) {
-                          setOtpCodeError(isPersian ? 'کد تایید باید ۵ رقم باشد.' : 'Verification code must be 5 digits.');
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleVerifyOtp();
-                        }
-                      }}
-                      variant="bordered"
-                      radius="lg"
-                      startContent={<KeyRound className="w-4 h-4 text-brand-bronze shrink-0" />}
-                      isInvalid={Boolean(otpCodeError)}
-                      classNames={{
-                        inputWrapper: Boolean(otpCodeError)
-                          ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors'
-                          : 'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors',
-                        input: 'text-center font-mono font-bold text-brand-text tracking-[0.3em] text-base',
-                      }}
-                    />
-                    <AnimatedFieldError error={otpCodeError} />
-                  </div>
-
-                  {/* Countdown Timer & Resend */}
-                  <div className="flex items-center justify-between text-xs pt-1">
-                    {countdown > 0 ? (
-                      <div className="flex items-center gap-1.5 text-brand-text-muted">
-                        <Clock className="w-3.5 h-3.5 text-brand-gold shrink-0" />
-                        <span>{isPersian ? 'زمان باقیمانده:' : 'Time remaining:'}</span>
-                        <span className="font-mono font-bold text-brand-gold">
-                          {formatTimer(countdown)}
-                        </span>
-                      </div>
-                    ) : (
-                      <button
+                      <Button
                         type="button"
-                        onClick={() => handleSendOtp(phone)}
-                        disabled={loadingSendOtp}
-                        className="text-brand-gold hover:underline font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        onPress={() => handleSendOtp()}
+                        isLoading={loadingSendOtp}
+                        radius="lg"
+                        className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98 cursor-pointer mt-2"
                       >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>{isPersian ? 'ارسال مجدد کد' : 'Resend code'}</span>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Verify & Enter Button */}
-                  <Button
-                    type="button"
-                    onPress={handleVerifyOtp}
-                    isLoading={loadingVerifyOtp}
-                    radius="lg"
-                    className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98 cursor-pointer mt-2"
-                  >
-                    {!loadingVerifyOtp && (
-                      <>
-                        <ShieldCheck className="w-4 h-4" />
-                        <span>{isPersian ? 'تایید و ورود به حساب' : 'Verify & Sign In'}</span>
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 2: PASSWORD AUTHENTICATION */}
-          {authMethod === 'password' && (
-            <Formik
-              initialValues={{ identifier: '', password: '' }}
-              validationSchema={getSignInSchema(isPersian)}
-              onSubmit={handlePasswordSubmit}
-              enableReinitialize
-            >
-              {({ values, errors, touched, handleChange, handleBlur, setFieldValue, submitCount }) => (
-                <Form className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-brand-text mb-1.5">
-                      {t.auth.identifier}
-                    </label>
-                    <Input
-                      name="identifier"
-                      type="text"
-                      aria-label={t.auth.identifier}
-                      placeholder={isPersian ? 'نام کاربری، شماره موبایل یا ایمیل' : 'Username, phone or email'}
-                      value={values.identifier}
-                      onChange={(e) => {
-                        const val = toEnglishDigits(e.target.value);
-                        if (/^0\d*$/.test(val)) {
-                          setFieldValue('identifier', val.replace(/\D/g, '').slice(0, 11));
-                        } else {
-                          handleChange(e);
-                        }
-                      }}
-                      onBlur={handleBlur}
-                      variant="bordered"
-                      radius="lg"
-                      startContent={<User className="w-4 h-4 text-brand-bronze shrink-0" />}
-                      isInvalid={Boolean(errors.identifier && (touched.identifier || submitCount > 0))}
-                      classNames={{
-                        inputWrapper: Boolean(errors.identifier && (touched.identifier || submitCount > 0))
-                          ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
-                          : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                        input: "text-xs font-semibold text-brand-text",
-                      }}
-                    />
-                    <AnimatedFieldError error={(touched.identifier || submitCount > 0) && errors.identifier ? String(errors.identifier) : null} />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <label className="text-xs font-bold text-brand-text">
-                        {t.auth.password}
-                      </label>
-                      <Link
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          toast.info(
-                            isPersian
-                              ? 'جهت بازیابی رمز با شماره پشتیبانی تماس حاصل فرمایید.'
-                              : 'Please contact support for password recovery.',
-                          );
-                        }}
-                        className="text-[11px] text-brand-bronze dark:text-brand-gold hover:underline"
-                      >
-                        {t.auth.forgotPassword}
-                      </Link>
-                    </div>
-                    <Input
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
-                      aria-label={t.auth.password}
-                      placeholder="••••••••"
-                      value={values.password}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      variant="bordered"
-                      radius="lg"
-                      startContent={<Lock className="w-4 h-4 text-brand-bronze shrink-0" />}
-                      endContent={
+                        {!loadingSendOtp && (
+                          <>
+                            <span>{isPersian ? 'ارسال کد تایید' : 'Send Verification Code'}</span>
+                            {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                          </>
+                        )}
+                      </Button>
+                    </motion.div>
+                  ) : (
+                    /* Step 2: Verify Code */
+                    <motion.div
+                      key="otp-step-verify"
+                      initial={{ opacity: 0, x: isRTL ? -14 : 14 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: isRTL ? -14 : 14 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      className="space-y-4"
+                    >
+                      {/* Phone Header with Edit button */}
+                      <div className="flex items-center justify-between p-3 bg-brand-surface-elevated rounded-2xl border border-brand-border">
+                        <div className="flex items-center gap-2">
+                          <Smartphone className="w-4 h-4 text-brand-gold shrink-0" />
+                          <div className="text-xs">
+                            <span className="text-brand-text-muted">
+                              {isPersian ? 'ارسال شده به: ' : 'Sent to: '}
+                            </span>
+                            <span className="font-bold font-mono text-brand-text tracking-wider">
+                              {isPersian ? toPersianDigits(phone) : phone}
+                            </span>
+                          </div>
+                        </div>
                         <button
                           type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="focus:outline-none text-brand-text-muted hover:text-brand-text transition-colors cursor-pointer"
-                          aria-label="toggle password visibility"
+                          onClick={() => {
+                            setOtpStep('phone');
+                            setDevCode(null);
+                          }}
+                          className="text-[11px] font-bold text-brand-gold hover:underline flex items-center gap-1 cursor-pointer"
                         >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>{isPersian ? 'ویرایش شماره' : 'Edit'}</span>
                         </button>
-                      }
-                      isInvalid={Boolean(errors.password && (touched.password || submitCount > 0))}
-                      classNames={{
-                        inputWrapper: Boolean(errors.password && (touched.password || submitCount > 0))
-                          ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
-                          : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                        input: "text-xs font-mono font-semibold text-brand-text",
-                      }}
-                    />
-                    <AnimatedFieldError error={(touched.password || submitCount > 0) && errors.password ? String(errors.password) : null} />
-                  </div>
+                      </div>
 
-                  <Button
-                    type="submit"
-                    isLoading={loadingPassword}
-                    radius="lg"
-                    className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98 cursor-pointer mt-2"
-                  >
-                    {!loadingPassword && (
-                      <>
-                        <span>{t.auth.signInBtn}</span>
-                        {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-                      </>
-                    )}
-                  </Button>
-                </Form>
-              )}
-            </Formik>
-          )}
+                      {/* Dev Test Code Helper (Since no SMS gateway is used yet) */}
+                      {devCode && (
+                        <div
+                          onClick={() => {
+                            setOtpCode(devCode);
+                            if (otpCodeError) setOtpCodeError('');
+                          }}
+                          className="p-3 bg-brand-gold/10 hover:bg-brand-gold/20 border border-brand-gold/30 rounded-2xl cursor-pointer transition-all flex items-center justify-between group"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-brand-gold shrink-0 animate-pulse" />
+                            <span className="text-xs text-brand-text font-bold">
+                              {isPersian ? 'کد تایید تست سیستم:' : 'System Dev Code:'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-sm font-black tracking-widest text-brand-gold bg-brand-surface px-2.5 py-0.5 rounded-xl border border-brand-gold/20 group-hover:border-brand-gold">
+                              {isPersian ? toPersianDigits(devCode) : devCode}
+                            </span>
+                            <span className="text-[10px] text-brand-text-muted group-hover:text-brand-gold font-medium">
+                              ({isPersian ? 'کلیک جهت درج' : 'click to fill'})
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Code Input */}
+                      <div>
+                        <label className="block text-xs font-bold text-brand-text mb-1.5">
+                          {isPersian ? 'کد ۵ رقمی تایید' : '5-Digit Verification Code'}
+                        </label>
+                        <Input
+                          ref={otpInputRef}
+                          type="text"
+                          inputMode="numeric"
+                          aria-label={isPersian ? 'کد تایید ۵ رقمی' : '5-Digit Verification Code'}
+                          placeholder={isPersian ? '۱۲۳۴۵' : '12345'}
+                          maxLength={5}
+                          value={otpCode}
+                          onChange={(e) => {
+                            const digits = toEnglishDigits(e.target.value).replace(/\D/g, '').slice(0, 5);
+                            setOtpCode(digits);
+                            if (digits.length === 5) {
+                              setOtpCodeError('');
+                            }
+                          }}
+                          onBlur={() => {
+                            if (!otpCode.trim()) {
+                              setOtpCodeError(isPersian ? 'وارد کردن کد تایید ضروری است.' : 'Verification code is required.');
+                            } else if (otpCode.trim().length < 5) {
+                              setOtpCodeError(isPersian ? 'کد تایید باید ۵ رقم باشد.' : 'Verification code must be 5 digits.');
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleVerifyOtp();
+                            }
+                          }}
+                          variant="bordered"
+                          radius="lg"
+                          startContent={<KeyRound className="w-4 h-4 text-brand-bronze shrink-0" />}
+                          isInvalid={Boolean(otpCodeError)}
+                          classNames={{
+                            inputWrapper: Boolean(otpCodeError)
+                              ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors'
+                              : 'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors',
+                            input: 'text-center font-mono font-bold text-brand-text tracking-[0.3em] text-base',
+                          }}
+                        />
+                        <AnimatedFieldError error={otpCodeError} />
+                      </div>
+
+                      {/* Countdown Timer & Resend */}
+                      <div className="flex items-center justify-between text-xs pt-1">
+                        {countdown > 0 ? (
+                          <div className="flex items-center gap-1.5 text-brand-text-muted">
+                            <Clock className="w-3.5 h-3.5 text-brand-gold shrink-0" />
+                            <span>{isPersian ? 'زمان باقیمانده:' : 'Time remaining:'}</span>
+                            <span className="font-mono font-bold text-brand-gold">
+                              {formatTimer(countdown)}
+                            </span>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleSendOtp(phone)}
+                            disabled={loadingSendOtp}
+                            className="text-brand-gold hover:underline font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>{isPersian ? 'ارسال مجدد کد' : 'Resend code'}</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Verify & Enter Button */}
+                      <Button
+                        type="button"
+                        onPress={handleVerifyOtp}
+                        isLoading={loadingVerifyOtp}
+                        radius="lg"
+                        className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98 cursor-pointer mt-2"
+                      >
+                        {!loadingVerifyOtp && (
+                          <>
+                            <ShieldCheck className="w-4 h-4" />
+                            <span>{isPersian ? 'تایید و ورود به حساب' : 'Verify & Sign In'}</span>
+                          </>
+                        )}
+                      </Button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ) : (
+              /* TAB 2: PASSWORD AUTHENTICATION */
+              <motion.div
+                key="auth-tab-password"
+                initial={{ opacity: 0, x: isRTL ? -16 : 16, filter: 'blur(4px)' }}
+                animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, x: isRTL ? -16 : 16, filter: 'blur(4px)' }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <Formik
+                  initialValues={{ identifier: '', password: '' }}
+                  validationSchema={getSignInSchema(isPersian)}
+                  onSubmit={handlePasswordSubmit}
+                  enableReinitialize
+                >
+                  {({ values, errors, touched, handleChange, handleBlur, setFieldValue, submitCount }) => (
+                    <Form className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-brand-text mb-1.5">
+                          {t.auth.identifier}
+                        </label>
+                        <Input
+                          name="identifier"
+                          type="text"
+                          aria-label={t.auth.identifier}
+                          placeholder={isPersian ? 'نام کاربری، شماره موبایل یا ایمیل' : 'Username, phone or email'}
+                          value={values.identifier}
+                          onChange={(e) => {
+                            const val = toEnglishDigits(e.target.value);
+                            if (/^0\d*$/.test(val)) {
+                              setFieldValue('identifier', val.replace(/\D/g, '').slice(0, 11));
+                            } else {
+                              handleChange(e);
+                            }
+                          }}
+                          onBlur={handleBlur}
+                          variant="bordered"
+                          radius="lg"
+                          startContent={<User className="w-4 h-4 text-brand-bronze shrink-0" />}
+                          isInvalid={Boolean(errors.identifier && (touched.identifier || submitCount > 0))}
+                          classNames={{
+                            inputWrapper: Boolean(errors.identifier && (touched.identifier || submitCount > 0))
+                              ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                              : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                            input: "text-xs font-semibold text-brand-text",
+                          }}
+                        />
+                        <AnimatedFieldError error={(touched.identifier || submitCount > 0) && errors.identifier ? String(errors.identifier) : null} />
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label className="text-xs font-bold text-brand-text">
+                            {t.auth.password}
+                          </label>
+                          <Link
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              toast.info(
+                                isPersian
+                                  ? 'جهت بازیابی رمز با شماره پشتیبانی تماس حاصل فرمایید.'
+                                  : 'Please contact support for password recovery.',
+                              );
+                            }}
+                            className="text-[11px] text-brand-bronze dark:text-brand-gold hover:underline"
+                          >
+                            {t.auth.forgotPassword}
+                          </Link>
+                        </div>
+                        <Input
+                          name="password"
+                          type={showPassword ? 'text' : 'password'}
+                          aria-label={t.auth.password}
+                          placeholder="••••••••"
+                          value={values.password}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          variant="bordered"
+                          radius="lg"
+                          startContent={<Lock className="w-4 h-4 text-brand-bronze shrink-0" />}
+                          endContent={
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="focus:outline-none text-brand-text-muted hover:text-brand-text transition-colors cursor-pointer"
+                              aria-label="toggle password visibility"
+                            >
+                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          }
+                          isInvalid={Boolean(errors.password && (touched.password || submitCount > 0))}
+                          classNames={{
+                            inputWrapper: Boolean(errors.password && (touched.password || submitCount > 0))
+                              ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                              : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                            input: "text-xs font-mono font-semibold text-brand-text",
+                          }}
+                        />
+                        <AnimatedFieldError error={(touched.password || submitCount > 0) && errors.password ? String(errors.password) : null} />
+                      </div>
+
+                      <Button
+                        type="submit"
+                        isLoading={loadingPassword}
+                        radius="lg"
+                        className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98 cursor-pointer mt-2"
+                      >
+                        {!loadingPassword && (
+                          <>
+                            <span>{t.auth.signInBtn}</span>
+                            {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                          </>
+                        )}
+                      </Button>
+                    </Form>
+                  )}
+                </Formik>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Footer Register Link */}
           <div className="text-center text-xs text-brand-text-muted pt-2 border-t border-brand-border/60">
