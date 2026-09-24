@@ -28,6 +28,7 @@ import { toast, toPersianDigits, toEnglishDigits, getApiErrorMessage } from '@/c
 import axiosInstance from '@/common/axiosInstance';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
+import { AnimatedPasswordToggle } from '@/components/common/AnimatedPasswordToggle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/common/i18n';
 
@@ -651,14 +652,11 @@ export function SignInPage() {
                           radius="lg"
                           startContent={<Lock className="w-4 h-4 text-brand-bronze shrink-0" />}
                           endContent={
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="focus:outline-none text-brand-text-muted hover:text-brand-text transition-colors cursor-pointer"
-                              aria-label="toggle password visibility"
-                            >
-                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
+                            <AnimatedPasswordToggle
+                              isVisible={showPassword}
+                              onToggle={() => setShowPassword((prev) => !prev)}
+                              ariaLabel={isPersian ? 'تغییر نمایش کلمه عبور' : 'Toggle password visibility'}
+                            />
                           }
                           isInvalid={Boolean(errors.password && (touched.password || submitCount > 0))}
                           classNames={{

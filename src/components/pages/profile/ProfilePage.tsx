@@ -58,6 +58,7 @@ import {
   ModalFooter,
   Skeleton,
 } from '@heroui/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { logout, updateUser, fetchProfile } from '@/stores/auth/authSlice';
 import { PATHS } from '@/common/constants/PATHS';
@@ -66,9 +67,33 @@ import { isoToJalali } from '@/common/utils/date';
 import { BirthDatePicker } from '@/components/common/BirthDatePicker';
 import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
+import { AnimatedPasswordToggle } from '@/components/common/AnimatedPasswordToggle';
 import { IOrder } from '@/common/interfaces';
 import axiosInstance from '@/common/axiosInstance';
 import { useTranslation } from '@/common/i18n';
+
+const VALID_TABS = ['dashboard', 'orders', 'addresses', 'edit', 'vip'] as const;
+type TabType = (typeof VALID_TABS)[number];
+
+const getInitialProfileTab = (): TabType => {
+  if (typeof window === 'undefined') return 'dashboard';
+  try {
+    const hash = window.location.hash.replace(/^#/, '').toLowerCase() as TabType;
+    if (VALID_TABS.includes(hash)) return hash;
+    if (hash === ('settings' as any)) return 'edit';
+
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab')?.toLowerCase() as TabType;
+    if (VALID_TABS.includes(tabParam)) return tabParam;
+    if (tabParam === ('settings' as any)) return 'edit';
+
+    const saved = localStorage.getItem('hatef_profile_tab')?.toLowerCase() as TabType;
+    if (VALID_TABS.includes(saved)) return saved;
+  } catch {
+    // ignore
+  }
+  return 'dashboard';
+};
 
 export function ProfilePage() {
   const router = useRouter();
@@ -77,7 +102,21 @@ export function ProfilePage() {
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const { t, isPersian } = useTranslation();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'orders' | 'addresses' | 'edit' | 'vip'>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabType>(() => getInitialProfileTab());
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    setIsEditing(false);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('hatef_profile_tab', tab);
+        window.history.replaceState(null, '', `#${tab}`);
+      } catch {
+        // ignore
+      }
+    }
+  };
+
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -174,6 +213,27 @@ export function ProfilePage() {
       setResetIdentifier(user.email || user.username || '');
     }
   }, [user]);
+
+  useEffect(() => {
+    const initial = getInitialProfileTab();
+    if (initial !== activeTab) {
+      setActiveTab(initial);
+    }
+
+    const handleHashChange = () => {
+      const currentHash = window.location.hash.replace(/^#/, '').toLowerCase() as TabType;
+      if (VALID_TABS.includes(currentHash)) {
+        setActiveTab(currentHash);
+        setIsEditing(false);
+      } else if (currentHash === ('settings' as any)) {
+        setActiveTab('edit');
+        setIsEditing(false);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   useEffect(() => {
     setIsEditing(false);
@@ -670,7 +730,7 @@ export function ProfilePage() {
                 type="button"
                 variant="light"
                 radius="lg"
-                onPress={() => setActiveTab('dashboard')}
+                onPress={() => handleTabChange('dashboard')}
                 className={`w-full h-12 justify-between text-xs font-bold transition-all px-4 rounded-2xl ${
                   activeTab === 'dashboard'
                     ? 'bg-brand-gold/15 text-brand-gold font-black border border-brand-gold/30 shadow-xs'
@@ -690,7 +750,7 @@ export function ProfilePage() {
                 type="button"
                 variant="light"
                 radius="lg"
-                onPress={() => setActiveTab('orders')}
+                onPress={() => handleTabChange('orders')}
                 className={`w-full h-12 justify-between text-xs font-bold transition-all px-4 rounded-2xl ${
                   activeTab === 'orders'
                     ? 'bg-brand-gold/15 text-brand-gold font-black border border-brand-gold/30 shadow-xs'
@@ -722,7 +782,7 @@ export function ProfilePage() {
                 type="button"
                 variant="light"
                 radius="lg"
-                onPress={() => setActiveTab('addresses')}
+                onPress={() => handleTabChange('addresses')}
                 className={`w-full h-12 justify-between text-xs font-bold transition-all px-4 rounded-2xl ${
                   activeTab === 'addresses'
                     ? 'bg-brand-gold/15 text-brand-gold font-black border border-brand-gold/30 shadow-xs'
@@ -742,7 +802,7 @@ export function ProfilePage() {
                 type="button"
                 variant="light"
                 radius="lg"
-                onPress={() => setActiveTab('vip')}
+                onPress={() => handleTabChange('vip')}
                 className={`w-full h-12 justify-between text-xs font-bold transition-all px-4 rounded-2xl ${
                   activeTab === 'vip'
                     ? 'bg-brand-gold/15 text-brand-gold font-black border border-brand-gold/30 shadow-xs'
@@ -774,7 +834,7 @@ export function ProfilePage() {
                 type="button"
                 variant="light"
                 radius="lg"
-                onPress={() => setActiveTab('edit')}
+                onPress={() => handleTabChange('edit')}
                 className={`w-full h-12 justify-between text-xs font-bold transition-all px-4 rounded-2xl ${
                   activeTab === 'edit'
                     ? 'bg-brand-gold/15 text-brand-gold font-black border border-brand-gold/30 shadow-xs'
@@ -829,9 +889,18 @@ export function ProfilePage() {
         </aside>
 
         {/* Main Content Area (Left in RTL, Right in LTR) */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* TAB 1: DASHBOARD VIEW */}
-          {activeTab === 'dashboard' && (
+        <div className="lg:col-span-8">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 14, filter: 'blur(3px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -10, filter: 'blur(2px)' }}
+              transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+              className="space-y-6"
+            >
+              {/* TAB 1: DASHBOARD VIEW */}
+              {activeTab === 'dashboard' && (
             <div className="space-y-6">
               {/* Top Banner (حساب من) */}
               <Card className="bg-gradient-to-r from-brand-surface via-brand-surface-elevated to-brand-surface rounded-3xl border border-brand-border shadow-xs overflow-hidden relative">
@@ -850,7 +919,7 @@ export function ProfilePage() {
                   </div>
                   <Button
                     type="button"
-                    onPress={() => setActiveTab('edit')}
+                    onPress={() => handleTabChange('edit')}
                     radius="lg"
                     size="sm"
                     startContent={<Edit3 className="w-4 h-4 shrink-0" />}
@@ -935,7 +1004,7 @@ export function ProfilePage() {
                 {/* Orders Metric */}
                 <Card
                   isPressable
-                  onPress={() => setActiveTab('orders')}
+                  onPress={() => handleTabChange('orders')}
                   className="bg-brand-surface rounded-3xl border border-brand-border hover:border-brand-gold/60 shadow-xs transition-all group cursor-pointer"
                 >
                   <div className="p-5 flex items-center justify-between">
@@ -956,7 +1025,7 @@ export function ProfilePage() {
                 {/* Address Metric */}
                 <Card
                   isPressable
-                  onPress={() => setActiveTab('addresses')}
+                  onPress={() => handleTabChange('addresses')}
                   className="bg-brand-surface rounded-3xl border border-brand-border hover:border-brand-gold/60 shadow-xs transition-all group cursor-pointer"
                 >
                   <div className="p-5 flex items-center justify-between">
@@ -977,7 +1046,7 @@ export function ProfilePage() {
                 {/* VIP Status Metric */}
                 <Card
                   isPressable
-                  onPress={() => setActiveTab('vip')}
+                  onPress={() => handleTabChange('vip')}
                   className="bg-brand-surface rounded-3xl border border-brand-border hover:border-brand-gold/60 shadow-xs transition-all group sm:col-span-2 lg:col-span-1 cursor-pointer"
                 >
                   <div className="p-5 flex items-center justify-between">
@@ -1007,7 +1076,7 @@ export function ProfilePage() {
                   {/* Quick 1: Orders */}
                   <Card
                     isPressable
-                    onPress={() => setActiveTab('orders')}
+                    onPress={() => handleTabChange('orders')}
                     className="bg-brand-surface rounded-2xl border border-brand-border hover:border-brand-gold/60 shadow-xs transition-all group cursor-pointer text-start overflow-hidden"
                   >
                     <div className="p-5 flex items-start gap-4">
@@ -1028,7 +1097,7 @@ export function ProfilePage() {
                   {/* Quick 2: Addresses */}
                   <Card
                     isPressable
-                    onPress={() => setActiveTab('addresses')}
+                    onPress={() => handleTabChange('addresses')}
                     className="bg-brand-surface rounded-2xl border border-brand-border hover:border-brand-gold/60 shadow-xs transition-all group cursor-pointer text-start overflow-hidden"
                   >
                     <div className="p-5 flex items-start gap-4">
@@ -1049,7 +1118,7 @@ export function ProfilePage() {
                   {/* Quick 3: Account Info */}
                   <Card
                     isPressable
-                    onPress={() => setActiveTab('edit')}
+                    onPress={() => handleTabChange('edit')}
                     className="bg-brand-surface rounded-2xl border border-brand-border hover:border-brand-gold/60 shadow-xs transition-all group cursor-pointer text-start overflow-hidden"
                   >
                     <div className="p-5 flex items-start gap-4">
@@ -1070,7 +1139,7 @@ export function ProfilePage() {
                   {/* Quick 4: VIP Club */}
                   <Card
                     isPressable
-                    onPress={() => setActiveTab('vip')}
+                    onPress={() => handleTabChange('vip')}
                     className="bg-brand-surface rounded-2xl border border-brand-border hover:border-brand-gold/60 shadow-xs transition-all group cursor-pointer text-start overflow-hidden"
                   >
                     <div className="p-5 flex items-start gap-4">
@@ -1129,7 +1198,7 @@ export function ProfilePage() {
                       size="sm"
                       variant="flat"
                       radius="lg"
-                      onPress={() => setActiveTab('dashboard')}
+                      onPress={() => handleTabChange('dashboard')}
                       aria-label="Back to Dashboard"
                       className="bg-brand-surface-elevated hover:bg-brand-border text-brand-text border border-brand-border transition-colors rounded-2xl cursor-pointer"
                     >
@@ -1222,7 +1291,7 @@ export function ProfilePage() {
                         size="sm"
                         variant="flat"
                         radius="lg"
-                        onPress={() => setActiveTab('dashboard')}
+                        onPress={() => handleTabChange('dashboard')}
                         aria-label="Back to Dashboard"
                         className="bg-brand-surface-elevated hover:bg-brand-border text-brand-text border border-brand-border transition-colors rounded-2xl cursor-pointer"
                       >
@@ -1436,7 +1505,7 @@ export function ProfilePage() {
                           size="sm"
                           variant="flat"
                           radius="lg"
-                          onPress={() => setActiveTab('dashboard')}
+                          onPress={() => handleTabChange('dashboard')}
                           aria-label="Back to Dashboard"
                           className="bg-brand-surface-elevated hover:bg-brand-border text-brand-text border border-brand-border transition-colors rounded-2xl cursor-pointer"
                         >
@@ -1976,7 +2045,6 @@ export function ProfilePage() {
                             </label>
                           </div>
                           <Input
-                            key={`curr-pwd-${showCurrentPassword ? 'text' : 'password'}`}
                             type={showCurrentPassword ? 'text' : 'password'}
                             aria-label={isPersian ? 'کلمه عبور فعلی' : 'Current Password'}
                             placeholder={isPersian ? 'رمز عبور فعلی حساب' : 'Current password'}
@@ -1985,22 +2053,11 @@ export function ProfilePage() {
                             variant="bordered"
                             radius="lg"
                             endContent={
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setShowCurrentPassword((prev) => !prev);
-                                }}
-                                className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
-                                aria-label="Toggle password visibility"
-                              >
-                                {showCurrentPassword ? (
-                                  <EyeOff className="w-4 h-4 pointer-events-none" />
-                                ) : (
-                                  <Eye className="w-4 h-4 pointer-events-none" />
-                                )}
-                              </button>
+                              <AnimatedPasswordToggle
+                                isVisible={showCurrentPassword}
+                                onToggle={() => setShowCurrentPassword((prev) => !prev)}
+                                ariaLabel={isPersian ? 'تغییر نمایش کلمه عبور فعلی' : 'Toggle current password visibility'}
+                              />
                             }
                             classNames={{
                               inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
@@ -2021,7 +2078,6 @@ export function ProfilePage() {
                           </label>
                         </div>
                         <Input
-                          key={`new-pwd-${showNewPassword ? 'text' : 'password'}`}
                           type={showNewPassword ? 'text' : 'password'}
                           aria-label={user?.hasPassword ? (isPersian ? 'کلمه عبور جدید' : 'New Password') : (isPersian ? 'کلمه عبور' : 'Password')}
                           placeholder={
@@ -2034,22 +2090,11 @@ export function ProfilePage() {
                           variant="bordered"
                           radius="lg"
                           endContent={
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setShowNewPassword((prev) => !prev);
-                              }}
-                              className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
-                              aria-label="Toggle password visibility"
-                            >
-                              {showNewPassword ? (
-                                <EyeOff className="w-4 h-4 pointer-events-none" />
-                              ) : (
-                                <Eye className="w-4 h-4 pointer-events-none" />
-                              )}
-                            </button>
+                            <AnimatedPasswordToggle
+                              isVisible={showNewPassword}
+                              onToggle={() => setShowNewPassword((prev) => !prev)}
+                              ariaLabel={isPersian ? 'تغییر نمایش کلمه عبور جدید' : 'Toggle new password visibility'}
+                            />
                           }
                           classNames={{
                             inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
@@ -2069,7 +2114,6 @@ export function ProfilePage() {
                           </label>
                         </div>
                         <Input
-                          key={`conf-pwd-${showConfirmPassword ? 'text' : 'password'}`}
                           type={showConfirmPassword ? 'text' : 'password'}
                           aria-label={user?.hasPassword ? (isPersian ? 'تکرار کلمه عبور جدید' : 'Confirm New Password') : (isPersian ? 'تکرار کلمه عبور' : 'Confirm Password')}
                           placeholder={isPersian ? 'تکرار رمز عبور' : 'Confirm password'}
@@ -2078,22 +2122,11 @@ export function ProfilePage() {
                           variant="bordered"
                           radius="lg"
                           endContent={
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setShowConfirmPassword((prev) => !prev);
-                              }}
-                              className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
-                              aria-label="Toggle password visibility"
-                            >
-                              {showConfirmPassword ? (
-                                <EyeOff className="w-4 h-4 pointer-events-none" />
-                              ) : (
-                                <Eye className="w-4 h-4 pointer-events-none" />
-                              )}
-                            </button>
+                            <AnimatedPasswordToggle
+                              isVisible={showConfirmPassword}
+                              onToggle={() => setShowConfirmPassword((prev) => !prev)}
+                              ariaLabel={isPersian ? 'تغییر نمایش تکرار کلمه عبور' : 'Toggle confirm password visibility'}
+                            />
                           }
                           classNames={{
                             inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
@@ -2250,6 +2283,8 @@ export function ProfilePage() {
               </Card>
             </div>
           )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 
@@ -2370,7 +2405,6 @@ export function ProfilePage() {
                         </label>
                       </div>
                       <Input
-                        key={`reset-pwd-${showResetNewPassword ? 'text' : 'password'}`}
                         type={showResetNewPassword ? 'text' : 'password'}
                         aria-label={isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر)' : 'New Password (min 6 chars)'}
                         placeholder={isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر)' : 'New password (min 6 chars)'}
@@ -2379,22 +2413,11 @@ export function ProfilePage() {
                         variant="bordered"
                         radius="lg"
                         endContent={
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setShowResetNewPassword((prev) => !prev);
-                            }}
-                            className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
-                            aria-label="Toggle password visibility"
-                          >
-                            {showResetNewPassword ? (
-                              <EyeOff className="w-4 h-4 pointer-events-none" />
-                            ) : (
-                              <Eye className="w-4 h-4 pointer-events-none" />
-                            )}
-                          </button>
+                          <AnimatedPasswordToggle
+                            isVisible={showResetNewPassword}
+                            onToggle={() => setShowResetNewPassword((prev) => !prev)}
+                            ariaLabel={isPersian ? 'تغییر نمایش رمز عبور جدید' : 'Toggle new password visibility'}
+                          />
                         }
                         classNames={{
                           inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
