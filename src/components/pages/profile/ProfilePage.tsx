@@ -39,6 +39,10 @@ import {
   Smartphone,
   RotateCcw,
   Clock,
+  Calendar,
+  AtSign,
+  Shield,
+  X,
 } from 'lucide-react';
 import {
   Card,
@@ -77,7 +81,8 @@ export function ProfilePage() {
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Edit Profile Form State
+  // Edit Profile Mode & Form State
+  const [isEditing, setIsEditing] = useState(false);
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [username, setUsername] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -169,6 +174,25 @@ export function ProfilePage() {
       setResetIdentifier(user.email || user.username || '');
     }
   }, [user]);
+
+  useEffect(() => {
+    setIsEditing(false);
+  }, [activeTab]);
+
+  const handleCancelEdit = () => {
+    if (user) {
+      setFullName(user.fullName || '');
+      setUsername(user.username || '');
+      setEmail(user.email || '');
+      setPhone(user.phone || '');
+      setBirthDate(user.birthDate || '');
+      setBirthDateShamsi(user.birthDateShamsi || '');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+    setIsEditing(false);
+  };
 
   const handleBirthDateChange = (isoDate: string) => {
     setBirthDate(isoDate);
@@ -308,7 +332,6 @@ export function ProfilePage() {
         fullName: fullName.trim(),
         username: username.trim().toLowerCase(),
         email: trimmedEmail || '',
-        phone: normalizedPhone || undefined,
         birthDate: birthDate || null,
         birthDateShamsi: birthDateShamsi || null,
         province: province.trim() || undefined,
@@ -334,6 +357,7 @@ export function ProfilePage() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      setIsEditing(false);
       toast.success(
         isPersian
           ? 'مشخصات حساب کاربری با موفقیت به‌روزرسانی شد.'
@@ -439,6 +463,7 @@ export function ProfilePage() {
     try {
       const res = await axiosInstance.post('/auth/otp/send', {
         phone: cleanNumber,
+        purpose: 'verify-phone',
       });
 
       if (res.data?.devCode) {
@@ -1395,230 +1420,617 @@ export function ProfilePage() {
 
           {/* TAB 4: EDIT PROFILE & SECURITY TAB */}
           {activeTab === 'edit' && (
-            <form onSubmit={handleProfileSubmit} className="space-y-6">
-              {/* Personal Details Card */}
-              <Card
-                classNames={{ base: "!overflow-visible overflow-visible card-overflow-visible relative z-30" }}
-                className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs !overflow-visible overflow-visible card-overflow-visible relative z-30"
-              >
-                <div className="p-6 sm:p-8 space-y-6">
-                  <div className="flex items-center justify-between pb-4 border-b border-brand-border">
-                    <div className="flex items-center gap-3">
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="flat"
-                        radius="lg"
-                        onPress={() => setActiveTab('dashboard')}
-                        aria-label="Back to Dashboard"
-                        className="bg-brand-surface-elevated hover:bg-brand-border text-brand-text border border-brand-border transition-colors rounded-2xl cursor-pointer"
-                      >
-                        {isPersian ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-                      </Button>
-                      <div>
-                        <h3 className="text-base font-black text-brand-text">
-                          {isPersian ? 'اطلاعات فردی و شناسایی' : 'Personal Information'}
-                        </h3>
-                        <p className="text-xs text-brand-text-muted mt-0.5">
-                          {isPersian
-                            ? 'نام، نام کاربری، ایمیل و شماره تماس خود را در اینجا ویرایش نمایید'
-                            : 'Update your name, unique username, email, and phone number'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {/* Full Name */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <User className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
-                        </label>
-                        <span className="text-rose-500 font-bold text-xs">*</span>
-                      </div>
-                      <Input
-                        aria-label={isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
-                        placeholder={isPersian ? 'مثال: علیرضا محمدی' : 'e.g. John Doe'}
-                        value={fullName}
-                        onValueChange={setFullName}
-                        variant="bordered"
-                        radius="lg"
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-semibold text-brand-text",
-                        }}
-                      />
-                    </div>
-
-                    {/* Username */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <User className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'نام کاربری (یکتا در سیستم)' : 'Username (Unique)'}
-                        </label>
-                        <span className="text-rose-500 font-bold text-xs">*</span>
-                      </div>
-                      <Input
-                        aria-label={isPersian ? 'نام کاربری (یکتا در سیستم)' : 'Username (Unique)'}
-                        placeholder="e.g. john_doe"
-                        value={username}
-                        onValueChange={setUsername}
-                        variant="bordered"
-                        radius="lg"
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-bold text-brand-text text-start",
-                        }}
-                      />
-                    </div>
-
-                    {/* Email */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <Mail className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'آدرس ایمیل (اختیاری)' : 'Email Address (Optional)'}
-                        </label>
-                      </div>
-                      <Input
-                        type="email"
-                        aria-label={isPersian ? 'آدرس ایمیل (اختیاری)' : 'Email Address (Optional)'}
-                        placeholder={isPersian ? 'user@example.com (اختیاری)' : 'user@example.com (optional)'}
-                        value={email}
-                        onValueChange={setEmail}
-                        variant="bordered"
-                        radius="lg"
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-semibold text-brand-text text-start",
-                        }}
-                      />
-                    </div>
-
-                    {/* Phone */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <Phone className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'شماره موبایل' : 'Phone Number'}
-                        </label>
-                      </div>
-                      <Input
-                        type="tel"
-                        aria-label={isPersian ? 'شماره موبایل' : 'Phone Number'}
-                        placeholder="09123456789"
-                        maxLength={11}
-                        value={phone}
-                        onValueChange={(val) => setPhone(toEnglishDigits(val).replace(/\D/g, '').slice(0, 11))}
-                        variant="bordered"
-                        radius="lg"
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-bold text-brand-text text-start",
-                        }}
-                      />
-                      {user?.isPhoneVerified && phone === user.phone ? (
-                        <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                          <span>{isPersian ? 'این شماره موبایل تایید شده است.' : 'This phone number is verified.'}</span>
+            !isEditing ? (
+              /* VIEW / OVERVIEW MODE */
+              <div className="space-y-6">
+                {/* Personal Information View Card */}
+                <Card
+                  classNames={{ base: "relative z-10" }}
+                  className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs relative z-10"
+                >
+                  <div className="p-6 sm:p-8 space-y-6">
+                    <div className="flex items-center justify-between pb-4 border-b border-brand-border flex-wrap gap-3">
+                      <div className="flex items-center gap-3">
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="flat"
+                          radius="lg"
+                          onPress={() => setActiveTab('dashboard')}
+                          aria-label="Back to Dashboard"
+                          className="bg-brand-surface-elevated hover:bg-brand-border text-brand-text border border-brand-border transition-colors rounded-2xl cursor-pointer"
+                        >
+                          {isPersian ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+                        </Button>
+                        <div>
+                          <h3 className="text-base font-black text-brand-text">
+                            {isPersian ? 'اطلاعات فردی و شناسایی' : 'Personal Information'}
+                          </h3>
+                          <p className="text-xs text-brand-text-muted mt-0.5">
+                            {isPersian
+                              ? 'مشاهده مشخصات حساب کاربری و اطلاعات فردی ثبت‌شده'
+                              : 'View registered personal and account information'}
+                          </p>
                         </div>
-                      ) : (
-                        <div className="flex items-center justify-between mt-1.5 flex-wrap gap-2 pt-1">
-                          <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                            {isPersian ? 'شماره موبایل تایید نشده است' : 'Phone is not verified'}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenPhoneVerification(phone)}
-                            className="text-[11px] font-black text-brand-gold bg-brand-surface-elevated hover:bg-brand-gold hover:text-[#141914] border border-brand-border px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
-                          >
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                            <span>{isPersian ? 'تایید شماره با کد یکبار مصرف (OTP)' : 'Verify Phone (OTP)'}</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Date of Birth Picker Component with Golden Ratio */}
-                  <div className="pt-4 border-t border-brand-border">
-                    <BirthDatePicker
-                      value={birthDate}
-                      onChange={handleBirthDateChange}
-                      label={isPersian ? 'تاریخ تولد (شمسی و میلادی)' : 'Date of Birth (Solar & Gregorian)'}
-                    />
-                  </div>
-                </div>
-              </Card>
-
-              {/* Password & Security Card */}
-              <Card
-                classNames={{ base: "relative z-10" }}
-                className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs relative z-10"
-              >
-                <div className="p-6 sm:p-8 space-y-6">
-                  <div className="flex items-center justify-between pb-4 border-b border-brand-border flex-wrap gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-brand-surface-elevated flex items-center justify-center text-brand-gold border border-brand-border shrink-0">
-                        <KeyRound className="w-4 h-4" />
                       </div>
-                      <div>
-                        <h3 className="text-base font-black text-brand-text">
-                          {user?.hasPassword
-                            ? (isPersian ? 'تغییر رمز عبور' : 'Change Password')
-                            : (isPersian ? 'تعیین کلمه عبور' : 'Set Password')}
-                        </h3>
-                        <p className="text-xs text-brand-text-muted mt-0.5">
-                          {user?.hasPassword
-                            ? (isPersian
-                                ? 'جهت تغییر رمز عبور، حتماً باید کلمه عبور فعلی را وارد نمایید'
-                                : 'You must provide your current password to set a new one')
-                            : (isPersian
-                                ? 'برای حساب کاربری خود کلمه عبور تعیین کنید تا بتوانید با رمز عبور نیز وارد شوید'
-                                : 'Set a password for your account to enable password login')}
-                        </p>
-                      </div>
-                    </div>
 
-                    {user?.hasPassword && (
                       <Button
                         type="button"
-                        variant="light"
-                        size="sm"
-                        radius="lg"
-                        onPress={() => {
-                          setResetModalOpen(true);
-                          setResetStep(1);
-                        }}
-                        startContent={<HelpCircle className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />}
-                        className="text-xs font-bold text-brand-bronze dark:text-brand-gold hover:underline p-0 h-auto cursor-pointer"
+                        variant="solid"
+                        onPress={() => setIsEditing(true)}
+                        startContent={<Edit3 className="w-4 h-4 shrink-0 text-[#141914]" />}
+                        className="h-10 px-6 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black rounded-2xl shadow-md shadow-brand-gold/20 transition-all cursor-pointer"
                       >
-                        {isPersian ? 'رمز فعلی را فراموش کرده‌اید؟' : 'Forgot current password?'}
+                        {isPersian ? 'ویرایش مشخصات' : 'Edit Profile'}
                       </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {/* Full Name */}
+                      <div className="p-4 bg-brand-surface-elevated/50 rounded-2xl border border-brand-border space-y-1.5">
+                        <div className="flex items-center gap-2 text-xs font-bold text-brand-text-muted">
+                          <User className="w-4 h-4 text-brand-gold" />
+                          <span>{isPersian ? 'نام و نام خانوادگی' : 'Full Name'}</span>
+                        </div>
+                        <p className="text-sm font-black text-brand-text pt-0.5">
+                          {user.fullName || '—'}
+                        </p>
+                      </div>
+
+                      {/* Username */}
+                      <div className="p-4 bg-brand-surface-elevated/50 rounded-2xl border border-brand-border space-y-1.5">
+                        <div className="flex items-center gap-2 text-xs font-bold text-brand-text-muted">
+                          <AtSign className="w-4 h-4 text-brand-gold" />
+                          <span>{isPersian ? 'نام کاربری' : 'Username'}</span>
+                        </div>
+                        <p className="text-sm font-black text-brand-text font-mono pt-0.5" dir="ltr">
+                          @{user.username}
+                        </p>
+                      </div>
+
+                      {/* Phone */}
+                      <div className="p-4 bg-brand-surface-elevated/50 rounded-2xl border border-brand-border space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-xs font-bold text-brand-text-muted">
+                            <Smartphone className="w-4 h-4 text-brand-gold" />
+                            <span>{isPersian ? 'شماره موبایل' : 'Mobile Phone'}</span>
+                          </div>
+                          {user.isPhoneVerified ? (
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              color="success"
+                              startContent={<CheckCircle2 className="w-3 h-3 text-emerald-500" />}
+                              classNames={{
+                                base: "bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold h-5 rounded-lg px-2",
+                              }}
+                            >
+                              {isPersian ? 'تایید شده' : 'Verified'}
+                            </Chip>
+                          ) : (
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              color="warning"
+                              classNames={{
+                                base: "bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold h-5 rounded-lg px-2",
+                              }}
+                            >
+                              {isPersian ? 'تایید نشده' : 'Unverified'}
+                            </Chip>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between pt-0.5">
+                          <p className="text-sm font-black text-brand-text font-mono" dir="ltr">
+                            {user.phone ? (isPersian ? toPersianDigits(user.phone) : user.phone) : (isPersian ? 'ثبت نشده' : 'Not set')}
+                          </p>
+                          <Button
+                            size="sm"
+                            variant="light"
+                            onPress={() => handleOpenPhoneVerification(user.phone)}
+                            className="text-xs font-bold text-brand-gold hover:underline p-0 h-auto cursor-pointer"
+                          >
+                            {user.isPhoneVerified
+                              ? (isPersian ? 'تغییر شماره' : 'Change')
+                              : (isPersian ? 'تایید شماره' : 'Verify')}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Email */}
+                      <div className="p-4 bg-brand-surface-elevated/50 rounded-2xl border border-brand-border space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-xs font-bold text-brand-text-muted">
+                            <Mail className="w-4 h-4 text-brand-gold" />
+                            <span>{isPersian ? 'آدرس ایمیل' : 'Email Address'}</span>
+                          </div>
+                          {user.email && (
+                            user.isEmailVerified ? (
+                              <Chip
+                                size="sm"
+                                variant="flat"
+                                color="success"
+                                classNames={{
+                                  base: "bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold h-5 rounded-lg px-2",
+                                }}
+                              >
+                                {isPersian ? 'تایید شده' : 'Verified'}
+                              </Chip>
+                            ) : (
+                              <Chip
+                                size="sm"
+                                variant="flat"
+                                color="warning"
+                                classNames={{
+                                  base: "bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold h-5 rounded-lg px-2",
+                                }}
+                              >
+                                {isPersian ? 'تایید نشده' : 'Unverified'}
+                              </Chip>
+                            )
+                          )}
+                        </div>
+                        <p className="text-sm font-black text-brand-text truncate pt-0.5" dir="ltr">
+                          {user.email || (isPersian ? 'ثبت نشده (اختیاری)' : 'Not set (Optional)')}
+                        </p>
+                      </div>
+
+                      {/* Birth Date */}
+                      <div className="p-4 bg-brand-surface-elevated/50 rounded-2xl border border-brand-border space-y-1.5">
+                        <div className="flex items-center gap-2 text-xs font-bold text-brand-text-muted">
+                          <Calendar className="w-4 h-4 text-brand-gold" />
+                          <span>{isPersian ? 'تاریخ تولد' : 'Date of Birth'}</span>
+                        </div>
+                        <p className="text-sm font-black text-brand-text pt-0.5">
+                          {user.birthDateShamsi
+                            ? toPersianDigits(user.birthDateShamsi)
+                            : user.birthDate
+                            ? toPersianDigits(user.birthDate)
+                            : (isPersian ? 'ثبت نشده (اختیاری)' : 'Not set (Optional)')}
+                        </p>
+                      </div>
+
+                      {/* Account Status / VIP */}
+                      <div className="p-4 bg-brand-surface-elevated/50 rounded-2xl border border-brand-border space-y-1.5">
+                        <div className="flex items-center gap-2 text-xs font-bold text-brand-text-muted">
+                          <Shield className="w-4 h-4 text-brand-gold" />
+                          <span>{isPersian ? 'سطح حساب کاربری' : 'Account Level'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 pt-0.5">
+                          {user.isVip ? (
+                            <Chip
+                              size="sm"
+                              variant="flat"
+                              startContent={<Crown className="w-3 h-3 text-brand-gold" />}
+                              classNames={{
+                                base: "bg-brand-gold/15 border border-brand-gold/30 text-brand-bronze dark:text-brand-gold text-xs font-bold h-6 rounded-xl px-2.5",
+                              }}
+                            >
+                              {isPersian ? 'عضو طلایی VIP' : 'Golden VIP'}
+                            </Chip>
+                          ) : (
+                            <span className="text-sm font-bold text-brand-text">
+                              {user.role === 'admin'
+                                ? (isPersian ? 'مدیر سیستم' : 'Admin')
+                                : (isPersian ? 'کاربر عادی' : 'Standard User')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Password & Security View Card */}
+                <Card
+                  classNames={{ base: "relative z-10" }}
+                  className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs relative z-10"
+                >
+                  <div className="p-6 sm:p-8 space-y-6">
+                    <div className="flex items-center justify-between pb-4 border-b border-brand-border flex-wrap gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-brand-surface-elevated flex items-center justify-center text-brand-gold border border-brand-border shrink-0">
+                          <KeyRound className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-black text-brand-text">
+                            {isPersian ? 'امنیت و کلمه عبور' : 'Password & Security'}
+                          </h3>
+                          <p className="text-xs text-brand-text-muted mt-0.5">
+                            {user.hasPassword
+                              ? (isPersian ? 'کلمه عبور برای حساب شما فعال است' : 'Password is set and active')
+                              : (isPersian ? 'کلمه عبور اختصاصی تعیین نشده است' : 'No password is set')}
+                          </p>
+                        </div>
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="flat"
+                        onPress={() => setIsEditing(true)}
+                        startContent={<KeyRound className="w-4 h-4 text-brand-gold shrink-0" />}
+                        className="h-10 px-5 bg-brand-surface-elevated hover:bg-brand-border text-brand-text font-bold text-xs rounded-2xl border border-brand-border transition-all cursor-pointer"
+                      >
+                        {user.hasPassword
+                          ? (isPersian ? 'تغییر کلمه عبور' : 'Change Password')
+                          : (isPersian ? 'تعیین کلمه عبور' : 'Set Password')}
+                      </Button>
+                    </div>
+
+                    {user.hasPassword ? (
+                      <div className="flex items-center justify-between p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/20 flex-wrap gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                            <ShieldCheck className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black text-brand-text">
+                              {isPersian ? 'کلمه عبور حساب فعال است' : 'Password Protected'}
+                            </h4>
+                            <p className="text-[11px] text-brand-text-muted mt-0.5">
+                              {isPersian
+                                ? 'می‌توانید علاوه بر پیامک کد یکبار مصرف، با کلمه عبور خود نیز وارد شوید.'
+                                : 'You can sign in using your password or SMS one-time code.'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="light"
+                            size="sm"
+                            onPress={() => {
+                              setResetModalOpen(true);
+                              setResetStep(1);
+                            }}
+                            startContent={<HelpCircle className="w-3.5 h-3.5 text-brand-gold shrink-0" />}
+                            className="text-xs font-bold text-brand-gold hover:underline p-0 h-auto cursor-pointer"
+                          >
+                            {isPersian ? 'فراموشی رمز عبور؟' : 'Forgot Password?'}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between p-4 bg-amber-500/5 rounded-2xl border border-amber-500/20 flex-wrap gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                            <KeyRound className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black text-brand-text">
+                              {isPersian ? 'حساب کاربری بدون کلمه عبور است' : 'No Password Set'}
+                            </h4>
+                            <p className="text-[11px] text-brand-text-muted mt-0.5">
+                              {isPersian
+                                ? 'شما از طریق کد یکبار مصرف پیامکی وارد می‌شوید. جهت امکان ورود با رمز، کلمه عبور تعیین نمایید.'
+                                : 'You currently sign in via OTP. Set a password for faster and flexible access.'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <Button
+                          type="button"
+                          size="sm"
+                          onPress={() => setIsEditing(true)}
+                          className="h-9 px-4 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black rounded-xl cursor-pointer"
+                        >
+                          {isPersian ? 'تعیین کلمه عبور' : 'Set Password'}
+                        </Button>
+                      </div>
                     )}
                   </div>
+                </Card>
+              </div>
+            ) : (
+              /* EDIT MODE FORM */
+              <form onSubmit={handleProfileSubmit} className="space-y-6">
+                {/* Personal Details Card */}
+                <Card
+                  classNames={{ base: "!overflow-visible overflow-visible card-overflow-visible relative z-30" }}
+                  className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs !overflow-visible overflow-visible card-overflow-visible relative z-30"
+                >
+                  <div className="p-6 sm:p-8 space-y-6">
+                    <div className="flex items-center justify-between pb-4 border-b border-brand-border flex-wrap gap-3">
+                      <div className="flex items-center gap-3">
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          variant="flat"
+                          radius="lg"
+                          onPress={handleCancelEdit}
+                          aria-label="Cancel editing"
+                          className="bg-brand-surface-elevated hover:bg-brand-border text-brand-text border border-brand-border transition-colors rounded-2xl cursor-pointer"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                        <div>
+                          <h3 className="text-base font-black text-brand-text">
+                            {isPersian ? 'ویرایش مشخصات فردی و حساب' : 'Edit Personal & Account Details'}
+                          </h3>
+                          <p className="text-xs text-brand-text-muted mt-0.5">
+                            {isPersian
+                              ? 'اطلاعات مورد نظر را اصلاح نموده و در پایان روی دکمه ذخیره کلیک کنید'
+                              : 'Update your details and click save to apply changes'}
+                          </p>
+                        </div>
+                      </div>
 
-                  <div className={`grid grid-cols-1 ${user?.hasPassword ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-5`}>
-                    {/* Current Password - Only displayed if user has an existing password */}
-                    {user?.hasPassword && (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="flat"
+                          size="sm"
+                          radius="lg"
+                          onPress={handleCancelEdit}
+                          className="h-10 px-5 bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-2xl cursor-pointer"
+                        >
+                          {isPersian ? 'انصراف' : 'Cancel'}
+                        </Button>
+                        <Button
+                          type="submit"
+                          isLoading={saving}
+                          size="sm"
+                          radius="lg"
+                          startContent={!saving && <Save className="w-4 h-4 shrink-0" />}
+                          className="h-10 px-6 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black rounded-2xl shadow-md shadow-brand-gold/20 transition-all cursor-pointer"
+                        >
+                          {saving
+                            ? (isPersian ? 'در حال ذخیره‌سازی...' : 'Saving...')
+                            : (isPersian ? 'ذخیره تغییرات' : 'Save Changes')}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      {/* Full Name */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5 h-5">
+                          <User className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                          <label className="text-xs font-bold text-brand-text">
+                            {isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
+                          </label>
+                          <span className="text-rose-500 font-bold text-xs">*</span>
+                        </div>
+                        <Input
+                          aria-label={isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
+                          placeholder={isPersian ? 'مثال: علیرضا محمدی' : 'e.g. John Doe'}
+                          value={fullName}
+                          onValueChange={setFullName}
+                          variant="bordered"
+                          radius="lg"
+                          classNames={{
+                            inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                            input: "text-xs font-semibold text-brand-text",
+                          }}
+                        />
+                      </div>
+
+                      {/* Username */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5 h-5">
+                          <AtSign className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                          <label className="text-xs font-bold text-brand-text">
+                            {isPersian ? 'نام کاربری (یکتا در سیستم)' : 'Username (Unique)'}
+                          </label>
+                          <span className="text-rose-500 font-bold text-xs">*</span>
+                        </div>
+                        <Input
+                          aria-label={isPersian ? 'نام کاربری (یکتا در سیستم)' : 'Username (Unique)'}
+                          placeholder="e.g. john_doe"
+                          value={username}
+                          onValueChange={setUsername}
+                          variant="bordered"
+                          radius="lg"
+                          classNames={{
+                            inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                            input: "text-xs font-bold text-brand-text text-start",
+                          }}
+                        />
+                      </div>
+
+                      {/* Email */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5 h-5">
+                          <Mail className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                          <label className="text-xs font-bold text-brand-text">
+                            {isPersian ? 'آدرس ایمیل (اختیاری)' : 'Email Address (Optional)'}
+                          </label>
+                        </div>
+                        <Input
+                          type="email"
+                          aria-label={isPersian ? 'آدرس ایمیل (اختیاری)' : 'Email Address (Optional)'}
+                          placeholder={isPersian ? 'user@example.com (اختیاری)' : 'user@example.com (optional)'}
+                          value={email}
+                          onValueChange={setEmail}
+                          variant="bordered"
+                          radius="lg"
+                          classNames={{
+                            inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                            input: "text-xs font-semibold text-brand-text text-start",
+                          }}
+                        />
+                      </div>
+
+                      {/* Phone (Secure credential - readOnly in edit form, modified via OTP) */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 h-5">
+                            <Phone className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                            <label className="text-xs font-bold text-brand-text">
+                              {isPersian ? 'شماره موبایل حساب' : 'Account Mobile Phone'}
+                            </label>
+                          </div>
+                          {user?.isPhoneVerified ? (
+                            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3 shrink-0" />
+                              {isPersian ? 'تایید شده' : 'Verified'}
+                            </span>
+                          ) : (
+                            <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                              {isPersian ? 'تایید نشده' : 'Unverified'}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="tel"
+                            readOnly
+                            aria-label={isPersian ? 'شماره موبایل' : 'Phone Number'}
+                            value={user?.phone ? (isPersian ? toPersianDigits(user.phone) : user.phone) : (isPersian ? 'شماره‌ای ثبت نشده' : 'No phone set')}
+                            variant="bordered"
+                            radius="lg"
+                            startContent={<Lock className="w-3.5 h-3.5 text-brand-text-muted shrink-0" />}
+                            classNames={{
+                              inputWrapper: "h-12 px-4 bg-brand-surface-elevated/70 border border-brand-border rounded-2xl shadow-xs cursor-not-allowed opacity-90",
+                              input: "text-xs font-bold text-brand-text text-start font-mono cursor-not-allowed",
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            onPress={() => handleOpenPhoneVerification(user?.phone)}
+                            className="h-12 px-4 bg-brand-surface-elevated hover:bg-brand-gold hover:text-[#141914] border border-brand-border text-brand-gold font-black text-xs rounded-2xl shrink-0 transition-all cursor-pointer shadow-xs"
+                          >
+                            {user?.isPhoneVerified
+                              ? (isPersian ? 'تغییر شماره' : 'Change')
+                              : (isPersian ? 'تایید شماره' : 'Verify')}
+                          </Button>
+                        </div>
+                        <p className="text-[11px] text-brand-text-muted leading-relaxed">
+                          {isPersian
+                            ? 'تغییر شماره موبایل به دلایل امنیتی فقط با ارسال و تایید کد پیامکی (OTP) امکان‌پذیر است.'
+                            : 'Changing mobile phone requires OTP verification for security.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Date of Birth Picker Component with Golden Ratio */}
+                    <div className="pt-4 border-t border-brand-border">
+                      <BirthDatePicker
+                        value={birthDate}
+                        onChange={handleBirthDateChange}
+                        label={isPersian ? 'تاریخ تولد (شمسی و میلادی)' : 'Date of Birth (Solar & Gregorian)'}
+                      />
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Password & Security Card */}
+                <Card
+                  classNames={{ base: "relative z-10" }}
+                  className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs relative z-10"
+                >
+                  <div className="p-6 sm:p-8 space-y-6">
+                    <div className="flex items-center justify-between pb-4 border-b border-brand-border flex-wrap gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-brand-surface-elevated flex items-center justify-center text-brand-gold border border-brand-border shrink-0">
+                          <KeyRound className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-black text-brand-text">
+                            {user?.hasPassword
+                              ? (isPersian ? 'تغییر رمز عبور' : 'Change Password')
+                              : (isPersian ? 'تعیین کلمه عبور' : 'Set Password')}
+                          </h3>
+                          <p className="text-xs text-brand-text-muted mt-0.5">
+                            {user?.hasPassword
+                              ? (isPersian
+                                  ? 'جهت تغییر رمز عبور، حتماً باید کلمه عبور فعلی را وارد نمایید'
+                                  : 'You must provide your current password to set a new one')
+                              : (isPersian
+                                  ? 'برای حساب کاربری خود کلمه عبور تعیین کنید تا بتوانید با رمز عبور نیز وارد شوید'
+                                  : 'Set a password for your account to enable password login')}
+                          </p>
+                        </div>
+                      </div>
+
+                      {user?.hasPassword && (
+                        <Button
+                          type="button"
+                          variant="light"
+                          size="sm"
+                          radius="lg"
+                          onPress={() => {
+                            setResetModalOpen(true);
+                            setResetStep(1);
+                          }}
+                          startContent={<HelpCircle className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />}
+                          className="text-xs font-bold text-brand-bronze dark:text-brand-gold hover:underline p-0 h-auto cursor-pointer"
+                        >
+                          {isPersian ? 'رمز فعلی را فراموش کرده‌اید؟' : 'Forgot current password?'}
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className={`grid grid-cols-1 ${user?.hasPassword ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-5`}>
+                      {/* Current Password - Only displayed if user has an existing password */}
+                      {user?.hasPassword && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-1.5 h-5">
+                            <Lock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                            <label className="text-xs font-bold text-brand-text truncate">
+                              {isPersian ? 'کلمه عبور فعلی' : 'Current Password'}
+                            </label>
+                          </div>
+                          <Input
+                            key={`curr-pwd-${showCurrentPassword ? 'text' : 'password'}`}
+                            type={showCurrentPassword ? 'text' : 'password'}
+                            aria-label={isPersian ? 'کلمه عبور فعلی' : 'Current Password'}
+                            placeholder={isPersian ? 'رمز عبور فعلی حساب' : 'Current password'}
+                            value={currentPassword}
+                            onValueChange={setCurrentPassword}
+                            variant="bordered"
+                            radius="lg"
+                            endContent={
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setShowCurrentPassword((prev) => !prev);
+                                }}
+                                className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
+                                aria-label="Toggle password visibility"
+                              >
+                                {showCurrentPassword ? (
+                                  <EyeOff className="w-4 h-4 pointer-events-none" />
+                                ) : (
+                                  <Eye className="w-4 h-4 pointer-events-none" />
+                                )}
+                              </button>
+                            }
+                            classNames={{
+                              inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                              input: "text-xs font-semibold text-brand-text",
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {/* New Password */}
                       <div className="space-y-2">
                         <div className="flex items-center gap-1.5 h-5">
                           <Lock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
                           <label className="text-xs font-bold text-brand-text truncate">
-                            {isPersian ? 'کلمه عبور فعلی' : 'Current Password'}
+                            {user?.hasPassword
+                              ? (isPersian ? 'کلمه عبور جدید' : 'New Password')
+                              : (isPersian ? 'کلمه عبور' : 'Password')}
                           </label>
                         </div>
                         <Input
-                          key={`curr-pwd-${showCurrentPassword ? 'text' : 'password'}`}
-                          type={showCurrentPassword ? 'text' : 'password'}
-                          aria-label={isPersian ? 'کلمه عبور فعلی' : 'Current Password'}
-                          placeholder={isPersian ? 'رمز عبور فعلی حساب' : 'Current password'}
-                          value={currentPassword}
-                          onValueChange={setCurrentPassword}
+                          key={`new-pwd-${showNewPassword ? 'text' : 'password'}`}
+                          type={showNewPassword ? 'text' : 'password'}
+                          aria-label={user?.hasPassword ? (isPersian ? 'کلمه عبور جدید' : 'New Password') : (isPersian ? 'کلمه عبور' : 'Password')}
+                          placeholder={
+                            user?.hasPassword
+                              ? (isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر)' : 'New password (min 6 chars)')
+                              : (isPersian ? 'رمز عبور (حداقل ۶ کاراکتر)' : 'Password (min 6 chars)')
+                          }
+                          value={newPassword}
+                          onValueChange={setNewPassword}
                           variant="bordered"
                           radius="lg"
                           endContent={
@@ -1627,12 +2039,12 @@ export function ProfilePage() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                setShowCurrentPassword((prev) => !prev);
+                                setShowNewPassword((prev) => !prev);
                               }}
                               className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
                               aria-label="Toggle password visibility"
                             >
-                              {showCurrentPassword ? (
+                              {showNewPassword ? (
                                 <EyeOff className="w-4 h-4 pointer-events-none" />
                               ) : (
                                 <Eye className="w-4 h-4 pointer-events-none" />
@@ -1645,128 +2057,80 @@ export function ProfilePage() {
                           }}
                         />
                       </div>
-                    )}
 
-                    {/* New Password */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <Lock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text truncate">
-                          {user?.hasPassword
-                            ? (isPersian ? 'کلمه عبور جدید' : 'New Password')
-                            : (isPersian ? 'کلمه عبور' : 'Password')}
-                        </label>
+                      {/* Confirm Password */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5 h-5">
+                          <Lock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                          <label className="text-xs font-bold text-brand-text truncate">
+                            {user?.hasPassword
+                              ? (isPersian ? 'تکرار کلمه عبور جدید' : 'Confirm New Password')
+                              : (isPersian ? 'تکرار کلمه عبور' : 'Confirm Password')}
+                          </label>
+                        </div>
+                        <Input
+                          key={`conf-pwd-${showConfirmPassword ? 'text' : 'password'}`}
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          aria-label={user?.hasPassword ? (isPersian ? 'تکرار کلمه عبور جدید' : 'Confirm New Password') : (isPersian ? 'تکرار کلمه عبور' : 'Confirm Password')}
+                          placeholder={isPersian ? 'تکرار رمز عبور' : 'Confirm password'}
+                          value={confirmPassword}
+                          onValueChange={setConfirmPassword}
+                          variant="bordered"
+                          radius="lg"
+                          endContent={
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowConfirmPassword((prev) => !prev);
+                              }}
+                              className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
+                              aria-label="Toggle password visibility"
+                            >
+                              {showConfirmPassword ? (
+                                <EyeOff className="w-4 h-4 pointer-events-none" />
+                              ) : (
+                                <Eye className="w-4 h-4 pointer-events-none" />
+                              )}
+                            </button>
+                          }
+                          classNames={{
+                            inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                            input: "text-xs font-semibold text-brand-text",
+                          }}
+                        />
                       </div>
-                      <Input
-                        key={`new-pwd-${showNewPassword ? 'text' : 'password'}`}
-                        type={showNewPassword ? 'text' : 'password'}
-                        aria-label={user?.hasPassword ? (isPersian ? 'کلمه عبور جدید' : 'New Password') : (isPersian ? 'کلمه عبور' : 'Password')}
-                        placeholder={
-                          user?.hasPassword
-                            ? (isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر)' : 'New password (min 6 chars)')
-                            : (isPersian ? 'رمز عبور (حداقل ۶ کاراکتر)' : 'Password (min 6 chars)')
-                        }
-                        value={newPassword}
-                        onValueChange={setNewPassword}
-                        variant="bordered"
-                        radius="lg"
-                        endContent={
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setShowNewPassword((prev) => !prev);
-                            }}
-                            className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
-                            aria-label="Toggle password visibility"
-                          >
-                            {showNewPassword ? (
-                              <EyeOff className="w-4 h-4 pointer-events-none" />
-                            ) : (
-                              <Eye className="w-4 h-4 pointer-events-none" />
-                            )}
-                          </button>
-                        }
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-semibold text-brand-text",
-                        }}
-                      />
-                    </div>
-
-                    {/* Confirm Password */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <Lock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text truncate">
-                          {user?.hasPassword
-                            ? (isPersian ? 'تکرار کلمه عبور جدید' : 'Confirm New Password')
-                            : (isPersian ? 'تکرار کلمه عبور' : 'Confirm Password')}
-                        </label>
-                      </div>
-                      <Input
-                        key={`conf-pwd-${showConfirmPassword ? 'text' : 'password'}`}
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        aria-label={user?.hasPassword ? (isPersian ? 'تکرار کلمه عبور جدید' : 'Confirm New Password') : (isPersian ? 'تکرار کلمه عبور' : 'Confirm Password')}
-                        placeholder={isPersian ? 'تکرار رمز عبور' : 'Confirm password'}
-                        value={confirmPassword}
-                        onValueChange={setConfirmPassword}
-                        variant="bordered"
-                        radius="lg"
-                        endContent={
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setShowConfirmPassword((prev) => !prev);
-                            }}
-                            className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
-                            aria-label="Toggle password visibility"
-                          >
-                            {showConfirmPassword ? (
-                              <EyeOff className="w-4 h-4 pointer-events-none" />
-                            ) : (
-                              <Eye className="w-4 h-4 pointer-events-none" />
-                            )}
-                          </button>
-                        }
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-semibold text-brand-text",
-                        }}
-                      />
                     </div>
                   </div>
+                </Card>
+
+                {/* Submit Actions */}
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <Button
+                    type="button"
+                    variant="flat"
+                    radius="lg"
+                    onPress={handleCancelEdit}
+                    className="h-11 px-6 bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-2xl transition-colors cursor-pointer"
+                  >
+                    {isPersian ? 'انصراف' : 'Cancel'}
+                  </Button>
+
+                  <Button
+                    type="submit"
+                    isLoading={saving}
+                    radius="lg"
+                    startContent={!saving && <Save className="w-4 h-4 shrink-0" />}
+                    className="h-11 px-8 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 transition-all rounded-2xl cursor-pointer"
+                  >
+                    {saving
+                      ? (isPersian ? 'در حال ذخیره‌سازی...' : 'Saving Changes...')
+                      : (isPersian ? 'ذخیره تغییرات' : 'Save Changes')}
+                  </Button>
                 </div>
-              </Card>
-
-              {/* Submit Actions */}
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="flat"
-                  radius="lg"
-                  onPress={() => setActiveTab('dashboard')}
-                  className="h-11 px-6 bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-2xl transition-colors cursor-pointer"
-                >
-                  {isPersian ? 'انصراف' : 'Cancel'}
-                </Button>
-
-                <Button
-                  type="submit"
-                  isLoading={saving}
-                  radius="lg"
-                  startContent={!saving && <Save className="w-4 h-4 shrink-0" />}
-                  className="h-11 px-8 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-xs font-black shadow-md shadow-brand-gold/20 transition-all rounded-2xl cursor-pointer"
-                >
-                  {saving
-                    ? isPersian ? 'در حال ذخیره‌سازی...' : 'Saving Changes...'
-                    : isPersian ? 'ذخیره تغییرات' : 'Save Changes'}
-                </Button>
-              </div>
-            </form>
+              </form>
+            )
           )}
 
           {/* TAB 5: VIP CLUB LOUNGE TAB */}
