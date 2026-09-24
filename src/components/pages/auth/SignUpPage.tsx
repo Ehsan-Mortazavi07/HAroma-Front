@@ -23,11 +23,11 @@ import {
   Check,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAppDispatch } from '@/stores/hooks';
+import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { setAuth } from '@/stores/auth/authSlice';
 import { getSignUpSchema } from '@/common/validators';
 import { PATHS } from '@/common/constants/PATHS';
-import { toast, toEnglishDigits, toPersianDigits, getApiErrorMessage } from '@/common/utils';
+import { toast, toEnglishDigits, toPersianDigits, getApiErrorMessage, storage } from '@/common/utils';
 import axiosInstance from '@/common/axiosInstance';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
@@ -39,7 +39,15 @@ type SignUpStep = 'phone' | 'otp' | 'profile';
 export function SignUpPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const { t, isPersian, isRTL } = useTranslation();
+
+  // If already logged in, redirect to profile
+  useEffect(() => {
+    if (isAuthenticated || (typeof window !== 'undefined' && storage.getToken())) {
+      router.replace(PATHS.PROFILE);
+    }
+  }, [isAuthenticated, router]);
 
   // Multi-step Registration Flow
   const [step, setStep] = useState<SignUpStep>('phone');
@@ -270,6 +278,14 @@ export function SignUpPage() {
       setLoadingRegister(false);
     }
   };
+
+  if (isAuthenticated || (typeof window !== 'undefined' && storage.getToken())) {
+    return (
+      <div className="w-full min-h-[50vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-brand-gold border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex items-center justify-center py-4 sm:py-6 px-4">

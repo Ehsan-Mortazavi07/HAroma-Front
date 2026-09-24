@@ -20,11 +20,11 @@ import {
   Edit3,
   Clock,
 } from 'lucide-react';
-import { useAppDispatch } from '@/stores/hooks';
+import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { setAuth } from '@/stores/auth/authSlice';
 import { getSignInSchema } from '@/common/validators';
 import { PATHS } from '@/common/constants/PATHS';
-import { toast, toPersianDigits, toEnglishDigits, getApiErrorMessage } from '@/common/utils';
+import { toast, toPersianDigits, toEnglishDigits, getApiErrorMessage, storage } from '@/common/utils';
 import axiosInstance from '@/common/axiosInstance';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
@@ -37,8 +37,17 @@ export function SignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const { t, isPersian, isRTL } = useTranslation();
   const redirectUrl = searchParams.get('redirect') || PATHS.HOME;
+
+  // If already logged in, redirect to profile or target page
+  useEffect(() => {
+    if (isAuthenticated || (typeof window !== 'undefined' && storage.getToken())) {
+      const destination = redirectUrl && !redirectUrl.startsWith('/auth') ? redirectUrl : PATHS.PROFILE;
+      router.replace(destination);
+    }
+  }, [isAuthenticated, redirectUrl, router]);
 
   // Active Login Method: 'otp' | 'password'
   const [authMethod, setAuthMethod] = useState<'otp' | 'password'>('otp');
@@ -287,6 +296,14 @@ export function SignInPage() {
       setLoadingPassword(false);
     }
   };
+
+  if (isAuthenticated || (typeof window !== 'undefined' && storage.getToken())) {
+    return (
+      <div className="w-full min-h-[50vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-brand-gold border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex items-center justify-center py-4 sm:py-6 px-4">
