@@ -6,11 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface AnimatedFieldErrorProps {
   error?: string | false | null;
   className?: string;
+  extra?: React.ReactNode;
   children?: React.ReactNode;
 }
 
-export function AnimatedFieldError({ error, className = '', children }: AnimatedFieldErrorProps) {
-  const isVisible = Boolean(error) || Boolean(children);
+export function AnimatedFieldError({ error, className = '', extra, children }: AnimatedFieldErrorProps) {
+  const isVisible = Boolean(error);
 
   return (
     <AnimatePresence initial={false}>
@@ -38,10 +39,13 @@ export function AnimatedFieldError({ error, className = '', children }: Animated
           className="overflow-hidden"
         >
           {children || (
-            <p className={`text-[11px] font-bold text-rose-500 flex items-center gap-1.5 leading-normal ${className}`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0 animate-pulse" />
-              <span>{error}</span>
-            </p>
+            <div className="space-y-1.5">
+              <p className={`text-[11px] font-bold text-rose-500 flex items-center gap-1.5 leading-normal ${className}`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0 animate-pulse" />
+                <span>{typeof error === 'string' ? error : ''}</span>
+              </p>
+              {extra}
+            </div>
           )}
         </motion.div>
       )}

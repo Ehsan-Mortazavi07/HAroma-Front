@@ -47,6 +47,7 @@ export function SignInPage() {
   // OTP Login State
   const [otpStep, setOtpStep] = useState<'phone' | 'verify'>('phone');
   const [phone, setPhone] = useState('');
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const [phoneError, setPhoneError] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpCodeError, setOtpCodeError] = useState('');
@@ -91,8 +92,9 @@ export function SignInPage() {
     const rawNumber = targetPhone || phone;
     const cleanNumber = toEnglishDigits(rawNumber.trim()).replace(/\D/g, '');
 
+    setPhoneTouched(true);
     if (!cleanNumber) {
-      setPhoneError(isPersian ? 'شماره موبایل الزامی است.' : 'Phone number is required.');
+      setPhoneError(isPersian ? 'وارد کردن شماره موبایل ضروری است.' : 'Phone number is required.');
       return;
     }
 
@@ -146,12 +148,12 @@ export function SignInPage() {
     const cleanCode = toEnglishDigits(otpCode.trim()).replace(/\D/g, '');
 
     if (!cleanCode) {
-      setOtpCodeError(isPersian ? 'کد تایید الزامی است.' : 'Verification code is required.');
+      setOtpCodeError(isPersian ? 'وارد کردن کد تایید ضروری است.' : 'Verification code is required.');
       return;
     }
 
-    if (cleanCode.length < 4) {
-      setOtpCodeError(isPersian ? 'کد تایید وارد شده کوتاه است.' : 'Verification code is too short.');
+    if (cleanCode.length < 5) {
+      setOtpCodeError(isPersian ? 'کد تایید باید ۵ رقم باشد.' : 'Verification code must be 5 digits.');
       return;
     }
 
@@ -198,7 +200,7 @@ export function SignInPage() {
   };
 
   // Handle Password Login
-  const handlePasswordSubmit = async (values: any, { setFieldError }: any) => {
+  const handlePasswordSubmit = async (values: any, { setFieldError, setFieldTouched }: any) => {
     setLoadingPassword(true);
     try {
       const res = await axiosInstance.post('/auth/login', {
@@ -228,8 +230,10 @@ export function SignInPage() {
       const serverMsg = getApiErrorMessage(err);
       if (serverMsg.includes('رمز عبور') || serverMsg.includes('پسورد')) {
         setFieldError('password', serverMsg);
+        setFieldTouched('password', true, false);
       } else {
         setFieldError('identifier', serverMsg);
+        setFieldTouched('identifier', true, false);
       }
       toast.error(serverMsg);
     } finally {
@@ -306,7 +310,26 @@ export function SignInPage() {
                       onChange={(e) => {
                         const digits = toEnglishDigits(e.target.value).replace(/\D/g, '').slice(0, 11);
                         setPhone(digits);
-                        if (phoneError) setPhoneError('');
+                        if (digits.length === 11 && digits.startsWith('09')) {
+                          setPhoneError('');
+                        } else if (phoneTouched && !digits) {
+                          setPhoneError(isPersian ? 'وارد کردن شماره موبایل ضروری است.' : 'Mobile number is required.');
+                        }
+                      }}
+                      onBlur={() => {
+                        setPhoneTouched(true);
+                        const clean = toEnglishDigits(phone.trim()).replace(/\D/g, '');
+                        if (!clean) {
+                          setPhoneError(isPersian ? 'وارد کردن شماره موبایل ضروری است.' : 'Mobile number is required.');
+                        } else if (!clean.startsWith('09') || clean.length !== 11) {
+                          setPhoneError(
+                            isPersian
+                              ? 'شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثال: ۰۹۱۲۳۴۵۶۷۸۹).'
+                              : 'Mobile number must be 11 digits starting with 09 (e.g. 09123456789).',
+                          );
+                        } else {
+                          setPhoneError('');
+                        }
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -325,22 +348,19 @@ export function SignInPage() {
                         input: 'text-xs font-bold text-brand-text tracking-wider',
                       }}
                     />
-                    <AnimatedFieldError error={phoneError}>
-                      <div className="space-y-1.5">
-                        <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0 animate-pulse" />
-                          <span>{phoneError}</span>
-                        </p>
-                        {phoneError.includes('ثبت‌نام') && (
+                    <AnimatedFieldError
+                      error={phoneError}
+                      extra={
+                        phoneError && phoneError.includes('ثبت‌نام') ? (
                           <Link
                             href={PATHS.SIGN_UP}
                             className="inline-flex items-center gap-1 text-xs font-bold text-brand-gold hover:underline mt-0.5"
                           >
                             <span>{isPersian ? '← ایجاد حساب کاربری جدید' : '← Create new account'}</span>
                           </Link>
-                        )}
-                      </div>
-                    </AnimatedFieldError>
+                        ) : null
+                      }
+                    />
                     <p className="text-[11px] text-brand-text-muted mt-2 leading-relaxed">
                       {isPersian
                         ? 'کد یکبار مصرف تنها برای شماره‌های ثبت‌نام شده در سایت ارسال خواهد شد.'
@@ -434,7 +454,16 @@ export function SignInPage() {
                       onChange={(e) => {
                         const digits = toEnglishDigits(e.target.value).replace(/\D/g, '').slice(0, 5);
                         setOtpCode(digits);
-                        if (otpCodeError) setOtpCodeError('');
+                        if (digits.length === 5) {
+                          setOtpCodeError('');
+                        }
+                      }}
+                      onBlur={() => {
+                        if (!otpCode.trim()) {
+                          setOtpCodeError(isPersian ? 'وارد کردن کد تایید ضروری است.' : 'Verification code is required.');
+                        } else if (otpCode.trim().length < 5) {
+                          setOtpCodeError(isPersian ? 'کد تایید باید ۵ رقم باشد.' : 'Verification code must be 5 digits.');
+                        }
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -507,7 +536,7 @@ export function SignInPage() {
               onSubmit={handlePasswordSubmit}
               enableReinitialize
             >
-              {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => (
+              {({ values, errors, touched, handleChange, handleBlur, setFieldValue, submitCount }) => (
                 <Form className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-brand-text mb-1.5">
@@ -531,15 +560,15 @@ export function SignInPage() {
                       variant="bordered"
                       radius="lg"
                       startContent={<User className="w-4 h-4 text-brand-bronze shrink-0" />}
-                      isInvalid={Boolean(errors.identifier && touched.identifier)}
+                      isInvalid={Boolean(errors.identifier && (touched.identifier || submitCount > 0))}
                       classNames={{
-                        inputWrapper: Boolean(errors.identifier && touched.identifier)
+                        inputWrapper: Boolean(errors.identifier && (touched.identifier || submitCount > 0))
                           ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                           : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
                         input: "text-xs font-semibold text-brand-text",
                       }}
                     />
-                    <AnimatedFieldError error={touched.identifier && errors.identifier ? String(errors.identifier) : null} />
+                    <AnimatedFieldError error={(touched.identifier || submitCount > 0) && errors.identifier ? String(errors.identifier) : null} />
                   </div>
 
                   <div>
@@ -583,15 +612,15 @@ export function SignInPage() {
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       }
-                      isInvalid={Boolean(errors.password && touched.password)}
+                      isInvalid={Boolean(errors.password && (touched.password || submitCount > 0))}
                       classNames={{
-                        inputWrapper: Boolean(errors.password && touched.password)
+                        inputWrapper: Boolean(errors.password && (touched.password || submitCount > 0))
                           ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                           : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
                         input: "text-xs font-mono font-semibold text-brand-text",
                       }}
                     />
-                    <AnimatedFieldError error={touched.password && errors.password ? String(errors.password) : null} />
+                    <AnimatedFieldError error={(touched.password || submitCount > 0) && errors.password ? String(errors.password) : null} />
                   </div>
 
                   <Button
