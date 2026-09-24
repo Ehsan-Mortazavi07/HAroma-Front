@@ -6,7 +6,6 @@ import {
   ModalContent,
   ModalHeader,
   ModalBody,
-  ModalFooter,
   Input,
   Button,
   Chip,
@@ -21,9 +20,6 @@ import {
   Send,
   RotateCcw,
   Clock,
-  AlertCircle,
-  Sparkles,
-  ShieldCheck,
   CheckCircle2,
   ArrowRight,
   ArrowLeft,
@@ -54,12 +50,12 @@ export function LiveTimerDisplay({
 
   return (
     <span
-      className={`inline-flex items-center justify-center gap-0.5 font-sans font-black [font-variant-numeric:tabular-nums] [font-feature-settings:'tnum'] tracking-wider select-none ${className}`}
+      className={`inline-flex items-center justify-center gap-0.5 font-sans font-bold [font-variant-numeric:tabular-nums] [font-feature-settings:'tnum'] tracking-wider select-none ${className}`}
       dir="ltr"
     >
-      <span className="w-4.5 text-center inline-block">{formattedMins}</span>
+      <span className="w-4 text-center inline-block">{formattedMins}</span>
       <span className="opacity-70 animate-pulse">:</span>
-      <span className="w-4.5 text-center inline-block">{formattedSecs}</span>
+      <span className="w-4 text-center inline-block">{formattedSecs}</span>
     </span>
   );
 }
@@ -185,6 +181,7 @@ export function ResetPasswordModal({
       const expiry = res.data?.expiresIn || 120;
       setCountdown(expiry);
       setStep1Cooldown(0);
+      setDirection(1);
       setStep(2);
 
       toast.success(
@@ -302,6 +299,7 @@ export function ResetPasswordModal({
             : 'Password changed successfully.'),
       );
 
+      setDirection(1);
       setStep(3);
       onSuccess?.();
     } catch (err: any) {
@@ -314,7 +312,7 @@ export function ResetPasswordModal({
   const stepVariants = {
     enter: (dir: number) => ({
       opacity: 0,
-      x: dir > 0 ? 14 : -14,
+      x: dir > 0 ? 12 : -12,
       filter: 'blur(3px)',
     }),
     center: {
@@ -324,7 +322,7 @@ export function ResetPasswordModal({
     },
     exit: (dir: number) => ({
       opacity: 0,
-      x: dir < 0 ? 14 : -14,
+      x: dir < 0 ? 12 : -12,
       filter: 'blur(3px)',
     }),
   };
@@ -338,32 +336,37 @@ export function ResetPasswordModal({
       backdrop="blur"
       placement="center"
       classNames={{
-        base: 'bg-brand-surface border border-brand-border/80 text-brand-text rounded-2xl shadow-xl max-w-sm sm:max-w-[390px] mx-4 overflow-hidden',
-        header: 'border-b border-brand-border/60 py-2.5 px-3.5 sm:px-4',
+        base: 'bg-brand-surface/95 backdrop-blur-xl border border-brand-border text-brand-text rounded-3xl shadow-2xl max-w-sm sm:max-w-[390px] mx-4 overflow-hidden',
+        header: 'border-b border-brand-border/60 py-3 px-4 sm:px-5 flex items-center justify-between',
         body: 'p-0',
-        closeButton: 'hover:bg-brand-surface-elevated text-brand-text-muted rounded-md cursor-pointer top-2 end-2 p-1.5',
+        closeButton: 'hover:bg-white/10 text-brand-text-muted hover:text-brand-text rounded-full cursor-pointer top-3 end-3 p-1.5 transition-colors',
       }}
     >
       <ModalContent>
         {() => (
           <>
-            <ModalHeader className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-brand-gold/10 border border-brand-gold/25 text-brand-gold flex items-center justify-center shrink-0">
+            <ModalHeader>
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0">
                   <KeyRound className="w-3.5 h-3.5" />
                 </div>
                 <h3 className="font-bold text-xs text-brand-text">
                   {isPersian ? 'بازیابی رمز عبور' : 'Reset Password'}
                 </h3>
               </div>
-              <span className="text-[10px] text-brand-text-muted font-mono font-medium ltr:mr-6 rtl:ml-6">
+              <Chip
+                size="sm"
+                variant="flat"
+                radius="full"
+                className="bg-white/5 border border-white/10 text-brand-text-muted text-[10px] font-mono ltr:mr-6 rtl:ml-6"
+              >
                 {step === 1 && (isPersian ? 'مرحله ۱ از ۲' : '1 of 2')}
                 {step === 2 && (isPersian ? 'مرحله ۲ از ۲' : '2 of 2')}
                 {step === 3 && '✓'}
-              </span>
+              </Chip>
             </ModalHeader>
 
-            <div className="overflow-hidden p-3.5 sm:p-4">
+            <div className="overflow-hidden p-4 sm:p-5">
               <AnimatePresence mode="wait" custom={direction} initial={false}>
                 {/* STEP 1: Enter Identifier & Choose Channel */}
                 {step === 1 && (
@@ -374,13 +377,13 @@ export function ResetPasswordModal({
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                   >
-                    <form onSubmit={handleSendCode} className="space-y-3">
+                    <form onSubmit={handleSendCode} className="space-y-3.5">
                       {/* Identifier Input */}
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-medium text-brand-text-muted flex items-center gap-1">
-                          <Smartphone className="w-3 h-3 text-brand-gold shrink-0 opacity-80" />
+                      <div className="space-y-1.5">
+                        <label className="text-[11px] font-medium text-brand-text-muted flex items-center gap-1.5">
+                          <Smartphone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                           <span>{isPersian ? 'موبایل، ایمیل یا نام کاربری:' : 'Mobile, Email or Username:'}</span>
                         </label>
                         <Input
@@ -392,40 +395,40 @@ export function ResetPasswordModal({
                             if (identifierError) setIdentifierError('');
                           }}
                           variant="bordered"
-                          radius="md"
+                          radius="full"
                           classNames={{
                             inputWrapper:
-                              'h-9 px-3 bg-brand-surface-elevated/40 border border-brand-border/70 hover:border-brand-gold/60 focus-within:!border-brand-gold rounded-lg shadow-none transition-colors',
+                              'h-9.5 px-4 bg-brand-surface-elevated/50 border border-brand-border/80 hover:border-emerald-500/50 focus-within:!border-emerald-500 rounded-full shadow-none transition-colors',
                             input: 'text-xs text-brand-text text-start',
                           }}
                         />
                         <AnimatedFieldError error={identifierError} />
                       </div>
 
-                      {/* Minimal Segmented Channel Control */}
-                      <div className="space-y-1">
+                      {/* Curved Pill Segmented Channel Control */}
+                      <div className="space-y-1.5">
                         <label className="text-[11px] font-medium text-brand-text-muted">
                           {isPersian ? 'نحوه دریافت کد تایید:' : 'Receive Code via:'}
                         </label>
-                        <div className="grid grid-cols-2 p-0.5 rounded-lg bg-brand-surface-elevated border border-brand-border/70 relative h-8.5">
+                        <div className="grid grid-cols-2 p-1 rounded-full bg-brand-surface-elevated/70 border border-brand-border/80 relative h-9">
                           {/* Option 1: Mobile / SMS */}
                           <button
                             type="button"
                             onClick={() => setChannel('sms')}
-                            className={`relative h-full flex items-center justify-center gap-1.5 rounded-md text-[11px] transition-colors cursor-pointer z-10 ${
+                            className={`relative h-full flex items-center justify-center gap-1.5 rounded-full text-[11px] transition-colors cursor-pointer z-10 ${
                               channel === 'sms'
-                                ? 'font-bold text-brand-text'
+                                ? 'font-bold text-white'
                                 : 'font-medium text-brand-text-muted hover:text-brand-text'
                             }`}
                           >
                             {channel === 'sms' && (
                               <motion.div
                                 layoutId="resetPassActivePill"
-                                className="absolute inset-0 bg-brand-surface rounded-md border border-brand-border shadow-xs -z-10"
+                                className="absolute inset-0 bg-brand-surface rounded-full border border-white/10 shadow-xs -z-10"
                                 transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                               />
                             )}
-                            <Smartphone className="w-3.5 h-3.5 opacity-80" />
+                            <Smartphone className={`w-3.5 h-3.5 ${channel === 'sms' ? 'text-emerald-400' : 'opacity-70'}`} />
                             <span>{isPersian ? 'پیامک همراه' : 'SMS'}</span>
                           </button>
 
@@ -433,48 +436,48 @@ export function ResetPasswordModal({
                           <button
                             type="button"
                             onClick={() => setChannel('email')}
-                            className={`relative h-full flex items-center justify-center gap-1.5 rounded-md text-[11px] transition-colors cursor-pointer z-10 ${
+                            className={`relative h-full flex items-center justify-center gap-1.5 rounded-full text-[11px] transition-colors cursor-pointer z-10 ${
                               channel === 'email'
-                                ? 'font-bold text-brand-text'
+                                ? 'font-bold text-white'
                                 : 'font-medium text-brand-text-muted hover:text-brand-text'
                             }`}
                           >
                             {channel === 'email' && (
                               <motion.div
                                 layoutId="resetPassActivePill"
-                                className="absolute inset-0 bg-brand-surface rounded-md border border-brand-border shadow-xs -z-10"
+                                className="absolute inset-0 bg-brand-surface rounded-full border border-white/10 shadow-xs -z-10"
                                 transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                               />
                             )}
-                            <Mail className="w-3.5 h-3.5 opacity-80" />
+                            <Mail className={`w-3.5 h-3.5 ${channel === 'email' ? 'text-emerald-400' : 'opacity-70'}`} />
                             <span>{isPersian ? 'ارسال به ایمیل' : 'Email'}</span>
                           </button>
                         </div>
                       </div>
 
-                      {/* Live Cooldown Error Alert */}
+                      {/* Live Cooldown Error Alert (Site Theme Colors - Emerald & Neutral) */}
                       <AnimatePresence>
                         {step1Cooldown > 0 && (
                           <motion.div
                             initial={{ opacity: 0, y: -4, height: 0 }}
                             animate={{ opacity: 1, y: 0, height: 'auto' }}
                             exit={{ opacity: 0, y: -4, height: 0 }}
-                            className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/25 space-y-1 text-xs overflow-hidden"
+                            className="p-2.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 space-y-1.5 text-xs overflow-hidden"
                           >
                             <div className="flex items-center justify-between gap-2">
-                              <div className="flex items-center gap-1 text-amber-700 dark:text-amber-300 font-medium min-w-0 text-[10px]">
-                                <Clock className="w-3 h-3 text-amber-500 shrink-0 animate-spin" />
+                              <div className="flex items-center gap-1.5 text-emerald-300 font-medium min-w-0 text-[11px]">
+                                <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0 animate-spin" />
                                 <span className="truncate">
                                   {isPersian
                                     ? 'کد قبلی هنوز معتبر است. زمان تا ارسال مجدد:'
                                     : 'Code active. Resend in:'}
                                 </span>
                               </div>
-                              <div className="bg-amber-500/20 px-1.5 py-0.5 rounded text-amber-800 dark:text-amber-200 shrink-0 font-bold">
+                              <div className="bg-emerald-500/20 px-2 py-0.5 rounded-full text-emerald-300 shrink-0 font-bold">
                                 <LiveTimerDisplay seconds={step1Cooldown} className="text-[10px]" />
                               </div>
                             </div>
-                            <div className="flex items-center justify-between pt-1 border-t border-amber-500/20 text-[10px]">
+                            <div className="flex items-center justify-between pt-1 border-t border-emerald-500/20 text-[10px]">
                               <span className="text-brand-text-muted">
                                 {isPersian ? 'کد ارسالی را در اختیار دارید؟' : 'Have code?'}
                               </span>
@@ -485,7 +488,7 @@ export function ResetPasswordModal({
                                   setDirection(1);
                                   setStep(2);
                                 }}
-                                className="font-bold text-brand-gold hover:underline cursor-pointer flex items-center gap-0.5"
+                                className="font-bold text-emerald-400 hover:text-emerald-300 hover:underline cursor-pointer flex items-center gap-1"
                               >
                                 <span>{isPersian ? 'ثبت کد و تغییر رمز' : 'Enter Code'}</span>
                                 {isPersian ? <ArrowLeft className="w-2.5 h-2.5" /> : <ArrowRight className="w-2.5 h-2.5" />}
@@ -501,18 +504,18 @@ export function ResetPasswordModal({
                           type="submit"
                           isLoading={loadingSend}
                           disabled={step1Cooldown > 0}
-                          radius="md"
-                          startContent={!loadingSend && <Send className="w-3 h-3 shrink-0" />}
-                          className={`flex-1 h-8.5 text-xs font-bold transition-all ${
+                          radius="full"
+                          startContent={!loadingSend && <Send className="w-3.5 h-3.5 shrink-0" />}
+                          className={`flex-1 h-9.5 text-xs font-bold transition-all rounded-full ${
                             step1Cooldown > 0
-                              ? 'bg-brand-surface-elevated text-brand-text-muted border border-brand-border opacity-70 cursor-not-allowed'
-                              : 'bg-brand-gold hover:bg-[#d4be9b] text-[#141914] cursor-pointer'
+                              ? 'bg-brand-surface-elevated text-brand-text-muted/60 border border-brand-border opacity-70 cursor-not-allowed shadow-none'
+                              : 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-md shadow-emerald-950/40 active:scale-98'
                           }`}
                         >
                           {loadingSend ? (
                             isPersian ? 'در حال صدور...' : 'Sending...'
                           ) : step1Cooldown > 0 ? (
-                            <span className="flex items-center gap-1 font-bold">
+                            <span className="flex items-center gap-1.5 font-bold">
                               <span>{isPersian ? 'ارسال مجدد پس از:' : 'Resend in:'}</span>
                               <LiveTimerDisplay seconds={step1Cooldown} className="text-[10px]" />
                             </span>
@@ -523,9 +526,9 @@ export function ResetPasswordModal({
                         <Button
                           type="button"
                           variant="flat"
-                          radius="md"
+                          radius="full"
                           onPress={onClose}
-                          className="h-8.5 px-3.5 bg-brand-surface-elevated border border-brand-border/70 text-brand-text text-xs cursor-pointer"
+                          className="h-9.5 px-4 bg-brand-surface-elevated hover:bg-white/5 border border-brand-border/70 text-brand-text text-xs rounded-full cursor-pointer transition-colors active:scale-98"
                         >
                           {isPersian ? 'انصراف' : 'Cancel'}
                         </Button>
@@ -543,11 +546,11 @@ export function ResetPasswordModal({
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                   >
-                    <form onSubmit={handleResetPassword} className="space-y-2.5">
+                    <form onSubmit={handleResetPassword} className="space-y-3">
                       {/* Destination Info & Timer Strip */}
-                      <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-brand-surface-elevated/50 border border-brand-border/60 text-[11px]">
+                      <div className="flex items-center justify-between px-3 py-1.5 rounded-full bg-brand-surface-elevated/60 border border-brand-border/70 text-[11px]">
                         <div className="flex items-center gap-1.5 min-w-0 text-brand-text-muted">
                           <span className="truncate">
                             {channel === 'sms'
@@ -559,23 +562,23 @@ export function ResetPasswordModal({
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-1 shrink-0">
-                          <Clock className={`w-3 h-3 ${countdown > 0 ? 'text-brand-gold animate-pulse' : 'text-rose-500'}`} />
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Clock className={`w-3.5 h-3.5 ${countdown > 0 ? 'text-emerald-400 animate-pulse' : 'text-rose-500'}`} />
                           <LiveTimerDisplay
                             seconds={countdown}
-                            className={countdown > 0 ? 'text-brand-gold text-[10px]' : 'text-rose-500 text-[10px]'}
+                            className={countdown > 0 ? 'text-emerald-400 text-[10px]' : 'text-rose-500 text-[10px]'}
                           />
                         </div>
                       </div>
 
                       {/* Dev Code Quick Fill (testing) */}
                       {devCode && (
-                        <div className="flex items-center justify-between px-2 py-1 rounded bg-amber-500/10 text-[10px] text-amber-700 dark:text-amber-300">
-                          <span className="font-medium">{isPersian ? '🔑 کد تست:' : '🔑 Dev Code:'}</span>
+                        <div className="flex items-center justify-between px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300">
+                          <span className="font-medium">{isPersian ? '🔑 کد تست سیستم:' : '🔑 Dev Code:'}</span>
                           <button
                             type="button"
                             onClick={() => setCode(devCode)}
-                            className="font-mono font-bold hover:underline cursor-pointer bg-amber-500/20 px-1.5 py-0.5 rounded"
+                            className="font-mono font-bold hover:underline cursor-pointer bg-emerald-500/20 px-2 py-0.5 rounded-full text-emerald-200"
                           >
                             {devCode} {isPersian ? '(کلیک)' : '(fill)'}
                           </button>
@@ -586,7 +589,7 @@ export function ResetPasswordModal({
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-[10px]">
                           <label className="font-medium text-brand-text-muted flex items-center gap-1">
-                            <Hash className="w-3 h-3 text-brand-gold opacity-80 shrink-0" />
+                            <Hash className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                             <span>{isPersian ? 'کد ۵ رقمی تایید:' : '5-Digit Code:'}</span>
                           </label>
 
@@ -598,7 +601,7 @@ export function ResetPasswordModal({
                             className={`font-medium flex items-center gap-1 transition-colors ${
                               countdown > 0
                                 ? 'text-brand-text-muted cursor-not-allowed opacity-60'
-                                : 'text-brand-gold hover:underline cursor-pointer font-bold'
+                                : 'text-emerald-400 hover:text-emerald-300 hover:underline cursor-pointer font-bold'
                             }`}
                           >
                             <RotateCcw className={`w-2.5 h-2.5 ${loadingSend ? 'animate-spin' : ''}`} />
@@ -627,11 +630,11 @@ export function ResetPasswordModal({
                             if (codeError) setCodeError('');
                           }}
                           variant="bordered"
-                          radius="md"
+                          radius="full"
                           classNames={{
                             inputWrapper:
-                              'h-9 px-3 bg-brand-surface-elevated/40 border border-brand-border/70 hover:border-brand-gold/60 focus-within:!border-brand-gold rounded-lg shadow-none transition-colors',
-                            input: 'text-center tracking-[0.25em] text-sm font-mono font-bold text-brand-text',
+                              'h-9.5 px-4 bg-brand-surface-elevated/40 border border-brand-border/70 hover:border-emerald-500/50 focus-within:!border-emerald-500 rounded-full shadow-none transition-colors',
+                            input: 'text-center tracking-[0.3em] text-sm font-mono font-bold text-brand-text',
                           }}
                         />
                         <AnimatedFieldError error={codeError} />
@@ -640,7 +643,7 @@ export function ResetPasswordModal({
                       {/* New Password Input */}
                       <div className="space-y-1">
                         <label className="text-[10px] font-medium text-brand-text-muted flex items-center gap-1">
-                          <Lock className="w-3 h-3 text-brand-gold opacity-80 shrink-0" />
+                          <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                           <span>{isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر):' : 'New Password (min 6 chars):'}</span>
                         </label>
                         <Input
@@ -653,7 +656,7 @@ export function ResetPasswordModal({
                             if (newPasswordError) setNewPasswordError('');
                           }}
                           variant="bordered"
-                          radius="md"
+                          radius="full"
                           endContent={
                             <AnimatedPasswordToggle
                               isVisible={showNewPassword}
@@ -663,7 +666,7 @@ export function ResetPasswordModal({
                           }
                           classNames={{
                             inputWrapper:
-                              'h-9 px-3 bg-brand-surface-elevated/40 border border-brand-border/70 hover:border-brand-gold/60 focus-within:!border-brand-gold rounded-lg shadow-none transition-colors',
+                              'h-9.5 px-4 bg-brand-surface-elevated/40 border border-brand-border/70 hover:border-emerald-500/50 focus-within:!border-emerald-500 rounded-full shadow-none transition-colors',
                             input: 'text-xs text-brand-text',
                           }}
                         />
@@ -673,7 +676,7 @@ export function ResetPasswordModal({
                       {/* Confirm Password Input */}
                       <div className="space-y-1">
                         <label className="text-[10px] font-medium text-brand-text-muted flex items-center gap-1">
-                          <Lock className="w-3 h-3 text-brand-gold opacity-80 shrink-0" />
+                          <Lock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                           <span>{isPersian ? 'تکرار رمز عبور جدید:' : 'Confirm Password:'}</span>
                         </label>
                         <Input
@@ -686,7 +689,7 @@ export function ResetPasswordModal({
                             if (confirmPasswordError) setConfirmPasswordError('');
                           }}
                           variant="bordered"
-                          radius="md"
+                          radius="full"
                           endContent={
                             <AnimatedPasswordToggle
                               isVisible={showConfirmPassword}
@@ -696,7 +699,7 @@ export function ResetPasswordModal({
                           }
                           classNames={{
                             inputWrapper:
-                              'h-9 px-3 bg-brand-surface-elevated/40 border border-brand-border/70 hover:border-brand-gold/60 focus-within:!border-brand-gold rounded-lg shadow-none transition-colors',
+                              'h-9.5 px-4 bg-brand-surface-elevated/40 border border-brand-border/70 hover:border-emerald-500/50 focus-within:!border-emerald-500 rounded-full shadow-none transition-colors',
                             input: 'text-xs text-brand-text',
                           }}
                         />
@@ -708,9 +711,9 @@ export function ResetPasswordModal({
                         <Button
                           type="submit"
                           isLoading={loadingReset}
-                          radius="md"
-                          startContent={!loadingReset && <Check className="w-3 h-3 shrink-0" />}
-                          className="flex-1 h-8.5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-bold text-xs cursor-pointer shadow-xs"
+                          radius="full"
+                          startContent={!loadingReset && <Check className="w-3.5 h-3.5 shrink-0" />}
+                          className="flex-1 h-9.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-full cursor-pointer shadow-md shadow-emerald-950/40 active:scale-98"
                         >
                           {loadingReset
                             ? (isPersian ? 'در حال ثبت...' : 'Saving...')
@@ -719,7 +722,7 @@ export function ResetPasswordModal({
                         <Button
                           type="button"
                           variant="flat"
-                          radius="md"
+                          radius="full"
                           onPress={() => {
                             setDirection(-1);
                             setStep(1);
@@ -727,7 +730,7 @@ export function ResetPasswordModal({
                               setStep1Cooldown(countdown);
                             }
                           }}
-                          className="h-8.5 px-3 bg-brand-surface-elevated border border-brand-border/70 text-brand-text text-xs cursor-pointer"
+                          className="h-9.5 px-4 bg-brand-surface-elevated hover:bg-white/5 border border-brand-border/70 text-brand-text text-xs rounded-full cursor-pointer transition-colors active:scale-98"
                         >
                           {isPersian ? 'مرحله قبل' : 'Back'}
                         </Button>
@@ -745,29 +748,29 @@ export function ResetPasswordModal({
                     initial="enter"
                     animate="center"
                     exit="exit"
-                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                     className="py-3 text-center space-y-3"
                   >
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-500 flex items-center justify-center mx-auto">
-                      <CheckCircle2 className="w-5 h-5" />
+                    <div className="w-12 h-12 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mx-auto">
+                      <CheckCircle2 className="w-6 h-6" />
                     </div>
 
-                    <div className="space-y-0.5">
+                    <div className="space-y-1">
                       <h4 className="text-xs font-bold text-brand-text">
                         {isPersian ? 'رمز عبور با موفقیت تغییر یافت' : 'Password Successfully Reset'}
                       </h4>
                       <p className="text-[11px] text-brand-text-muted leading-relaxed">
                         {isPersian
-                          ? 'رمز عبور جدید حساب شما فعال شد. اکنون می‌توانید وارد شوید.'
+                          ? 'رمز عبور جدید حساب شما فعال شد. اکنون می‌توانید با رمز جدید وارد شوید.'
                           : 'Your password has been updated. You can now log in.'}
                       </p>
                     </div>
 
                     <Button
                       type="button"
-                      radius="md"
+                      radius="full"
                       onPress={onClose}
-                      className="w-full h-8.5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-bold text-xs cursor-pointer shadow-xs"
+                      className="w-full h-9.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-full cursor-pointer shadow-md shadow-emerald-950/40 active:scale-98"
                     >
                       {isPersian ? 'بستن' : 'Close'}
                     </Button>
