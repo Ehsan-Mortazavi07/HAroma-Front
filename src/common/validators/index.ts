@@ -2,9 +2,39 @@ import * as Yup from 'yup';
 
 export const getSignInSchema = (isPersian = true) =>
   Yup.object().shape({
-    identifier: Yup.string().required(
-      isPersian ? 'این فیلد ضروری است.' : 'This field is required.',
-    ),
+    identifier: Yup.string()
+      .required(isPersian ? 'این فیلد ضروری است.' : 'This field is required.')
+      .test(
+        'phone-format',
+        isPersian
+          ? 'فرمت شماره موبایل نامعتبر است (شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود).'
+          : 'Invalid phone format (must be 11 digits starting with 09).',
+        function (value) {
+          if (!value || !value.trim()) return false;
+          const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+          const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+          let clean = value.trim();
+          for (let i = 0; i < 10; i++) {
+            clean = clean.replace(new RegExp(persianDigits[i], 'g'), i.toString());
+            clean = clean.replace(new RegExp(arabicDigits[i], 'g'), i.toString());
+          }
+          const stripped = clean.replace(/\s|-/g, '');
+          const isPhoneLike =
+            /^(\+98|0098|98|09)/.test(stripped) ||
+            (/^\d+$/.test(stripped) && stripped.length >= 7);
+
+          if (!isPhoneLike) {
+            return true; // Valid username or email
+          }
+
+          let normalized = stripped.replace(/\D/g, '');
+          if (normalized.startsWith('0098')) normalized = '0' + normalized.slice(4);
+          else if (normalized.startsWith('98') && normalized.length === 12) normalized = '0' + normalized.slice(2);
+          else if (normalized.startsWith('9') && normalized.length === 10) normalized = '0' + normalized;
+
+          return /^09\d{9}$/.test(normalized);
+        },
+      ),
     password: Yup.string()
       .min(6, isPersian ? 'رمز عبور باید حداقل ۶ کاراکتر باشد.' : 'Password must be at least 6 characters.')
       .required(isPersian ? 'وارد کردن رمز عبور ضروری است.' : 'Password is required.'),
@@ -20,6 +50,30 @@ export const getSignUpSchema = (isPersian = true) =>
     ),
     email: Yup.string()
       .email(isPersian ? 'فرمت ایمیل نامعتبر است.' : 'Invalid email address format.')
+      .optional(),
+    phone: Yup.string()
+      .test(
+        'valid-phone',
+        isPersian
+          ? 'فرمت شماره موبایل نامعتبر است (شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود).'
+          : 'Invalid phone format (must be 11 digits starting with 09).',
+        function (val) {
+          if (!val || !val.trim()) return true;
+          const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+          const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+          let clean = val.trim();
+          for (let i = 0; i < 10; i++) {
+            clean = clean.replace(new RegExp(persianDigits[i], 'g'), i.toString());
+            clean = clean.replace(new RegExp(arabicDigits[i], 'g'), i.toString());
+          }
+          let normalized = clean.replace(/\D/g, '');
+          if (normalized.startsWith('0098')) normalized = '0' + normalized.slice(4);
+          else if (normalized.startsWith('98') && normalized.length === 12) normalized = '0' + normalized.slice(2);
+          else if (normalized.startsWith('9') && normalized.length === 10) normalized = '0' + normalized;
+
+          return /^09\d{9}$/.test(normalized);
+        },
+      )
       .optional(),
     password: Yup.string()
       .min(6, isPersian ? 'رمز عبور باید حداقل ۶ کاراکتر باشد.' : 'Password must be at least 6 characters.')

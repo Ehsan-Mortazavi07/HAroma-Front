@@ -109,6 +109,7 @@ export function SignInPage() {
     try {
       const res = await axiosInstance.post('/auth/otp/send', {
         phone: cleanNumber,
+        purpose: 'login',
       });
 
       if (res.data?.devCode) {
@@ -131,10 +132,8 @@ export function SignInPage() {
       }, 300);
     } catch (err: any) {
       const serverMsg = getApiErrorMessage(err);
-      toast.error(
-        serverMsg ||
-          (isPersian ? 'خطا در ارسال کد تایید یکبار مصرف.' : 'Failed to send verification code.'),
-      );
+      setPhoneError(serverMsg);
+      toast.error(serverMsg);
     } finally {
       setLoadingSendOtp(false);
     }
@@ -198,7 +197,7 @@ export function SignInPage() {
   };
 
   // Handle Password Login
-  const handlePasswordSubmit = async (values: any) => {
+  const handlePasswordSubmit = async (values: any, { setFieldError }: any) => {
     setLoadingPassword(true);
     try {
       const res = await axiosInstance.post('/auth/login', {
@@ -226,9 +225,12 @@ export function SignInPage() {
       }
     } catch (err: any) {
       const serverMsg = getApiErrorMessage(err);
-      toast.error(
-        serverMsg || (isPersian ? 'اطلاعات ورود اشتباه است.' : 'Invalid username/email or password.'),
-      );
+      if (serverMsg.includes('رمز عبور') || serverMsg.includes('پسورد')) {
+        setFieldError('password', serverMsg);
+      } else {
+        setFieldError('identifier', serverMsg);
+      }
+      toast.error(serverMsg);
     } finally {
       setLoadingPassword(false);
     }
@@ -322,15 +324,25 @@ export function SignInPage() {
                       }}
                     />
                     {phoneError && (
-                      <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                        {phoneError}
-                      </p>
+                      <div className="mt-1.5 space-y-1.5">
+                        <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                          {phoneError}
+                        </p>
+                        {phoneError.includes('ثبت‌نام') && (
+                          <Link
+                            href={PATHS.SIGN_UP}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-brand-gold hover:underline mt-0.5"
+                          >
+                            <span>{isPersian ? '← ایجاد حساب کاربری جدید' : '← Create new account'}</span>
+                          </Link>
+                        )}
+                      </div>
                     )}
                     <p className="text-[11px] text-brand-text-muted mt-2 leading-relaxed">
                       {isPersian
-                        ? 'در صورت نداشتن حساب، با تایید شماره حساب شما به صورت خودکار ایجاد می‌شود.'
-                        : 'If you do not have an account, one will be created automatically upon verification.'}
+                        ? 'کد یکبار مصرف تنها برای شماره‌های ثبت‌نام شده در سایت ارسال خواهد شد.'
+                        : 'Verification code is only sent to accounts registered on the website.'}
                     </p>
                   </div>
 

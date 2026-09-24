@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Formik, Form } from 'formik';
 import { Card, CardBody, Input, Button } from '@heroui/react';
-import { Lock, User, Mail, Eye, EyeOff, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Lock, User, Mail, Eye, EyeOff, ArrowLeft, ArrowRight, Smartphone } from 'lucide-react';
 import { useAppDispatch } from '@/stores/hooks';
 import { setAuth } from '@/stores/auth/authSlice';
 import { getSignUpSchema } from '@/common/validators';
 import { PATHS } from '@/common/constants/PATHS';
-import { toast } from '@/common/utils';
+import { toast, toEnglishDigits } from '@/common/utils';
 import axiosInstance from '@/common/axiosInstance';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { useTranslation } from '@/common/i18n';
@@ -32,10 +32,15 @@ export function SignUpPage() {
   const handleSubmit = async (values: any) => {
     setLoading(true);
     try {
+      const cleanPhone = values.phone?.trim()
+        ? toEnglishDigits(values.phone.trim()).replace(/\D/g, '')
+        : undefined;
+
       const res = await axiosInstance.post('/auth/register', {
         fullName: values.fullName,
         username: values.username,
         email: values.email?.trim() ? values.email.trim().toLowerCase() : undefined,
+        phone: cleanPhone || undefined,
         password: values.password,
         confirmPassword: values.confirmPassword,
       });
@@ -85,6 +90,7 @@ export function SignUpPage() {
             initialValues={{
               fullName: '',
               username: '',
+              phone: '',
               email: '',
               password: '',
               confirmPassword: '',
@@ -153,6 +159,38 @@ export function SignUpPage() {
                     <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
                       {String(errors.username)}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-brand-text mb-1.5">
+                    {isPersian ? 'شماره موبایل (جهت ورود با پیامک)' : 'Mobile Phone (for OTP login)'}
+                  </label>
+                  <Input
+                    name="phone"
+                    type="tel"
+                    aria-label={isPersian ? 'شماره موبایل' : 'Mobile Phone'}
+                    placeholder={isPersian ? '۰۹۱۲۳۴۵۶۷۸۹' : '09123456789'}
+                    maxLength={11}
+                    value={values.phone}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    variant="bordered"
+                    radius="lg"
+                    startContent={<Smartphone className="w-4 h-4 text-brand-bronze shrink-0" />}
+                    isInvalid={Boolean(errors.phone && touched.phone)}
+                    classNames={{
+                      inputWrapper: Boolean(errors.phone && touched.phone)
+                        ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                        : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                      input: "text-xs font-mono text-brand-text",
+                    }}
+                  />
+                  {errors.phone && touched.phone && (
+                    <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
+                      {String(errors.phone)}
                     </p>
                   )}
                 </div>

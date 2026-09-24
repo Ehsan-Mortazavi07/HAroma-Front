@@ -5,6 +5,7 @@ export interface IUser {
   fullName: string;
   username: string;
   email?: string;
+  isEmailVerified?: boolean;
   phone?: string;
   isPhoneVerified?: boolean;
   role: UserRole;
