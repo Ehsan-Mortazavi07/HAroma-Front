@@ -21,8 +21,11 @@ import {
   CheckCircle2,
   ArrowRight,
   ArrowLeft,
+  User as UserIcon,
+  ShieldCheck,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAppSelector } from '@/stores/hooks';
 import { AnimatedPasswordToggle } from '@/components/common/AnimatedPasswordToggle';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import axiosInstance from '@/common/axiosInstance';
@@ -58,6 +61,26 @@ export function LiveTimerDisplay({
   );
 }
 
+const maskPhone = (phone?: string) => {
+  if (!phone) return '';
+  const clean = toEnglishDigits(phone.trim().replace(/\D/g, ''));
+  if (clean.length === 11) {
+    return toPersianDigits(clean.slice(0, 4) + '***' + clean.slice(7));
+  }
+  return toPersianDigits(clean);
+};
+
+const maskEmail = (email?: string) => {
+  if (!email) return '';
+  const clean = email.trim();
+  const parts = clean.split('@');
+  if (parts.length !== 2) return clean;
+  const name = parts[0];
+  const domain = parts[1];
+  const maskedName = name.length > 2 ? name.slice(0, 2) + '*'.repeat(Math.max(3, name.length - 2)) : name + '***';
+  return `${maskedName}@${domain}`;
+};
+
 interface ResetPasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -73,23 +96,34 @@ export function ResetPasswordModal({
 }: ResetPasswordModalProps) {
   const { isPersian } = useTranslation();
 
-  // Multi-step Flow: 1 (Identifier & Channel) -> 2 (OTP & New Passwords) -> 3 (Success)
+  // Auth state from Redux store
+  const authUser = useAppSelector((state) => state.auth.user);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const isUserLoggedIn = isAuthenticated && Boolean(authUser);
+
+  // Multi-step Flow: 1 (Choose Channel / Identifier) -> 2 (OTP & New Passwords) -> 3 (Success)
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [direction, setDirection] = useState<1 | -1>(1);
 
-  // Step 1: Identifier & Delivery Channel
+  // Step 1: Identifier (only for guest / unauthenticated users) & Channel
   const [identifier, setIdentifier] = useState(initialIdentifier);
   const [identifierError, setIdentifierError] = useState('');
   const [channel, setChannel] = useState<'sms' | 'email'>('sms');
   const [loadingSend, setLoadingSend] = useState(false);
-  const [step1Cooldown, setStep1Cooldown] = useState(0);
+
+  // Independent cooldown timers & targets for SMS and Email
+  const [smsCooldown, setSmsCooldown] = useState(0);
+  const [smsTarget, setSmsTarget] = useState('');
+  const [smsDevCode, setSmsDevCode] = useState<string | null>(null);
+
+  const [emailCooldown, setEmailCooldown] = useState(0);
+  const [emailTarget, setEmailTarget] = useState('');
+  const [emailDevCode, setEmailDevCode] = useState<string | null>(null);
 
   // Step 2: Verification Code & Passwords
-  const [targetDestination, setTargetDestination] = useState('');
+  const [activeChannel, setActiveChannel] = useState<'sms' | 'email'>('sms');
   const [code, setCode] = useState('');
   const [codeError, setCodeError] = useState('');
-  const [devCode, setDevCode] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState(0);
 
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordError, setNewPasswordError] = useState('');
@@ -99,14 +133,23 @@ export function ResetPasswordModal({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loadingReset, setLoadingReset] = useState(false);
 
-  // Synchronize initial identifier
+  // Initialize or reset form when modal opens / closes
   useEffect(() => {
     if (isOpen) {
-      if (initialIdentifier && !identifier) {
+      if (isUserLoggedIn) {
+        // Default to SMS if available, otherwise Email
+        if (authUser?.phone) {
+          setChannel('sms');
+          setActiveChannel('sms');
+        } else if (authUser?.email) {
+          setChannel('email');
+          setActiveChannel('email');
+        }
+      } else if (initialIdentifier && !identifier) {
         setIdentifier(initialIdentifier);
       }
     } else {
-      // Reset state on modal close
+      // Clear inputs upon closing
       setStep(1);
       setCode('');
       setCodeError('');
@@ -114,88 +157,101 @@ export function ResetPasswordModal({
       setNewPasswordError('');
       setConfirmPassword('');
       setConfirmPasswordError('');
-      setDevCode(null);
-      setCountdown(0);
-      setStep1Cooldown(0);
       setIdentifierError('');
     }
-  }, [isOpen, initialIdentifier]);
+  }, [isOpen, initialIdentifier, isUserLoggedIn, authUser]);
 
-  // Live 2-minute (120s) countdown timer in Step 2
+  // Independent 2-minute countdown timer for SMS
   useEffect(() => {
-    if (countdown <= 0) return;
+    if (smsCooldown <= 0) return;
     const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setSmsCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
     return () => clearInterval(timer);
-  }, [countdown]);
+  }, [smsCooldown]);
 
-  // Live Cooldown countdown timer in Step 1 (when user enters phone again before 2 minutes)
+  // Independent 2-minute countdown timer for Email
   useEffect(() => {
-    if (step1Cooldown <= 0) return;
+    if (emailCooldown <= 0) return;
     const timer = setInterval(() => {
-      setStep1Cooldown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setEmailCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
     return () => clearInterval(timer);
-  }, [step1Cooldown]);
+  }, [emailCooldown]);
 
-  // Step 1: Request Password Reset Code
-  const handleSendCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step1Cooldown > 0) return;
+  // Active cooldown for the currently selected channel in Step 1
+  const currentStep1Cooldown = channel === 'sms' ? smsCooldown : emailCooldown;
+
+  // Step 1: Request Password Reset Code (for chosen channel)
+  const handleSendCode = async (e?: React.FormEvent, overrideChannel?: 'sms' | 'email') => {
+    if (e) e.preventDefault();
+    const targetChannel = overrideChannel || channel;
+
+    const activeCooldown = targetChannel === 'sms' ? smsCooldown : emailCooldown;
+    if (activeCooldown > 0) return;
+
     setIdentifierError('');
 
-    const cleanId = identifier.trim();
-    if (!cleanId) {
-      setIdentifierError(
-        isPersian
-          ? 'لطفاً شماره موبایل، ایمیل یا نام کاربری حساب خود را وارد کنید.'
-          : 'Please enter your mobile phone, email, or username.',
-      );
-      return;
+    // If guest, validate identifier
+    let cleanId = '';
+    if (!isUserLoggedIn) {
+      cleanId = identifier.trim();
+      if (!cleanId) {
+        setIdentifierError(
+          isPersian
+            ? 'لطفاً شماره موبایل، ایمیل یا نام کاربری حساب خود را وارد کنید.'
+            : 'Please enter your mobile phone, email, or username.',
+        );
+        return;
+      }
     }
 
     setLoadingSend(true);
     try {
-      const res = await axiosInstance.post('/auth/forgot-password', {
-        identifier: cleanId,
-        channel,
-      });
+      const payload: any = {
+        channel: targetChannel,
+      };
+      if (!isUserLoggedIn) {
+        payload.identifier = cleanId;
+      }
 
-      setTargetDestination(res.data?.target || cleanId);
-      setDevCode(res.data?.devCode || null);
+      const res = await axiosInstance.post('/auth/forgot-password', payload);
+
+      const returnedTarget = res.data?.target || (targetChannel === 'sms' ? authUser?.phone : authUser?.email) || cleanId;
+      const returnedDevCode = res.data?.devCode || null;
       const expiry = res.data?.expiresIn || 120;
-      setCountdown(expiry);
-      setStep1Cooldown(0);
+
+      if (targetChannel === 'sms') {
+        setSmsCooldown(expiry);
+        setSmsTarget(returnedTarget);
+        setSmsDevCode(returnedDevCode);
+        setActiveChannel('sms');
+      } else {
+        setEmailCooldown(expiry);
+        setEmailTarget(returnedTarget);
+        setEmailDevCode(returnedDevCode);
+        setActiveChannel('email');
+      }
+
       setDirection(1);
       setStep(2);
 
       toast.success(
         res.data?.message ||
           (isPersian
-            ? 'کد تایید ۲ دقیقه‌ای بازیابی رمز عبور ارسال شد.'
-            : 'Password reset code has been dispatched.'),
+            ? `کد تایید ۲ دقیقه‌ای ${targetChannel === 'sms' ? 'پیامک' : 'ایمیل'} ارسال شد.`
+            : `Verification code sent via ${targetChannel === 'sms' ? 'SMS' : 'Email'}.`),
       );
     } catch (err: any) {
-      // Extract live retryAfter if rate-limited within 2 minutes
+      // Extract live retryAfter if rate-limited within 2 minutes for this channel
       const retryAfter = err?.response?.data?.retryAfter;
       if (typeof retryAfter === 'number' && retryAfter > 0) {
-        setStep1Cooldown(retryAfter);
-        setCountdown(retryAfter);
-        if (err?.response?.data?.devCode) {
-          setDevCode(err.response.data.devCode);
+        if (targetChannel === 'sms') {
+          setSmsCooldown(retryAfter);
+          if (err?.response?.data?.devCode) setSmsDevCode(err.response.data.devCode);
+        } else {
+          setEmailCooldown(retryAfter);
+          if (err?.response?.data?.devCode) setEmailDevCode(err.response.data.devCode);
         }
       } else {
         const msg = err?.response?.data?.message;
@@ -203,8 +259,8 @@ export function ResetPasswordModal({
           const match = msg.match(/(\d+)\s*ثانیه/);
           if (match && match[1]) {
             const sec = parseInt(match[1], 10);
-            setStep1Cooldown(sec);
-            setCountdown(sec);
+            if (targetChannel === 'sms') setSmsCooldown(sec);
+            else setEmailCooldown(sec);
           }
         }
       }
@@ -214,35 +270,11 @@ export function ResetPasswordModal({
     }
   };
 
-  // Resend Code (Available when 2-minute timer reaches 0)
-  const handleResendCode = async () => {
-    if (countdown > 0 || loadingSend) return;
-
-    setLoadingSend(true);
-    try {
-      const res = await axiosInstance.post('/auth/forgot-password', {
-        identifier: identifier.trim(),
-        channel,
-      });
-
-      setCountdown(res.data?.expiresIn || 120);
-      setDevCode(res.data?.devCode || null);
-      setCode('');
-      setCodeError('');
-
-      toast.success(
-        res.data?.message ||
-          (isPersian ? 'کد تایید جدید با موفقیت ارسال شد.' : 'A new code has been sent.'),
-      );
-    } catch (err: any) {
-      const retryAfter = err?.response?.data?.retryAfter;
-      if (typeof retryAfter === 'number' && retryAfter > 0) {
-        setCountdown(retryAfter);
-      }
-      toast.error(getApiErrorMessage(err, isPersian));
-    } finally {
-      setLoadingSend(false);
-    }
+  // Step 2: Resend Code for the active channel
+  const handleResendActiveChannel = async () => {
+    const currentActiveCooldown = activeChannel === 'sms' ? smsCooldown : emailCooldown;
+    if (currentActiveCooldown > 0 || loadingSend) return;
+    await handleSendCode(undefined, activeChannel);
   };
 
   // Step 2: Verify Code and Set New Password
@@ -258,11 +290,12 @@ export function ResetPasswordModal({
       return;
     }
 
-    if (countdown <= 0) {
+    const currentChannelCooldown = activeChannel === 'sms' ? smsCooldown : emailCooldown;
+    if (currentChannelCooldown <= 0 && smsCooldown <= 0 && emailCooldown <= 0) {
       setCodeError(
         isPersian
-          ? 'کد تایید منقضی شده است. لطفاً روی دکمه «ارسال مجدد کد» کلیک کنید.'
-          : 'Verification code has expired. Please request a new code.',
+          ? 'کد تایید منقضی شده است. لطفاً روی «ارسال مجدد کد» کلیک کنید.'
+          : 'Verification code expired. Please request a new code.',
       );
       return;
     }
@@ -283,12 +316,17 @@ export function ResetPasswordModal({
 
     setLoadingReset(true);
     try {
-      const res = await axiosInstance.post('/auth/reset-password', {
-        identifier: identifier.trim(),
+      const payload: any = {
         code: cleanCode,
         newPassword,
         confirmPassword,
-      });
+        channel: activeChannel,
+      };
+      if (!isUserLoggedIn) {
+        payload.identifier = identifier.trim();
+      }
+
+      const res = await axiosInstance.post('/auth/reset-password', payload);
 
       toast.success(
         res.data?.message ||
@@ -356,7 +394,7 @@ export function ResetPasswordModal({
 
             <div className="overflow-hidden p-4 sm:p-5">
               <AnimatePresence mode="wait" custom={direction} initial={false}>
-                {/* STEP 1: Enter Identifier & Choose Channel */}
+                {/* STEP 1: Enter / Select Destination & Choose Channel */}
                 {step === 1 && (
                   <motion.div
                     key="reset-modal-step-1"
@@ -368,84 +406,200 @@ export function ResetPasswordModal({
                     transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                   >
                     <form onSubmit={handleSendCode} className="space-y-3.5">
-                      {/* Identifier Input */}
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-brand-text flex items-center gap-1.5">
-                          <Smartphone className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                          <span>{isPersian ? 'موبایل، ایمیل یا نام کاربری:' : 'Mobile, Email or Username:'}</span>
-                        </label>
-                        <Input
-                          aria-label={isPersian ? 'موبایل، ایمیل یا نام کاربری' : 'Mobile, Email or Username'}
-                          placeholder={isPersian ? '۰۹۱۲۳۴۵۶۷۸۹ یا info@example.com' : '09123456789 or info@example.com'}
-                          value={identifier}
-                          onValueChange={(val) => {
-                            setIdentifier(val);
-                            if (identifierError) setIdentifierError('');
-                          }}
-                          variant="bordered"
-                          radius="full"
-                          classNames={{
-                            inputWrapper:
-                              'h-10 px-4 bg-brand-surface-elevated/70 dark:bg-brand-surface-elevated/40 border border-brand-border hover:border-brand-bronze/80 dark:hover:border-brand-gold/80 focus-within:!border-brand-bronze dark:focus-within:!border-brand-gold rounded-full shadow-2xs transition-colors',
-                            input: 'text-xs font-semibold text-brand-text placeholder:text-brand-text-muted/60 text-start',
-                          }}
-                        />
-                        <AnimatedFieldError error={identifierError} />
-                      </div>
+                      {/* Logged-In User Mode: Locked to their own account; NO input field allowed */}
+                      {isUserLoggedIn ? (
+                        <div className="space-y-3">
+                          {/* Account badge */}
+                          <div className="p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border flex items-center justify-between shadow-2xs">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-8 h-8 rounded-full bg-brand-surface border border-brand-border flex items-center justify-center text-brand-bronze dark:text-brand-gold font-bold text-xs shrink-0 shadow-2xs">
+                                <UserIcon className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-xs font-black text-brand-text truncate">
+                                  {authUser?.fullName || authUser?.username}
+                                </div>
+                                <div className="text-[11px] text-brand-text-muted font-mono truncate" dir="ltr">
+                                  @{authUser?.username}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="px-2.5 py-0.5 rounded-full bg-brand-surface border border-brand-border text-[10px] font-bold text-brand-text-muted shrink-0">
+                              {isPersian ? 'حساب کاربری فعال' : 'Active Account'}
+                            </div>
+                          </div>
 
-                      {/* Curved Pill Segmented Channel Control */}
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'نحوه دریافت کد تایید:' : 'Receive Code via:'}
-                        </label>
-                        <div className="grid grid-cols-2 p-1 rounded-full bg-brand-surface-elevated border border-brand-border relative h-9.5">
-                          {/* Option 1: Mobile / SMS */}
-                          <button
-                            type="button"
-                            onClick={() => setChannel('sms')}
-                            className={`relative h-full flex items-center justify-center gap-2 rounded-full text-xs transition-colors cursor-pointer z-10 ${
-                              channel === 'sms'
-                                ? 'font-black text-brand-text'
-                                : 'font-semibold text-brand-text-muted hover:text-brand-text'
-                            }`}
-                          >
-                            {channel === 'sms' && (
-                              <motion.div
-                                layoutId="resetPassActivePill"
-                                className="absolute inset-0 bg-brand-surface rounded-full border border-brand-border shadow-xs -z-10"
-                                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                              />
-                            )}
-                            <Smartphone className={`w-3.5 h-3.5 shrink-0 ${channel === 'sms' ? 'text-brand-bronze dark:text-brand-gold' : 'opacity-70'}`} />
-                            <span>{isPersian ? 'پیامک همراه' : 'SMS'}</span>
-                          </button>
+                          {/* Channel selection strictly limited to user's registered phone / email */}
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-brand-text">
+                              {isPersian ? 'نحوه دریافت کد تایید:' : 'Receive Code via:'}
+                            </label>
 
-                          {/* Option 2: Email */}
-                          <button
-                            type="button"
-                            onClick={() => setChannel('email')}
-                            className={`relative h-full flex items-center justify-center gap-2 rounded-full text-xs transition-colors cursor-pointer z-10 ${
-                              channel === 'email'
-                                ? 'font-black text-brand-text'
-                                : 'font-semibold text-brand-text-muted hover:text-brand-text'
-                            }`}
-                          >
-                            {channel === 'email' && (
-                              <motion.div
-                                layoutId="resetPassActivePill"
-                                className="absolute inset-0 bg-brand-surface rounded-full border border-brand-border shadow-xs -z-10"
-                                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                              />
-                            )}
-                            <Mail className={`w-3.5 h-3.5 shrink-0 ${channel === 'email' ? 'text-brand-bronze dark:text-brand-gold' : 'opacity-70'}`} />
-                            <span>{isPersian ? 'ارسال به ایمیل' : 'Email'}</span>
-                          </button>
+                            <div className="grid grid-cols-1 gap-2">
+                              {/* SMS option */}
+                              <button
+                                type="button"
+                                disabled={!authUser?.phone}
+                                onClick={() => setChannel('sms')}
+                                className={`w-full p-2.5 rounded-2xl border text-start transition-all cursor-pointer flex items-center justify-between ${
+                                  channel === 'sms'
+                                    ? 'bg-brand-surface border-brand-gold shadow-xs'
+                                    : 'bg-brand-surface-elevated/70 border-brand-border hover:border-brand-border/90'
+                                } ${!authUser?.phone ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                                    channel === 'sms'
+                                      ? 'bg-brand-gold/15 text-brand-bronze dark:text-brand-gold border border-brand-gold/30'
+                                      : 'bg-brand-surface border border-brand-border text-brand-text-muted'
+                                  }`}>
+                                    <Smartphone className="w-3.5 h-3.5" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-bold text-brand-text flex items-center gap-1.5">
+                                      <span>{isPersian ? 'پیامک به شماره موبایل' : 'SMS to Phone'}</span>
+                                      {smsCooldown > 0 && (
+                                        <span className="text-[10px] text-brand-bronze dark:text-brand-gold font-mono font-black">
+                                          (<LiveTimerDisplay seconds={smsCooldown} />)
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-[11px] text-brand-text-muted font-mono truncate" dir="ltr">
+                                      {authUser?.phone ? maskPhone(authUser.phone) : (isPersian ? 'شماره موبایل ثبت نشده است' : 'No phone registered')}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                  channel === 'sms' ? 'border-brand-gold bg-brand-gold text-[#141914]' : 'border-brand-border'
+                                }`}>
+                                  {channel === 'sms' && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                </div>
+                              </button>
+
+                              {/* Email option */}
+                              <button
+                                type="button"
+                                disabled={!authUser?.email}
+                                onClick={() => setChannel('email')}
+                                className={`w-full p-2.5 rounded-2xl border text-start transition-all cursor-pointer flex items-center justify-between ${
+                                  channel === 'email'
+                                    ? 'bg-brand-surface border-brand-gold shadow-xs'
+                                    : 'bg-brand-surface-elevated/70 border-brand-border hover:border-brand-border/90'
+                                } ${!authUser?.email ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                                    channel === 'email'
+                                      ? 'bg-brand-gold/15 text-brand-bronze dark:text-brand-gold border border-brand-gold/30'
+                                      : 'bg-brand-surface border border-brand-border text-brand-text-muted'
+                                  }`}>
+                                    <Mail className="w-3.5 h-3.5" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-bold text-brand-text flex items-center gap-1.5">
+                                      <span>{isPersian ? 'ارسال به آدرس ایمیل' : 'Send to Email'}</span>
+                                      {emailCooldown > 0 && (
+                                        <span className="text-[10px] text-brand-bronze dark:text-brand-gold font-mono font-black">
+                                          (<LiveTimerDisplay seconds={emailCooldown} />)
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-[11px] text-brand-text-muted font-mono truncate" dir="ltr">
+                                      {authUser?.email ? maskEmail(authUser.email) : (isPersian ? 'ایمیل ثبت نشده است' : 'No email registered')}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                  channel === 'email' ? 'border-brand-gold bg-brand-gold text-[#141914]' : 'border-brand-border'
+                                }`}>
+                                  {channel === 'email' && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                </div>
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        /* Guest / Unauthenticated Mode: Requires typing identifier */
+                        <>
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-brand-text flex items-center gap-1.5">
+                              <Smartphone className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                              <span>{isPersian ? 'موبایل، ایمیل یا نام کاربری:' : 'Mobile, Email or Username:'}</span>
+                            </label>
+                            <Input
+                              aria-label={isPersian ? 'موبایل، ایمیل یا نام کاربری' : 'Mobile, Email or Username'}
+                              placeholder={isPersian ? '۰۹۱۲۳۴۵۶۷۸۹ یا info@example.com' : '09123456789 or info@example.com'}
+                              value={identifier}
+                              onValueChange={(val) => {
+                                setIdentifier(val);
+                                if (identifierError) setIdentifierError('');
+                              }}
+                              variant="bordered"
+                              radius="full"
+                              classNames={{
+                                inputWrapper:
+                                  'h-10 px-4 bg-brand-surface-elevated/70 dark:bg-brand-surface-elevated/40 border border-brand-border hover:border-brand-bronze/80 dark:hover:border-brand-gold/80 focus-within:!border-brand-bronze dark:focus-within:!border-brand-gold rounded-full shadow-2xs transition-colors',
+                                input: 'text-xs font-semibold text-brand-text placeholder:text-brand-text-muted/60 text-start',
+                              }}
+                            />
+                            <AnimatedFieldError error={identifierError} />
+                          </div>
 
-                      {/* Live Cooldown Alert (Brand Theme Colors - Elevated Surface & Bronze/Gold) */}
+                          {/* Curved Pill Segmented Channel Control */}
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-brand-text">
+                              {isPersian ? 'نحوه دریافت کد تایید:' : 'Receive Code via:'}
+                            </label>
+                            <div className="grid grid-cols-2 p-1 rounded-full bg-brand-surface-elevated border border-brand-border relative h-9.5">
+                              {/* Option 1: Mobile / SMS */}
+                              <button
+                                type="button"
+                                onClick={() => setChannel('sms')}
+                                className={`relative h-full flex items-center justify-center gap-2 rounded-full text-xs transition-colors cursor-pointer z-10 ${
+                                  channel === 'sms'
+                                    ? 'font-black text-brand-text'
+                                    : 'font-semibold text-brand-text-muted hover:text-brand-text'
+                                }`}
+                              >
+                                {channel === 'sms' && (
+                                  <motion.div
+                                    layoutId="resetPassActivePill"
+                                    className="absolute inset-0 bg-brand-surface rounded-full border border-brand-border shadow-xs -z-10"
+                                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                                  />
+                                )}
+                                <Smartphone className={`w-3.5 h-3.5 shrink-0 ${channel === 'sms' ? 'text-brand-bronze dark:text-brand-gold' : 'opacity-70'}`} />
+                                <span>{isPersian ? 'پیامک همراه' : 'SMS'}</span>
+                              </button>
+
+                              {/* Option 2: Email */}
+                              <button
+                                type="button"
+                                onClick={() => setChannel('email')}
+                                className={`relative h-full flex items-center justify-center gap-2 rounded-full text-xs transition-colors cursor-pointer z-10 ${
+                                  channel === 'email'
+                                    ? 'font-black text-brand-text'
+                                    : 'font-semibold text-brand-text-muted hover:text-brand-text'
+                                }`}
+                              >
+                                {channel === 'email' && (
+                                  <motion.div
+                                    layoutId="resetPassActivePill"
+                                    className="absolute inset-0 bg-brand-surface rounded-full border border-brand-border shadow-xs -z-10"
+                                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                                  />
+                                )}
+                                <Mail className={`w-3.5 h-3.5 shrink-0 ${channel === 'email' ? 'text-brand-bronze dark:text-brand-gold' : 'opacity-70'}`} />
+                                <span>{isPersian ? 'ارسال به ایمیل' : 'Email'}</span>
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Cooldown Alert for current channel */}
                       <AnimatePresence>
-                        {step1Cooldown > 0 && (
+                        {currentStep1Cooldown > 0 && (
                           <motion.div
                             initial={{ opacity: 0, y: -4, height: 0 }}
                             animate={{ opacity: 1, y: 0, height: 'auto' }}
@@ -457,22 +611,24 @@ export function ResetPasswordModal({
                                 <Clock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0 animate-spin" />
                                 <span className="truncate">
                                   {isPersian
-                                    ? 'کد قبلی هنوز معتبر است. زمان تا ارسال مجدد:'
-                                    : 'Code active. Resend in:'}
+                                    ? `کد ${channel === 'sms' ? 'پیامک' : 'ایمیل'} قبلی معتبر است. ارسال مجدد:`
+                                    : `${channel === 'sms' ? 'SMS' : 'Email'} code active. Resend in:`}
                                 </span>
                               </div>
                               <div className="bg-brand-surface px-2 py-0.5 rounded-full text-brand-bronze dark:text-brand-gold border border-brand-border shrink-0 font-black">
-                                <LiveTimerDisplay seconds={step1Cooldown} className="text-xs" />
+                                <LiveTimerDisplay seconds={currentStep1Cooldown} className="text-xs" />
                               </div>
                             </div>
                             <div className="flex items-center justify-between pt-1.5 border-t border-brand-border/60 text-[11px]">
                               <span className="text-brand-text-muted font-medium">
-                                {isPersian ? 'کد ارسالی را در اختیار دارید؟' : 'Have code?'}
+                                {isPersian
+                                  ? `کد ${channel === 'sms' ? 'پیامک' : 'ایمیل'} را دارید؟`
+                                  : 'Have code?'}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setTargetDestination(identifier.trim());
+                                  setActiveChannel(channel);
                                   setDirection(1);
                                   setStep(2);
                                 }}
@@ -491,24 +647,26 @@ export function ResetPasswordModal({
                         <Button
                           type="submit"
                           isLoading={loadingSend}
-                          disabled={step1Cooldown > 0}
+                          disabled={currentStep1Cooldown > 0}
                           radius="full"
                           startContent={!loadingSend && <Send className="w-3.5 h-3.5 shrink-0" />}
                           className={`flex-1 h-10 text-xs font-black transition-all rounded-full shadow-md ${
-                            step1Cooldown > 0
+                            currentStep1Cooldown > 0
                               ? 'bg-brand-surface-elevated text-brand-text-muted/60 border border-brand-border opacity-70 cursor-not-allowed shadow-none'
                               : 'bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-brand-gold/20 cursor-pointer active:scale-98'
                           }`}
                         >
                           {loadingSend ? (
                             isPersian ? 'در حال صدور...' : 'Sending...'
-                          ) : step1Cooldown > 0 ? (
+                          ) : currentStep1Cooldown > 0 ? (
                             <span className="flex items-center gap-1.5 font-bold">
                               <span>{isPersian ? 'ارسال مجدد پس از:' : 'Resend in:'}</span>
-                              <LiveTimerDisplay seconds={step1Cooldown} className="text-xs" />
+                              <LiveTimerDisplay seconds={currentStep1Cooldown} className="text-xs" />
                             </span>
                           ) : (
-                            isPersian ? 'ارسال کد تایید' : 'Send Code'
+                            isPersian
+                              ? `ارسال کد به ${channel === 'sms' ? 'شماره موبایل' : 'ایمیل'}`
+                              : `Send Code via ${channel === 'sms' ? 'SMS' : 'Email'}`
                           )}
                         </Button>
                         <Button
@@ -537,75 +695,160 @@ export function ResetPasswordModal({
                     transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                   >
                     <form onSubmit={handleResetPassword} className="space-y-3">
-                      {/* Destination Info & Timer Strip */}
-                      <div className="flex items-center justify-between px-3.5 py-2 rounded-full bg-brand-surface-elevated border border-brand-border text-xs">
-                        <div className="flex items-center gap-1.5 min-w-0 text-brand-text-muted">
-                          <span className="truncate">
-                            {channel === 'sms'
-                              ? (isPersian ? 'کد ارسالی به:' : 'To:')
-                              : (isPersian ? 'کد برای ایمیل:' : 'To:')}
-                          </span>
-                          <span className="font-mono text-brand-text dir-ltr font-black truncate">
-                            {targetDestination}
-                          </span>
-                        </div>
+                      {/* Channel Switcher in Step 2: Allows switching between SMS and Email verification codes */}
+                      <div className="grid grid-cols-2 p-1 rounded-full bg-brand-surface-elevated border border-brand-border relative h-9">
+                        {/* Tab 1: SMS */}
+                        <button
+                          type="button"
+                          onClick={() => setActiveChannel('sms')}
+                          className={`relative h-full flex items-center justify-center gap-1.5 rounded-full text-xs transition-colors cursor-pointer z-10 ${
+                            activeChannel === 'sms'
+                              ? 'font-black text-brand-text'
+                              : 'font-semibold text-brand-text-muted hover:text-brand-text'
+                          }`}
+                        >
+                          {activeChannel === 'sms' && (
+                            <motion.div
+                              layoutId="step2ChannelPill"
+                              className="absolute inset-0 bg-brand-surface rounded-full border border-brand-border shadow-xs -z-10"
+                              transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                            />
+                          )}
+                          <Smartphone className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                          <span>{isPersian ? 'کد پیامک' : 'SMS Code'}</span>
+                          {smsCooldown > 0 && (
+                            <span className="text-[10px] font-mono text-brand-bronze dark:text-brand-gold">
+                              (<LiveTimerDisplay seconds={smsCooldown} />)
+                            </span>
+                          )}
+                        </button>
 
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <Clock className={`w-3.5 h-3.5 ${countdown > 0 ? 'text-brand-bronze dark:text-brand-gold animate-pulse' : 'text-rose-500'}`} />
-                          <LiveTimerDisplay
-                            seconds={countdown}
-                            className={countdown > 0 ? 'text-brand-bronze dark:text-brand-gold text-xs' : 'text-rose-500 text-xs'}
-                          />
-                        </div>
+                        {/* Tab 2: Email */}
+                        <button
+                          type="button"
+                          onClick={() => setActiveChannel('email')}
+                          className={`relative h-full flex items-center justify-center gap-1.5 rounded-full text-xs transition-colors cursor-pointer z-10 ${
+                            activeChannel === 'email'
+                              ? 'font-black text-brand-text'
+                              : 'font-semibold text-brand-text-muted hover:text-brand-text'
+                          }`}
+                        >
+                          {activeChannel === 'email' && (
+                            <motion.div
+                              layoutId="step2ChannelPill"
+                              className="absolute inset-0 bg-brand-surface rounded-full border border-brand-border shadow-xs -z-10"
+                              transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                            />
+                          )}
+                          <Mail className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                          <span>{isPersian ? 'کد ایمیل' : 'Email Code'}</span>
+                          {emailCooldown > 0 && (
+                            <span className="text-[10px] font-mono text-brand-bronze dark:text-brand-gold">
+                              (<LiveTimerDisplay seconds={emailCooldown} />)
+                            </span>
+                          )}
+                        </button>
                       </div>
 
-                      {/* Dev Code Quick Fill (testing) */}
-                      {devCode && (
-                        <div className="flex items-center justify-between px-3.5 py-1.5 rounded-full bg-brand-surface-elevated border border-brand-border text-xs text-brand-text">
-                          <span className="font-bold">{isPersian ? '🔑 کد تست سیستم:' : '🔑 Dev Code:'}</span>
-                          <button
-                            type="button"
-                            onClick={() => setCode(devCode)}
-                            className="font-mono font-black hover:underline cursor-pointer bg-brand-surface border border-brand-border px-2.5 py-0.5 rounded-full text-brand-bronze dark:text-brand-gold hover:border-brand-gold transition-colors"
-                          >
-                            {devCode} {isPersian ? '(کلیک)' : '(fill)'}
-                          </button>
-                        </div>
-                      )}
+                      {/* Active Channel Destination Info & Live Timer Strip */}
+                      {(() => {
+                        const target = activeChannel === 'sms' ? smsTarget : emailTarget;
+                        const cooldown = activeChannel === 'sms' ? smsCooldown : emailCooldown;
+                        const devCode = activeChannel === 'sms' ? smsDevCode : emailDevCode;
+
+                        return (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between px-3.5 py-1.5 rounded-full bg-brand-surface-elevated border border-brand-border text-xs">
+                              <div className="flex items-center gap-1.5 min-w-0 text-brand-text-muted">
+                                <span className="truncate">
+                                  {activeChannel === 'sms'
+                                    ? (isPersian ? 'کد ارسالی به:' : 'To:')
+                                    : (isPersian ? 'کد ارسالی به ایمیل:' : 'To Email:')}
+                                </span>
+                                <span className="font-mono text-brand-text dir-ltr font-black truncate">
+                                  {target || (isUserLoggedIn ? (activeChannel === 'sms' ? maskPhone(authUser?.phone) : maskEmail(authUser?.email)) : identifier)}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <Clock className={`w-3.5 h-3.5 ${cooldown > 0 ? 'text-brand-bronze dark:text-brand-gold animate-pulse' : 'text-rose-500'}`} />
+                                <LiveTimerDisplay
+                                  seconds={cooldown}
+                                  className={cooldown > 0 ? 'text-brand-bronze dark:text-brand-gold text-xs' : 'text-rose-500 text-xs'}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Dev Code Quick Fill (testing) */}
+                            {devCode && (
+                              <div className="flex items-center justify-between px-3.5 py-1.5 rounded-full bg-brand-surface-elevated border border-brand-border text-xs text-brand-text">
+                                <span className="font-bold">
+                                  {isPersian
+                                    ? `🔑 کد تست (${activeChannel === 'sms' ? 'پیامک' : 'ایمیل'}):`
+                                    : `🔑 Dev Code (${activeChannel}):`}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setCode(devCode)}
+                                  className="font-mono font-black hover:underline cursor-pointer bg-brand-surface border border-brand-border px-2.5 py-0.5 rounded-full text-brand-bronze dark:text-brand-gold hover:border-brand-gold transition-colors"
+                                >
+                                  {devCode} {isPersian ? '(کلیک)' : '(fill)'}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* OTP Code Input */}
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-xs">
                           <label className="font-bold text-brand-text flex items-center gap-1">
                             <Hash className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                            <span>{isPersian ? 'کد ۵ رقمی تایید:' : '5-Digit Code:'}</span>
+                            <span>
+                              {isPersian
+                                ? `کد تایید ${activeChannel === 'sms' ? 'پیامک' : 'ایمیل'}:`
+                                : `5-Digit ${activeChannel === 'sms' ? 'SMS' : 'Email'} Code:`}
+                            </span>
                           </label>
 
-                          {/* Resend button */}
-                          <button
-                            type="button"
-                            disabled={countdown > 0 || loadingSend}
-                            onClick={handleResendCode}
-                            className={`font-bold flex items-center gap-1 transition-colors ${
-                              countdown > 0
-                                ? 'text-brand-text-muted cursor-not-allowed opacity-60'
-                                : 'text-brand-bronze dark:text-brand-gold hover:underline cursor-pointer font-black'
-                            }`}
-                          >
-                            <RotateCcw className={`w-3 h-3 ${loadingSend ? 'animate-spin' : ''}`} />
-                            <span>
-                              {countdown > 0 ? (
-                                <span className="flex items-center gap-1">
-                                  <span>{isPersian ? 'ارسال مجدد پس از:' : 'Resend in:'}</span>
-                                  <LiveTimerDisplay seconds={countdown} className="text-xs" />
+                          {/* Resend / Send button for active channel */}
+                          {(() => {
+                            const cooldown = activeChannel === 'sms' ? smsCooldown : emailCooldown;
+                            const target = activeChannel === 'sms' ? smsTarget : emailTarget;
+                            const isNeverSent = !target && cooldown === 0;
+
+                            return (
+                              <button
+                                type="button"
+                                disabled={cooldown > 0 || loadingSend}
+                                onClick={handleResendActiveChannel}
+                                className={`font-bold flex items-center gap-1 transition-colors ${
+                                  cooldown > 0
+                                    ? 'text-brand-text-muted cursor-not-allowed opacity-60'
+                                    : 'text-brand-bronze dark:text-brand-gold hover:underline cursor-pointer font-black'
+                                }`}
+                              >
+                                <RotateCcw className={`w-3 h-3 ${loadingSend ? 'animate-spin' : ''}`} />
+                                <span>
+                                  {cooldown > 0 ? (
+                                    <span className="flex items-center gap-1">
+                                      <span>{isPersian ? 'ارسال مجدد:' : 'Resend:'}</span>
+                                      <LiveTimerDisplay seconds={cooldown} className="text-xs" />
+                                    </span>
+                                  ) : isNeverSent ? (
+                                    isPersian
+                                      ? `ارسال کد به ${activeChannel === 'sms' ? 'پیامک' : 'ایمیل'}`
+                                      : `Send ${activeChannel === 'sms' ? 'SMS' : 'Email'} Code`
+                                  ) : isPersian ? (
+                                    'ارسال مجدد کد'
+                                  ) : (
+                                    'Resend Code'
+                                  )}
                                 </span>
-                              ) : isPersian ? (
-                                'ارسال مجدد کد'
-                              ) : (
-                                'Resend Code'
-                              )}
-                            </span>
-                          </button>
+                              </button>
+                            );
+                          })()}
                         </div>
 
                         <Input
@@ -714,9 +957,6 @@ export function ResetPasswordModal({
                           onPress={() => {
                             setDirection(-1);
                             setStep(1);
-                            if (countdown > 0) {
-                              setStep1Cooldown(countdown);
-                            }
                           }}
                           className="h-10 px-5 bg-brand-surface-elevated hover:bg-brand-surface border border-brand-border text-brand-text font-bold text-xs rounded-full cursor-pointer transition-colors active:scale-98"
                         >
@@ -749,7 +989,7 @@ export function ResetPasswordModal({
                       </h4>
                       <p className="text-xs text-brand-text-muted leading-relaxed">
                         {isPersian
-                          ? 'رمز عبور جدید حساب شما فعال شد. اکنون می‌توانید وارد شوید.'
+                          ? 'رمز عبور جدید حساب شما فعال شد. اکنون می‌توانید با رمز جدید وارد شوید.'
                           : 'Your password has been updated. You can now log in.'}
                       </p>
                     </div>
