@@ -59,6 +59,14 @@ export function SignUpPage() {
 
   // Step 3: Profile State
   const [loadingRegister, setLoadingRegister] = useState(false);
+  const [registerError, setRegisterError] = useState('');
+  const [profileValues, setProfileValues] = useState({
+    fullName: '',
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -185,6 +193,9 @@ export function SignUpPage() {
     const cleanCode = toEnglishDigits(otpCode.trim()).replace(/\D/g, '');
 
     setLoadingRegister(true);
+    setRegisterError('');
+    setProfileValues(values);
+
     try {
       const res = await axiosInstance.post('/auth/register', {
         phone: cleanPhone,
@@ -211,6 +222,7 @@ export function SignUpPage() {
       router.push(PATHS.HOME);
     } catch (err: any) {
       const message = getApiErrorMessage(err);
+      setRegisterError(message);
       toast.error(message);
     } finally {
       setLoadingRegister(false);
@@ -573,13 +585,7 @@ export function SignUpPage() {
                 transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               >
                 <Formik
-                  initialValues={{
-                    fullName: '',
-                    username: '',
-                    email: '',
-                    password: '',
-                    confirmPassword: '',
-                  }}
+                  initialValues={profileValues}
                   validationSchema={getSignUpSchema(isPersian)}
                   onSubmit={handleFinalRegister}
                   enableReinitialize
@@ -765,6 +771,23 @@ export function SignUpPage() {
                           ? 'نکته: ایمیل، نام کاربری و کلمه عبور را می‌توانید بعداً در پنل پروفایل کاربری خود تکمیل یا ویرایش کنید.'
                           : 'Note: You can complete or edit your username, email, and password later in your profile.'}
                       </p>
+
+                      {registerError && (
+                        <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl flex items-center justify-between text-xs text-rose-500">
+                          <span className="font-semibold">{registerError}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRegisterError('');
+                              setStep('phone');
+                            }}
+                            className="text-brand-gold font-bold hover:underline shrink-0 mr-2 flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>{isPersian ? 'دریافت مجدد کد تایید' : 'Request new code'}</span>
+                            {isRTL ? <ArrowLeft className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      )}
 
                       <Button
                         type="submit"
