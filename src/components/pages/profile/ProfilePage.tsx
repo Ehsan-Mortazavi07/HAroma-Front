@@ -216,8 +216,14 @@ export function ProfilePage() {
       return;
     }
 
-    if (!email.trim()) {
-      toast.error(isPersian ? 'آدرس ایمیل الزامی است.' : 'Email is required.');
+    // Email validation (optional)
+    const trimmedEmail = email.trim().toLowerCase();
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast.error(
+        isPersian
+          ? 'فرمت آدرس ایمیل نامعتبر است.'
+          : 'Invalid email address format.',
+      );
       return;
     }
 
@@ -297,7 +303,7 @@ export function ProfilePage() {
       const payload: any = {
         fullName: fullName.trim(),
         username: username.trim().toLowerCase(),
-        email: email.trim().toLowerCase(),
+        email: trimmedEmail || '',
         phone: normalizedPhone || undefined,
         birthDate: birthDate || null,
         birthDateShamsi: birthDateShamsi || null,
@@ -1468,14 +1474,13 @@ export function ProfilePage() {
                       <div className="flex items-center gap-1.5 h-5">
                         <Mail className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
                         <label className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'آدرس ایمیل (یکتا در سیستم)' : 'Email Address (Unique)'}
+                          {isPersian ? 'آدرس ایمیل (اختیاری)' : 'Email Address (Optional)'}
                         </label>
-                        <span className="text-rose-500 font-bold text-xs">*</span>
                       </div>
                       <Input
                         type="email"
-                        aria-label={isPersian ? 'آدرس ایمیل (یکتا در سیستم)' : 'Email Address (Unique)'}
-                        placeholder="user@example.com"
+                        aria-label={isPersian ? 'آدرس ایمیل (اختیاری)' : 'Email Address (Optional)'}
+                        placeholder={isPersian ? 'user@example.com (اختیاری)' : 'user@example.com (optional)'}
                         value={email}
                         onValueChange={setEmail}
                         variant="bordered"
