@@ -17,7 +17,7 @@ export function ToastContainer() {
     const handleToast = (e: Event) => {
       const customEvent = e as CustomEvent<{ type: 'success' | 'error' | 'info'; message: string }>;
       const newToast: ToastItem = {
-        id: `${Date.now()}_${Math.random()}`,
+        id: `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
         type: customEvent.detail.type || 'info',
         message: customEvent.detail.message,
       };
@@ -26,7 +26,7 @@ export function ToastContainer() {
 
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== newToast.id));
-      }, 4000);
+      }, 4500);
     };
 
     window.addEventListener('app-toast', handleToast);
@@ -34,36 +34,43 @@ export function ToastContainer() {
   }, []);
 
   return (
-    <div className="fixed bottom-6 left-6 z-[9999] flex flex-col gap-2 max-w-sm pointer-events-none">
-      <AnimatePresence>
+    <div className="fixed top-5 right-4 sm:right-8 z-[9999] flex flex-col gap-2.5 max-w-sm w-[calc(100%-2rem)] sm:w-96 pointer-events-none">
+      <AnimatePresence mode="popLayout">
         {toasts.map((toast) => (
           <motion.div
             key={toast.id}
             layout
-            initial={{ opacity: 0, y: 16, scale: 0.94 }}
+            initial={{ opacity: 0, y: -35, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.94 }}
+            exit={{ opacity: 0, y: -25, scale: 0.92 }}
             transition={{
-              duration: 0.36,
-              ease: [0.16, 1, 0.3, 1],
+              type: 'spring',
+              stiffness: 400,
+              damping: 28,
             }}
-            className={`pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-2xl shadow-xl border backdrop-blur-md transform-gpu ${
+            className={`pointer-events-auto flex items-start justify-between gap-3 px-4 py-3.5 rounded-2xl shadow-2xl border backdrop-blur-xl transform-gpu text-right select-none ${
               toast.type === 'success'
-                ? 'bg-emerald-900/90 border-emerald-700 text-white'
+                ? 'bg-[#122418]/95 border-emerald-500/50 text-emerald-50 shadow-emerald-950/50'
                 : toast.type === 'error'
-                ? 'bg-rose-900/90 border-rose-700 text-white'
-                : 'bg-slate-900/90 border-slate-700 text-white'
+                ? 'bg-[#2b1216]/95 border-rose-500/50 text-rose-50 shadow-rose-950/50'
+                : 'bg-[#1b221c]/95 border-brand-gold/50 text-[#f5f1ea] shadow-black/60'
             }`}
           >
-            <div className="flex items-center gap-2.5 text-sm font-medium">
-              {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
-              {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />}
-              {toast.type === 'info' && <Info className="w-5 h-5 text-sky-400 shrink-0" />}
-              <span>{toast.message}</span>
+            <div className="flex items-start gap-2.5 flex-1 min-w-0">
+              <div className="shrink-0 mt-0.5">
+                {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
+                {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-rose-400" />}
+                {toast.type === 'info' && <Info className="w-5 h-5 text-brand-gold" />}
+              </div>
+              <p className="text-xs font-bold leading-relaxed break-words flex-1">
+                {toast.message}
+              </p>
             </div>
             <button
+              type="button"
               onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
-              className="text-white/70 hover:text-white transition-colors"
+              className="text-white/60 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10 shrink-0 cursor-pointer mt-0.5"
+              aria-label="بستن پیام"
             >
               <X className="w-4 h-4" />
             </button>

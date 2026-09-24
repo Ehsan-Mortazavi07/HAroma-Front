@@ -27,6 +27,7 @@ import { PATHS } from '@/common/constants/PATHS';
 import { toast, toPersianDigits, toEnglishDigits, getApiErrorMessage } from '@/common/utils';
 import axiosInstance from '@/common/axiosInstance';
 import { BrandLogo } from '@/components/common/BrandLogo';
+import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import { useTranslation } from '@/common/i18n';
 
 export function SignInPage() {
@@ -238,7 +239,7 @@ export function SignInPage() {
 
   return (
     <div className="w-full flex items-center justify-center py-4 sm:py-6 px-4">
-      <Card className="w-full max-w-md bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-2xl">
+      <Card className="w-full max-w-md bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-2xl transition-all duration-300 ease-out">
         <CardBody className="p-0 space-y-6">
           {/* Header */}
           <div className="text-center space-y-3">
@@ -303,7 +304,8 @@ export function SignInPage() {
                       maxLength={11}
                       value={phone}
                       onChange={(e) => {
-                        setPhone(e.target.value);
+                        const digits = toEnglishDigits(e.target.value).replace(/\D/g, '').slice(0, 11);
+                        setPhone(digits);
                         if (phoneError) setPhoneError('');
                       }}
                       onKeyDown={(e) => {
@@ -323,11 +325,11 @@ export function SignInPage() {
                         input: 'text-xs font-bold text-brand-text tracking-wider',
                       }}
                     />
-                    {phoneError && (
-                      <div className="mt-1.5 space-y-1.5">
+                    <AnimatedFieldError error={phoneError}>
+                      <div className="space-y-1.5">
                         <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                          {phoneError}
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0 animate-pulse" />
+                          <span>{phoneError}</span>
                         </p>
                         {phoneError.includes('ثبت‌نام') && (
                           <Link
@@ -338,7 +340,7 @@ export function SignInPage() {
                           </Link>
                         )}
                       </div>
-                    )}
+                    </AnimatedFieldError>
                     <p className="text-[11px] text-brand-text-muted mt-2 leading-relaxed">
                       {isPersian
                         ? 'کد یکبار مصرف تنها برای شماره‌های ثبت‌نام شده در سایت ارسال خواهد شد.'
@@ -427,10 +429,11 @@ export function SignInPage() {
                       inputMode="numeric"
                       aria-label={isPersian ? 'کد تایید ۵ رقمی' : '5-Digit Verification Code'}
                       placeholder={isPersian ? '۱۲۳۴۵' : '12345'}
-                      maxLength={6}
+                      maxLength={5}
                       value={otpCode}
                       onChange={(e) => {
-                        setOtpCode(e.target.value);
+                        const digits = toEnglishDigits(e.target.value).replace(/\D/g, '').slice(0, 5);
+                        setOtpCode(digits);
                         if (otpCodeError) setOtpCodeError('');
                       }}
                       onKeyDown={(e) => {
@@ -450,12 +453,7 @@ export function SignInPage() {
                         input: 'text-center font-mono font-bold text-brand-text tracking-[0.3em] text-base',
                       }}
                     />
-                    {otpCodeError && (
-                      <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                        {otpCodeError}
-                      </p>
-                    )}
+                    <AnimatedFieldError error={otpCodeError} />
                   </div>
 
                   {/* Countdown Timer & Resend */}
@@ -509,7 +507,7 @@ export function SignInPage() {
               onSubmit={handlePasswordSubmit}
               enableReinitialize
             >
-              {({ values, errors, touched, handleChange, handleBlur }) => (
+              {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => (
                 <Form className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-brand-text mb-1.5">
@@ -521,7 +519,14 @@ export function SignInPage() {
                       aria-label={t.auth.identifier}
                       placeholder={isPersian ? 'نام کاربری، شماره موبایل یا ایمیل' : 'Username, phone or email'}
                       value={values.identifier}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        const val = toEnglishDigits(e.target.value);
+                        if (/^0\d*$/.test(val)) {
+                          setFieldValue('identifier', val.replace(/\D/g, '').slice(0, 11));
+                        } else {
+                          handleChange(e);
+                        }
+                      }}
                       onBlur={handleBlur}
                       variant="bordered"
                       radius="lg"
@@ -534,12 +539,7 @@ export function SignInPage() {
                         input: "text-xs font-semibold text-brand-text",
                       }}
                     />
-                    {errors.identifier && touched.identifier && (
-                      <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                        {String(errors.identifier)}
-                      </p>
-                    )}
+                    <AnimatedFieldError error={touched.identifier && errors.identifier ? String(errors.identifier) : null} />
                   </div>
 
                   <div>
@@ -591,12 +591,7 @@ export function SignInPage() {
                         input: "text-xs font-mono font-semibold text-brand-text",
                       }}
                     />
-                    {errors.password && touched.password && (
-                      <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                        {String(errors.password)}
-                      </p>
-                    )}
+                    <AnimatedFieldError error={touched.password && errors.password ? String(errors.password) : null} />
                   </div>
 
                   <Button

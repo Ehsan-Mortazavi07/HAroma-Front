@@ -526,8 +526,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                       label={isPersian ? 'شماره موبایل' : 'Mobile Phone'}
                       labelPlacement="outside-top"
                       type="tel"
+                      maxLength={11}
                       value={formData.phone}
-                      onValueChange={(val) => setFormData((prev) => ({ ...prev, phone: val }))}
+                      onValueChange={(val) => setFormData((prev) => ({ ...prev, phone: toEnglishDigits(val).replace(/\D/g, '').slice(0, 11) }))}
                       placeholder="09123456789"
                       startContent={<Phone className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                       variant="bordered"
@@ -853,8 +854,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                       <Input
                         label={isPersian ? 'کد پستی (۱۰ رقمی)' : 'Postal Code (10 digits)'}
                         labelPlacement="outside-top"
+                        maxLength={10}
                         value={formData.postalCode}
-                        onValueChange={(val) => setFormData((prev) => ({ ...prev, postalCode: val }))}
+                        onValueChange={(val) => setFormData((prev) => ({ ...prev, postalCode: toEnglishDigits(val).replace(/\D/g, '').slice(0, 10) }))}
                         placeholder="1234567890"
                         startContent={<Hash className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-2" />}
                         variant="bordered"
@@ -926,8 +928,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         label={isPersian ? 'شماره تماس گیرنده' : 'Recipient Phone'}
                         labelPlacement="outside-top"
                         type="tel"
+                        maxLength={11}
                         value={formData.recipientPhone}
-                        onValueChange={(val) => setFormData((prev) => ({ ...prev, recipientPhone: val }))}
+                        onValueChange={(val) => setFormData((prev) => ({ ...prev, recipientPhone: toEnglishDigits(val).replace(/\D/g, '').slice(0, 11) }))}
                         placeholder="09123456789"
                         variant="bordered"
                         radius="lg"

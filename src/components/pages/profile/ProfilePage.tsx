@@ -61,6 +61,7 @@ import { formatToman, toPersianDigits, toEnglishDigits, toast, getApiErrorMessag
 import { isoToJalali } from '@/common/utils/date';
 import { BirthDatePicker } from '@/components/common/BirthDatePicker';
 import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
+import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import { IOrder } from '@/common/interfaces';
 import axiosInstance from '@/common/axiosInstance';
 import { useTranslation } from '@/common/i18n';
@@ -1275,7 +1276,7 @@ export function ProfilePage() {
                         type="tel"
                         maxLength={11}
                         value={recipientPhone}
-                        onValueChange={(val) => setRecipientPhone(toEnglishDigits(val))}
+                        onValueChange={(val) => setRecipientPhone(toEnglishDigits(val).replace(/\D/g, '').slice(0, 11))}
                         variant="bordered"
                         radius="lg"
                         classNames={{
@@ -1298,7 +1299,7 @@ export function ProfilePage() {
                         placeholder="1234567890"
                         maxLength={10}
                         value={postalCode}
-                        onValueChange={(val) => setPostalCode(toEnglishDigits(val))}
+                        onValueChange={(val) => setPostalCode(toEnglishDigits(val).replace(/\D/g, '').slice(0, 10))}
                         variant="bordered"
                         radius="lg"
                         classNames={{
@@ -1500,7 +1501,7 @@ export function ProfilePage() {
                         placeholder="09123456789"
                         maxLength={11}
                         value={phone}
-                        onValueChange={(val) => setPhone(toEnglishDigits(val))}
+                        onValueChange={(val) => setPhone(toEnglishDigits(val).replace(/\D/g, '').slice(0, 11))}
                         variant="bordered"
                         radius="lg"
                         classNames={{
@@ -1956,8 +1957,9 @@ export function ProfilePage() {
                       <Input
                         aria-label={isPersian ? 'کد تایید ۶ رقمی' : '6-Digit Verification Code'}
                         placeholder="123456"
+                        maxLength={6}
                         value={resetCode}
-                        onValueChange={setResetCode}
+                        onValueChange={(val) => setResetCode(toEnglishDigits(val).replace(/\D/g, '').slice(0, 6))}
                         variant="bordered"
                         radius="lg"
                         classNames={{
@@ -2085,7 +2087,8 @@ export function ProfilePage() {
                         maxLength={11}
                         value={verifyPhoneInput}
                         onChange={(e) => {
-                          setVerifyPhoneInput(e.target.value);
+                          const digits = toEnglishDigits(e.target.value).replace(/\D/g, '').slice(0, 11);
+                          setVerifyPhoneInput(digits);
                           if (verifyPhoneError) setVerifyPhoneError('');
                         }}
                         variant="bordered"
@@ -2098,12 +2101,7 @@ export function ProfilePage() {
                           input: "text-xs font-bold text-brand-text tracking-wider",
                         }}
                       />
-                      {verifyPhoneError && (
-                        <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                          {verifyPhoneError}
-                        </p>
-                      )}
+                      <AnimatedFieldError error={verifyPhoneError} />
                     </div>
                   </ModalBody>
                   <ModalFooter className="flex gap-2">
@@ -2192,10 +2190,11 @@ export function ProfilePage() {
                         inputMode="numeric"
                         aria-label={isPersian ? 'کد تایید ۵ رقمی' : '5-Digit Verification Code'}
                         placeholder={isPersian ? '۱۲۳۴۵' : '12345'}
-                        maxLength={6}
+                        maxLength={5}
                         value={verifyOtpCode}
                         onChange={(e) => {
-                          setVerifyOtpCode(e.target.value);
+                          const digits = toEnglishDigits(e.target.value).replace(/\D/g, '').slice(0, 5);
+                          setVerifyOtpCode(digits);
                           if (verifyOtpCodeError) setVerifyOtpCodeError('');
                         }}
                         variant="bordered"
@@ -2208,12 +2207,7 @@ export function ProfilePage() {
                           input: "text-center font-mono font-bold text-brand-text tracking-[0.3em] text-base",
                         }}
                       />
-                      {verifyOtpCodeError && (
-                        <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                          {verifyOtpCodeError}
-                        </p>
-                      )}
+                      <AnimatedFieldError error={verifyOtpCodeError} />
                     </div>
 
                     <div className="flex items-center justify-between text-xs pt-1">

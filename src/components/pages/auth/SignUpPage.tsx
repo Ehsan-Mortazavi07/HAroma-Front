@@ -13,6 +13,7 @@ import { PATHS } from '@/common/constants/PATHS';
 import { toast, toEnglishDigits } from '@/common/utils';
 import axiosInstance from '@/common/axiosInstance';
 import { BrandLogo } from '@/components/common/BrandLogo';
+import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import { useTranslation } from '@/common/i18n';
 
 export function SignUpPage() {
@@ -71,7 +72,7 @@ export function SignUpPage() {
 
   return (
     <div className="w-full flex items-center justify-center py-4 sm:py-6 px-4">
-      <Card className="w-full max-w-md bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-2xl">
+      <Card className="w-full max-w-md bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-2xl transition-all duration-300 ease-out">
         <CardBody className="p-0 space-y-6">
           {/* Header with Brand Logo */}
           <div className="flex flex-col items-center text-center space-y-3">
@@ -99,7 +100,7 @@ export function SignUpPage() {
             onSubmit={handleSubmit}
             enableReinitialize
           >
-            {({ values, errors, touched, handleChange, handleBlur }) => (
+            {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => (
               <Form className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-brand-text mb-1.5">
@@ -124,12 +125,7 @@ export function SignUpPage() {
                       input: "text-xs font-semibold text-brand-text",
                     }}
                   />
-                  {errors.fullName && touched.fullName && (
-                    <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                      {String(errors.fullName)}
-                    </p>
-                  )}
+                  <AnimatedFieldError error={touched.fullName && errors.fullName ? String(errors.fullName) : null} />
                 </div>
 
                 <div>
@@ -155,12 +151,7 @@ export function SignUpPage() {
                       input: "text-xs font-mono text-brand-text",
                     }}
                   />
-                  {errors.username && touched.username && (
-                    <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                      {String(errors.username)}
-                    </p>
-                  )}
+                  <AnimatedFieldError error={touched.username && errors.username ? String(errors.username) : null} />
                 </div>
 
                 <div>
@@ -174,7 +165,10 @@ export function SignUpPage() {
                     placeholder={isPersian ? '۰۹۱۲۳۴۵۶۷۸۹' : '09123456789'}
                     maxLength={11}
                     value={values.phone}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const cleanDigits = toEnglishDigits(e.target.value).replace(/\D/g, '').slice(0, 11);
+                      setFieldValue('phone', cleanDigits);
+                    }}
                     onBlur={handleBlur}
                     variant="bordered"
                     radius="lg"
@@ -187,12 +181,7 @@ export function SignUpPage() {
                       input: "text-xs font-mono text-brand-text",
                     }}
                   />
-                  {errors.phone && touched.phone && (
-                    <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                      {String(errors.phone)}
-                    </p>
-                  )}
+                  <AnimatedFieldError error={touched.phone && errors.phone ? String(errors.phone) : null} />
                 </div>
 
                 <div>
@@ -218,12 +207,7 @@ export function SignUpPage() {
                       input: "text-xs font-mono text-brand-text",
                     }}
                   />
-                  {errors.email && touched.email && (
-                    <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                      {String(errors.email)}
-                    </p>
-                  )}
+                  <AnimatedFieldError error={touched.email && errors.email ? String(errors.email) : null} />
                 </div>
 
                 <div>
@@ -259,12 +243,7 @@ export function SignUpPage() {
                       input: "text-xs font-mono font-semibold text-brand-text",
                     }}
                   />
-                  {errors.password && touched.password && (
-                    <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                      {String(errors.password)}
-                    </p>
-                  )}
+                  <AnimatedFieldError error={touched.password && errors.password ? String(errors.password) : null} />
                 </div>
 
                 <div>
@@ -300,12 +279,7 @@ export function SignUpPage() {
                       input: "text-xs font-mono font-semibold text-brand-text",
                     }}
                   />
-                  {errors.confirmPassword && touched.confirmPassword && (
-                    <p className="text-[11px] font-bold text-rose-500 mt-1.5 flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0" />
-                      {String(errors.confirmPassword)}
-                    </p>
-                  )}
+                  <AnimatedFieldError error={touched.confirmPassword && errors.confirmPassword ? String(errors.confirmPassword) : null} />
                 </div>
 
                 <Button

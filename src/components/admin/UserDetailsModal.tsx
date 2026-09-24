@@ -786,7 +786,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             type="tel"
                             maxLength={11}
                             value={formData.phone}
-                            onValueChange={(val) => setFormData((prev) => ({ ...prev, phone: toEnglishDigits(val) }))}
+                            onValueChange={(val) => setFormData((prev) => ({ ...prev, phone: toEnglishDigits(val).replace(/\D/g, '').slice(0, 11) }))}
                             startContent={<Phone className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                             placeholder="09123456789"
                             variant="bordered"
@@ -1133,7 +1133,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             label={isPersian ? 'کد پستی ۱۰ رقمی' : 'Postal Code'}
                             labelPlacement="outside-top"
                             value={formData.postalCode}
-                            onValueChange={(val) => setFormData((prev) => ({ ...prev, postalCode: toEnglishDigits(val) }))}
+                            onValueChange={(val) => setFormData((prev) => ({ ...prev, postalCode: toEnglishDigits(val).replace(/\D/g, '').slice(0, 10) }))}
                             placeholder="1234567890"
                             maxLength={10}
                             startContent={<Hash className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
@@ -1225,7 +1225,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             maxLength={11}
                             value={formData.recipientPhone}
                             onValueChange={(val) =>
-                              setFormData((prev) => ({ ...prev, recipientPhone: toEnglishDigits(val) }))
+                              setFormData((prev) => ({ ...prev, recipientPhone: toEnglishDigits(val).replace(/\D/g, '').slice(0, 11) }))
                             }
                             placeholder="09123456789"
                             startContent={<Phone className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
