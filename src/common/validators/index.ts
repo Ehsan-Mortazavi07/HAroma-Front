@@ -45,45 +45,34 @@ export const getSignUpSchema = (isPersian = true) =>
     fullName: Yup.string().required(
       isPersian ? 'وارد کردن نام و نام خانوادگی ضروری است.' : 'Full name is required.',
     ),
-    username: Yup.string().required(
-      isPersian ? 'وارد کردن نام کاربری ضروری است.' : 'Username is required.',
-    ),
+    username: Yup.string()
+      .test(
+        'valid-username',
+        isPersian ? 'نام کاربری باید حداقل ۳ کاراکتر باشد.' : 'Username must be at least 3 characters.',
+        (val) => !val || !val.trim() || val.trim().length >= 3,
+      )
+      .optional(),
     email: Yup.string()
       .email(isPersian ? 'فرمت ایمیل نامعتبر است.' : 'Invalid email address format.')
       .optional(),
-    phone: Yup.string()
+    password: Yup.string()
       .test(
-        'valid-phone',
-        isPersian
-          ? 'فرمت شماره موبایل نامعتبر است (شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود).'
-          : 'Invalid phone format (must be 11 digits starting with 09).',
-        function (val) {
-          if (!val || !val.trim()) return true;
-          const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-          const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-          let clean = val.trim();
-          for (let i = 0; i < 10; i++) {
-            clean = clean.replace(new RegExp(persianDigits[i], 'g'), i.toString());
-            clean = clean.replace(new RegExp(arabicDigits[i], 'g'), i.toString());
-          }
-          let normalized = clean.replace(/\D/g, '');
-          if (normalized.startsWith('0098')) normalized = '0' + normalized.slice(4);
-          else if (normalized.startsWith('98') && normalized.length === 12) normalized = '0' + normalized.slice(2);
-          else if (normalized.startsWith('9') && normalized.length === 10) normalized = '0' + normalized;
-
-          return /^09\d{9}$/.test(normalized);
-        },
+        'valid-password',
+        isPersian ? 'رمز عبور باید حداقل ۶ کاراکتر باشد.' : 'Password must be at least 6 characters.',
+        (val) => !val || val.length >= 6,
       )
       .optional(),
-    password: Yup.string()
-      .min(6, isPersian ? 'رمز عبور باید حداقل ۶ کاراکتر باشد.' : 'Password must be at least 6 characters.')
-      .required(isPersian ? 'وارد کردن رمز عبور ضروری است.' : 'Password is required.'),
-    confirmPassword: Yup.string()
-      .oneOf(
-        [Yup.ref('password')],
-        isPersian ? 'تکرار رمز عبور با رمز عبور مطابقت ندارد.' : 'Passwords do not match.',
-      )
-      .required(isPersian ? 'تکرار رمز عبور ضروری است.' : 'Please confirm your password.'),
+    confirmPassword: Yup.string().when('password', {
+      is: (val: string) => Boolean(val && val.length > 0),
+      then: (schema) =>
+        schema
+          .oneOf(
+            [Yup.ref('password')],
+            isPersian ? 'تکرار رمز عبور با رمز عبور مطابقت ندارد.' : 'Passwords do not match.',
+          )
+          .required(isPersian ? 'تکرار رمز عبور الزامی است.' : 'Please confirm your password.'),
+      otherwise: (schema) => schema.optional(),
+    }),
   });
 
 export const getCheckoutSchema = (isPersian = true) =>
