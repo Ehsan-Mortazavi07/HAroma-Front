@@ -25,6 +25,8 @@ import {
   Sparkles,
   ShieldCheck,
   CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedPasswordToggle } from '@/components/common/AnimatedPasswordToggle';
@@ -32,6 +34,35 @@ import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import axiosInstance from '@/common/axiosInstance';
 import { toast, toPersianDigits, toEnglishDigits, getApiErrorMessage } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
+
+/**
+ * LiveTimerDisplay Component
+ * Displays minutes and seconds in stable tabular numbers format with Vazirmatn font
+ * Prevents horizontal jitter and fixes digit alignment
+ */
+export function LiveTimerDisplay({
+  seconds,
+  className = '',
+}: {
+  seconds: number;
+  className?: string;
+}) {
+  const mins = Math.max(0, Math.floor(seconds / 60));
+  const secs = Math.max(0, seconds % 60);
+  const formattedMins = toPersianDigits(mins.toString().padStart(2, '0'));
+  const formattedSecs = toPersianDigits(secs.toString().padStart(2, '0'));
+
+  return (
+    <span
+      className={`inline-flex items-center justify-center gap-0.5 font-sans font-black [font-variant-numeric:tabular-nums] [font-feature-settings:'tnum'] tracking-wider select-none ${className}`}
+      dir="ltr"
+    >
+      <span className="w-4.5 text-center inline-block">{formattedMins}</span>
+      <span className="opacity-70 animate-pulse">:</span>
+      <span className="w-4.5 text-center inline-block">{formattedSecs}</span>
+    </span>
+  );
+}
 
 interface ResetPasswordModalProps {
   isOpen: boolean;
@@ -56,6 +87,7 @@ export function ResetPasswordModal({
   const [identifierError, setIdentifierError] = useState('');
   const [channel, setChannel] = useState<'sms' | 'email'>('sms');
   const [loadingSend, setLoadingSend] = useState(false);
+  const [step1Cooldown, setStep1Cooldown] = useState(0);
 
   // Step 2: Verification Code & Passwords
   const [targetDestination, setTargetDestination] = useState('');
@@ -89,11 +121,12 @@ export function ResetPasswordModal({
       setConfirmPasswordError('');
       setDevCode(null);
       setCountdown(0);
+      setStep1Cooldown(0);
       setIdentifierError('');
     }
   }, [isOpen, initialIdentifier]);
 
-  // Live 2-minute (120s) countdown timer
+  // Live 2-minute (120s) countdown timer in Step 2
   useEffect(() => {
     if (countdown <= 0) return;
     const timer = setInterval(() => {
@@ -108,16 +141,25 @@ export function ResetPasswordModal({
     return () => clearInterval(timer);
   }, [countdown]);
 
-  const formatTimer = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    return isPersian ? toPersianDigits(formatted) : formatted;
-  };
+  // Live Cooldown countdown timer in Step 1 (when user enters phone again before 2 minutes)
+  useEffect(() => {
+    if (step1Cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setStep1Cooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [step1Cooldown]);
 
   // Step 1: Request Password Reset Code
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (step1Cooldown > 0) return;
     setIdentifierError('');
 
     const cleanId = identifier.trim();
@@ -139,7 +181,9 @@ export function ResetPasswordModal({
 
       setTargetDestination(res.data?.target || cleanId);
       setDevCode(res.data?.devCode || null);
-      setCountdown(res.data?.expiresIn || 120);
+      const expiry = res.data?.expiresIn || 120;
+      setCountdown(expiry);
+      setStep1Cooldown(0);
       setStep(2);
 
       toast.success(
@@ -149,6 +193,25 @@ export function ResetPasswordModal({
             : 'Password reset code has been dispatched.'),
       );
     } catch (err: any) {
+      // Extract live retryAfter if rate-limited within 2 minutes
+      const retryAfter = err?.response?.data?.retryAfter;
+      if (typeof retryAfter === 'number' && retryAfter > 0) {
+        setStep1Cooldown(retryAfter);
+        setCountdown(retryAfter);
+        if (err?.response?.data?.devCode) {
+          setDevCode(err.response.data.devCode);
+        }
+      } else {
+        const msg = err?.response?.data?.message;
+        if (typeof msg === 'string') {
+          const match = msg.match(/(\d+)\s*ثانیه/);
+          if (match && match[1]) {
+            const sec = parseInt(match[1], 10);
+            setStep1Cooldown(sec);
+            setCountdown(sec);
+          }
+        }
+      }
       toast.error(getApiErrorMessage(err, isPersian));
     } finally {
       setLoadingSend(false);
@@ -176,6 +239,10 @@ export function ResetPasswordModal({
           (isPersian ? 'کد تایید جدید با موفقیت ارسال شد.' : 'A new code has been sent.'),
       );
     } catch (err: any) {
+      const retryAfter = err?.response?.data?.retryAfter;
+      if (typeof retryAfter === 'number' && retryAfter > 0) {
+        setCountdown(retryAfter);
+      }
       toast.error(getApiErrorMessage(err, isPersian));
     } finally {
       setLoadingSend(false);
@@ -271,7 +338,7 @@ export function ResetPasswordModal({
                   {isPersian ? 'بازیابی و تغییر رمز عبور' : 'Reset Password'}
                 </h3>
                 <p className="text-[11px] text-brand-text-muted font-normal mt-0.5">
-                  {step === 1 && (isPersian ? 'مرحله اول: مشخصات حساب و روش دریافت کد' : 'Step 1: Account & Channel')}
+                  {step === 1 && (isPersian ? 'مرحله اول: مشخصات حساب و کانال دریافت کد' : 'Step 1: Account & Delivery Channel')}
                   {step === 2 && (isPersian ? 'مرحله دوم: اعتبارسنجی کد و تعیین رمز جدید' : 'Step 2: Verification & New Password')}
                   {step === 3 && (isPersian ? 'پایان: تغییر موفقیت‌آمیز رمز عبور' : 'Complete: Password Reset')}
                 </p>
@@ -284,7 +351,7 @@ export function ResetPasswordModal({
                 <ModalBody className="space-y-4">
                   <p className="text-xs text-brand-text-muted leading-relaxed">
                     {isPersian
-                      ? 'شماره موبایل، ایمیل یا نام کاربری خود را وارد کنید و کانال دریافت کد تایید را مشخص فرمایید:'
+                      ? 'شماره موبایل، ایمیل یا نام کاربری خود را وارد کنید و مشخص فرمایید کد به کدام کانال ارسال شود:'
                       : 'Enter your mobile phone, email, or username, and select where you would like to receive the code:'}
                   </p>
 
@@ -314,94 +381,189 @@ export function ResetPasswordModal({
                     <AnimatedFieldError error={identifierError} />
                   </div>
 
-                  {/* Channel Selection */}
+                  {/* Redesigned Channel Selection with Fluid Sliding Animation */}
                   <div className="space-y-2 pt-1">
-                    <label className="text-xs font-bold text-brand-text block">
-                      {isPersian ? 'کد تایید به کجا ارسال شود؟' : 'Where should the code be sent?'}
-                    </label>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      {/* Option SMS */}
-                      <button
-                        type="button"
-                        onClick={() => setChannel('sms')}
-                        className={`p-3.5 rounded-2xl border text-start transition-all cursor-pointer flex flex-col gap-1 relative ${
-                          channel === 'sms'
-                            ? 'bg-brand-gold/10 border-brand-gold shadow-xs'
-                            : 'bg-brand-surface-elevated border-brand-border hover:border-brand-gold/40'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <Smartphone
-                            className={`w-4 h-4 ${
-                              channel === 'sms' ? 'text-brand-gold' : 'text-brand-text-muted'
-                            }`}
-                          />
-                          <div
-                            className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                              channel === 'sms'
-                                ? 'border-brand-gold bg-brand-gold text-[#141914]'
-                                : 'border-brand-border'
-                            }`}
-                          >
-                            {channel === 'sms' && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                          </div>
-                        </div>
-                        <span className="text-xs font-bold text-brand-text mt-1">
-                          {isPersian ? 'پیامک به موبایل' : 'SMS to Phone'}
-                        </span>
-                        <span className="text-[10px] text-brand-text-muted leading-tight">
-                          {isPersian ? 'ارسال سریع کد با SMS' : 'Instant mobile SMS'}
-                        </span>
-                      </button>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-brand-text">
+                        {isPersian ? 'کانال دریافت کد تایید:' : 'Verification Channel:'}
+                      </label>
+                      <span className="text-[11px] font-bold text-brand-gold flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        {channel === 'sms'
+                          ? isPersian
+                            ? 'پیامک تلفن همراه'
+                            : 'Mobile SMS'
+                          : isPersian
+                          ? 'ارسال به ایمیل'
+                          : 'Email'}
+                      </span>
+                    </div>
 
-                      {/* Option Email */}
-                      <button
+                    <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-brand-surface-elevated/70 border border-brand-border relative">
+                      {/* Option 1: Mobile / SMS */}
+                      <motion.button
                         type="button"
-                        onClick={() => setChannel('email')}
-                        className={`p-3.5 rounded-2xl border text-start transition-all cursor-pointer flex flex-col gap-1 relative ${
-                          channel === 'email'
-                            ? 'bg-brand-gold/10 border-brand-gold shadow-xs'
-                            : 'bg-brand-surface-elevated border-brand-border hover:border-brand-gold/40'
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setChannel('sms')}
+                        className={`relative p-3.5 rounded-xl text-start transition-all cursor-pointer flex flex-col gap-2 z-10 ${
+                          channel === 'sms'
+                            ? 'text-brand-text'
+                            : 'text-brand-text-muted hover:text-brand-text'
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <Mail
-                            className={`w-4 h-4 ${
-                              channel === 'email' ? 'text-brand-gold' : 'text-brand-text-muted'
-                            }`}
+                        {channel === 'sms' && (
+                          <motion.div
+                            layoutId="activeChannelHighlight"
+                            className="absolute inset-0 bg-brand-surface rounded-xl border-2 border-brand-gold shadow-md shadow-brand-gold/15 -z-10"
+                            transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                           />
+                        )}
+                        <div className="flex items-center justify-between">
                           <div
-                            className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                              channel === 'email'
-                                ? 'border-brand-gold bg-brand-gold text-[#141914]'
-                                : 'border-brand-border'
+                            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
+                              channel === 'sms'
+                                ? 'bg-brand-gold text-[#141914] shadow-xs scale-105'
+                                : 'bg-brand-surface text-brand-text-muted border border-brand-border'
                             }`}
                           >
-                            {channel === 'email' && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                            <Smartphone className="w-4 h-4" />
+                          </div>
+                          <div
+                            className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                              channel === 'sms'
+                                ? 'bg-brand-gold text-[#141914] scale-100'
+                                : 'border border-brand-border text-transparent scale-90'
+                            }`}
+                          >
+                            <Check className="w-3 h-3 stroke-[3]" />
                           </div>
                         </div>
-                        <span className="text-xs font-bold text-brand-text mt-1">
-                          {isPersian ? 'ارسال به ایمیل' : 'Email Message'}
-                        </span>
-                        <span className="text-[10px] text-brand-text-muted leading-tight">
-                          {isPersian ? 'ثبت و صدور کد در سیستم' : 'Database generated'}
-                        </span>
-                      </button>
+                        <div>
+                          <div className="text-xs font-black leading-snug">
+                            {isPersian ? 'پیامک به شماره همراه' : 'SMS to Phone'}
+                          </div>
+                          <div className="text-[10px] text-brand-text-muted mt-0.5 leading-tight">
+                            {isPersian ? 'ارسال سریع کد با پیامک' : 'Instant mobile SMS'}
+                          </div>
+                        </div>
+                      </motion.button>
+
+                      {/* Option 2: Email */}
+                      <motion.button
+                        type="button"
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setChannel('email')}
+                        className={`relative p-3.5 rounded-xl text-start transition-all cursor-pointer flex flex-col gap-2 z-10 ${
+                          channel === 'email'
+                            ? 'text-brand-text'
+                            : 'text-brand-text-muted hover:text-brand-text'
+                        }`}
+                      >
+                        {channel === 'email' && (
+                          <motion.div
+                            layoutId="activeChannelHighlight"
+                            className="absolute inset-0 bg-brand-surface rounded-xl border-2 border-brand-gold shadow-md shadow-brand-gold/15 -z-10"
+                            transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                          />
+                        )}
+                        <div className="flex items-center justify-between">
+                          <div
+                            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
+                              channel === 'email'
+                                ? 'bg-brand-gold text-[#141914] shadow-xs scale-105'
+                                : 'bg-brand-surface text-brand-text-muted border border-brand-border'
+                            }`}
+                          >
+                            <Mail className="w-4 h-4" />
+                          </div>
+                          <div
+                            className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                              channel === 'email'
+                                ? 'bg-brand-gold text-[#141914] scale-100'
+                                : 'border border-brand-border text-transparent scale-90'
+                            }`}
+                          >
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs font-black leading-snug">
+                            {isPersian ? 'ارسال به آدرس ایمیل' : 'Send to Email'}
+                          </div>
+                          <div className="text-[10px] text-brand-text-muted mt-0.5 leading-tight">
+                            {isPersian ? 'ثبت و صدور در دیتابیس' : 'Save to database'}
+                          </div>
+                        </div>
+                      </motion.button>
                     </div>
                   </div>
+
+                  {/* Live Cooldown Error Alert (If requested again within 2 minutes) */}
+                  <AnimatePresence>
+                    {step1Cooldown > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -6, height: 0 }}
+                        animate={{ opacity: 1, y: 0, height: 'auto' }}
+                        exit={{ opacity: 0, y: -6, height: 0 }}
+                        className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2 text-xs"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-bold min-w-0">
+                            <Clock className="w-4 h-4 text-amber-500 shrink-0 animate-spin" />
+                            <span className="truncate">
+                              {isPersian
+                                ? 'کد قبلی معتبر است. زمان تا امکان ارسال مجدد:'
+                                : 'Previous code active. Cooldown remaining:'}
+                            </span>
+                          </div>
+                          <div className="bg-amber-500/20 px-2.5 py-1 rounded-xl text-amber-800 dark:text-amber-200 shrink-0">
+                            <LiveTimerDisplay seconds={step1Cooldown} className="text-xs" />
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between pt-1 border-t border-amber-500/20 text-[11px]">
+                          <span className="text-brand-text-muted">
+                            {isPersian ? 'کد ارسالی را در اختیار دارید؟' : 'Already have the code?'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetDestination(identifier.trim());
+                              setStep(2);
+                            }}
+                            className="font-black text-brand-gold hover:underline cursor-pointer flex items-center gap-1"
+                          >
+                            <span>{isPersian ? 'ثبت کد و تغییر رمز عبور' : 'Enter Code'}</span>
+                            {isPersian ? <ArrowLeft className="w-3 h-3" /> : <ArrowRight className="w-3 h-3" />}
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </ModalBody>
 
                 <ModalFooter className="flex gap-2.5">
                   <Button
                     type="submit"
                     isLoading={loadingSend}
+                    disabled={step1Cooldown > 0}
                     radius="lg"
                     startContent={!loadingSend && <Send className="w-4 h-4 shrink-0" />}
-                    className="flex-1 h-11 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 rounded-2xl cursor-pointer"
+                    className={`flex-1 h-11 text-xs font-black shadow-md rounded-2xl transition-all ${
+                      step1Cooldown > 0
+                        ? 'bg-brand-surface-elevated text-brand-text-muted border border-brand-border opacity-70 cursor-not-allowed'
+                        : 'bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-brand-gold/20 cursor-pointer'
+                    }`}
                   >
-                    {loadingSend
-                      ? (isPersian ? 'در حال صدور و ارسال...' : 'Sending...')
-                      : (isPersian ? 'ارسال کد تایید' : 'Send Verification Code')}
+                    {loadingSend ? (
+                      isPersian ? 'در حال صدور و ارسال...' : 'Sending...'
+                    ) : step1Cooldown > 0 ? (
+                      <span className="flex items-center gap-1.5">
+                        <span>{isPersian ? 'ارسال مجدد پس از:' : 'Resend in:'}</span>
+                        <LiveTimerDisplay seconds={step1Cooldown} className="text-xs" />
+                      </span>
+                    ) : (
+                      isPersian ? 'ارسال کد تایید' : 'Send Verification Code'
+                    )}
                   </Button>
                   <Button
                     type="button"
@@ -431,7 +593,7 @@ export function ResetPasswordModal({
                       <span className="font-bold text-brand-text dir-ltr">{targetDestination}</span>
                     </div>
 
-                    {/* Live 2-Minute Timer Pill */}
+                    {/* Live 2-Minute Timer Pill with Stable Tabular Font */}
                     <div className="flex items-center justify-between pt-1 border-t border-brand-border/60">
                       <div className="flex items-center gap-1.5">
                         <Clock
@@ -448,10 +610,10 @@ export function ResetPasswordModal({
                         <Chip
                           size="sm"
                           classNames={{
-                            base: 'bg-brand-gold/15 text-brand-gold border border-brand-gold/30 font-black text-xs px-2 h-6 rounded-lg dir-ltr',
+                            base: 'bg-brand-gold/15 text-brand-gold border border-brand-gold/30 font-black text-xs px-2.5 h-6 rounded-lg',
                           }}
                         >
-                          {formatTimer(countdown)}
+                          <LiveTimerDisplay seconds={countdown} className="text-xs text-brand-gold" />
                         </Chip>
                       ) : (
                         <Chip
@@ -504,13 +666,16 @@ export function ResetPasswordModal({
                       >
                         <RotateCcw className={`w-3 h-3 ${loadingSend ? 'animate-spin' : ''}`} />
                         <span>
-                          {countdown > 0
-                            ? isPersian
-                              ? `ارسال مجدد (${formatTimer(countdown)})`
-                              : `Resend in (${formatTimer(countdown)})`
-                            : isPersian
-                            ? 'درخواست مجدد کد'
-                            : 'Resend Code'}
+                          {countdown > 0 ? (
+                            <span className="flex items-center gap-1">
+                              <span>{isPersian ? 'ارسال مجدد پس از:' : 'Resend in:'}</span>
+                              <LiveTimerDisplay seconds={countdown} className="text-[11px]" />
+                            </span>
+                          ) : isPersian ? (
+                            'درخواست مجدد کد'
+                          ) : (
+                            'Resend Code'
+                          )}
                         </span>
                       </button>
                     </div>
@@ -620,7 +785,12 @@ export function ResetPasswordModal({
                     type="button"
                     variant="flat"
                     radius="lg"
-                    onPress={() => setStep(1)}
+                    onPress={() => {
+                      setStep(1);
+                      if (countdown > 0) {
+                        setStep1Cooldown(countdown);
+                      }
+                    }}
                     className="h-11 px-5 bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-2xl cursor-pointer"
                   >
                     {isPersian ? 'مرحله قبل' : 'Back'}
