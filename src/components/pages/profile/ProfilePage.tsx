@@ -68,6 +68,7 @@ import { BirthDatePicker } from '@/components/common/BirthDatePicker';
 import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import { AnimatedPasswordToggle } from '@/components/common/AnimatedPasswordToggle';
+import { ResetPasswordModal } from '@/components/common/ResetPasswordModal';
 import { IOrder } from '@/common/interfaces';
 import axiosInstance from '@/common/axiosInstance';
 import { useTranslation } from '@/common/i18n';
@@ -150,13 +151,6 @@ export function ProfilePage() {
 
   // Reset Password Modal State
   const [resetModalOpen, setResetModalOpen] = useState(false);
-  const [resetStep, setResetStep] = useState<1 | 2>(1);
-  const [resetIdentifier, setResetIdentifier] = useState(user?.email || '');
-  const [resetCode, setResetCode] = useState('');
-  const [resetNewPassword, setResetNewPassword] = useState('');
-  const [showResetNewPassword, setShowResetNewPassword] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
-  const [maskedEmail, setMaskedEmail] = useState('');
 
   // Phone Verification Modal State
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
@@ -210,7 +204,6 @@ export function ProfilePage() {
       setRecipientPhone(user.recipientPhone || user.phone || '');
       setRecipientEmail(user.recipientEmail || user.email || '');
       setAddressNotes(user.addressNotes || '');
-      setResetIdentifier(user.email || user.username || '');
     }
   }, [user]);
 
@@ -430,65 +423,7 @@ export function ProfilePage() {
     }
   };
 
-  const handleSendResetCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!resetIdentifier.trim()) {
-      toast.error(isPersian ? 'لطفاً ایمیل یا نام کاربری را وارد کنید.' : 'Please enter your email or username.');
-      return;
-    }
 
-    setResetLoading(true);
-    try {
-      const res = await axiosInstance.post('/auth/forgot-password', {
-        identifier: resetIdentifier.trim(),
-      });
-      setMaskedEmail(res.data?.email || resetIdentifier);
-      setResetStep(2);
-      toast.success(
-        isPersian
-          ? res.data?.message || 'کد تایید با موفقیت ارسال شد.'
-          : 'Verification code sent to your email.',
-      );
-    } catch (err: any) {
-      toast.error(getApiErrorMessage(err, isPersian));
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
-  const handleConfirmReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!resetCode.trim()) {
-      toast.error(isPersian ? 'کد تایید الزامی است.' : 'Verification code is required.');
-      return;
-    }
-    if (resetNewPassword.length < 6) {
-      toast.error(isPersian ? 'رمز عبور جدید باید حداقل ۶ کاراکتر باشد.' : 'Password must be at least 6 characters.');
-      return;
-    }
-
-    setResetLoading(true);
-    try {
-      await axiosInstance.post('/auth/reset-password', {
-        identifier: resetIdentifier.trim(),
-        code: resetCode.trim(),
-        newPassword: resetNewPassword,
-      });
-      toast.success(
-        isPersian
-          ? 'رمز عبور جدید با موفقیت فعال شد. لطفاً از رمز جدید برای ورود استفاده نمایید.'
-          : 'Password reset successfully. You can now use your new password.',
-      );
-      setResetModalOpen(false);
-      setResetStep(1);
-      setResetCode('');
-      setResetNewPassword('');
-    } catch (err: any) {
-      toast.error(getApiErrorMessage(err, isPersian));
-    } finally {
-      setResetLoading(false);
-    }
-  };
 
   const handleOpenPhoneVerification = (targetPhone?: string) => {
     const defaultNumber = targetPhone || phone || user?.phone || '';
@@ -1750,10 +1685,7 @@ export function ProfilePage() {
                             type="button"
                             variant="light"
                             size="sm"
-                            onPress={() => {
-                              setResetModalOpen(true);
-                              setResetStep(1);
-                            }}
+                            onPress={() => setResetModalOpen(true)}
                             startContent={<HelpCircle className="w-3.5 h-3.5 text-brand-gold shrink-0" />}
                             className="text-xs font-bold text-brand-gold hover:underline p-0 h-auto cursor-pointer"
                           >
@@ -2022,10 +1954,7 @@ export function ProfilePage() {
                           variant="light"
                           size="sm"
                           radius="lg"
-                          onPress={() => {
-                            setResetModalOpen(true);
-                            setResetStep(1);
-                          }}
+                          onPress={() => setResetModalOpen(true)}
                           startContent={<HelpCircle className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />}
                           className="text-xs font-bold text-brand-bronze dark:text-brand-gold hover:underline p-0 h-auto cursor-pointer"
                         >
@@ -2288,171 +2217,12 @@ export function ProfilePage() {
         </div>
       </div>
 
-      {/* Forgot / Reset Password HeroUI Modal */}
-      <Modal
+      {/* Forgot / Reset Password Modal */}
+      <ResetPasswordModal
         isOpen={resetModalOpen}
-        onOpenChange={setResetModalOpen}
-        backdrop="blur"
-        placement="center"
-        classNames={{
-          base: "bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl max-w-md mx-4",
-          header: "border-b border-brand-border pb-3",
-          body: "py-5",
-          footer: "border-t border-brand-border pt-3",
-          closeButton: "hover:bg-brand-surface-elevated text-brand-text-muted rounded-xl cursor-pointer",
-        }}
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-brand-surface-elevated flex items-center justify-center text-brand-gold border border-brand-border shrink-0">
-                  <KeyRound className="w-4 h-4" />
-                </div>
-                <h3 className="font-black text-base text-brand-text">
-                  {isPersian ? 'بازنشانی رمز عبور' : 'Reset Password'}
-                </h3>
-              </ModalHeader>
-
-              {resetStep === 1 ? (
-                <form onSubmit={handleSendResetCode}>
-                  <ModalBody className="space-y-4">
-                    <p className="text-xs text-brand-text-muted leading-relaxed">
-                      {isPersian
-                        ? 'جهت بازیابی رمز عبور، ایمیل یا نام کاربری حساب خود را وارد کنید تا کد تایید برای شما ارسال شود:'
-                        : 'Enter your account email or username to receive a 6-digit password reset code:'}
-                    </p>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <Mail className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'ایمیل یا نام کاربری' : 'Email or Username'}
-                        </label>
-                      </div>
-                      <Input
-                        aria-label={isPersian ? 'ایمیل یا نام کاربری' : 'Email or Username'}
-                        placeholder="user@example.com / username"
-                        value={resetIdentifier}
-                        onValueChange={setResetIdentifier}
-                        variant="bordered"
-                        radius="lg"
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-semibold text-brand-text text-start",
-                        }}
-                      />
-                    </div>
-                  </ModalBody>
-
-                  <ModalFooter className="flex gap-2.5">
-                    <Button
-                      type="submit"
-                      isLoading={resetLoading}
-                      radius="lg"
-                      startContent={!resetLoading && <Send className="w-4 h-4 shrink-0" />}
-                      className="flex-1 h-11 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 rounded-2xl cursor-pointer"
-                    >
-                      {resetLoading ? (isPersian ? 'در حال ارسال...' : 'Sending...') : (isPersian ? 'ارسال کد تایید' : 'Send Code')}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="flat"
-                      radius="lg"
-                      onPress={onClose}
-                      className="h-11 px-5 bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-2xl cursor-pointer"
-                    >
-                      {isPersian ? 'انصراف' : 'Cancel'}
-                    </Button>
-                  </ModalFooter>
-                </form>
-              ) : (
-                <form onSubmit={handleConfirmReset}>
-                  <ModalBody className="space-y-4">
-                    <p className="text-xs text-brand-text-muted leading-relaxed">
-                      {isPersian
-                        ? `کد تایید ۶ رقمی به آدرس ${maskedEmail} ارسال شد. لطفاً کد را وارد کرده و رمز جدید خود را تعیین کنید:`
-                        : `A 6-digit code was sent to ${maskedEmail}. Please enter the code and set your new password:`}
-                    </p>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <Hash className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'کد تایید ۶ رقمی' : '6-Digit Verification Code'}
-                        </label>
-                      </div>
-                      <Input
-                        aria-label={isPersian ? 'کد تایید ۶ رقمی' : '6-Digit Verification Code'}
-                        placeholder="123456"
-                        maxLength={6}
-                        value={resetCode}
-                        onValueChange={(val) => setResetCode(toEnglishDigits(val).replace(/\D/g, '').slice(0, 6))}
-                        variant="bordered"
-                        radius="lg"
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-center tracking-widest text-sm font-black text-brand-text",
-                        }}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <Lock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text">
-                          {isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر)' : 'New Password (min 6 chars)'}
-                        </label>
-                      </div>
-                      <Input
-                        type={showResetNewPassword ? 'text' : 'password'}
-                        aria-label={isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر)' : 'New Password (min 6 chars)'}
-                        placeholder={isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر)' : 'New password (min 6 chars)'}
-                        value={resetNewPassword}
-                        onValueChange={setResetNewPassword}
-                        variant="bordered"
-                        radius="lg"
-                        endContent={
-                          <AnimatedPasswordToggle
-                            isVisible={showResetNewPassword}
-                            onToggle={() => setShowResetNewPassword((prev) => !prev)}
-                            ariaLabel={isPersian ? 'تغییر نمایش رمز عبور جدید' : 'Toggle new password visibility'}
-                          />
-                        }
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-semibold text-brand-text",
-                        }}
-                      />
-                    </div>
-                  </ModalBody>
-
-                  <ModalFooter className="flex gap-2.5">
-                    <Button
-                      type="submit"
-                      isLoading={resetLoading}
-                      radius="lg"
-                      startContent={!resetLoading && <Check className="w-4 h-4 shrink-0" />}
-                      className="flex-1 h-11 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 rounded-2xl cursor-pointer"
-                    >
-                      {resetLoading ? (isPersian ? 'در حال تایید...' : 'Verifying...') : (isPersian ? 'تغییر و ثبت رمز جدید' : 'Set New Password')}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="flat"
-                      radius="lg"
-                      onPress={() => setResetStep(1)}
-                      className="h-11 px-5 bg-brand-surface-elevated border border-brand-border text-brand-text font-bold text-xs rounded-2xl cursor-pointer"
-                    >
-                      {isPersian ? 'مرحله قبل' : 'Back'}
-                    </Button>
-                  </ModalFooter>
-                </form>
-              )}
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+        onClose={() => setResetModalOpen(false)}
+        initialIdentifier={user?.phone || user?.email || user?.username || ''}
+      />
 
       {/* Phone Verification Modal */}
       <Modal

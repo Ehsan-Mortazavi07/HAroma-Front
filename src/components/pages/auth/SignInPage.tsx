@@ -29,6 +29,7 @@ import axiosInstance from '@/common/axiosInstance';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import { AnimatedPasswordToggle } from '@/components/common/AnimatedPasswordToggle';
+import { ResetPasswordModal } from '@/components/common/ResetPasswordModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/common/i18n';
 
@@ -41,6 +42,9 @@ export function SignInPage() {
 
   // Active Login Method: 'otp' | 'password'
   const [authMethod, setAuthMethod] = useState<'otp' | 'password'>('otp');
+
+  // Reset Password Modal State
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
 
   // Password Login State
   const [loadingPassword, setLoadingPassword] = useState(false);
@@ -625,20 +629,16 @@ export function SignInPage() {
                           <label className="text-xs font-bold text-brand-text">
                             {t.auth.password}
                           </label>
-                          <Link
-                            href="#"
+                          <button
+                            type="button"
                             onClick={(e) => {
                               e.preventDefault();
-                              toast.info(
-                                isPersian
-                                  ? 'جهت بازیابی رمز با شماره پشتیبانی تماس حاصل فرمایید.'
-                                  : 'Please contact support for password recovery.',
-                              );
+                              setIsResetPasswordOpen(true);
                             }}
-                            className="text-[11px] text-brand-bronze dark:text-brand-gold hover:underline"
+                            className="text-[11px] text-brand-bronze dark:text-brand-gold hover:underline cursor-pointer bg-transparent border-0 p-0"
                           >
                             {t.auth.forgotPassword}
-                          </Link>
+                          </button>
                         </div>
                         <Input
                           name="password"
@@ -701,6 +701,12 @@ export function SignInPage() {
           </div>
         </CardBody>
       </Card>
+
+      <ResetPasswordModal
+        isOpen={isResetPasswordOpen}
+        onClose={() => setIsResetPasswordOpen(false)}
+        initialIdentifier={phone || ''}
+      />
     </div>
   );
 }
