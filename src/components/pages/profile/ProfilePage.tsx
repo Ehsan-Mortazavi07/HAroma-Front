@@ -55,7 +55,7 @@ import {
   Skeleton,
 } from '@heroui/react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
-import { logout, updateUser } from '@/stores/auth/authSlice';
+import { logout, updateUser, fetchProfile } from '@/stores/auth/authSlice';
 import { PATHS } from '@/common/constants/PATHS';
 import { formatToman, toPersianDigits, toEnglishDigits, toast, getApiErrorMessage } from '@/common/utils';
 import { isoToJalali } from '@/common/utils/date';
@@ -187,6 +187,8 @@ export function ProfilePage() {
       return;
     }
 
+    dispatch(fetchProfile());
+
     const fetchOrders = async () => {
       try {
         const res = await axiosInstance.get('/orders/my');
@@ -271,12 +273,14 @@ export function ProfilePage() {
       return;
     }
 
+    const hasExistingPassword = user?.hasPassword ?? false;
+
     if (newPassword) {
-      if (!currentPassword) {
+      if (hasExistingPassword && !currentPassword) {
         toast.error(
           isPersian
             ? 'برای تغییر رمز عبور، وارد کردن کلمه عبور فعلی الزامی است.'
-            : 'Current password is required to set a new password.',
+            : 'Current password is required to change password.',
         );
         return;
       }
@@ -319,7 +323,9 @@ export function ProfilePage() {
       };
 
       if (newPassword) {
-        payload.currentPassword = currentPassword;
+        if (hasExistingPassword && currentPassword) {
+          payload.currentPassword = currentPassword;
+        }
         payload.password = newPassword;
       }
 
@@ -1562,88 +1568,104 @@ export function ProfilePage() {
                       </div>
                       <div>
                         <h3 className="text-base font-black text-brand-text">
-                          {isPersian ? 'تغییر رمز عبور' : 'Change Password'}
+                          {user?.hasPassword
+                            ? (isPersian ? 'تغییر رمز عبور' : 'Change Password')
+                            : (isPersian ? 'تعیین کلمه عبور' : 'Set Password')}
                         </h3>
                         <p className="text-xs text-brand-text-muted mt-0.5">
-                          {isPersian
-                            ? 'جهت تغییر رمز عبور، حتماً باید کلمه عبور فعلی را وارد نمایید'
-                            : 'You must provide your current password to set a new one'}
+                          {user?.hasPassword
+                            ? (isPersian
+                                ? 'جهت تغییر رمز عبور، حتماً باید کلمه عبور فعلی را وارد نمایید'
+                                : 'You must provide your current password to set a new one')
+                            : (isPersian
+                                ? 'برای حساب کاربری خود کلمه عبور تعیین کنید تا بتوانید با رمز عبور نیز وارد شوید'
+                                : 'Set a password for your account to enable password login')}
                         </p>
                       </div>
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="light"
-                      size="sm"
-                      radius="lg"
-                      onPress={() => {
-                        setResetModalOpen(true);
-                        setResetStep(1);
-                      }}
-                      startContent={<HelpCircle className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />}
-                      className="text-xs font-bold text-brand-bronze dark:text-brand-gold hover:underline p-0 h-auto cursor-pointer"
-                    >
-                      {isPersian ? 'رمز فعلی را فراموش کرده‌اید؟' : 'Forgot current password?'}
-                    </Button>
+                    {user?.hasPassword && (
+                      <Button
+                        type="button"
+                        variant="light"
+                        size="sm"
+                        radius="lg"
+                        onPress={() => {
+                          setResetModalOpen(true);
+                          setResetStep(1);
+                        }}
+                        startContent={<HelpCircle className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />}
+                        className="text-xs font-bold text-brand-bronze dark:text-brand-gold hover:underline p-0 h-auto cursor-pointer"
+                      >
+                        {isPersian ? 'رمز فعلی را فراموش کرده‌اید؟' : 'Forgot current password?'}
+                      </Button>
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                    {/* Current Password */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 h-5">
-                        <Lock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                        <label className="text-xs font-bold text-brand-text truncate">
-                          {isPersian ? 'کلمه عبور فعلی' : 'Current Password'}
-                        </label>
+                  <div className={`grid grid-cols-1 ${user?.hasPassword ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-5`}>
+                    {/* Current Password - Only displayed if user has an existing password */}
+                    {user?.hasPassword && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5 h-5">
+                          <Lock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                          <label className="text-xs font-bold text-brand-text truncate">
+                            {isPersian ? 'کلمه عبور فعلی' : 'Current Password'}
+                          </label>
+                        </div>
+                        <Input
+                          key={`curr-pwd-${showCurrentPassword ? 'text' : 'password'}`}
+                          type={showCurrentPassword ? 'text' : 'password'}
+                          aria-label={isPersian ? 'کلمه عبور فعلی' : 'Current Password'}
+                          placeholder={isPersian ? 'رمز عبور فعلی حساب' : 'Current password'}
+                          value={currentPassword}
+                          onValueChange={setCurrentPassword}
+                          variant="bordered"
+                          radius="lg"
+                          endContent={
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowCurrentPassword((prev) => !prev);
+                              }}
+                              className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
+                              aria-label="Toggle password visibility"
+                            >
+                              {showCurrentPassword ? (
+                                <EyeOff className="w-4 h-4 pointer-events-none" />
+                              ) : (
+                                <Eye className="w-4 h-4 pointer-events-none" />
+                              )}
+                            </button>
+                          }
+                          classNames={{
+                            inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                            input: "text-xs font-semibold text-brand-text",
+                          }}
+                        />
                       </div>
-                      <Input
-                        key={`curr-pwd-${showCurrentPassword ? 'text' : 'password'}`}
-                        type={showCurrentPassword ? 'text' : 'password'}
-                        aria-label={isPersian ? 'کلمه عبور فعلی' : 'Current Password'}
-                        placeholder={isPersian ? 'رمز عبور فعلی حساب' : 'Current password'}
-                        value={currentPassword}
-                        onValueChange={setCurrentPassword}
-                        variant="bordered"
-                        radius="lg"
-                        endContent={
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setShowCurrentPassword((prev) => !prev);
-                            }}
-                            className="text-brand-text-muted hover:text-brand-gold focus:outline-none cursor-pointer p-1 relative z-10"
-                            aria-label="Toggle password visibility"
-                          >
-                            {showCurrentPassword ? (
-                              <EyeOff className="w-4 h-4 pointer-events-none" />
-                            ) : (
-                              <Eye className="w-4 h-4 pointer-events-none" />
-                            )}
-                          </button>
-                        }
-                        classNames={{
-                          inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-semibold text-brand-text",
-                        }}
-                      />
-                    </div>
+                    )}
 
                     {/* New Password */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-1.5 h-5">
                         <Lock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
                         <label className="text-xs font-bold text-brand-text truncate">
-                          {isPersian ? 'کلمه عبور جدید' : 'New Password'}
+                          {user?.hasPassword
+                            ? (isPersian ? 'کلمه عبور جدید' : 'New Password')
+                            : (isPersian ? 'کلمه عبور' : 'Password')}
                         </label>
                       </div>
                       <Input
                         key={`new-pwd-${showNewPassword ? 'text' : 'password'}`}
                         type={showNewPassword ? 'text' : 'password'}
-                        aria-label={isPersian ? 'کلمه عبور جدید' : 'New Password'}
-                        placeholder={isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر)' : 'New password (min 6 chars)'}
+                        aria-label={user?.hasPassword ? (isPersian ? 'کلمه عبور جدید' : 'New Password') : (isPersian ? 'کلمه عبور' : 'Password')}
+                        placeholder={
+                          user?.hasPassword
+                            ? (isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر)' : 'New password (min 6 chars)')
+                            : (isPersian ? 'رمز عبور (حداقل ۶ کاراکتر)' : 'Password (min 6 chars)')
+                        }
                         value={newPassword}
                         onValueChange={setNewPassword}
                         variant="bordered"
@@ -1678,14 +1700,16 @@ export function ProfilePage() {
                       <div className="flex items-center gap-1.5 h-5">
                         <Lock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
                         <label className="text-xs font-bold text-brand-text truncate">
-                          {isPersian ? 'تکرار کلمه عبور جدید' : 'Confirm New Password'}
+                          {user?.hasPassword
+                            ? (isPersian ? 'تکرار کلمه عبور جدید' : 'Confirm New Password')
+                            : (isPersian ? 'تکرار کلمه عبور' : 'Confirm Password')}
                         </label>
                       </div>
                       <Input
                         key={`conf-pwd-${showConfirmPassword ? 'text' : 'password'}`}
                         type={showConfirmPassword ? 'text' : 'password'}
-                        aria-label={isPersian ? 'تکرار کلمه عبور جدید' : 'Confirm New Password'}
-                        placeholder={isPersian ? 'تکرار رمز عبور جدید' : 'Confirm new password'}
+                        aria-label={user?.hasPassword ? (isPersian ? 'تکرار کلمه عبور جدید' : 'Confirm New Password') : (isPersian ? 'تکرار کلمه عبور' : 'Confirm Password')}
+                        placeholder={isPersian ? 'تکرار رمز عبور' : 'Confirm password'}
                         value={confirmPassword}
                         onValueChange={setConfirmPassword}
                         variant="bordered"

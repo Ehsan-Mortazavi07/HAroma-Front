@@ -8,6 +8,7 @@ export interface IUser {
   isEmailVerified?: boolean;
   phone?: string;
   isPhoneVerified?: boolean;
+  hasPassword?: boolean;
   role: UserRole;
   isVip: boolean;
   vipExpiresAt?: string | null;
