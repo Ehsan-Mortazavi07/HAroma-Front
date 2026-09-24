@@ -1,5 +1,23 @@
 export type UserRole = 'admin' | 'editor' | 'user';
 
+export interface IUserAddress {
+  _id: string;
+  title?: string;
+  province: string;
+  city: string;
+  address: string;
+  postalCode?: string;
+  buildingNumber?: string;
+  unit?: string;
+  recipientName?: string;
+  recipientPhone?: string;
+  recipientEmail?: string;
+  addressNotes?: string;
+  isDefault: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface IUser {
   _id: string;
   fullName: string;
@@ -25,6 +43,7 @@ export interface IUser {
   recipientPhone?: string;
   recipientEmail?: string;
   addressNotes?: string;
+  addresses?: IUserAddress[];
   createdAt?: string;
 }
 

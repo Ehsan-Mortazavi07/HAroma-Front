@@ -24,8 +24,23 @@ import {
   Hash,
   FileText,
   Sparkles,
+  Plus,
+  Check,
 } from 'lucide-react';
-import { Card, CardBody, Button, Input, Textarea, Chip } from '@heroui/react';
+import {
+  Card,
+  CardBody,
+  Button,
+  Input,
+  Textarea,
+  Chip,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Skeleton,
+} from '@heroui/react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { clearCart } from '@/stores/cart/cartSlice';
 import { updateUser } from '@/stores/auth/authSlice';
@@ -34,6 +49,8 @@ import { formatToman, toPersianDigits, toEnglishDigits, getLocalizedVariantTitle
 import axiosInstance from '@/common/axiosInstance';
 import { useTranslation } from '@/common/i18n';
 import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
+import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
+import { IUserAddress } from '@/common/interfaces';
 
 export function CheckoutPage() {
   const router = useRouter();
@@ -62,9 +79,63 @@ export function CheckoutPage() {
     addressDetail: false,
   });
 
-  // Sync address when user profile loads/changes
+  // Saved Addresses State
+  const [addresses, setAddresses] = useState<IUserAddress[]>(user?.addresses || []);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [isNewAddressModalOpen, setIsNewAddressModalOpen] = useState(false);
+  const [newAddressForm, setNewAddressForm] = useState({
+    title: '',
+    province: 'تهران',
+    city: 'تهران',
+    address: '',
+    postalCode: '',
+    buildingNumber: '',
+    unit: '',
+    recipientName: '',
+    recipientPhone: '',
+    recipientEmail: '',
+    addressNotes: '',
+    isDefault: false,
+  });
+  const [newAddressErrors, setNewAddressErrors] = useState<Record<string, string>>({});
+  const [savingNewAddress, setSavingNewAddress] = useState(false);
+
+  const applyAddressToDelivery = (addr: IUserAddress) => {
+    setDeliveryAddress({
+      fullName: addr.recipientName || user?.fullName || '',
+      phone: addr.recipientPhone || user?.phone || '',
+      email: addr.recipientEmail || user?.email || '',
+      province: addr.province || 'تهران',
+      city: addr.city || 'تهران',
+      postalCode: addr.postalCode || '',
+      addressDetail: addr.address || '',
+      description: addr.addressNotes || '',
+    });
+  };
+
+  const fetchCheckoutAddresses = async () => {
+    try {
+      setLoadingAddresses(true);
+      const res = await axiosInstance.get('/users/addresses');
+      const list: IUserAddress[] = res.data || [];
+      setAddresses(list);
+      if (list.length > 0) {
+        const defaultAddr = list.find((a) => a.isDefault) || list[0];
+        setSelectedAddressId(defaultAddr._id);
+        applyAddressToDelivery(defaultAddr);
+      }
+    } catch (err) {
+      console.error('Failed to load user addresses in checkout', err);
+    } finally {
+      setLoadingAddresses(false);
+    }
+  };
+
   React.useEffect(() => {
-    if (user) {
+    if (isAuthenticated) {
+      fetchCheckoutAddresses();
+    } else if (user) {
       setDeliveryAddress((prev) => ({
         ...prev,
         fullName: user.recipientName || user.fullName || prev.fullName,
@@ -77,7 +148,117 @@ export function CheckoutPage() {
         description: user.addressNotes || prev.description,
       }));
     }
-  }, [user]);
+  }, [isAuthenticated, user]);
+
+  const handleSelectAddress = (addr: IUserAddress) => {
+    setSelectedAddressId(addr._id);
+    applyAddressToDelivery(addr);
+    setIsEditingAddress(false);
+    toast.success(
+      isPersian
+        ? `نشانی تحویل به «${addr.title || addr.city}» تغییر یافت.`
+        : `Delivery address set to "${addr.title || addr.city}".`
+    );
+  };
+
+  const handleOpenNewAddressModal = () => {
+    setNewAddressForm({
+      title: '',
+      province: 'تهران',
+      city: 'تهران',
+      address: '',
+      postalCode: '',
+      buildingNumber: '',
+      unit: '',
+      recipientName: user?.fullName || '',
+      recipientPhone: user?.phone || '',
+      recipientEmail: user?.email || '',
+      addressNotes: '',
+      isDefault: addresses.length === 0,
+    });
+    setNewAddressErrors({});
+    setIsNewAddressModalOpen(true);
+  };
+
+  const handleSaveNewAddressInCheckout = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const errors: Record<string, string> = {};
+
+    if (!newAddressForm.recipientName.trim()) {
+      errors.recipientName = isPersian ? 'نام و نام خانوادگی تحویل‌گیرنده الزامی است.' : 'Recipient full name is required.';
+    }
+
+    const cleanPhone = toEnglishDigits(newAddressForm.recipientPhone).trim();
+    if (!cleanPhone) {
+      errors.recipientPhone = isPersian ? 'شماره تماس الزامی است.' : 'Phone number is required.';
+    } else if (!/^09\d{9}$/.test(cleanPhone)) {
+      errors.recipientPhone = isPersian ? 'شماره تماس باید ۱۱ رقم بوده و با ۰۹ شروع شود.' : 'Phone must be 11 digits starting with 09.';
+    }
+
+    if (!newAddressForm.province.trim()) {
+      errors.province = isPersian ? 'انتخاب استان الزامی است.' : 'Province is required.';
+    }
+    if (!newAddressForm.city.trim()) {
+      errors.city = isPersian ? 'انتخاب شهر الزامی است.' : 'City is required.';
+    }
+    if (!newAddressForm.address.trim()) {
+      errors.address = isPersian ? 'نشانی دقیق پستی الزامی است.' : 'Street address is required.';
+    }
+
+    const cleanPostal = toEnglishDigits(newAddressForm.postalCode).trim();
+    if (cleanPostal && cleanPostal.length !== 10) {
+      errors.postalCode = isPersian ? 'کد پستی باید ۱۰ رقم باشد.' : 'Postal code must be 10 digits.';
+    }
+
+    const cleanEmail = newAddressForm.recipientEmail.trim().toLowerCase();
+    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      errors.recipientEmail = isPersian ? 'فرمت ایمیل نامعتبر است.' : 'Invalid email format.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setNewAddressErrors(errors);
+      return;
+    }
+    setNewAddressErrors({});
+
+    setSavingNewAddress(true);
+    try {
+      const res = await axiosInstance.post('/users/addresses', {
+        title: newAddressForm.title.trim() || undefined,
+        province: newAddressForm.province.trim(),
+        city: newAddressForm.city.trim(),
+        address: newAddressForm.address.trim(),
+        postalCode: cleanPostal || undefined,
+        buildingNumber: newAddressForm.buildingNumber.trim() || undefined,
+        unit: newAddressForm.unit.trim() || undefined,
+        recipientName: newAddressForm.recipientName.trim(),
+        recipientPhone: cleanPhone,
+        recipientEmail: cleanEmail || undefined,
+        addressNotes: newAddressForm.addressNotes.trim() || undefined,
+        isDefault: newAddressForm.isDefault,
+      });
+
+      const updatedList: IUserAddress[] = res.data?.addresses || [];
+      setAddresses(updatedList);
+
+      const newlyAdded = res.data?.address || updatedList[updatedList.length - 1];
+      if (newlyAdded) {
+        setSelectedAddressId(newlyAdded._id);
+        applyAddressToDelivery(newlyAdded);
+      }
+
+      setIsNewAddressModalOpen(false);
+      toast.success(
+        isPersian
+          ? 'نشانی جدید با موفقیت ذخیره و انتخاب شد.'
+          : 'New address added and selected.'
+      );
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || (isPersian ? 'خطا در ثبت نشانی جدید.' : 'Failed to add address.'));
+    } finally {
+      setSavingNewAddress(false);
+    }
+  };
 
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod' | 'installment'>('online');
@@ -354,22 +535,38 @@ export function CheckoutPage() {
         <div className="lg:col-span-8 space-y-6">
           {/* Step 1: Delivery Address */}
           <Card className="bg-brand-surface rounded-3xl p-6 border border-brand-border shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-brand-bronze dark:text-brand-gold" />
                 <h3 className="font-black text-base text-brand-text">
                   {t.checkout.deliveryAddress}
                 </h3>
               </div>
-              <Button
-                size="sm"
-                variant="light"
-                onPress={() => setIsEditingAddress(!isEditingAddress)}
-                startContent={<Edit2 className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold" />}
-                className="h-8 px-3 rounded-xl text-xs font-bold text-brand-bronze dark:text-brand-gold hover:bg-brand-surface-elevated cursor-pointer"
-              >
-                <span>{isEditingAddress ? t.common.cancel : t.checkout.editAddress}</span>
-              </Button>
+
+              <div className="flex items-center gap-2">
+                {isAuthenticated && (
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    radius="lg"
+                    onPress={handleOpenNewAddressModal}
+                    startContent={<Plus className="w-3.5 h-3.5" />}
+                    className="h-8 px-3 rounded-xl text-xs font-bold bg-brand-surface-elevated hover:bg-brand-gold/10 text-brand-bronze dark:text-brand-gold border border-brand-border hover:border-brand-gold/40 cursor-pointer transition-colors"
+                  >
+                    {isPersian ? '+ نشانی جدید' : '+ New Address'}
+                  </Button>
+                )}
+
+                <Button
+                  size="sm"
+                  variant="light"
+                  onPress={() => setIsEditingAddress(!isEditingAddress)}
+                  startContent={<Edit2 className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold" />}
+                  className="h-8 px-3 rounded-xl text-xs font-bold text-brand-bronze dark:text-brand-gold hover:bg-brand-surface-elevated cursor-pointer"
+                >
+                  <span>{isEditingAddress ? t.common.cancel : (isPersian ? 'ویرایش جزئیات' : t.checkout.editAddress)}</span>
+                </Button>
+              </div>
             </div>
 
             {isEditingAddress ? (
@@ -631,6 +828,90 @@ export function CheckoutPage() {
                   {t.checkout.saveAddress}
                 </Button>
               </div>
+            ) : loadingAddresses ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                {[...Array(2)].map((_, i) => (
+                  <Skeleton key={i} className="h-28 rounded-2xl bg-brand-surface-elevated" />
+                ))}
+              </div>
+            ) : addresses.length > 0 ? (
+              <div className="space-y-3 pt-1">
+                <p className="text-xs text-brand-text-muted font-medium">
+                  {isPersian
+                    ? 'نشانی مورد نظر برای ارسال سفارش را انتخاب نمایید:'
+                    : 'Select an address for delivery:'}
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {addresses.map((addr) => {
+                    const isSelected = selectedAddressId === addr._id;
+                    return (
+                      <div
+                        key={addr._id}
+                        onClick={() => handleSelectAddress(addr)}
+                        className={`p-4 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-3 relative ${
+                          isSelected
+                            ? 'bg-brand-gold/10 border-2 border-brand-gold shadow-sm ring-1 ring-brand-gold/30'
+                            : 'bg-brand-surface-elevated/40 hover:bg-brand-surface-elevated border-brand-border hover:border-brand-gold/40'
+                        }`}
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={`w-5 h-5 rounded-full flex items-center justify-center border transition-colors ${
+                                  isSelected
+                                    ? 'border-brand-gold bg-brand-gold text-[#141914]'
+                                    : 'border-brand-border bg-brand-surface'
+                                }`}
+                              >
+                                {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                              </div>
+                              <span className="font-bold text-xs text-brand-text">
+                                {addr.title || (isPersian ? 'نشانی تحویل' : 'Address')}
+                              </span>
+                            </div>
+
+                            {addr.isDefault && (
+                              <span className="px-2 py-0.5 rounded-full bg-brand-gold/15 text-brand-gold border border-brand-gold/30 text-[10px] font-bold">
+                                {isPersian ? 'پیش‌فرض' : 'Default'}
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-xs font-semibold text-brand-text leading-relaxed">
+                            {[addr.province, addr.city, addr.address].filter(Boolean).join('، ')}
+                          </p>
+
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-brand-text-muted pt-1">
+                            <span className="flex items-center gap-1">
+                              <User className="w-3 h-3 text-brand-bronze dark:text-brand-gold" />
+                              <strong className="text-brand-text">{addr.recipientName || user?.fullName}</strong>
+                            </span>
+                            <span className="flex items-center gap-1 font-mono">
+                              <Phone className="w-3 h-3 text-brand-bronze dark:text-brand-gold" />
+                              <strong className="text-brand-text">{isPersian ? toPersianDigits(addr.recipientPhone || '') : addr.recipientPhone}</strong>
+                            </span>
+                            {addr.postalCode && (
+                              <span className="flex items-center gap-1 font-mono">
+                                <Hash className="w-3 h-3 text-brand-bronze dark:text-brand-gold" />
+                                <span>{isPersian ? toPersianDigits(addr.postalCode) : addr.postalCode}</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {isSelected && (
+                          <div className="pt-2 border-t border-brand-border/60 flex items-center justify-between text-[11px] text-brand-gold font-bold">
+                            <span>{isPersian ? 'ارسال به این نشانی' : 'Deliver to this address'}</span>
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             ) : (
               <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs space-y-2">
                 <div className="flex items-center justify-between">
@@ -850,6 +1131,321 @@ export function CheckoutPage() {
           </Card>
         </div>
       </div>
+
+      {/* Add New Address Modal in Checkout */}
+      <Modal
+        isOpen={isNewAddressModalOpen}
+        onOpenChange={setIsNewAddressModalOpen}
+        size="2xl"
+        backdrop="blur"
+        scrollBehavior="inside"
+        classNames={{
+          base: "bg-brand-surface border border-brand-border text-brand-text max-w-2xl rounded-3xl shadow-2xl",
+          header: "border-b border-brand-border pb-3",
+          body: "py-5 space-y-4",
+          footer: "border-t border-brand-border pt-3",
+          closeButton: "hover:bg-brand-surface-elevated text-brand-text-muted rounded-xl cursor-pointer",
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <div>
+              <ModalHeader className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-brand-gold/15 flex items-center justify-center text-brand-gold shrink-0">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-brand-text">
+                    {isPersian ? 'افزودن نشانی جدید' : 'Add New Address'}
+                  </h3>
+                  <p className="text-xs text-brand-text-muted mt-0.5">
+                    {isPersian
+                      ? 'مشخصات نشانی را وارد کنید تا به نشانی‌های شما افزوده و برای این سفارش انتخاب شود'
+                      : 'Add an address and select it for this order'}
+                  </p>
+                </div>
+              </ModalHeader>
+
+              <ModalBody>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Title */}
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <div className="flex items-center gap-1.5 h-5">
+                      <Building className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                      <label className="text-xs font-bold text-brand-text">
+                        {isPersian ? 'عنوان نشانی (اختیاری)' : 'Address Title (Optional)'}
+                      </label>
+                    </div>
+                    <Input
+                      aria-label={isPersian ? 'عنوان نشانی' : 'Address Title'}
+                      placeholder={isPersian ? 'مثلاً خانه، محل کار...' : 'e.g. Home, Office...'}
+                      value={newAddressForm.title}
+                      onValueChange={(val) => setNewAddressForm({ ...newAddressForm, title: val })}
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                        input: "text-xs font-semibold text-brand-text",
+                      }}
+                    />
+                  </div>
+
+                  {/* Province & City */}
+                  <div className="sm:col-span-2">
+                    <ProvinceCitySelect
+                      province={newAddressForm.province}
+                      city={newAddressForm.city}
+                      onChangeProvince={(p) => {
+                        setNewAddressForm({ ...newAddressForm, province: p });
+                        if (newAddressErrors.province) setNewAddressErrors((prev) => ({ ...prev, province: '' }));
+                      }}
+                      onChangeCity={(c) => {
+                        setNewAddressForm({ ...newAddressForm, city: c });
+                        if (newAddressErrors.city) setNewAddressErrors((prev) => ({ ...prev, city: '' }));
+                      }}
+                    />
+                    {(newAddressErrors.province || newAddressErrors.city) && (
+                      <p className="text-[11px] font-bold text-rose-500 mt-1">
+                        {newAddressErrors.province || newAddressErrors.city}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Address Detail */}
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <div className="flex items-center gap-1.5 h-5">
+                      <MapPin className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                      <label className="text-xs font-bold text-brand-text">
+                        {isPersian ? 'نشانی دقیق پستی' : 'Street Address'}
+                      </label>
+                    </div>
+                    <Textarea
+                      aria-label={isPersian ? 'نشانی دقیق پستی' : 'Street Address'}
+                      placeholder={
+                        isPersian
+                          ? 'نام خیابان، کوچه، پلاک، طبقه، واحد...'
+                          : 'Street name, alley, building, unit...'
+                      }
+                      rows={3}
+                      maxLength={500}
+                      value={newAddressForm.address}
+                      onValueChange={(val) => {
+                        setNewAddressForm({ ...newAddressForm, address: val });
+                        if (newAddressErrors.address) setNewAddressErrors((prev) => ({ ...prev, address: '' }));
+                      }}
+                      isInvalid={Boolean(newAddressErrors.address)}
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: newAddressErrors.address
+                          ? "p-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors h-24 !resize-none"
+                          : "p-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors h-24 !resize-none",
+                        input: "text-xs font-semibold text-brand-text leading-relaxed !resize-none resize-none overflow-y-auto",
+                      }}
+                    />
+                    <AnimatedFieldError error={newAddressErrors.address} />
+                  </div>
+
+                  {/* Recipient Name */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 h-5">
+                      <User className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                      <label className="text-xs font-bold text-brand-text">
+                        {isPersian ? 'نام گیرنده تحویل' : 'Recipient Full Name'}
+                      </label>
+                    </div>
+                    <Input
+                      aria-label={isPersian ? 'نام گیرنده تحویل' : 'Recipient Full Name'}
+                      placeholder={isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
+                      value={newAddressForm.recipientName}
+                      onValueChange={(val) => {
+                        setNewAddressForm({ ...newAddressForm, recipientName: val });
+                        if (newAddressErrors.recipientName) setNewAddressErrors((prev) => ({ ...prev, recipientName: '' }));
+                      }}
+                      isInvalid={Boolean(newAddressErrors.recipientName)}
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: newAddressErrors.recipientName
+                          ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                          : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                        input: "text-xs font-semibold text-brand-text",
+                      }}
+                    />
+                    <AnimatedFieldError error={newAddressErrors.recipientName} />
+                  </div>
+
+                  {/* Recipient Phone */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 h-5">
+                      <Phone className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                      <label className="text-xs font-bold text-brand-text">
+                        {isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone'}
+                      </label>
+                    </div>
+                    <Input
+                      aria-label={isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone'}
+                      placeholder="09123456789"
+                      type="tel"
+                      dir="ltr"
+                      maxLength={11}
+                      value={newAddressForm.recipientPhone}
+                      onValueChange={(val) => {
+                        const clean = toEnglishDigits(val).replace(/\D/g, '').slice(0, 11);
+                        setNewAddressForm({ ...newAddressForm, recipientPhone: clean });
+                        if (newAddressErrors.recipientPhone) setNewAddressErrors((prev) => ({ ...prev, recipientPhone: '' }));
+                      }}
+                      isInvalid={Boolean(newAddressErrors.recipientPhone)}
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: newAddressErrors.recipientPhone
+                          ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                          : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                        input: "text-xs font-bold text-brand-text text-center font-mono",
+                      }}
+                    />
+                    <AnimatedFieldError error={newAddressErrors.recipientPhone} />
+                  </div>
+
+                  {/* Postal Code */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 h-5">
+                      <Hash className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                      <label className="text-xs font-bold text-brand-text">
+                        {isPersian ? 'کد پستی (۱۰ رقمی - اختیاری)' : 'Postal Code (10 digits - Optional)'}
+                      </label>
+                    </div>
+                    <Input
+                      aria-label={isPersian ? 'کد پستی' : 'Postal Code'}
+                      placeholder="1234567890"
+                      dir="ltr"
+                      maxLength={10}
+                      value={newAddressForm.postalCode}
+                      onValueChange={(val) => {
+                        const clean = toEnglishDigits(val).replace(/\D/g, '').slice(0, 10);
+                        setNewAddressForm({ ...newAddressForm, postalCode: clean });
+                        if (newAddressErrors.postalCode) setNewAddressErrors((prev) => ({ ...prev, postalCode: '' }));
+                      }}
+                      isInvalid={Boolean(newAddressErrors.postalCode)}
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: newAddressErrors.postalCode
+                          ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                          : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                        input: "text-xs font-bold text-brand-text tracking-widest text-center font-mono",
+                      }}
+                    />
+                    <AnimatedFieldError error={newAddressErrors.postalCode} />
+                  </div>
+
+                  {/* Recipient Email */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5 h-5">
+                      <Mail className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                      <label className="text-xs font-bold text-brand-text">
+                        {isPersian ? 'ایمیل تحویل‌گیرنده (اختیاری)' : 'Recipient Email (Optional)'}
+                      </label>
+                    </div>
+                    <Input
+                      type="email"
+                      aria-label={isPersian ? 'ایمیل تحویل‌گیرنده' : 'Recipient Email'}
+                      placeholder="user@example.com"
+                      dir="ltr"
+                      value={newAddressForm.recipientEmail}
+                      onValueChange={(val) => {
+                        setNewAddressForm({ ...newAddressForm, recipientEmail: val });
+                        if (newAddressErrors.recipientEmail) setNewAddressErrors((prev) => ({ ...prev, recipientEmail: '' }));
+                      }}
+                      isInvalid={Boolean(newAddressErrors.recipientEmail)}
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: newAddressErrors.recipientEmail
+                          ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
+                          : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
+                        input: "text-xs font-semibold text-brand-text text-start",
+                      }}
+                    />
+                    <AnimatedFieldError error={newAddressErrors.recipientEmail} />
+                  </div>
+
+                  {/* Notes */}
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <div className="flex items-center gap-1.5 h-5">
+                      <FileText className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
+                      <label className="text-xs font-bold text-brand-text">
+                        {isPersian ? 'توضیحات و یادداشت تحویل (اختیاری)' : 'Delivery Notes (Optional)'}
+                      </label>
+                    </div>
+                    <Textarea
+                      aria-label={isPersian ? 'توضیحات و یادداشت تحویل' : 'Delivery Notes'}
+                      placeholder={
+                        isPersian
+                          ? 'توضیحات تکمیلی تحویل سفارش، شماره زنگ، طبقه، هماهنگی قبل از ارسال و... (اختیاری)'
+                          : 'Special delivery instructions, apartment/bell number, coordination... (optional)'
+                      }
+                      rows={2}
+                      maxLength={300}
+                      value={newAddressForm.addressNotes}
+                      onValueChange={(val) => setNewAddressForm({ ...newAddressForm, addressNotes: val })}
+                      variant="bordered"
+                      radius="lg"
+                      classNames={{
+                        inputWrapper: "p-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors h-20 !resize-none",
+                        input: "text-xs font-semibold text-brand-text leading-relaxed !resize-none resize-none overflow-y-auto",
+                      }}
+                    />
+                  </div>
+
+                  {/* Default Address Checkbox */}
+                  <div className="sm:col-span-2 pt-2">
+                    <label className="inline-flex items-center gap-3 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={newAddressForm.isDefault}
+                        onChange={(e) => setNewAddressForm({ ...newAddressForm, isDefault: e.target.checked })}
+                        className="w-4 h-4 rounded-lg accent-[#c5a880] cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-brand-text">
+                        {isPersian
+                          ? 'این نشانی به عنوان نشانی پیش‌فرض حساب کاربری ثبت شود'
+                          : 'Set this address as default in profile'}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </ModalBody>
+
+              <ModalFooter className="flex items-center justify-end gap-2.5">
+                <Button
+                  type="button"
+                  variant="flat"
+                  radius="lg"
+                  onPress={() => setIsNewAddressModalOpen(false)}
+                  className="h-11 px-5 bg-brand-surface-elevated hover:bg-brand-border text-brand-text font-bold text-xs rounded-2xl cursor-pointer"
+                >
+                  {isPersian ? 'انصراف' : 'Cancel'}
+                </Button>
+
+                <Button
+                  type="button"
+                  onPress={() => handleSaveNewAddressInCheckout()}
+                  isLoading={savingNewAddress}
+                  radius="lg"
+                  startContent={!savingNewAddress && <Check className="w-4 h-4" />}
+                  className="h-11 px-7 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 rounded-2xl cursor-pointer transition-all"
+                >
+                  {savingNewAddress
+                    ? isPersian ? 'در حال ثبت...' : 'Saving...'
+                    : isPersian ? 'ثبت و انتخاب این نشانی' : 'Save & Select Address'}
+                </Button>
+              </ModalFooter>
+            </div>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
