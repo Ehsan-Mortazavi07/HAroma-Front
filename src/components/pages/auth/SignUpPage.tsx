@@ -56,6 +56,7 @@ export function SignUpPage() {
   const [loadingVerifyOtp, setLoadingVerifyOtp] = useState(false);
   const [devCode, setDevCode] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
+  const [phoneCooldown, setPhoneCooldown] = useState(0);
   const otpInputRef = useRef<HTMLInputElement>(null);
 
   // Step 3: Profile State
@@ -87,6 +88,22 @@ export function SignUpPage() {
     }
     return () => clearInterval(timer);
   }, [countdown]);
+
+  // Live countdown timer for phone rate-limit cooldown
+  useEffect(() => {
+    if (phoneCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setPhoneCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setPhoneError((err) => (err.includes('ارسال مجدد') || err.includes('صبر کنید') ? '' : err));
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [phoneCooldown]);
 
   // Auto-focus OTP input when entering OTP step
   useEffect(() => {
@@ -122,6 +139,8 @@ export function SignUpPage() {
       return;
     }
 
+    if (phoneCooldown > 0) return;
+
     setPhoneError('');
     setLoadingSendOtp(true);
 
@@ -135,6 +154,7 @@ export function SignUpPage() {
         setDevCode(res.data.devCode);
       }
       setCountdown(res.data.expiresIn || 120);
+      setPhoneCooldown(0);
       setStep('otp');
       setOtpCode('');
       setOtpCodeError('');
@@ -146,8 +166,29 @@ export function SignUpPage() {
       );
     } catch (err: any) {
       const message = getApiErrorMessage(err);
-      setPhoneError(message);
-      toast.error(message);
+      const retryAfter = err?.response?.data?.retryAfter;
+      let waitSec = 0;
+      if (typeof retryAfter === 'number' && retryAfter > 0) {
+        waitSec = retryAfter;
+      } else {
+        const match = message.match(/(\d+)\s*(?:ثانیه|seconds)/i);
+        if (match && match[1]) {
+          waitSec = parseInt(match[1], 10);
+        }
+      }
+
+      if (waitSec > 0) {
+        setPhoneCooldown(waitSec);
+        setPhoneError(message);
+        toast.error(
+          isPersian
+            ? `لطفاً قبل از ارسال مجدد کد، ${toPersianDigits(waitSec)} ثانیه صبر کنید.`
+            : `Please wait ${waitSec} seconds before resending code.`,
+        );
+      } else {
+        setPhoneError(message);
+        toast.error(message);
+      }
     } finally {
       setLoadingSendOtp(false);
     }
@@ -350,6 +391,9 @@ export function SignUpPage() {
                     value={phone}
                     onChange={(e) => {
                       const digits = toEnglishDigits(e.target.value).replace(/\D/g, '').slice(0, 11);
+                      if (digits !== phone) {
+                        setPhoneCooldown(0);
+                      }
                       setPhone(digits);
                       if (digits.length === 11 && digits.startsWith('09')) {
                         setPhoneError('');
@@ -368,7 +412,7 @@ export function SignUpPage() {
                             ? 'شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود (مثال: ۰۹۱۲۳۴۵۶۷۸۹).'
                             : 'Mobile number must be 11 digits starting with 09 (e.g. 09123456789).',
                         );
-                      } else {
+                      } else if (phoneCooldown <= 0) {
                         setPhoneError('');
                       }
                     }}
@@ -381,16 +425,16 @@ export function SignUpPage() {
                     variant="bordered"
                     radius="lg"
                     startContent={<Smartphone className="w-4 h-4 text-brand-bronze shrink-0" />}
-                    isInvalid={Boolean(phoneError)}
+                    isInvalid={Boolean(phoneError || phoneCooldown > 0)}
                     classNames={{
-                      inputWrapper: Boolean(phoneError)
+                      inputWrapper: Boolean(phoneError || phoneCooldown > 0)
                         ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors'
                         : 'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors',
                       input: 'text-xs font-bold text-brand-text tracking-wider',
                     }}
                   />
                   <AnimatedFieldError
-                    error={phoneError}
+                    error={phoneCooldown > 0 ? true : phoneError}
                     extra={
                       phoneError && phoneError.includes('وارد شوید') ? (
                         <Link
@@ -401,7 +445,34 @@ export function SignUpPage() {
                         </Link>
                       ) : null
                     }
-                  />
+                  >
+                    {phoneCooldown > 0 ? (
+                      <div className="space-y-1.5">
+                        <p className="text-[11px] font-bold text-rose-500 flex items-center gap-1.5 leading-normal">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block shrink-0 animate-pulse" />
+                          <span>
+                            {isPersian ? (
+                              <>
+                                لطفاً قبل از ارسال مجدد کد،{' '}
+                                <span className="inline-block px-1 font-mono font-black [font-variant-numeric:tabular-nums] text-rose-600 dark:text-rose-400">
+                                  {toPersianDigits(phoneCooldown)}
+                                </span>{' '}
+                                ثانیه صبر کنید.
+                              </>
+                            ) : (
+                              <>
+                                Please wait{' '}
+                                <span className="inline-block px-1 font-mono font-black [font-variant-numeric:tabular-nums]">
+                                  {phoneCooldown}
+                                </span>{' '}
+                                seconds before resending code.
+                              </>
+                            )}
+                          </span>
+                        </p>
+                      </div>
+                    ) : null}
+                  </AnimatedFieldError>
                   <p className="text-[11px] text-brand-text-muted mt-2 leading-relaxed">
                     {isPersian
                       ? 'کد تایید یکبار مصرف جهت اعتبارسنجی شماره شما ارسال خواهد شد.'
@@ -413,14 +484,28 @@ export function SignUpPage() {
                   type="button"
                   onPress={() => handleSendOtp()}
                   isLoading={loadingSendOtp}
+                  disabled={phoneCooldown > 0}
                   radius="lg"
-                  className="w-full h-12 rounded-2xl font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98 cursor-pointer mt-2"
+                  className={`w-full h-12 rounded-2xl font-black shadow-lg flex items-center justify-center gap-2 text-sm transition-all duration-200 ease-out active:scale-98 mt-2 ${
+                    phoneCooldown > 0
+                      ? 'bg-brand-surface-elevated text-brand-text-muted border border-brand-border opacity-70 cursor-not-allowed shadow-none'
+                      : 'bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-brand-gold/20 cursor-pointer'
+                  }`}
                 >
                   {!loadingSendOtp && (
-                    <>
-                      <span>{isPersian ? 'ارسال کد تایید' : 'Send Verification Code'}</span>
-                      {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-                    </>
+                    phoneCooldown > 0 ? (
+                      <span className="flex items-center gap-1.5 font-bold">
+                        <span>{isPersian ? 'ارسال مجدد پس از:' : 'Resend in:'}</span>
+                        <span className="font-mono font-black [font-variant-numeric:tabular-nums]">
+                          {toPersianDigits(phoneCooldown)} {isPersian ? 'ثانیه' : 's'}
+                        </span>
+                      </span>
+                    ) : (
+                      <>
+                        <span>{isPersian ? 'ارسال کد تایید' : 'Send Verification Code'}</span>
+                        {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                      </>
+                    )
                   )}
                 </Button>
               </motion.div>

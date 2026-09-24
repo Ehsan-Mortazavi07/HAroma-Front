@@ -4,7 +4,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AnimatedFieldErrorProps {
-  error?: string | false | null;
+  error?: string | boolean | null;
   className?: string;
   extra?: React.ReactNode;
   children?: React.ReactNode;
