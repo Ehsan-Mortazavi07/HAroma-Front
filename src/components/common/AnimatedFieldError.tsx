@@ -17,6 +17,8 @@ export function AnimatedFieldError({ error, className = '', extra, children }: A
     <AnimatePresence initial={false}>
       {isVisible && (
         <motion.div
+          role="alert"
+          aria-live="polite"
           initial={{ opacity: 0, height: 0, marginTop: 0 }}
           animate={{
             opacity: 1,

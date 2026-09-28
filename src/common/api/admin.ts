@@ -153,6 +153,10 @@ export const adminApi = {
     const res = await axiosInstance.get(`/admin/users/${id}/addresses`);
     return res.data;
   },
+  createUserAddress: async (userId: string, data: Partial<IUserAddress>) => {
+    const res = await axiosInstance.post(`/admin/users/${userId}/addresses`, data);
+    return res.data;
+  },
   updateUserAddress: async (userId: string, addressId: string, data: Partial<IUserAddress>) => {
     const res = await axiosInstance.patch(`/admin/users/${userId}/addresses/${addressId}`, data);
     return res.data;
