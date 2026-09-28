@@ -258,9 +258,9 @@ export function BirthDatePicker({
                 openDropdown === 'day'
                   ? 'border-brand-gold ring-2 ring-brand-gold/20 shadow-sm'
                   : 'border-brand-border hover:border-brand-gold/70'
-              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } ${disabled ? 'disabled:bg-brand-surface-elevated cursor-not-allowed' : ''}`}
             >
-              <span className={`text-xs font-bold truncate ${currentParts.day ? 'text-brand-text' : 'text-brand-text-muted'}`}>
+              <span className={`text-sm font-bold truncate ${currentParts.day ? 'text-brand-text' : 'text-brand-text-muted'}`}>
                 {currentParts.day ? (isPersian ? toPersianDigits(currentParts.day) : currentParts.day) : (isPersian ? 'روز' : 'Day')}
               </span>
               <ChevronDown
@@ -320,9 +320,9 @@ export function BirthDatePicker({
                 openDropdown === 'month'
                   ? 'border-brand-gold ring-2 ring-brand-gold/20 shadow-sm'
                   : 'border-brand-border hover:border-brand-gold/70'
-              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } ${disabled ? 'disabled:bg-brand-surface-elevated cursor-not-allowed' : ''}`}
             >
-              <span className={`text-xs font-bold truncate ${currentParts.month ? 'text-brand-text' : 'text-brand-text-muted'}`}>
+              <span className={`text-sm font-bold truncate ${currentParts.month ? 'text-brand-text' : 'text-brand-text-muted'}`}>
                 {currentMonthName || (isPersian ? 'انتخاب ماه' : 'Month')}
               </span>
               <ChevronDown
@@ -382,9 +382,9 @@ export function BirthDatePicker({
                 openDropdown === 'year'
                   ? 'border-brand-gold ring-2 ring-brand-gold/20 shadow-sm'
                   : 'border-brand-border hover:border-brand-gold/70'
-              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              } ${disabled ? 'disabled:bg-brand-surface-elevated cursor-not-allowed' : ''}`}
             >
-              <span className={`text-xs font-bold truncate ${currentParts.year ? 'text-brand-text' : 'text-brand-text-muted'}`}>
+              <span className={`text-sm font-bold truncate ${currentParts.year ? 'text-brand-text' : 'text-brand-text-muted'}`}>
                 {currentParts.year ? (isPersian ? toPersianDigits(currentParts.year) : currentParts.year) : (isPersian ? 'سال' : 'Year')}
               </span>
               <ChevronDown

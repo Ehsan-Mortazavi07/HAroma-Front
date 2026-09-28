@@ -163,9 +163,9 @@ export function ProvinceCitySelect({
                 : provinceError
                 ? 'border-rose-500 hover:border-rose-500'
                 : 'border-brand-border hover:border-brand-gold/70'
-            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+            } ${disabled ? 'disabled:bg-brand-surface-elevated cursor-not-allowed' : ''}`}
           >
-            <span className={`text-xs font-bold truncate ${province ? 'text-brand-text' : 'text-brand-text-muted'}`}>
+            <span className={`text-sm font-bold truncate ${province ? 'text-brand-text' : 'text-brand-text-muted'}`}>
               {province || (isPersian ? 'انتخاب استان...' : 'Select Province...')}
             </span>
             <ChevronDown
@@ -268,9 +268,9 @@ export function ProvinceCitySelect({
                 : cityError
                 ? 'border-rose-500 hover:border-rose-500'
                 : 'border-brand-border hover:border-brand-gold/70'
-            } ${disabled || !province ? 'opacity-50 cursor-not-allowed' : ''}`}
+            } ${disabled || !province ? 'disabled:bg-brand-surface-elevated cursor-not-allowed' : ''}`}
           >
-            <span className={`text-xs font-bold truncate ${city ? 'text-brand-text' : 'text-brand-text-muted'}`}>
+            <span className={`text-sm font-bold truncate ${city ? 'text-brand-text' : 'text-brand-text-muted'}`}>
               {!province
                 ? isPersian ? 'ابتدا استان را انتخاب کنید' : 'Select province first'
                 : city || (isPersian ? 'انتخاب شهر...' : 'Select City...')}

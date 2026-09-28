@@ -35,6 +35,22 @@
   [dir="rtl"] input[type="url"] {
     direction: ltr;
   }
+
+  /* Avoid narrow flex layouts clipping control text and keep glyphs vertically centered. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+  textarea,
+  select {
+    box-sizing: border-box;
+    min-width: 0;
+    line-height: 1.5;
+  }
+}
+
+/* Normalize compact form text while preserving explicit display/code sizes such as OTP fields. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not(.text-base):not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl):not(.text-4xl),
+textarea:not(.text-base):not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl):not(.text-4xl),
+[data-slot="input"]:not(.text-base):not(.text-lg):not(.text-xl):not(.text-2xl):not(.text-3xl):not(.text-4xl) {
+  font-size: 0.875rem !important;
 }
 
 /* Placeholders need enough contrast to remain readable in either theme. */
@@ -48,8 +64,6 @@ textarea::placeholder,
 /* Keep address-form values and hints readable, including fields disabled until a province is chosen. */
 .admin-address-fields :is(input, textarea, [data-slot="input"]) {
   color: var(--brand-text) !important;
-  font-size: 0.875rem !important;
-  line-height: 1.5rem !important;
   opacity: 1 !important;
 }
 
@@ -369,7 +383,7 @@ html[dir="rtl"] [data-slot="trigger"] {
 
 [data-slot="value"] {
   text-align: start !important;
-  font-size: 0.75rem !important;
+  font-size: 0.875rem !important;
   font-weight: 600 !important;
 }
 
