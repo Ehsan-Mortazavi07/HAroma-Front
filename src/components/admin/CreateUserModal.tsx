@@ -426,6 +426,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                       <Input
+                        dir="auto"
                         label={
                           <span className="flex items-center gap-1">
                             <span>{isPersian ? 'نام و نام خانوادگی' : 'Full Name'}</span>
@@ -451,7 +452,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                             ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                             : inputWrapperClass,
                           innerWrapper: 'gap-3',
-                          input: 'text-xs font-bold text-brand-text',
+                          input: 'text-sm font-bold text-brand-text',
                         }}
                       />
                       {touched.fullName && !formData.fullName.trim() && (
@@ -464,6 +465,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
 
                     <div>
                       <Input
+                        dir="auto"
                         label={
                           <span className="flex items-center gap-1">
                             <span>{isPersian ? 'نام کاربری یکتا' : 'Username'}</span>
@@ -489,7 +491,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                             ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                             : inputWrapperClass,
                           innerWrapper: 'gap-3',
-                          input: 'text-xs font-mono font-bold text-brand-text text-start',
+                          input: 'text-sm font-mono font-bold text-brand-text text-start',
                         }}
                       />
                       {touched.username && !formData.username.trim() && (
@@ -518,7 +520,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         label: inputLabelClass,
                         inputWrapper: inputWrapperClass,
                         innerWrapper: 'gap-3',
-                        input: 'text-xs font-mono font-semibold text-brand-text text-start',
+                        input: 'text-sm font-mono font-semibold text-brand-text text-start',
                       }}
                     />
 
@@ -537,7 +539,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         label: inputLabelClass,
                         inputWrapper: inputWrapperClass,
                         innerWrapper: 'gap-3',
-                        input: 'text-xs font-mono font-semibold text-brand-text text-start',
+                        input: 'text-sm font-mono font-semibold text-brand-text text-start',
                       }}
                     />
                   </div>
@@ -606,7 +608,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                             ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                             : inputWrapperClass,
                           innerWrapper: 'gap-3',
-                          input: 'text-xs font-mono font-semibold text-brand-text text-start',
+                          input: 'text-sm font-mono font-semibold text-brand-text text-start',
                         }}
                       />
                       {touched.password && !formData.password && (
@@ -802,6 +804,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     </div>
 
                     <Input
+                      dir="auto"
                       label={isPersian ? 'لینک تصویر پروفایل (URL)' : 'Avatar Image URL'}
                       labelPlacement="outside-top"
                       value={formData.avatar}
@@ -814,7 +817,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         label: inputLabelClass,
                         inputWrapper: inputWrapperClass,
                         innerWrapper: 'gap-3',
-                        input: 'text-xs font-mono text-brand-text text-start',
+                        input: 'text-sm font-mono text-brand-text text-start',
                       }}
                     />
                   </div>
@@ -835,6 +838,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                   {/* Address Details */}
                   <div className="space-y-4">
                     <Textarea
+                      dir="auto"
                       label={isPersian ? 'آدرس پستی دقیق' : 'Exact Postal Address'}
                       labelPlacement="outside-top"
                       value={formData.address}
@@ -846,12 +850,13 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                       classNames={{
                         label: inputLabelClass,
                         inputWrapper: 'px-4 py-3 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors',
-                        input: 'text-xs font-bold text-brand-text',
+                        input: 'text-sm font-bold text-brand-text',
                       }}
                     />
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <Input
+                        dir="auto"
                         label={isPersian ? 'کد پستی (۱۰ رقمی)' : 'Postal Code (10 digits)'}
                         labelPlacement="outside-top"
                         maxLength={10}
@@ -864,11 +869,12 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         classNames={{
                           label: inputLabelClass,
                           inputWrapper: inputWrapperClass,
-                          input: 'text-xs font-mono font-semibold text-brand-text text-start',
+                          input: 'text-sm font-mono font-semibold text-brand-text text-start',
                         }}
                       />
 
                       <Input
+                        dir="auto"
                         label={isPersian ? 'پلاک' : 'Building Number'}
                         labelPlacement="outside-top"
                         value={formData.buildingNumber}
@@ -880,11 +886,12 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         classNames={{
                           label: inputLabelClass,
                           inputWrapper: inputWrapperClass,
-                          input: 'text-xs font-bold text-brand-text text-start',
+                          input: 'text-sm font-bold text-brand-text text-start',
                         }}
                       />
 
                       <Input
+                        dir="auto"
                         label={isPersian ? 'واحد' : 'Unit'}
                         labelPlacement="outside-top"
                         value={formData.unit}
@@ -895,7 +902,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         classNames={{
                           label: inputLabelClass,
                           inputWrapper: inputWrapperClass,
-                          input: 'text-xs font-bold text-brand-text text-start',
+                          input: 'text-sm font-bold text-brand-text text-start',
                         }}
                       />
                     </div>
@@ -910,6 +917,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Input
+                        dir="auto"
                         label={isPersian ? 'نام گیرنده تحویل' : 'Recipient Name'}
                         labelPlacement="outside-top"
                         value={formData.recipientName}
@@ -920,7 +928,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         classNames={{
                           label: inputLabelClass,
                           inputWrapper: inputWrapperClass,
-                          input: 'text-xs font-bold text-brand-text',
+                          input: 'text-sm font-bold text-brand-text',
                         }}
                       />
 
@@ -937,12 +945,13 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         classNames={{
                           label: inputLabelClass,
                           inputWrapper: inputWrapperClass,
-                          input: 'text-xs font-mono font-semibold text-brand-text text-start',
+                          input: 'text-sm font-mono font-semibold text-brand-text text-start',
                         }}
                       />
                     </div>
 
                     <Input
+                      dir="auto"
                       label={isPersian ? 'یادداشت یا توضیحات ویژه آدرس' : 'Address Notes'}
                       labelPlacement="outside-top"
                       value={formData.addressNotes}
@@ -955,7 +964,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         label: inputLabelClass,
                         inputWrapper: inputWrapperClass,
                         innerWrapper: 'gap-3',
-                        input: 'text-xs font-bold text-brand-text',
+                        input: 'text-sm font-bold text-brand-text',
                       }}
                     />
                   </div>

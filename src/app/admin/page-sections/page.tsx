@@ -400,6 +400,7 @@ export default function AdminPageSectionsPage() {
               <ModalBody className="space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
+                    dir="auto"
                     label={isPersian ? 'عنوان بخش (فارسی)' : 'Section Title (FA)'}
                     labelPlacement="outside-top"
                     isRequired
@@ -409,12 +410,13 @@ export default function AdminPageSectionsPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                      input: 'text-xs font-semibold text-brand-text',
+                      input: 'text-sm font-semibold text-brand-text',
                       label: 'text-xs font-bold text-brand-text mb-1',
                     }}
                   />
 
                   <Input
+                    dir="auto"
                     label={isPersian ? 'عنوان بخش (انگلیسی)' : 'Section Title (EN)'}
                     labelPlacement="outside-top"
                     value={titleEn}
@@ -424,7 +426,7 @@ export default function AdminPageSectionsPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                      input: 'text-xs font-semibold text-brand-text',
+                      input: 'text-sm font-semibold text-brand-text',
                       label: 'text-xs font-bold text-brand-text mb-1',
                     }}
                   />
@@ -439,37 +441,40 @@ export default function AdminPageSectionsPage() {
                     </div>
 
                     <Textarea
+                      dir="auto"
                       label={isPersian ? 'متن درباره برند در فوتر (فارسی)' : 'About Brand Bio (Persian)'}
                       labelPlacement="outside-top"
-                      rows={3}
+                    minRows={3}
                       value={aboutFa}
                       onValueChange={setAboutFa}
                       variant="bordered"
                       radius="lg"
                       classNames={{
                         inputWrapper: 'p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs',
-                        input: 'text-xs font-semibold leading-relaxed text-brand-text',
+                        input: 'text-sm font-semibold leading-relaxed text-brand-text',
                         label: 'text-xs font-bold text-brand-text mb-1',
                       }}
                     />
 
                     <Textarea
+                      dir="auto"
                       label={isPersian ? 'متن درباره برند در فوتر (انگلیسی)' : 'About Brand Bio (English)'}
                       labelPlacement="outside-top"
-                      rows={3}
+                    minRows={3}
                       value={aboutEn}
                       onValueChange={setAboutEn}
                       variant="bordered"
                       radius="lg"
                       classNames={{
                         inputWrapper: 'p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs',
-                        input: 'text-xs font-semibold leading-relaxed text-brand-text',
+                        input: 'text-sm font-semibold leading-relaxed text-brand-text',
                         label: 'text-xs font-bold text-brand-text mb-1',
                       }}
                     />
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input
+                        dir="auto"
                         label={isPersian ? 'شماره تماس و پشتیبانی' : 'Support Phone'}
                         labelPlacement="outside-top"
                         value={phone}
@@ -479,7 +484,7 @@ export default function AdminPageSectionsPage() {
                         radius="full"
                         classNames={{
                           inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                          input: 'text-xs font-mono font-bold text-brand-text',
+                          input: 'text-sm font-mono font-bold text-brand-text',
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
                       />
@@ -495,7 +500,7 @@ export default function AdminPageSectionsPage() {
                         radius="full"
                         classNames={{
                           inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                          input: 'text-xs font-sans font-semibold text-brand-text',
+                          input: 'text-sm font-sans font-semibold text-brand-text',
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
                       />
@@ -503,6 +508,7 @@ export default function AdminPageSectionsPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input
+                        dir="auto"
                         label={isPersian ? 'آدرس فروشگاه (فارسی)' : 'Address (Persian)'}
                         labelPlacement="outside-top"
                         value={addressFa}
@@ -511,12 +517,13 @@ export default function AdminPageSectionsPage() {
                         radius="full"
                         classNames={{
                           inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                          input: 'text-xs font-semibold text-brand-text',
+                          input: 'text-sm font-semibold text-brand-text',
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
                       />
 
                       <Input
+                        dir="auto"
                         label={isPersian ? 'آدرس فروشگاه (انگلیسی)' : 'Address (English)'}
                         labelPlacement="outside-top"
                         value={addressEn}
@@ -525,7 +532,7 @@ export default function AdminPageSectionsPage() {
                         radius="full"
                         classNames={{
                           inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                          input: 'text-xs font-semibold text-brand-text',
+                          input: 'text-sm font-semibold text-brand-text',
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
                       />
@@ -533,6 +540,7 @@ export default function AdminPageSectionsPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input
+                        dir="auto"
                         label={isPersian ? 'متن کپی‌رایت انتهای فوتر (فارسی)' : 'Copyright Text (Persian)'}
                         labelPlacement="outside-top"
                         value={copyrightFa}
@@ -541,12 +549,13 @@ export default function AdminPageSectionsPage() {
                         radius="full"
                         classNames={{
                           inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                          input: 'text-xs font-semibold text-brand-text',
+                          input: 'text-sm font-semibold text-brand-text',
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
                       />
 
                       <Input
+                        dir="auto"
                         label={isPersian ? 'متن کپی‌رایت انتهای فوتر (انگلیسی)' : 'Copyright Text (English)'}
                         labelPlacement="outside-top"
                         value={copyrightEn}
@@ -555,7 +564,7 @@ export default function AdminPageSectionsPage() {
                         radius="full"
                         classNames={{
                           inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                          input: 'text-xs font-semibold text-brand-text',
+                          input: 'text-sm font-semibold text-brand-text',
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
                       />
@@ -573,7 +582,7 @@ export default function AdminPageSectionsPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                      input: 'text-xs font-bold text-brand-text',
+                      input: 'text-sm font-bold text-brand-text',
                       label: 'text-xs font-bold text-brand-text mb-1',
                     }}
                   />
@@ -621,4 +630,3 @@ export default function AdminPageSectionsPage() {
     </div>
   );
 }
-

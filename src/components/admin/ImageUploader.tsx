@@ -169,7 +169,7 @@ export function ImageUploader({ images = [], onChange, maxImages = 8 }: ImageUpl
                   radius="full"
                   classNames={{
                     inputWrapper: 'bg-brand-surface-elevated border-brand-border hover:border-brand-gold',
-                    input: 'text-xs font-mono',
+                    input: 'text-sm font-mono',
                   }}
                 />
               </ModalBody>

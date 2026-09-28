@@ -312,6 +312,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
                   <div>
                     <Input
+                      dir="auto"
                       name="title"
                       label={isPersian ? 'عنوان فارسی محصول *' : 'Product Title (Persian) *'}
                       labelPlacement="outside-top"
@@ -326,7 +327,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                         inputWrapper: Boolean(errors.title && touched.title)
                           ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-full shadow-xs transition-colors'
                           : 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs transition-colors',
-                        input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                        input: 'text-sm font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
                         label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
                       }}
                     />
@@ -339,6 +340,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   </div>
 
                   <Input
+                    dir="auto"
                     name="titleEn"
                     label={isPersian ? 'عنوان انگلیسی محصول' : 'Product Title (English)'}
                     labelPlacement="outside-top"
@@ -349,13 +351,14 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                     radius="full"
                     classNames={{
                       inputWrapper: 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs transition-colors',
-                      input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                      input: 'text-sm font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
                       label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
                     }}
                   />
 
                   <div className="sm:col-span-2">
                     <Input
+                      dir="auto"
                       name="slug"
                       label={isPersian ? 'نامک آدرس (Slug یکتا)' : 'URL Slug (Unique)'}
                       labelPlacement="outside-top"
@@ -369,7 +372,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                         inputWrapper: Boolean(errors.slug && touched.slug)
                           ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-full shadow-xs transition-colors'
                           : 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs transition-colors',
-                        input: 'font-mono text-xs text-[#1d241d] dark:text-[#f7f4ee]',
+                        input: 'font-mono text-sm text-[#1d241d] dark:text-[#f7f4ee]',
                         label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
                       }}
                     />
@@ -427,7 +430,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                     radius="full"
                     classNames={{
                       inputWrapper: 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
-                      input: 'font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      input: 'text-sm font-bold text-[#1d241d] dark:text-[#f7f4ee]',
                       label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
                     }}
                   />
@@ -688,7 +691,8 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                     <Textarea
                       label={isPersian ? 'خلاصه مشخصات فارسی' : 'Persian Short Summary'}
                       labelPlacement="outside-top"
-                      rows={2}
+                      minRows={2}
+                      maxRows={6}
                       dir="rtl"
                       value={values.shortDescription}
                       onValueChange={(val) => setFieldValue('shortDescription', val)}
@@ -697,7 +701,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                       radius="lg"
                       classNames={{
                         inputWrapper: 'p-3 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-2xl shadow-xs',
-                        input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                        input: 'min-h-24 whitespace-pre-wrap text-sm font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
                         label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
                       }}
                     />
@@ -706,7 +710,8 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                       <Textarea
                         label={isPersian ? 'توضیحات کامل و هرم بویایی فارسی *' : 'Persian Full Description & Olfactory Pyramid *'}
                         labelPlacement="outside-top"
-                        rows={7}
+                        minRows={7}
+                        maxRows={18}
                         dir="rtl"
                         value={values.description}
                         onValueChange={(val) => setFieldValue('description', val)}
@@ -718,7 +723,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                           inputWrapper: Boolean(errors.description && touched.description)
                             ? 'p-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors'
                             : 'p-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-2xl shadow-xs transition-colors',
-                          input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                          input: 'min-h-48 whitespace-pre-wrap text-sm font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
                           label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
                         }}
                       />
@@ -744,7 +749,8 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                     <Textarea
                       label={isPersian ? 'خلاصه مشخصات انگلیسی' : 'English Short Summary'}
                       labelPlacement="outside-top"
-                      rows={2}
+                      minRows={2}
+                      maxRows={6}
                       dir="ltr"
                       value={values.shortDescriptionEn}
                       onValueChange={(val) => setFieldValue('shortDescriptionEn', val)}
@@ -753,7 +759,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                       radius="lg"
                       classNames={{
                         inputWrapper: 'p-3 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-2xl shadow-xs',
-                        input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                        input: 'min-h-24 whitespace-pre-wrap text-sm font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
                         label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
                       }}
                     />
@@ -761,7 +767,8 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                     <Textarea
                       label={isPersian ? 'توضیحات کامل و هرم بویایی انگلیسی' : 'English Full Description & Olfactory Pyramid'}
                       labelPlacement="outside-top"
-                      rows={7}
+                      minRows={7}
+                      maxRows={18}
                       dir="ltr"
                       value={values.descriptionEn}
                       onValueChange={(val) => setFieldValue('descriptionEn', val)}
@@ -770,7 +777,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                       radius="lg"
                       classNames={{
                         inputWrapper: 'p-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-2xl shadow-xs',
-                        input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                        input: 'min-h-48 whitespace-pre-wrap text-sm font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
                         label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
                       }}
                     />
@@ -835,6 +842,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
               <ModalBody className="space-y-4 text-xs">
                 <Input
+                  dir="auto"
                   label={isPersian ? 'نام فارسی دسته‌بندی *' : 'Category Name (Persian) *'}
                   labelPlacement="outside-top"
                   isRequired
@@ -845,12 +853,13 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   radius="full"
                   classNames={{
                     inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
-                    input: 'text-xs font-semibold text-brand-text',
+                    input: 'text-sm font-semibold text-brand-text',
                     label: 'text-xs font-bold text-brand-text',
                   }}
                 />
 
                 <Input
+                  dir="auto"
                   label={isPersian ? 'نام انگلیسی دسته‌بندی' : 'Category Name (English)'}
                   labelPlacement="outside-top"
                   value={newCatNameEn}
@@ -860,7 +869,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   radius="full"
                   classNames={{
                     inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
-                    input: 'text-xs font-semibold text-brand-text',
+                    input: 'text-sm font-semibold text-brand-text',
                     label: 'text-xs font-bold text-brand-text',
                   }}
                 />
@@ -876,8 +885,8 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   variant="bordered"
                   radius="full"
                   classNames={{
-                    trigger: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs text-xs font-semibold text-brand-text',
-                    value: 'text-xs font-semibold text-brand-text',
+                    trigger: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs text-sm font-semibold text-brand-text',
+                    value: 'text-sm font-semibold text-brand-text',
                     label: 'text-xs font-bold text-brand-text',
                     popoverContent: 'bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] rounded-2xl shadow-xl',
                   }}
@@ -893,6 +902,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                 </Select>
 
                 <Input
+                  dir="auto"
                   label={isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
                   labelPlacement="outside-top"
                   value={newCatSlug}
@@ -902,7 +912,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   radius="full"
                   classNames={{
                     inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
-                    input: 'text-xs font-mono text-brand-text',
+                    input: 'text-sm font-mono text-brand-text',
                     label: 'text-xs font-bold text-brand-text',
                   }}
                 />
@@ -957,6 +967,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
 
               <ModalBody className="space-y-4 text-xs">
                 <Input
+                  dir="auto"
                   label={isPersian ? 'نام برند به فارسی *' : 'Brand Name (Persian) *'}
                   labelPlacement="outside-top"
                   isRequired
@@ -967,12 +978,13 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   radius="full"
                   classNames={{
                     inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
-                    input: 'text-xs font-semibold text-brand-text',
+                    input: 'text-sm font-semibold text-brand-text',
                     label: 'text-xs font-bold text-brand-text',
                   }}
                 />
 
                 <Input
+                  dir="auto"
                   label={isPersian ? 'نام برند به انگلیسی' : 'Brand Name (English)'}
                   labelPlacement="outside-top"
                   value={newBrandNameEn}
@@ -982,12 +994,13 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   radius="full"
                   classNames={{
                     inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
-                    input: 'text-xs font-semibold text-brand-text',
+                    input: 'text-sm font-semibold text-brand-text',
                     label: 'text-xs font-bold text-brand-text',
                   }}
                 />
 
                 <Input
+                  dir="auto"
                   label={isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
                   labelPlacement="outside-top"
                   value={newBrandSlug}
@@ -997,12 +1010,13 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   radius="full"
                   classNames={{
                     inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
-                    input: 'text-xs font-mono text-brand-text',
+                    input: 'text-sm font-mono text-brand-text',
                     label: 'text-xs font-bold text-brand-text',
                   }}
                 />
 
                 <Input
+                  dir="auto"
                   label={isPersian ? 'آدرس اینترنتی لوگو (اختیاری)' : 'Logo URL (Optional)'}
                   labelPlacement="outside-top"
                   value={newBrandLogo}
@@ -1012,7 +1026,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   radius="full"
                   classNames={{
                     inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
-                    input: 'text-xs font-mono text-brand-text',
+                    input: 'text-sm font-mono text-brand-text',
                     label: 'text-xs font-bold text-brand-text',
                   }}
                 />

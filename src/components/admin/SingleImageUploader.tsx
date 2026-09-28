@@ -282,8 +282,8 @@ export function SingleImageUploader({
                   radius="full"
                   classNames={{
                     inputWrapper:
-                      'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full font-mono text-xs',
-                    input: 'text-xs font-mono',
+                      'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full font-mono text-sm',
+                    input: 'text-sm font-mono',
                   }}
                   autoFocus
                 />

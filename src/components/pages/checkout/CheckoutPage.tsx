@@ -596,6 +596,7 @@ export function CheckoutPage() {
                     </label>
                   </div>
                   <Input
+                    dir="auto"
                     aria-label={t.checkout.fullName}
                     placeholder={isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
                     value={deliveryAddress.fullName}
@@ -611,7 +612,7 @@ export function CheckoutPage() {
                       inputWrapper: addressTouched.fullName && !deliveryAddress.fullName.trim()
                         ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                         : "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                      input: "text-xs font-semibold text-brand-text",
+                      input: "text-sm font-semibold text-brand-text",
                     }}
                   />
                   {addressTouched.fullName && !deliveryAddress.fullName.trim() && (
@@ -650,7 +651,7 @@ export function CheckoutPage() {
                       inputWrapper: addressTouched.phone && (!deliveryAddress.phone.trim() || !/^09\d{9}$/.test(toEnglishDigits(deliveryAddress.phone).trim()))
                         ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                         : "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                      input: "text-xs font-semibold font-mono text-brand-text text-center",
+                      input: "text-sm font-semibold font-mono text-brand-text text-center",
                     }}
                   />
                   {addressTouched.phone && !deliveryAddress.phone.trim() && (
@@ -684,6 +685,7 @@ export function CheckoutPage() {
                     </label>
                   </div>
                   <Textarea
+                    dir="auto"
                     aria-label={t.checkout.addressDetail}
                     minRows={3}
                     maxLength={500}
@@ -705,7 +707,7 @@ export function CheckoutPage() {
                       inputWrapper: addressTouched.addressDetail && !deliveryAddress.addressDetail.trim()
                         ? "px-4 py-3 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                         : "px-4 py-3 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                      input: "text-xs font-semibold text-brand-text leading-relaxed",
+                      input: "text-sm font-semibold text-brand-text leading-relaxed",
                     }}
                   />
                   {addressTouched.addressDetail && !deliveryAddress.addressDetail.trim() && (
@@ -739,7 +741,7 @@ export function CheckoutPage() {
                     radius="lg"
                     classNames={{
                       inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                      input: "text-xs font-semibold font-mono text-brand-text text-center",
+                      input: "text-sm font-semibold font-mono text-brand-text text-center",
                     }}
                   />
                 </div>
@@ -764,7 +766,7 @@ export function CheckoutPage() {
                     radius="lg"
                     classNames={{
                       inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                      input: "text-xs font-semibold text-brand-text text-start",
+                      input: "text-sm font-semibold text-brand-text text-start",
                     }}
                   />
                 </div>
@@ -777,6 +779,7 @@ export function CheckoutPage() {
                     </label>
                   </div>
                   <Textarea
+                    dir="auto"
                     aria-label={t.checkout.notes}
                     minRows={2}
                     maxLength={300}
@@ -793,7 +796,7 @@ export function CheckoutPage() {
                     radius="lg"
                     classNames={{
                       inputWrapper: "px-4 py-3 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                      input: "text-xs font-semibold text-brand-text leading-relaxed",
+                      input: "text-sm font-semibold text-brand-text leading-relaxed",
                     }}
                   />
                 </div>
@@ -1059,6 +1062,7 @@ export function CheckoutPage() {
             </h4>
             <form onSubmit={handleApplyCoupon} className="flex gap-2">
               <Input
+                dir="auto"
                 aria-label={t.checkout.couponCode}
                 placeholder={isPersian ? 'مثال: VIP20' : 'e.g. VIP20'}
                 value={promoCode}
@@ -1066,8 +1070,8 @@ export function CheckoutPage() {
                 variant="bordered"
                 radius="lg"
                 classNames={{
-                  inputWrapper: "h-11 px-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-xl shadow-xs uppercase font-bold text-xs",
-                  input: "text-xs font-bold text-brand-text uppercase",
+                  inputWrapper: "h-11 px-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-xl shadow-xs uppercase font-bold text-sm",
+                  input: "text-sm font-bold text-brand-text uppercase",
                 }}
               />
               <Button
@@ -1194,6 +1198,7 @@ export function CheckoutPage() {
                       </label>
                     </div>
                     <Input
+                      dir="auto"
                       aria-label={isPersian ? 'عنوان نشانی' : 'Address Title'}
                       placeholder={isPersian ? 'مثلاً خانه، محل کار...' : 'e.g. Home, Office...'}
                       value={newAddressForm.title}
@@ -1206,7 +1211,7 @@ export function CheckoutPage() {
                       radius="lg"
                       classNames={{
                         inputWrapper: "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                        input: "text-xs font-semibold text-brand-text",
+                        input: "text-sm font-semibold text-brand-text",
                       }}
                     />
                     <AnimatedFieldError error={newAddressErrors.title} />
@@ -1242,13 +1247,14 @@ export function CheckoutPage() {
                       </label>
                     </div>
                     <Textarea
+                      dir="auto"
                       aria-label={isPersian ? 'نشانی دقیق پستی' : 'Street Address'}
                       placeholder={
                         isPersian
                           ? 'نام خیابان، کوچه، پلاک، طبقه، واحد...'
                           : 'Street name, alley, building, unit...'
                       }
-                      rows={3}
+                      minRows={3}
                       maxLength={500}
                       value={newAddressForm.address}
                       onValueChange={(val) => {
@@ -1262,7 +1268,7 @@ export function CheckoutPage() {
                         inputWrapper: newAddressErrors.address
                           ? "p-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors h-24 !resize-none"
                           : "p-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors h-24 !resize-none",
-                        input: "text-xs font-semibold text-brand-text leading-relaxed !resize-none resize-none overflow-y-auto",
+                        input: "text-sm font-semibold text-brand-text leading-relaxed !resize-none resize-none overflow-y-auto",
                       }}
                     />
                     <AnimatedFieldError error={newAddressErrors.address} />
@@ -1277,6 +1283,7 @@ export function CheckoutPage() {
                       </label>
                     </div>
                     <Input
+                      dir="auto"
                       aria-label={isPersian ? 'نام گیرنده تحویل' : 'Recipient Full Name'}
                       placeholder={isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
                       value={newAddressForm.recipientName}
@@ -1291,7 +1298,7 @@ export function CheckoutPage() {
                         inputWrapper: newAddressErrors.recipientName
                           ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                           : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                        input: "text-xs font-semibold text-brand-text",
+                        input: "text-sm font-semibold text-brand-text",
                       }}
                     />
                     <AnimatedFieldError error={newAddressErrors.recipientName} />
@@ -1324,7 +1331,7 @@ export function CheckoutPage() {
                         inputWrapper: newAddressErrors.recipientPhone
                           ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                           : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                        input: "text-xs font-bold text-brand-text text-center font-mono",
+                        input: "text-sm font-bold text-brand-text text-center font-mono",
                       }}
                     />
                     <AnimatedFieldError error={newAddressErrors.recipientPhone} />
@@ -1356,7 +1363,7 @@ export function CheckoutPage() {
                         inputWrapper: newAddressErrors.postalCode
                           ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                           : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                        input: "text-xs font-bold text-brand-text tracking-widest text-center font-mono",
+                        input: "text-sm font-bold text-brand-text tracking-widest text-center font-mono",
                       }}
                     />
                     <AnimatedFieldError error={newAddressErrors.postalCode} />
@@ -1387,7 +1394,7 @@ export function CheckoutPage() {
                         inputWrapper: newAddressErrors.recipientEmail
                           ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                           : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                        input: "text-xs font-semibold text-brand-text text-start",
+                        input: "text-sm font-semibold text-brand-text text-start",
                       }}
                     />
                     <AnimatedFieldError error={newAddressErrors.recipientEmail} />
@@ -1402,13 +1409,14 @@ export function CheckoutPage() {
                       </label>
                     </div>
                     <Textarea
+                      dir="auto"
                       aria-label={isPersian ? 'توضیحات و یادداشت تحویل' : 'Delivery Notes'}
                       placeholder={
                         isPersian
                           ? 'توضیحات تکمیلی تحویل سفارش، شماره زنگ، طبقه، هماهنگی قبل از ارسال و... (اختیاری)'
                           : 'Special delivery instructions, apartment/bell number, coordination... (optional)'
                       }
-                      rows={2}
+                      minRows={2}
                       maxLength={300}
                       value={newAddressForm.addressNotes}
                       onValueChange={(val) => setNewAddressForm({ ...newAddressForm, addressNotes: val })}
@@ -1416,7 +1424,7 @@ export function CheckoutPage() {
                       radius="lg"
                       classNames={{
                         inputWrapper: "p-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors h-20 !resize-none",
-                        input: "text-xs font-semibold text-brand-text leading-relaxed !resize-none resize-none overflow-y-auto",
+                        input: "text-sm font-semibold text-brand-text leading-relaxed !resize-none resize-none overflow-y-auto",
                       }}
                     />
                   </div>

@@ -275,6 +275,7 @@ export function ProductVariantManager({
                   {/* Title Input */}
                   <div className="sm:col-span-3">
                     <Input
+                      dir="auto"
                       label={isPersian ? 'عنوان حجم / مدل *' : 'Variant Title *'}
                       labelPlacement="outside-top"
                       isRequired
@@ -285,7 +286,7 @@ export function ProductVariantManager({
                       radius="full"
                       classNames={{
                         inputWrapper: 'h-11 px-3.5 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                        input: 'font-bold text-xs text-brand-text',
+                        input: 'font-bold text-sm text-brand-text',
                         label: 'text-xs font-bold text-brand-text mb-1',
                       }}
                     />
@@ -327,7 +328,7 @@ export function ProductVariantManager({
                       radius="full"
                       classNames={{
                         inputWrapper: 'h-11 px-3.5 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                        input: 'font-bold text-xs text-brand-text',
+                        input: 'font-bold text-sm text-brand-text',
                         label: 'text-xs font-bold text-brand-text mb-1',
                       }}
                     />

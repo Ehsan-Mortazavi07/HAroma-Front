@@ -288,8 +288,8 @@ export function DynamicAttributeBuilder({
               radius="full"
               className="w-full sm:w-2/3"
               classNames={{
-                trigger: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-11 text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee] rounded-full text-start shadow-xs',
-                value: 'text-xs font-bold text-start',
+                trigger: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-11 text-sm font-bold text-[#1d241d] dark:text-[#f7f4ee] rounded-full text-start shadow-xs',
+                value: 'text-sm font-bold text-start',
                 popoverContent: 'bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] rounded-2xl shadow-xl',
               }}
             >
@@ -351,6 +351,7 @@ export function DynamicAttributeBuilder({
               {/* Custom Value Adder Input */}
               <div className="flex flex-col sm:flex-row gap-2 items-center">
                 <Input
+                  dir="auto"
                   value={customValueInput}
                   onValueChange={setCustomValueInput}
                   onKeyDown={(e) => {
@@ -365,7 +366,7 @@ export function DynamicAttributeBuilder({
                   className="w-full sm:w-2/3"
                   classNames={{
                     inputWrapper: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-10',
-                    input: 'text-xs font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
+                    input: 'text-sm font-semibold text-[#1d241d] dark:text-[#f7f4ee]',
                   }}
                 />
                 <Button
@@ -463,8 +464,9 @@ export function DynamicAttributeBuilder({
                       {addingToAttrIndex === idx ? (
                         <div className="inline-flex items-center gap-1">
                           <Input
+                            dir="auto"
                             autoFocus
-                            size="sm"
+                            size="md"
                             value={newTagInput}
                             onValueChange={setNewTagInput}
                             onKeyDown={(e) => {
@@ -478,8 +480,8 @@ export function DynamicAttributeBuilder({
                             radius="full"
                             className="w-28"
                             classNames={{
-                              inputWrapper: 'h-7 bg-[#ffffff] dark:bg-[#1c231c] border-brand-gold',
-                              input: 'text-xs font-semibold',
+                              inputWrapper: 'h-9 bg-[#ffffff] dark:bg-[#1c231c] border-brand-gold',
+                              input: 'text-sm font-semibold',
                             }}
                           />
                           <Button
@@ -563,6 +565,7 @@ export function DynamicAttributeBuilder({
 
               <ModalBody className="space-y-4 text-xs">
                 <Input
+                  dir="auto"
                   label={isPersian ? 'عنوان ویژگی *' : 'Attribute Title *'}
                   labelPlacement="outside-top"
                   isRequired
@@ -573,15 +576,16 @@ export function DynamicAttributeBuilder({
                   radius="full"
                   classNames={{
                     inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
-                    input: 'text-xs font-semibold text-brand-text',
+                    input: 'text-sm font-semibold text-brand-text',
                     label: 'text-xs font-bold text-brand-text',
                   }}
                 />
 
                 <Textarea
+                  dir="auto"
                   label={isPersian ? 'مقادیر اولیه (با کاما یا اینتر جدا کنید) *' : 'Values (separated by comma or newline) *'}
                   labelPlacement="outside-top"
-                  rows={3}
+                    minRows={3}
                   isRequired
                   value={newAttrValues}
                   onValueChange={setNewAttrValues}
@@ -590,12 +594,13 @@ export function DynamicAttributeBuilder({
                   radius="lg"
                   classNames={{
                     inputWrapper: 'p-3 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-2xl shadow-xs',
-                    input: 'text-xs font-semibold text-brand-text',
+                    input: 'text-sm font-semibold text-brand-text',
                     label: 'text-xs font-bold text-brand-text',
                   }}
                 />
 
                 <Input
+                  dir="auto"
                   label={isPersian ? 'واحد اندازه‌گیری (اختیاری)' : 'Unit (Optional)'}
                   labelPlacement="outside-top"
                   value={newAttrUnit}
@@ -605,7 +610,7 @@ export function DynamicAttributeBuilder({
                   radius="full"
                   classNames={{
                     inputWrapper: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
-                    input: 'text-xs font-semibold text-brand-text',
+                    input: 'text-sm font-semibold text-brand-text',
                     label: 'text-xs font-bold text-brand-text',
                   }}
                 />

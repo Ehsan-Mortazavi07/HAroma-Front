@@ -936,6 +936,7 @@ export default function AdminAttributesPage() {
               <ModalBody className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
+                    dir="auto"
                     label={isPersian ? 'عنوان تنوع (فارسی)' : 'Variant Title (Persian)'}
                     labelPlacement="outside-top"
                     isRequired
@@ -946,12 +947,13 @@ export default function AdminAttributesPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-semibold text-brand-text",
+                      input: "text-sm font-semibold text-brand-text",
                       label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
+                    dir="auto"
                     label={isPersian ? 'عنوان تنوع (انگلیسی)' : 'Variant Title (English)'}
                     labelPlacement="outside-top"
                     value={tplTitleEn}
@@ -961,7 +963,7 @@ export default function AdminAttributesPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-semibold text-brand-text",
+                      input: "text-sm font-semibold text-brand-text",
                       label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
@@ -996,12 +998,13 @@ export default function AdminAttributesPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-bold text-brand-text",
+                      input: "text-sm font-bold text-brand-text",
                       label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
+                    dir="auto"
                     label={isPersian ? 'واحد سنجش' : 'Unit'}
                     labelPlacement="outside-top"
                     value={tplUnit}
@@ -1011,7 +1014,7 @@ export default function AdminAttributesPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-semibold text-brand-text",
+                      input: "text-sm font-semibold text-brand-text",
                       label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
@@ -1026,7 +1029,7 @@ export default function AdminAttributesPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-bold text-brand-text",
+                      input: "text-sm font-bold text-brand-text",
                       label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
@@ -1093,6 +1096,7 @@ export default function AdminAttributesPage() {
               <ModalBody className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
+                    dir="auto"
                     label={isPersian ? 'نام ویژگی (فارسی)' : 'Attribute Name (Persian)'}
                     labelPlacement="outside-top"
                     isRequired
@@ -1103,12 +1107,13 @@ export default function AdminAttributesPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-semibold text-brand-text",
+                      input: "text-sm font-semibold text-brand-text",
                       label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
+                    dir="auto"
                     label={isPersian ? 'نام ویژگی (انگلیسی)' : 'Attribute Name (English)'}
                     labelPlacement="outside-top"
                     value={attrNameEn}
@@ -1118,7 +1123,7 @@ export default function AdminAttributesPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-semibold text-brand-text",
+                      input: "text-sm font-semibold text-brand-text",
                       label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
@@ -1126,6 +1131,7 @@ export default function AdminAttributesPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
+                    dir="auto"
                     label={isPersian ? 'کلید سیستمی (انگلیسی/یکتا)' : 'System Key (Unique)'}
                     labelPlacement="outside-top"
                     value={attrKey}
@@ -1135,12 +1141,13 @@ export default function AdminAttributesPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold font-mono font-bold rounded-full shadow-xs",
-                      input: "text-xs font-semibold text-brand-text",
+                      input: "text-sm font-semibold text-brand-text",
                       label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
 
                   <Input
+                    dir="auto"
                     label={isPersian ? 'واحد سنجش (اختیاری)' : 'Unit (Optional)'}
                     labelPlacement="outside-top"
                     value={attrUnit}
@@ -1150,7 +1157,7 @@ export default function AdminAttributesPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-semibold text-brand-text",
+                      input: "text-sm font-semibold text-brand-text",
                       label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
@@ -1163,6 +1170,7 @@ export default function AdminAttributesPage() {
                   </label>
                   <div className="flex gap-2">
                     <Input
+                      dir="auto"
                       value={attrValueInput}
                       onValueChange={setAttrValueInput}
                       onKeyDown={(e) => {
@@ -1177,7 +1185,7 @@ export default function AdminAttributesPage() {
                       className="flex-1"
                       classNames={{
                         inputWrapper: "bg-brand-surface-elevated border-brand-border hover:border-brand-gold",
-                        input: "text-xs font-semibold text-brand-text",
+                        input: "text-sm font-semibold text-brand-text",
                       }}
                     />
                     <Button

@@ -38,14 +38,14 @@ export default function AdminVipPlansPage() {
     label: `text-xs font-bold text-brand-text mb-1.5 block ${isRTL ? 'text-right' : 'text-left'}`,
     inputWrapper:
       'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold hover:!border-[#d4be9b] rounded-2xl shadow-xs transition-colors',
-    input: 'text-xs font-semibold text-brand-text text-start',
+    input: 'text-sm font-semibold text-brand-text text-start',
   };
 
   const vipTextareaClassNames = {
     label: `text-xs font-bold text-brand-text mb-1.5 block ${isRTL ? 'text-right' : 'text-left'}`,
     inputWrapper:
       'p-3.5 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold hover:!border-[#d4be9b] rounded-2xl shadow-xs transition-colors min-h-[84px] !resize-none',
-    input: 'text-xs font-medium text-brand-text text-start',
+    input: 'text-sm font-medium text-brand-text text-start',
   };
 
   const [loading, setLoading] = useState(true);
@@ -586,6 +586,7 @@ export default function AdminVipPlansPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Input
+                      dir="auto"
                       label={isPersian ? 'عنوان فارسی پلن' : 'Plan Title (Persian)'}
                       labelPlacement="outside-top"
                       isRequired
@@ -624,12 +625,13 @@ export default function AdminVipPlansPage() {
                     variant="bordered"
                     classNames={{
                       ...vipInputClassNames,
-                      input: 'text-xs font-semibold text-brand-text text-left font-sans',
+                      input: 'text-sm font-semibold text-brand-text text-left font-sans',
                     }}
                   />
                 </div>
 
                 <Textarea
+                  dir="auto"
                   label={isPersian ? 'توضیحات کوتاه' : 'Short Description'}
                   labelPlacement="outside-top"
                   minRows={2}
@@ -660,7 +662,7 @@ export default function AdminVipPlansPage() {
                     variant="bordered"
                     classNames={{
                       ...vipInputClassNames,
-                      input: 'text-xs font-bold text-brand-text text-start font-mono',
+                      input: 'text-sm font-bold text-brand-text text-start font-mono',
                     }}
                   />
 
@@ -673,7 +675,7 @@ export default function AdminVipPlansPage() {
                     variant="bordered"
                     classNames={{
                       ...vipInputClassNames,
-                      input: 'text-xs font-bold text-brand-text text-start font-mono',
+                      input: 'text-sm font-bold text-brand-text text-start font-mono',
                     }}
                   />
                 </div>
@@ -685,6 +687,7 @@ export default function AdminVipPlansPage() {
                   </label>
                   <div className="flex gap-2 mb-2">
                     <Input
+                      dir="auto"
                       value={perkInput}
                       onValueChange={setPerkInput}
                       placeholder={isPersian ? 'مثال: ارسال رایگان، هدیه تستر' : 'e.g. Free shipping, 2 tester vials'}

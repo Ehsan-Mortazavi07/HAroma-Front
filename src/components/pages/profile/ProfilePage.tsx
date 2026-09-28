@@ -2019,6 +2019,7 @@ export function ProfilePage() {
                           <span className="text-rose-500 font-bold text-xs">*</span>
                         </div>
                         <Input
+                          dir="auto"
                           aria-label={isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
                           placeholder={isPersian ? 'مثال: علیرضا محمدی' : 'e.g. John Doe'}
                           value={fullName}
@@ -2027,7 +2028,7 @@ export function ProfilePage() {
                           radius="lg"
                           classNames={{
                             inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                            input: "text-xs font-semibold text-brand-text",
+                            input: "text-sm font-semibold text-brand-text",
                           }}
                         />
                       </div>
@@ -2042,6 +2043,7 @@ export function ProfilePage() {
                           <span className="text-rose-500 font-bold text-xs">*</span>
                         </div>
                         <Input
+                          dir="auto"
                           aria-label={isPersian ? 'نام کاربری (یکتا در سیستم)' : 'Username (Unique)'}
                           placeholder="e.g. john_doe"
                           value={username}
@@ -2050,7 +2052,7 @@ export function ProfilePage() {
                           radius="lg"
                           classNames={{
                             inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                            input: "text-xs font-bold text-brand-text text-start",
+                            input: "text-sm font-bold text-brand-text text-start",
                           }}
                         />
                       </div>
@@ -2073,7 +2075,7 @@ export function ProfilePage() {
                           radius="lg"
                           classNames={{
                             inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                            input: "text-xs font-semibold text-brand-text text-start",
+                            input: "text-sm font-semibold text-brand-text text-start",
                           }}
                         />
                       </div>
@@ -2111,7 +2113,7 @@ export function ProfilePage() {
                             startContent={<Lock className="w-3.5 h-3.5 text-brand-text-muted shrink-0" />}
                             classNames={{
                               inputWrapper: "h-12 px-4 bg-brand-surface-elevated/70 border border-brand-border rounded-2xl shadow-xs cursor-not-allowed opacity-90",
-                              input: "text-xs font-bold text-brand-text text-start font-mono cursor-not-allowed",
+                              input: "text-sm font-bold text-brand-text text-start font-mono cursor-not-allowed",
                             }}
                           />
                           <Button
@@ -2214,7 +2216,7 @@ export function ProfilePage() {
                             }
                             classNames={{
                               inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                              input: "text-xs font-semibold text-brand-text",
+                              input: "text-sm font-semibold text-brand-text",
                             }}
                           />
                         </div>
@@ -2251,7 +2253,7 @@ export function ProfilePage() {
                           }
                           classNames={{
                             inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                            input: "text-xs font-semibold text-brand-text",
+                            input: "text-sm font-semibold text-brand-text",
                           }}
                         />
                       </div>
@@ -2283,7 +2285,7 @@ export function ProfilePage() {
                           }
                           classNames={{
                             inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                            input: "text-xs font-semibold text-brand-text",
+                            input: "text-sm font-semibold text-brand-text",
                           }}
                         />
                       </div>
@@ -2508,7 +2510,7 @@ export function ProfilePage() {
                           inputWrapper: Boolean(verifyPhoneError)
                             ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                             : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                          input: "text-xs font-bold text-brand-text tracking-wider",
+                          input: "text-sm font-bold text-brand-text tracking-wider",
                         }}
                       />
                       <AnimatedFieldError error={verifyPhoneError} />
@@ -2716,6 +2718,7 @@ export function ProfilePage() {
                       </label>
                     </div>
                     <Input
+                      dir="auto"
                       aria-label={isPersian ? 'عنوان نشانی' : 'Address Title'}
                       placeholder={isPersian ? 'مثلاً خانه، محل کار، شرکت...' : 'e.g. Home, Office, Work...'}
                       value={addressForm.title}
@@ -2728,7 +2731,7 @@ export function ProfilePage() {
                       radius="lg"
                       classNames={{
                         inputWrapper: "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                        input: "text-xs font-semibold text-brand-text",
+                        input: "text-sm font-semibold text-brand-text",
                       }}
                     />
                     <AnimatedFieldError error={addressErrors.title} />
@@ -2764,13 +2767,14 @@ export function ProfilePage() {
                       </label>
                     </div>
                     <Textarea
+                      dir="auto"
                       aria-label={isPersian ? 'نشانی دقیق پستی' : 'Street Address'}
                       placeholder={
                         isPersian
                           ? 'نام خیابان، کوچه، پلاک، طبقه، واحد یا توضیحات تکمیلی نشانی...'
                           : 'Street name, alley, building number, floor, details...'
                       }
-                      rows={3}
+                        minRows={3}
                       maxLength={500}
                       value={addressForm.address}
                       onValueChange={(val) => {
@@ -2784,7 +2788,7 @@ export function ProfilePage() {
                         inputWrapper: addressErrors.address
                           ? "p-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors h-24 !resize-none"
                           : "p-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors h-24 !resize-none",
-                        input: "text-xs font-semibold text-brand-text leading-relaxed !resize-none resize-none overflow-y-auto",
+                        input: "text-sm font-semibold text-brand-text leading-relaxed !resize-none resize-none overflow-y-auto",
                       }}
                     />
                     <AnimatedFieldError error={addressErrors.address} />
@@ -2799,6 +2803,7 @@ export function ProfilePage() {
                       </label>
                     </div>
                     <Input
+                      dir="auto"
                       aria-label={isPersian ? 'نام گیرنده تحویل' : 'Recipient Full Name'}
                       placeholder={isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
                       value={addressForm.recipientName}
@@ -2813,7 +2818,7 @@ export function ProfilePage() {
                         inputWrapper: addressErrors.recipientName
                           ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                           : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                        input: "text-xs font-semibold text-brand-text",
+                        input: "text-sm font-semibold text-brand-text",
                       }}
                     />
                     <AnimatedFieldError error={addressErrors.recipientName} />
@@ -2846,7 +2851,7 @@ export function ProfilePage() {
                         inputWrapper: addressErrors.recipientPhone
                           ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                           : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                        input: "text-xs font-bold text-brand-text text-center font-mono",
+                        input: "text-sm font-bold text-brand-text text-center font-mono",
                       }}
                     />
                     <AnimatedFieldError error={addressErrors.recipientPhone} />
@@ -2878,7 +2883,7 @@ export function ProfilePage() {
                         inputWrapper: addressErrors.postalCode
                           ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                           : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                        input: "text-xs font-bold text-brand-text tracking-widest text-center font-mono",
+                        input: "text-sm font-bold text-brand-text tracking-widest text-center font-mono",
                       }}
                     />
                     <AnimatedFieldError error={addressErrors.postalCode} />
@@ -2909,7 +2914,7 @@ export function ProfilePage() {
                         inputWrapper: addressErrors.recipientEmail
                           ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                           : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                        input: "text-xs font-semibold text-brand-text text-start",
+                        input: "text-sm font-semibold text-brand-text text-start",
                       }}
                     />
                     <AnimatedFieldError error={addressErrors.recipientEmail} />
@@ -2924,13 +2929,14 @@ export function ProfilePage() {
                       </label>
                     </div>
                     <Textarea
+                      dir="auto"
                       aria-label={isPersian ? 'توضیحات و یادداشت تحویل' : 'Delivery Notes'}
                       placeholder={
                         isPersian
                           ? 'توضیحات تکمیلی تحویل سفارش، شماره زنگ، طبقه، هماهنگی قبل از ارسال و... (اختیاری)'
                           : 'Special delivery instructions, apartment/bell number, coordination... (optional)'
                       }
-                      rows={2}
+                        minRows={2}
                       maxLength={300}
                       value={addressForm.addressNotes}
                       onValueChange={(val) => setAddressForm({ ...addressForm, addressNotes: val })}
@@ -2938,7 +2944,7 @@ export function ProfilePage() {
                       radius="lg"
                       classNames={{
                         inputWrapper: "p-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors h-20 !resize-none",
-                        input: "text-xs font-semibold text-brand-text leading-relaxed !resize-none resize-none overflow-y-auto",
+                        input: "text-sm font-semibold text-brand-text leading-relaxed !resize-none resize-none overflow-y-auto",
                       }}
                     />
                   </div>

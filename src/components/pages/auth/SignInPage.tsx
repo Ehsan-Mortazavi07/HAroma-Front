@@ -446,7 +446,7 @@ export function SignInPage() {
                             inputWrapper: Boolean(phoneError || phoneCooldown > 0)
                               ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors'
                               : 'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors',
-                            input: 'text-xs font-bold text-brand-text tracking-wider',
+                            input: 'text-sm font-bold text-brand-text tracking-wider',
                           }}
                         />
                         <AnimatedFieldError
@@ -698,6 +698,7 @@ export function SignInPage() {
                           {t.auth.identifier}
                         </label>
                         <Input
+                          dir="auto"
                           name="identifier"
                           type="text"
                           aria-label={t.auth.identifier}
@@ -720,7 +721,7 @@ export function SignInPage() {
                             inputWrapper: Boolean(errors.identifier && (touched.identifier || submitCount > 0))
                               ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                               : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                            input: "text-xs font-semibold text-brand-text",
+                            input: "text-sm font-semibold text-brand-text",
                           }}
                         />
                         <AnimatedFieldError error={(touched.identifier || submitCount > 0) && errors.identifier ? String(errors.identifier) : null} />
@@ -765,7 +766,7 @@ export function SignInPage() {
                             inputWrapper: Boolean(errors.password && (touched.password || submitCount > 0))
                               ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                               : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                            input: "text-xs font-mono font-semibold text-brand-text",
+                            input: "text-sm font-mono font-semibold text-brand-text",
                           }}
                         />
                         <AnimatedFieldError error={(touched.password || submitCount > 0) && errors.password ? String(errors.password) : null} />

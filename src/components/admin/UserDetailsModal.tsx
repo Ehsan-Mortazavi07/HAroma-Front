@@ -1145,6 +1145,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                       <div className="space-y-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <Input
+                            dir="auto"
                             label={isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
                             labelPlacement="outside-top"
                             isRequired
@@ -1163,11 +1164,12 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
                               innerWrapper: 'gap-3',
-                              input: 'text-xs font-bold text-brand-text',
+                              input: 'text-sm font-bold text-brand-text',
                             }}
                           />
 
                           <Input
+                            dir="auto"
                             label={isPersian ? 'نام کاربری (یکتا)' : 'Username (Unique)'}
                             labelPlacement="outside-top"
                             isRequired
@@ -1186,7 +1188,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
                               innerWrapper: 'gap-3',
-                              input: 'text-xs font-mono font-bold text-brand-text text-start',
+                              input: 'text-sm font-mono font-bold text-brand-text text-start',
                             }}
                           />
 
@@ -1209,7 +1211,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
                               innerWrapper: 'gap-3',
-                              input: 'text-xs font-mono font-semibold text-brand-text text-start',
+                              input: 'text-sm font-mono font-semibold text-brand-text text-start',
                             }}
                           />
 
@@ -1233,7 +1235,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
                               innerWrapper: 'gap-3',
-                              input: 'text-xs font-mono font-semibold text-brand-text text-start',
+                              input: 'text-sm font-mono font-semibold text-brand-text text-start',
                             }}
                           />
                         </div>
@@ -1339,6 +1341,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           </div>
 
                           <Input
+                            dir="auto"
                             label={isPersian ? 'لینک تصویر آواتار (URL)' : 'Avatar Image URL'}
                             labelPlacement="outside-top"
                             value={formData.avatar}
@@ -1351,7 +1354,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
                               innerWrapper: 'gap-3',
-                              input: 'text-xs font-mono text-brand-text text-start',
+                              input: 'text-sm font-mono text-brand-text text-start',
                             }}
                           />
                         </div>
@@ -1415,7 +1418,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             classNames={{
                               inputWrapper: inputWrapperClass,
                               innerWrapper: 'gap-3',
-                              input: 'text-xs font-mono font-semibold text-brand-text text-start',
+                              input: 'text-sm font-mono font-semibold text-brand-text text-start',
                             }}
                           />
                         </div>
@@ -1633,6 +1636,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                           <div>
                             <Input
+                              dir="auto"
                               label={isPersian ? 'کد پستی ۱۰ رقمی' : 'Postal Code'}
                               labelPlacement="outside-top"
                               isInvalid={Boolean(fieldErrors.postalCode)}
@@ -1650,7 +1654,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                 label: inputLabelClass,
                                 inputWrapper: inputWrapperClass,
                                 innerWrapper: 'gap-3',
-                                input: 'text-xs font-mono font-bold text-brand-text text-start',
+                                input: 'text-sm font-mono font-bold text-brand-text text-start',
                               }}
                             />
                             <AnimatedFieldError error={fieldErrors.postalCode} />
@@ -1750,7 +1754,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                 label: inputLabelClass,
                                 inputWrapper: inputWrapperClass,
                                 innerWrapper: 'gap-3',
-                                input: 'text-xs font-mono font-bold text-brand-text text-start',
+                                input: 'text-sm font-mono font-bold text-brand-text text-start',
                               }}
                             />
                             <AnimatedFieldError error={fieldErrors.recipientPhone} />
@@ -1776,7 +1780,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
                               innerWrapper: 'gap-3',
-                              input: 'text-xs font-mono font-semibold text-brand-text text-start',
+                              input: 'text-sm font-mono font-semibold text-brand-text text-start',
                             }}
                           />
                           <AnimatedFieldError error={fieldErrors.recipientEmail} />

@@ -512,6 +512,7 @@ export default function AdminCouponsPage() {
               <ModalBody className="space-y-4">
                 <div>
                   <Input
+                    dir="auto"
                     label={isPersian ? 'کد تخفیف (لاتین و بدون فاصله)' : 'Coupon Code (Latin)'}
                     labelPlacement="outside-top"
                     isRequired
@@ -530,7 +531,7 @@ export default function AdminCouponsPage() {
                         codeTouched && !code.trim()
                           ? 'h-11 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 font-mono font-bold uppercase rounded-full shadow-xs transition-colors'
                           : 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold font-mono font-bold uppercase rounded-full shadow-xs transition-colors',
-                      input: 'text-xs font-semibold text-brand-text',
+                      input: 'text-sm font-semibold text-brand-text',
                       label: 'text-xs font-bold text-brand-text mb-1',
                     }}
                   />
@@ -553,7 +554,7 @@ export default function AdminCouponsPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-xs font-bold text-brand-text",
+                      input: "text-sm font-bold text-brand-text",
                       label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />
@@ -594,7 +595,7 @@ export default function AdminCouponsPage() {
                     radius="full"
                     classNames={{
                       inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs transition-colors",
-                      input: "text-xs font-bold text-brand-text",
+                      input: "text-sm font-bold text-brand-text",
                       label: "text-xs font-bold text-brand-text mb-1",
                     }}
                   />

@@ -51,7 +51,7 @@ const cardVariants = {
 const inputClassNames = {
   inputWrapper:
     'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:border-brand-gold rounded-full shadow-xs transition-colors',
-  input: 'text-xs font-semibold text-brand-text',
+  input: 'text-sm font-semibold text-brand-text',
   label: 'text-xs font-bold text-brand-text mb-1',
 };
 
@@ -578,6 +578,7 @@ export default function AdminCategoriesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Input
+                      dir="auto"
                       label={isPersian ? 'نام فارسی دسته‌بندی' : 'Category Name (Persian)'}
                       labelPlacement="outside-top"
                       isRequired
@@ -608,6 +609,7 @@ export default function AdminCategoriesPage() {
                   </div>
 
                   <Input
+                    dir="auto"
                     label={isPersian ? 'نام انگلیسی دسته‌بندی' : 'Category Name (English)'}
                     labelPlacement="outside-top"
                     value={nameEn}
@@ -631,8 +633,8 @@ export default function AdminCategoriesPage() {
                     variant="bordered"
                     radius="full"
                     classNames={{
-                      trigger: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs text-xs font-semibold text-brand-text text-start transition-colors',
-                      value: 'text-xs font-semibold text-brand-text text-start',
+                      trigger: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs text-sm font-semibold text-brand-text text-start transition-colors',
+                      value: 'text-sm font-semibold text-brand-text text-start',
                       label: 'text-xs font-bold text-brand-text mb-1',
                       popoverContent: 'bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl',
                     }}
@@ -647,6 +649,7 @@ export default function AdminCategoriesPage() {
                   </Select>
 
                   <Input
+                    dir="auto"
                     label={isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
                     labelPlacement="outside-top"
                     value={slug}

@@ -527,6 +527,7 @@ export function ResetPasswordModal({
                               <span>{isPersian ? 'موبایل، ایمیل یا نام کاربری:' : 'Mobile, Email or Username:'}</span>
                             </label>
                             <Input
+                              dir="auto"
                               aria-label={isPersian ? 'موبایل، ایمیل یا نام کاربری' : 'Mobile, Email or Username'}
                               placeholder={isPersian ? '۰۹۱۲۳۴۵۶۷۸۹ یا info@example.com' : '09123456789 or info@example.com'}
                               value={identifier}
@@ -539,7 +540,7 @@ export function ResetPasswordModal({
                               classNames={{
                                 inputWrapper:
                                   'h-10 px-4 bg-brand-surface-elevated/70 dark:bg-brand-surface-elevated/40 border border-brand-border hover:border-brand-bronze/80 dark:hover:border-brand-gold/80 focus-within:!border-brand-bronze dark:focus-within:!border-brand-gold rounded-full shadow-2xs transition-colors',
-                                input: 'text-xs font-semibold text-brand-text text-start',
+                                input: 'text-sm font-semibold text-brand-text text-start',
                               }}
                             />
                             <AnimatedFieldError error={identifierError} />
@@ -898,7 +899,7 @@ export function ResetPasswordModal({
                           classNames={{
                             inputWrapper:
                               'h-10 px-4 bg-brand-surface-elevated/70 dark:bg-brand-surface-elevated/40 border border-brand-border hover:border-brand-bronze/80 dark:hover:border-brand-gold/80 focus-within:!border-brand-bronze dark:focus-within:!border-brand-gold rounded-full shadow-2xs transition-colors',
-                            input: 'text-xs font-semibold text-brand-text',
+                            input: 'text-sm font-semibold text-brand-text',
                           }}
                         />
                         <AnimatedFieldError error={newPasswordError} />
@@ -931,7 +932,7 @@ export function ResetPasswordModal({
                           classNames={{
                             inputWrapper:
                               'h-10 px-4 bg-brand-surface-elevated/70 dark:bg-brand-surface-elevated/40 border border-brand-border hover:border-brand-bronze/80 dark:hover:border-brand-gold/80 focus-within:!border-brand-bronze dark:focus-within:!border-brand-gold rounded-full shadow-2xs transition-colors',
-                            input: 'text-xs font-semibold text-brand-text',
+                            input: 'text-sm font-semibold text-brand-text',
                           }}
                         />
                         <AnimatedFieldError error={confirmPasswordError} />

@@ -355,6 +355,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             <div className="relative w-full shrink-0 flex items-center gap-2 sm:gap-3">
               <div className="relative flex-1 min-w-0">
                 <Input
+                  dir="auto"
                   ref={inputRef}
                   type="text"
                   value={searchQuery}
@@ -398,7 +399,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     inputWrapper:
                       'bg-[#f0eae0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#3e4c3e] hover:border-[#9f815b]/60 dark:hover:border-[#bfa27a]/60 data-[focus=true]:border-[#9f815b] dark:data-[focus=true]:border-[#bfa27a] data-[focus=true]:bg-white dark:data-[focus=true]:bg-[#242c24] h-12 sm:h-14 px-3.5 sm:px-4 transition-all shadow-inner rounded-full',
                     input:
-                      '!border-none !outline-none !shadow-none !ring-0 !bg-transparent text-xs sm:text-sm font-medium text-[#1d241d] dark:text-[#f7f4ee] placeholder:text-[#73695c] dark:placeholder:text-[#a69c8e] placeholder:font-normal focus:!outline-none focus:!ring-0 focus:!border-none [appearance:none] [-webkit-appearance:none] pr-1 sm:pr-2',
+                      '!border-none !outline-none !shadow-none !ring-0 !bg-transparent text-sm font-medium text-[#1d241d] dark:text-[#f7f4ee] placeholder:text-[#73695c] dark:placeholder:text-[#a69c8e] placeholder:font-normal focus:!outline-none focus:!ring-0 focus:!border-none [appearance:none] [-webkit-appearance:none] pr-1 sm:pr-2',
                     innerWrapper: '!bg-transparent',
                   }}
                 />
@@ -734,4 +735,3 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     </AnimatePresence>
   );
 }
-

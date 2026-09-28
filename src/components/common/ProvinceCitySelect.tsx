@@ -189,12 +189,13 @@ export function ProvinceCitySelect({
                 <div className="relative px-1 pt-1 pb-1">
                   <Search className="w-3.5 h-3.5 text-brand-text-muted absolute right-3.5 top-3.5 shrink-0 pointer-events-none" />
                   <input
+                    dir="auto"
                     type="text"
                     autoFocus
                     value={provinceSearch}
                     onChange={(e) => setProvinceSearch(e.target.value)}
                     placeholder={isPersian ? 'جستجوی استان...' : 'Search province...'}
-                    className="w-full h-9 pr-8 pl-3 text-xs font-semibold rounded-xl bg-brand-surface-elevated border border-brand-border text-brand-text focus:outline-none focus:border-brand-gold"
+                    className="w-full h-9 pr-8 pl-3 text-sm font-semibold rounded-xl bg-brand-surface-elevated border border-brand-border text-brand-text focus:outline-none focus:border-brand-gold"
                   />
                   {provinceSearch && (
                     <button
@@ -296,12 +297,13 @@ export function ProvinceCitySelect({
                 <div className="relative px-1 pt-1 pb-1">
                   <Search className="w-3.5 h-3.5 text-brand-text-muted absolute right-3.5 top-3.5 shrink-0 pointer-events-none" />
                   <input
+                    dir="auto"
                     type="text"
                     autoFocus
                     value={citySearch}
                     onChange={(e) => setCitySearch(e.target.value)}
                     placeholder={isPersian ? 'جستجوی شهر...' : 'Search city...'}
-                    className="w-full h-9 pr-8 pl-3 text-xs font-semibold rounded-xl bg-brand-surface-elevated border border-brand-border text-brand-text focus:outline-none focus:border-brand-gold"
+                    className="w-full h-9 pr-8 pl-3 text-sm font-semibold rounded-xl bg-brand-surface-elevated border border-brand-border text-brand-text focus:outline-none focus:border-brand-gold"
                   />
                   {citySearch && (
                     <button

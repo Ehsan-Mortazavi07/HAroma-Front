@@ -376,6 +376,7 @@ export default function AdminProductsPage() {
       <Card className="p-4 bg-brand-surface border border-brand-border rounded-3xl shadow-xs overflow-visible">
         <CardBody className="p-0 flex flex-col sm:flex-row items-center gap-3 overflow-visible">
           <Input
+            dir="auto"
             value={searchQuery}
             onValueChange={setSearchQuery}
             placeholder={isPersian ? 'جستجو در عنوان یا برند عطر...' : 'Search by title, brand, or slug...'}
@@ -385,7 +386,7 @@ export default function AdminProductsPage() {
             className="flex-1 w-full"
             classNames={{
               inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs transition-colors",
-              input: "text-xs font-semibold text-brand-text",
+              input: "text-sm font-semibold text-brand-text",
             }}
           />
 
@@ -402,8 +403,8 @@ export default function AdminProductsPage() {
               radius="full"
               className="w-full sm:w-56"
               classNames={{
-                trigger: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs text-xs font-bold text-brand-text text-start",
-                value: "text-xs font-bold text-brand-text text-start",
+                trigger: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs text-sm font-bold text-brand-text text-start",
+                value: "text-sm font-bold text-brand-text text-start",
                 popoverContent: "bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl",
               }}
             >

@@ -446,7 +446,7 @@ export function SignUpPage() {
                       inputWrapper: Boolean(phoneError || phoneCooldown > 0)
                         ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors'
                         : 'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors',
-                      input: 'text-xs font-bold text-brand-text tracking-wider',
+                      input: 'text-sm font-bold text-brand-text tracking-wider',
                     }}
                   />
                   <AnimatedFieldError
@@ -702,6 +702,7 @@ export function SignUpPage() {
                           </label>
                         </div>
                         <Input
+                          dir="auto"
                           name="fullName"
                           type="text"
                           aria-label={t.auth.fullName}
@@ -717,7 +718,7 @@ export function SignUpPage() {
                             inputWrapper: Boolean(errors.fullName && (touched.fullName || submitCount > 0))
                               ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                               : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                            input: "text-xs font-semibold text-brand-text",
+                            input: "text-sm font-semibold text-brand-text",
                           }}
                         />
                         <AnimatedFieldError error={(touched.fullName || submitCount > 0) && errors.fullName ? String(errors.fullName) : null} />
@@ -734,6 +735,7 @@ export function SignUpPage() {
                           </span>
                         </div>
                         <Input
+                          dir="auto"
                           name="username"
                           type="text"
                           aria-label={t.auth.username}
@@ -749,7 +751,7 @@ export function SignUpPage() {
                             inputWrapper: Boolean(errors.username && (touched.username || submitCount > 0))
                               ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                               : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                            input: "text-xs font-mono text-brand-text",
+                            input: "text-sm font-mono text-brand-text",
                           }}
                         />
                         <AnimatedFieldError error={(touched.username || submitCount > 0) && errors.username ? String(errors.username) : null} />
@@ -781,7 +783,7 @@ export function SignUpPage() {
                             inputWrapper: Boolean(errors.email && (touched.email || submitCount > 0))
                               ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                               : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                            input: "text-xs font-mono text-brand-text",
+                            input: "text-sm font-mono text-brand-text",
                           }}
                         />
                         <AnimatedFieldError error={(touched.email || submitCount > 0) && errors.email ? String(errors.email) : null} />
@@ -820,7 +822,7 @@ export function SignUpPage() {
                             inputWrapper: Boolean(errors.password && (touched.password || submitCount > 0))
                               ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                               : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                            input: "text-xs font-mono font-semibold text-brand-text",
+                            input: "text-sm font-mono font-semibold text-brand-text",
                           }}
                         />
                         <AnimatedFieldError error={(touched.password || submitCount > 0) && errors.password ? String(errors.password) : null} />
@@ -855,7 +857,7 @@ export function SignUpPage() {
                               inputWrapper: Boolean(errors.confirmPassword && (touched.confirmPassword || submitCount > 0))
                                 ? "h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors"
                                 : "h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
-                              input: "text-xs font-mono font-semibold text-brand-text",
+                              input: "text-sm font-mono font-semibold text-brand-text",
                             }}
                           />
                           <AnimatedFieldError error={(touched.confirmPassword || submitCount > 0) && errors.confirmPassword ? String(errors.confirmPassword) : null} />

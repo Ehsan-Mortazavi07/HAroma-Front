@@ -89,7 +89,7 @@ export const AdminPriceInput: React.FC<AdminPriceInputProps> = ({
   const defaultWrapperClass = isInvalid
     ? 'h-12 px-4 bg-rose-500/5 border border-rose-500/80 focus-within:!border-rose-500 rounded-2xl shadow-xs transition-colors'
     : 'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold hover:!border-[#d4be9b] rounded-2xl shadow-xs transition-colors';
-  const defaultInputClass = 'text-xs font-bold text-brand-text text-start font-mono';
+  const defaultInputClass = 'text-sm font-bold text-brand-text text-start font-mono';
   const defaultLabelClass = `text-xs font-bold text-brand-text mb-1.5 block ${
     isRTL ? 'text-right' : 'text-left'
   }`;

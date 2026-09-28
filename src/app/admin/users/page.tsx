@@ -638,6 +638,7 @@ export default function AdminUsersPage() {
       <Card className="bg-brand-surface p-4 rounded-3xl border border-brand-border shadow-xs overflow-visible">
         <CardBody className="p-0 flex flex-col sm:flex-row gap-3 items-center justify-between overflow-visible">
           <Input
+            dir="auto"
             value={search}
             onValueChange={setSearch}
             placeholder={isPersian ? 'جستجو بر اساس نام، ایمیل، شماره یا نام‌کاربری...' : 'Search by name, email, or username...'}
@@ -647,7 +648,7 @@ export default function AdminUsersPage() {
             className="w-full sm:w-80"
             classNames={{
               inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs transition-colors",
-              input: "text-xs font-semibold text-brand-text",
+              input: "text-sm font-semibold text-brand-text",
             }}
           />
 

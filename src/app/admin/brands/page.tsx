@@ -50,7 +50,7 @@ const cardVariants = {
 const inputClassNames = {
   inputWrapper:
     'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:border-brand-gold rounded-full shadow-xs transition-colors',
-  input: 'text-xs font-semibold text-brand-text',
+  input: 'text-sm font-semibold text-brand-text',
   label: 'text-xs font-bold text-brand-text mb-1',
 };
 
@@ -573,6 +573,7 @@ export default function AdminBrandsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Input
+                      dir="auto"
                       label={isPersian ? 'نام برند به فارسی' : 'Brand Name (Persian)'}
                       labelPlacement="outside-top"
                       isRequired
@@ -603,6 +604,7 @@ export default function AdminBrandsPage() {
                   </div>
 
                   <Input
+                    dir="auto"
                     label={isPersian ? 'نام برند به انگلیسی' : 'Brand Name (English)'}
                     labelPlacement="outside-top"
                     value={nameEn}
@@ -616,6 +618,7 @@ export default function AdminBrandsPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
+                    dir="auto"
                     label={isPersian ? 'نامک آدرس (Slug)' : 'URL Slug'}
                     labelPlacement="outside-top"
                     value={slug}
@@ -639,9 +642,10 @@ export default function AdminBrandsPage() {
                 </div>
 
                 <Textarea
+                  dir="auto"
                   label={isPersian ? 'توضیحات کوتاه درباره خانه عطر' : 'Short Description'}
                   labelPlacement="outside-top"
-                  rows={2}
+                    minRows={2}
                   value={description}
                   onValueChange={setDescription}
                   placeholder={isPersian ? 'توضیح کوتاه درباره تاریخچه و سبک عطرسازی...' : 'Short summary...'}
@@ -649,7 +653,7 @@ export default function AdminBrandsPage() {
                   radius="lg"
                   classNames={{
                     inputWrapper: 'p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:border-brand-gold rounded-2xl shadow-xs transition-colors',
-                    input: 'text-xs font-semibold text-brand-text',
+                    input: 'text-sm font-semibold text-brand-text',
                     label: 'text-xs font-bold text-brand-text mb-1',
                   }}
                 />

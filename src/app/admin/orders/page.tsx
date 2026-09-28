@@ -460,6 +460,7 @@ export default function AdminOrdersPage() {
       <Card className="bg-brand-surface p-4 rounded-3xl border border-brand-border shadow-xs overflow-visible">
         <CardBody className="p-0 flex flex-col sm:flex-row gap-3 items-center justify-between overflow-visible">
           <Input
+            dir="auto"
             value={search}
             onValueChange={setSearch}
             placeholder={isPersian ? 'جستجو بر اساس شماره سفارش یا نام مشتری...' : 'Search by order number or customer...'}
@@ -469,7 +470,7 @@ export default function AdminOrdersPage() {
             className="w-full sm:w-80"
             classNames={{
               inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs transition-colors",
-              input: "text-xs font-semibold text-brand-text",
+              input: "text-sm font-semibold text-brand-text",
             }}
           />
 
@@ -861,6 +862,7 @@ export default function AdminOrdersPage() {
                       </div>
 
                       <Input
+                        dir="auto"
                         label={isPersian ? 'کد رهگیری پستی (۲۴ رقمی)' : 'Postal Tracking Code'}
                         labelPlacement="outside-top"
                         value={trackingCode}
@@ -877,7 +879,7 @@ export default function AdminOrdersPage() {
                         classNames={{
                           inputWrapper:
                             'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/70 focus-within:!border-brand-gold focus-within:!ring-2 focus-within:!ring-brand-gold/20 rounded-2xl shadow-xs transition-all',
-                          input: 'text-xs font-mono font-semibold text-brand-text',
+                          input: 'text-sm font-mono font-semibold text-brand-text',
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
                       />
