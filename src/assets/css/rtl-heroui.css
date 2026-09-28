@@ -379,9 +379,46 @@ html[dir="rtl"] [data-slot="innerWrapper"] > span {
   transform-origin: top center;
 }
 
-/* Keep the admin attribute menu below the sticky admin navbar without changing its layout. */
+/* Keep the admin attribute menu below the fixed admin navbar without changing its layout. */
 [data-slot="base"].admin-attribute-select-overlay {
   z-index: 40 !important;
+}
+
+/* Make the admin attribute select's hovered and selected options easy to distinguish. */
+[data-slot="base"].admin-attribute-select-overlay [role="option"][data-hover="true"]:not([data-selected="true"]) {
+  background-color: #efe6d8 !important;
+  color: #1d241d !important;
+  box-shadow: inset 0 0 0 1px rgba(191, 162, 122, 0.7);
+}
+
+[data-slot="base"].admin-attribute-select-overlay [role="option"][data-selected="true"] {
+  background-color: #f1e7d7 !important;
+  color: #593f20 !important;
+  box-shadow: inset 0 0 0 1px rgba(159, 129, 91, 0.75);
+}
+
+[data-slot="base"].admin-attribute-select-overlay [role="option"][data-selected="true"][data-hover="true"] {
+  background-color: #e8d5b7 !important;
+  color: #402b12 !important;
+  box-shadow: inset 0 0 0 1px #9f815b;
+}
+
+.dark [data-slot="base"].admin-attribute-select-overlay [role="option"][data-hover="true"]:not([data-selected="true"]) {
+  background-color: #303b30 !important;
+  color: #f7f4ee !important;
+  box-shadow: inset 0 0 0 1px rgba(212, 190, 155, 0.8);
+}
+
+.dark [data-slot="base"].admin-attribute-select-overlay [role="option"][data-selected="true"] {
+  background-color: #3b3427 !important;
+  color: #f3d99c !important;
+  box-shadow: inset 0 0 0 1px rgba(212, 190, 155, 0.8);
+}
+
+.dark [data-slot="base"].admin-attribute-select-overlay [role="option"][data-selected="true"][data-hover="true"] {
+  background-color: #51442b !important;
+  color: #fff1c9 !important;
+  box-shadow: inset 0 0 0 1px #d4be9b;
 }
 
 [data-slot="trigger"] {
