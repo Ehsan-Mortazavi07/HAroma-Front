@@ -1,4 +1,5 @@
 import axiosInstance from '../axiosInstance';
+import type { IUserAddress } from '../interfaces';
 
 export const adminApi = {
   // Products CRUD
@@ -146,6 +147,18 @@ export const adminApi = {
   },
   getUser: async (id: string) => {
     const res = await axiosInstance.get(`/admin/users/${id}`);
+    return res.data;
+  },
+  getUserAddresses: async (id: string): Promise<IUserAddress[]> => {
+    const res = await axiosInstance.get(`/admin/users/${id}/addresses`);
+    return res.data;
+  },
+  updateUserAddress: async (userId: string, addressId: string, data: Partial<IUserAddress>) => {
+    const res = await axiosInstance.patch(`/admin/users/${userId}/addresses/${addressId}`, data);
+    return res.data;
+  },
+  deleteUserAddress: async (userId: string, addressId: string) => {
+    const res = await axiosInstance.delete(`/admin/users/${userId}/addresses/${addressId}`);
     return res.data;
   },
   createUser: async (data: any) => {

@@ -2,7 +2,7 @@ export type UserRole = 'admin' | 'editor' | 'user';
 
 export interface IUserAddress {
   _id: string;
-  title?: string;
+  title: string;
   province: string;
   city: string;
   address: string;

@@ -14,6 +14,8 @@ interface ProvinceCitySelectProps {
   onChange?: (val: { province: string; city: string }) => void;
   disabled?: boolean;
   required?: boolean;
+  provinceError?: string;
+  cityError?: string;
   className?: string;
 }
 
@@ -25,6 +27,8 @@ export function ProvinceCitySelect({
   onChange,
   disabled = false,
   required = false,
+  provinceError,
+  cityError,
   className = '',
 }: ProvinceCitySelectProps) {
   const { isPersian } = useTranslation();
@@ -151,10 +155,13 @@ export function ProvinceCitySelect({
           <button
             type="button"
             disabled={disabled}
+            aria-invalid={Boolean(provinceError)}
             onClick={() => setOpenDropdown(openDropdown === 'province' ? null : 'province')}
             className={`w-full h-12 px-4 rounded-2xl bg-brand-surface border transition-all flex items-center justify-between gap-2 text-right cursor-pointer select-none ${
               openDropdown === 'province'
                 ? 'border-brand-gold ring-2 ring-brand-gold/20 shadow-sm'
+                : provinceError
+                ? 'border-rose-500 hover:border-rose-500'
                 : 'border-brand-border hover:border-brand-gold/70'
             } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
@@ -232,6 +239,11 @@ export function ProvinceCitySelect({
             )}
           </AnimatePresence>
         </div>
+        {provinceError && (
+          <p role="alert" className="text-[11px] font-bold text-rose-500">
+            {provinceError}
+          </p>
+        )}
       </div>
 
       {/* City Selector */}
@@ -248,10 +260,13 @@ export function ProvinceCitySelect({
           <button
             type="button"
             disabled={disabled || !province}
+            aria-invalid={Boolean(cityError)}
             onClick={() => setOpenDropdown(openDropdown === 'city' ? null : 'city')}
             className={`w-full h-12 px-4 rounded-2xl bg-brand-surface border transition-all flex items-center justify-between gap-2 text-right cursor-pointer select-none ${
               openDropdown === 'city'
                 ? 'border-brand-gold ring-2 ring-brand-gold/20 shadow-sm'
+                : cityError
+                ? 'border-rose-500 hover:border-rose-500'
                 : 'border-brand-border hover:border-brand-gold/70'
             } ${disabled || !province ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
@@ -331,6 +346,11 @@ export function ProvinceCitySelect({
             )}
           </AnimatePresence>
         </div>
+        {cityError && (
+          <p role="alert" className="text-[11px] font-bold text-rose-500">
+            {cityError}
+          </p>
+        )}
       </div>
     </div>
   );

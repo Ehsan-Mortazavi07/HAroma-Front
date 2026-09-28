@@ -48,7 +48,7 @@ import {
   Hash,
   RefreshCw,
 } from 'lucide-react';
-import { IUser, IOrder, UserRole } from '@/common/interfaces';
+import { IUser, IUserAddress, IOrder, UserRole } from '@/common/interfaces';
 import { adminApi } from '@/common/api/admin';
 import { formatToman, toPersianDigits, toEnglishDigits, toast } from '@/common/utils';
 import { formatDisplayBirthDate, parseIsoDate, gregorianToJalali } from '@/common/utils/date';
@@ -56,6 +56,7 @@ import { IRAN_PROVINCES } from '@/common/constants/iranProvinces';
 import { BirthDatePicker } from '@/components/common/BirthDatePicker';
 import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface UserDetailsModalProps {
@@ -136,12 +137,22 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [addressLoadFailed, setAddressLoadFailed] = useState(false);
+  const [addressReloadCount, setAddressReloadCount] = useState(0);
+  const [addressEditOnly, setAddressEditOnly] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [addressToDelete, setAddressToDelete] = useState<IUserAddress | null>(null);
+  const [isDeletingAddress, setIsDeletingAddress] = useState(false);
 
   // Edit form state
   const [showPassword, setShowPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [currentUserData, setCurrentUserData] = useState<IUser | null>(user);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
+  const modalWasOpenRef = useRef(false);
+  const currentUserIdRef = useRef<string | null>(null);
   const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   // Close role dropdown on click outside
@@ -168,6 +179,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     avatar: '',
     birthDate: null as string | null,
     birthDateShamsi: null as string | null,
+    title: '',
     province: '',
     city: '',
     address: '',
@@ -182,34 +194,79 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
   // Sync state with incoming user
   useEffect(() => {
-    if (user) {
-      setCurrentUserData(user);
-      setFormData({
-        fullName: user.fullName || '',
-        username: user.username || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        password: '',
-        role: user.role || 'user',
-        isVip: user.isVip ?? false,
-        vipExpiresAt: user.vipExpiresAt || null,
-        avatar: user.avatar || '',
-        birthDate: user.birthDate || null,
-        birthDateShamsi: user.birthDateShamsi || null,
-        province: user.province || '',
-        city: user.city || '',
-        address: user.address || '',
-        postalCode: user.postalCode || '',
-        buildingNumber: user.buildingNumber || '',
-        unit: user.unit || '',
-        recipientName: user.recipientName || '',
-        recipientPhone: user.recipientPhone || '',
-        recipientEmail: user.recipientEmail || '',
-        addressNotes: user.addressNotes || '',
-      });
-      setIsEditing(initialMode === 'edit' && !!isAdmin);
+    if (!isOpen || !user) {
+      if (!isOpen) modalWasOpenRef.current = false;
+      return;
     }
+
+    setCurrentUserData(user);
+    const shouldResetEditor =
+      !modalWasOpenRef.current || currentUserIdRef.current !== user._id;
+    modalWasOpenRef.current = true;
+    currentUserIdRef.current = user._id;
+    if (!shouldResetEditor) return;
+
+    setSelectedTab('profile');
+    setSelectedEditTab('identity');
+    setAddressLoadFailed(false);
+    setFieldErrors({});
+    setAddressToDelete(null);
+    setAddressEditOnly(false);
+    setSelectedAddressId(null);
+    setIsEditing(initialMode === 'edit' && !!isAdmin);
+    setFormData({
+      fullName: user.fullName || '',
+      username: user.username || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      password: '',
+      role: user.role || 'user',
+      isVip: user.isVip ?? false,
+      vipExpiresAt: user.vipExpiresAt || null,
+      avatar: user.avatar || '',
+      birthDate: user.birthDate || null,
+      birthDateShamsi: user.birthDateShamsi || null,
+      title: '',
+      province: user.province || '',
+      city: user.city || '',
+      address: user.address || '',
+      postalCode: user.postalCode || '',
+      buildingNumber: user.buildingNumber || '',
+      unit: user.unit || '',
+      recipientName: user.recipientName || '',
+      recipientPhone: user.recipientPhone || '',
+      recipientEmail: user.recipientEmail || '',
+      addressNotes: user.addressNotes || '',
+    });
   }, [user, initialMode, isAdmin, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !user?._id) return;
+
+    let isCurrentRequest = true;
+    setLoadingAddresses(true);
+    setAddressLoadFailed(false);
+    adminApi
+      .getUserAddresses(user._id)
+      .then((addresses: IUserAddress[]) => {
+        if (!isCurrentRequest || !Array.isArray(addresses)) return;
+        setCurrentUserData((previous) =>
+          previous?._id === user._id ? { ...previous, addresses } : previous,
+        );
+      })
+      .catch((error) => {
+        if (!isCurrentRequest) return;
+        console.error('Failed to fetch user addresses', error);
+        setAddressLoadFailed(true);
+      })
+      .finally(() => {
+        if (isCurrentRequest) setLoadingAddresses(false);
+      });
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [isOpen, user?._id, addressReloadCount]);
 
   useEffect(() => {
     if (isOpen && currentUserData?._id) {
@@ -241,6 +298,20 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     setCopiedKey(key);
     toast.success(isPersian ? 'در حافظه کپی شد' : 'Copied to clipboard');
     setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const clearFieldError = (field: string) => {
+    setFieldErrors((previous) => {
+      if (!previous[field]) return previous;
+      const next = { ...previous };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const handleModalClose = () => {
+    onOpenChange?.(false);
+    onClose?.();
   };
 
   if (!currentUserData) return null;
@@ -321,6 +392,156 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     }
   };
 
+  const handleStartAddressEdit = (address: IUserAddress, standalone = true) => {
+    setFormData((previous) => ({
+      ...previous,
+      title: address.title || '',
+      province: address.province || '',
+      city: address.city || '',
+      address: address.address || '',
+      postalCode: address.postalCode || '',
+      buildingNumber: address.buildingNumber || '',
+      unit: address.unit || '',
+      recipientName: address.recipientName || '',
+      recipientPhone: address.recipientPhone || '',
+      recipientEmail: address.recipientEmail || '',
+      addressNotes: address.addressNotes || '',
+    }));
+    setFieldErrors({});
+    setSelectedAddressId(address._id);
+    setSelectedEditTab('shipping');
+    setAddressEditOnly(standalone);
+    setIsEditing(true);
+  };
+
+  const updateAddressProjection = (addresses: IUserAddress[]) => {
+    const defaultAddress = addresses.find((address) => address.isDefault);
+    const updatedUser: IUser = {
+      ...currentUserData,
+      addresses,
+      province: defaultAddress?.province || '',
+      city: defaultAddress?.city || '',
+      address: defaultAddress?.address || '',
+      postalCode: defaultAddress?.postalCode || '',
+      buildingNumber: defaultAddress?.buildingNumber || '',
+      unit: defaultAddress?.unit || '',
+      recipientName: defaultAddress?.recipientName || '',
+      recipientPhone: defaultAddress?.recipientPhone || '',
+      recipientEmail: defaultAddress?.recipientEmail || '',
+      addressNotes: defaultAddress?.addressNotes || '',
+    };
+    setCurrentUserData(updatedUser);
+    onUserUpdated?.(updatedUser);
+  };
+
+  const handleSaveSelectedAddress = async () => {
+    if (!isAdmin || !selectedAddressId) return;
+
+    const title = formData.title.trim().replace(/\s+/g, ' ');
+    const titleKey = title.toLowerCase();
+    const addresses = currentUserData.addresses || [];
+    const errors: Record<string, string> = {};
+    if (!title) {
+      errors.title = isPersian ? 'عنوان نشانی الزامی است.' : 'Address title is required.';
+    } else if (
+      addresses.some(
+        (address) =>
+          address._id !== selectedAddressId &&
+          (address.title || '').trim().replace(/\s+/g, ' ').toLowerCase() === titleKey,
+      )
+    ) {
+      errors.title = isPersian
+        ? 'این عنوان برای یکی دیگر از نشانی‌های این کاربر ثبت شده است.'
+        : 'This user already has another address with this title.';
+    }
+    if (!formData.province.trim()) errors.province = isPersian ? 'انتخاب استان الزامی است.' : 'Province is required.';
+    if (!formData.city.trim()) errors.city = isPersian ? 'انتخاب شهر الزامی است.' : 'City is required.';
+    if (!formData.address.trim()) errors.address = isPersian ? 'نشانی دقیق الزامی است.' : 'Street address is required.';
+
+    const postalCode = formData.postalCode ? toEnglishDigits(formData.postalCode).trim() : '';
+    if (postalCode && !/^\d{10}$/.test(postalCode)) {
+      errors.postalCode = isPersian ? 'کد پستی باید دقیقاً ۱۰ رقم عددی باشد.' : 'Postal code must be exactly 10 digits.';
+    }
+
+    const recipientPhone = formData.recipientPhone
+      ? toEnglishDigits(formData.recipientPhone).trim()
+      : '';
+    if (recipientPhone && !/^09\d{9}$/.test(recipientPhone)) {
+      errors.recipientPhone = isPersian
+        ? 'شماره تماس باید ۱۱ رقم بوده و با ۰۹ شروع شود.'
+        : 'Recipient phone must be an 11-digit mobile number.';
+    }
+    const recipientEmail = formData.recipientEmail.trim().toLowerCase();
+    if (recipientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
+      errors.recipientEmail = isPersian ? 'فرمت ایمیل نامعتبر است.' : 'Invalid email format.';
+    }
+
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) return;
+
+    setIsSaving(true);
+    try {
+      const response = await adminApi.updateUserAddress(
+        currentUserData._id,
+        selectedAddressId,
+        {
+          title,
+          province: formData.province.trim(),
+          city: formData.city.trim(),
+          address: formData.address.trim(),
+          postalCode,
+          buildingNumber: formData.buildingNumber.trim(),
+          unit: formData.unit.trim(),
+          recipientName: formData.recipientName.trim(),
+          recipientPhone,
+          recipientEmail,
+          addressNotes: formData.addressNotes.trim(),
+        },
+      );
+      const updatedAddresses: IUserAddress[] = response?.addresses || [];
+      updateAddressProjection(updatedAddresses);
+      if (addressEditOnly) {
+        setIsEditing(false);
+        setSelectedTab('address');
+      } else {
+        setSelectedEditTab('addresses');
+      }
+      setAddressEditOnly(false);
+      setSelectedAddressId(null);
+      setFieldErrors({});
+      toast.success(response?.message || (isPersian ? 'نشانی با موفقیت ویرایش شد.' : 'Address updated.'));
+    } catch (error: any) {
+      console.error('Failed to update user address', error);
+      const message =
+        error?.response?.data?.message ||
+        (isPersian ? 'خطا در ویرایش نشانی کاربر.' : 'Failed to update the user address.');
+      toast.error(Array.isArray(message) ? message[0] : message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleConfirmDeleteAddress = async () => {
+    if (!addressToDelete || !currentUserData) return;
+
+    setIsDeletingAddress(true);
+    try {
+      const response = await adminApi.deleteUserAddress(currentUserData._id, addressToDelete._id);
+      const updatedAddresses: IUserAddress[] = response?.addresses || [];
+      updateAddressProjection(updatedAddresses);
+      setAddressToDelete(null);
+      toast.success(response?.message || (isPersian ? 'نشانی با موفقیت حذف شد.' : 'Address deleted.'));
+    } catch (error: any) {
+      console.error('Failed to delete user address', error);
+      const message =
+        error?.response?.data?.message ||
+        (isPersian ? 'حذف نشانی انجام نشد.' : 'Failed to delete the address.');
+      toast.error(Array.isArray(message) ? message[0] : message);
+    } finally {
+      setIsDeletingAddress(false);
+    }
+  };
+
   // Save All Changes
   const handleSaveAll = async () => {
     if (!isAdmin) {
@@ -332,62 +553,30 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       return;
     }
 
-    if (!formData.fullName.trim()) {
-      toast.error(isPersian ? 'نام و نام خانوادگی الزامی است.' : 'Full name is required.');
-      return;
-    }
-
-    if (!formData.username.trim()) {
-      toast.error(isPersian ? 'نام کاربری الزامی است.' : 'Username is required.');
-      return;
-    }
+    const errors: Record<string, string> = {};
+    if (!formData.fullName.trim()) errors.fullName = isPersian ? 'نام و نام خانوادگی الزامی است.' : 'Full name is required.';
+    if (!formData.username.trim()) errors.username = isPersian ? 'نام کاربری الزامی است.' : 'Username is required.';
 
     if (formData.email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email.trim())) {
-        toast.error(isPersian ? 'فرمت ایمیل نامعتبر است.' : 'Invalid email format.');
-        return;
+        errors.email = isPersian ? 'فرمت ایمیل نامعتبر است.' : 'Invalid email format.';
       }
     }
 
     const cleanPhone = formData.phone ? toEnglishDigits(formData.phone).trim() : '';
     if (cleanPhone && !/^09\d{9}$/.test(cleanPhone)) {
-      toast.error(
-        isPersian
-          ? 'شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود.'
-          : 'Phone number must be an 11-digit Iranian mobile number (09...).',
-      );
-      return;
-    }
-
-    const cleanPostal = formData.postalCode ? toEnglishDigits(formData.postalCode).trim() : '';
-    if (cleanPostal && !/^\d{10}$/.test(cleanPostal)) {
-      toast.error(
-        isPersian
-          ? 'کد پستی باید دقیقاً ۱۰ رقم عددی باشد.'
-          : 'Postal code must be exactly 10 digits.',
-      );
-      return;
-    }
-
-    const cleanRecPhone = formData.recipientPhone ? toEnglishDigits(formData.recipientPhone).trim() : '';
-    if (cleanRecPhone && !/^09\d{9}$/.test(cleanRecPhone)) {
-      toast.error(
-        isPersian
-          ? 'شماره تماس تحویل‌گیرنده باید ۱۱ رقم بوده و با ۰۹ شروع شود.'
-          : 'Recipient phone must be an 11-digit mobile number.',
-      );
-      return;
+      errors.phone = isPersian
+        ? 'شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود.'
+        : 'Phone number must be an 11-digit Iranian mobile number (09...).';
     }
 
     if (formData.password && formData.password.length < 6) {
-      toast.error(
-        isPersian
-          ? 'رمز عبور باید حداقل ۶ کاراکتر باشد.'
-          : 'Password must be at least 6 characters long.',
-      );
-      return;
+      errors.password = isPersian ? 'رمز عبور باید حداقل ۶ کاراکتر باشد.' : 'Password must be at least 6 characters long.';
     }
+
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) return;
 
     setIsSaving(true);
     try {
@@ -402,16 +591,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
         avatar: formData.avatar.trim(),
         birthDate: formData.birthDate || null,
         birthDateShamsi: formData.birthDateShamsi || null,
-        province: formData.province.trim(),
-        city: formData.city.trim(),
-        address: formData.address.trim(),
-        postalCode: cleanPostal,
-        buildingNumber: formData.buildingNumber.trim(),
-        unit: formData.unit.trim(),
-        recipientName: formData.recipientName.trim(),
-        recipientPhone: cleanRecPhone,
-        recipientEmail: formData.recipientEmail ? formData.recipientEmail.trim().toLowerCase() : '',
-        addressNotes: formData.addressNotes.trim(),
       };
 
       if (formData.password) {
@@ -447,11 +626,144 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
   const selectedProvinceObj = IRAN_PROVINCES.find((p) => p.name === formData.province);
 
+  const renderAddressList = (context: 'view' | 'edit') => {
+    if (loadingAddresses) {
+      return (
+        <div className="space-y-3">
+          {[1, 2].map((item) => <Skeleton key={item} className="h-36 w-full rounded-2xl" />)}
+        </div>
+      );
+    }
+
+    if (addressLoadFailed) {
+      return (
+        <div className="py-16 text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 mx-auto flex items-center justify-center text-rose-500">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <h4 className="text-sm font-bold text-brand-text">
+            {isPersian ? 'بارگذاری نشانی‌ها ناموفق بود' : 'Could not load addresses'}
+          </h4>
+          <p className="text-xs text-brand-text-muted max-w-sm mx-auto">
+            {isPersian
+              ? 'برای دیدن نشانی‌های این کاربر دوباره تلاش کنید.'
+              : 'Try again to load this user’s addresses.'}
+          </p>
+          <Button
+            size="sm"
+            variant="bordered"
+            onPress={() => setAddressReloadCount((count) => count + 1)}
+            startContent={<RefreshCw className="w-3.5 h-3.5" />}
+            className="mx-auto text-xs font-bold border-brand-gold/50 text-brand-bronze dark:text-brand-gold rounded-xl"
+          >
+            {isPersian ? 'تلاش دوباره' : 'Retry'}
+          </Button>
+        </div>
+      );
+    }
+
+    const addresses = currentUserData.addresses || [];
+    if (!addresses.length) {
+      return (
+        <div className="py-16 text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-brand-surface-elevated mx-auto flex items-center justify-center text-brand-text-muted">
+            <MapPin className="w-6 h-6" />
+          </div>
+          <h4 className="text-sm font-bold text-brand-text">
+            {isPersian ? 'هیچ آدرسی ثبت نشده است' : 'No Address Registered'}
+          </h4>
+          <p className="text-xs text-brand-text-muted max-w-sm mx-auto">
+            {isPersian
+              ? 'این کاربر هنوز نشانی ثبت نکرده است.'
+              : 'This user has not saved an address yet.'}
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        <p className="text-xs text-brand-text-muted">
+          {isPersian
+            ? `${toPersianDigits(addresses.length)} نشانی ثبت شده است. برای ویرایش، نشانی موردنظر را انتخاب کنید.`
+            : `${addresses.length} saved addresses. Choose one to edit it.`}
+        </p>
+        {addresses.map((address) => (
+          <article
+            key={address._id}
+            className="p-4 rounded-2xl border border-brand-border/60 bg-brand-surface-elevated/30 space-y-3"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm font-black text-brand-text">
+                    {address.title || (isPersian ? 'نشانی بدون عنوان' : 'Untitled address')}
+                  </h3>
+                  {address.isDefault && (
+                    <Chip size="sm" variant="flat" className="h-5 text-[10px] font-bold bg-brand-gold/15 text-brand-bronze dark:text-brand-gold border border-brand-gold/30">
+                      {isPersian ? 'پیش‌فرض' : 'Default'}
+                    </Chip>
+                  )}
+                </div>
+                <p className="text-xs font-bold text-brand-text-muted">
+                  {address.province || '—'}، {address.city || '—'}
+                </p>
+              </div>
+              {isAdmin && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    variant="bordered"
+                    onPress={() => handleStartAddressEdit(address, context === 'view')}
+                    startContent={<Pencil className="w-3.5 h-3.5" />}
+                    className="h-8 text-xs font-bold border-brand-gold/50 text-brand-bronze dark:text-brand-gold rounded-xl"
+                  >
+                    {isPersian ? 'ویرایش نشانی' : 'Edit address'}
+                  </Button>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    color="danger"
+                    aria-label={isPersian ? `حذف نشانی ${address.title}` : `Delete ${address.title}`}
+                    title={isPersian ? 'حذف نشانی' : 'Delete address'}
+                    onPress={() => setAddressToDelete(address)}
+                    className="h-8 w-8 min-w-8 text-rose-500 hover:bg-rose-500/10 rounded-xl"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+            <p className="text-xs font-medium text-brand-text leading-relaxed">
+              {address.address || '—'}
+            </p>
+            <div className="flex flex-wrap gap-x-5 gap-y-2 pt-2 border-t border-brand-border/40 text-[11px] text-brand-text-muted">
+              <span>{isPersian ? 'پلاک' : 'Building'}: <strong className="text-brand-text">{address.buildingNumber || '—'}</strong></span>
+              <span>{isPersian ? 'واحد' : 'Unit'}: <strong className="text-brand-text">{address.unit || '—'}</strong></span>
+              <span>{isPersian ? 'کد پستی' : 'Postal code'}: <strong className="font-mono text-brand-text">{address.postalCode ? toPersianDigits(address.postalCode) : '—'}</strong></span>
+              <span>{isPersian ? 'تحویل‌گیرنده' : 'Recipient'}: <strong className="text-brand-text">{address.recipientName || '—'}</strong></span>
+              {address.recipientPhone && (
+                <span>{isPersian ? 'تلفن' : 'Phone'}: <strong className="font-mono text-brand-text">{toPersianDigits(address.recipientPhone)}</strong></span>
+              )}
+            </div>
+            {address.addressNotes && (
+              <p className="text-xs text-brand-text-muted leading-relaxed">
+                {isPersian ? 'یادداشت:' : 'Notes:'} {address.addressNotes}
+              </p>
+            )}
+          </article>
+        ))}
+      </div>
+    );
+  };
+
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      onClose={onClose}
+      onClose={handleModalClose}
       backdrop="blur"
       placement="center"
       size="3xl"
@@ -563,7 +875,25 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                       radius="full"
                       variant={isEditing ? 'solid' : 'bordered'}
                       color={isEditing ? 'warning' : 'default'}
-                      onPress={() => setIsEditing(!isEditing)}
+                      onPress={() => {
+                        if (addressEditOnly) {
+                          setIsEditing(false);
+                          setAddressEditOnly(false);
+                          setSelectedAddressId(null);
+                          setSelectedTab('address');
+                          setFieldErrors({});
+                        } else {
+                          if (isEditing) {
+                            setSelectedAddressId(null);
+                            setFieldErrors({});
+                          } else {
+                            setSelectedEditTab('identity');
+                            setFieldErrors({});
+                            setSelectedAddressId(null);
+                          }
+                          setIsEditing(!isEditing);
+                        }
+                      }}
                       startContent={
                         isEditing ? <Eye className="w-3.5 h-3.5" /> : <Pencil className="w-3.5 h-3.5" />
                       }
@@ -574,12 +904,12 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                       }`}
                     >
                       {isEditing
-                        ? isPersian
-                          ? 'انصراف از ویرایش'
-                          : 'Exit Edit Mode'
+                        ? addressEditOnly
+                          ? isPersian ? 'بازگشت به فهرست نشانی‌ها' : 'Back to address list'
+                          : isPersian ? 'انصراف از ویرایش' : 'Exit Edit Mode'
                         : isPersian
-                        ? 'ویرایش تمامی اطلاعات'
-                        : 'Edit All Details'}
+                        ? 'ویرایش مشخصات حساب'
+                        : 'Edit Account Details'}
                     </Button>
                   ) : (
                     <Chip
@@ -643,53 +973,75 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
             ) : (
               /* ======================= EDIT MODE NAVIGATION TABS ======================= */
               <div className="px-5 sm:px-6 pt-3 border-b border-brand-border/40 bg-brand-gold/5 shrink-0">
-                <Tabs
-                  selectedKey={selectedEditTab}
-                  onSelectionChange={(k) => setSelectedEditTab(k as string)}
-                  variant="underlined"
-                  classNames={{
-                    tabList: 'gap-6 p-0 border-b-0',
-                    cursor: 'w-full bg-brand-gold h-0.5 rounded-full',
-                    tab: 'max-w-fit px-1 h-10 text-xs font-bold text-brand-text-muted data-[selected=true]:text-brand-bronze dark:data-[selected=true]:text-brand-gold data-[selected=true]:font-black',
-                  }}
-                >
-                  <Tab
-                    key="identity"
-                    title={
-                      <div className="flex items-center gap-2">
-                        <UserIcon className="w-3.5 h-3.5" />
-                        <span>{isPersian ? 'مشخصات هویتی و رمز' : 'Identity & Password'}</span>
-                      </div>
-                    }
-                  />
-                  <Tab
-                    key="vip"
-                    title={
-                      <div className="flex items-center gap-2">
-                        <Crown className="w-3.5 h-3.5" />
-                        <span>{isPersian ? 'عضویت طلایی VIP' : 'VIP Subscription'}</span>
-                      </div>
-                    }
-                  />
-                  <Tab
-                    key="shipping"
-                    title={
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-3.5 h-3.5" />
-                        <span>{isPersian ? 'آدرس و نشانی تحویل' : 'Shipping Address'}</span>
-                      </div>
-                    }
-                  />
-                  <Tab
-                    key="recipient"
-                    title={
-                      <div className="flex items-center gap-2">
-                        <Package className="w-3.5 h-3.5" />
-                        <span>{isPersian ? 'مشخصات گیرنده و نکات' : 'Recipient & Notes'}</span>
-                      </div>
-                    }
-                  />
-                </Tabs>
+                {addressEditOnly ? (
+                  <div className="flex items-center gap-2 h-10 text-xs font-black text-brand-bronze dark:text-brand-gold">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>{isPersian ? `ویرایش نشانی «${formData.title}»` : `Editing “${formData.title}”`}</span>
+                  </div>
+                ) : selectedEditTab === 'shipping' ? (
+                  <div className="flex items-center justify-between gap-3 h-10">
+                    <Button
+                      size="sm"
+                      variant="light"
+                      onPress={() => {
+                        setSelectedAddressId(null);
+                        setSelectedEditTab('addresses');
+                        setFieldErrors({});
+                      }}
+                      startContent={<ChevronLeft className="w-3.5 h-3.5" />}
+                      className="text-xs font-bold text-brand-bronze dark:text-brand-gold"
+                    >
+                      {isPersian ? 'بازگشت به فهرست نشانی‌ها' : 'Back to addresses'}
+                    </Button>
+                    <span className="text-xs font-black text-brand-bronze dark:text-brand-gold">
+                      {isPersian ? `ویرایش نشانی «${formData.title}»` : `Editing “${formData.title}”`}
+                    </span>
+                  </div>
+                ) : (
+                  <Tabs
+                    selectedKey={selectedEditTab}
+                    onSelectionChange={(k) => setSelectedEditTab(k as string)}
+                    variant="underlined"
+                    classNames={{
+                      tabList: 'gap-6 p-0 border-b-0',
+                      cursor: 'w-full bg-brand-gold h-0.5 rounded-full',
+                      tab: 'max-w-fit px-1 h-10 text-xs font-bold text-brand-text-muted data-[selected=true]:text-brand-bronze dark:data-[selected=true]:text-brand-gold data-[selected=true]:font-black',
+                    }}
+                  >
+                    <Tab
+                      key="identity"
+                      title={
+                        <div className="flex items-center gap-2">
+                          <UserIcon className="w-3.5 h-3.5" />
+                          <span>{isPersian ? 'مشخصات هویتی و رمز' : 'Identity & Password'}</span>
+                        </div>
+                      }
+                    />
+                    <Tab
+                      key="vip"
+                      title={
+                        <div className="flex items-center gap-2">
+                          <Crown className="w-3.5 h-3.5" />
+                          <span>{isPersian ? 'عضویت طلایی VIP' : 'VIP Subscription'}</span>
+                        </div>
+                      }
+                    />
+                    <Tab
+                      key="addresses"
+                      title={
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-3.5 h-3.5" />
+                          <span>{isPersian ? 'نشانی‌ها' : 'Addresses'}</span>
+                          {currentUserData.addresses?.length ? (
+                            <Chip size="sm" variant="flat" className="h-4 text-[10px] px-1 font-bold">
+                              {toPersianDigits(currentUserData.addresses.length)}
+                            </Chip>
+                          ) : null}
+                        </div>
+                      }
+                    />
+                  </Tabs>
+                )}
               </div>
             )}
 
@@ -712,9 +1064,14 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     <div className="p-3.5 rounded-2xl bg-brand-gold/8 border border-brand-gold/20 text-xs text-brand-bronze dark:text-brand-gold flex items-start gap-2.5">
                       <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                       <p className="leading-relaxed">
-                        {isPersian
-                          ? 'شما به عنوان مدیر ارشد سیستم مجاز به تغییر تمامی مشخصات این کاربر (شامل اطلاعات هویتی، رمز عبور مستقیم بدون نیاز به رمز قبلی، نقش دسترسی، عضویت VIP و آدرس‌ها) هستید.'
-                          : 'As a Super Admin, you are authorized to modify every single piece of information for this user, including direct password resets, role, VIP status, and delivery addresses.'}
+                        {addressEditOnly
+                          || (selectedAddressId && selectedEditTab === 'shipping')
+                          ? isPersian
+                            ? 'اطلاعات همین نشانی ویرایش می‌شود. عنوان باید برای این کاربر یکتا باشد.'
+                            : 'You are editing this address. Its title must be unique for this user.'
+                          : isPersian
+                            ? 'شما به عنوان مدیر ارشد سیستم مجاز به تغییر اطلاعات هویتی، رمز عبور، نقش دسترسی و عضویت VIP این کاربر هستید.'
+                            : 'As a Super Admin, you can update this user’s identity, password, role, and VIP membership.'}
                       </p>
                     </div>
 
@@ -726,8 +1083,13 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             label={isPersian ? 'نام و نام خانوادگی' : 'Full Name'}
                             labelPlacement="outside-top"
                             isRequired
+                            isInvalid={Boolean(fieldErrors.fullName)}
+                            errorMessage={fieldErrors.fullName}
                             value={formData.fullName}
-                            onValueChange={(val) => setFormData((prev) => ({ ...prev, fullName: val }))}
+                            onValueChange={(val) => {
+                              setFormData((prev) => ({ ...prev, fullName: val }));
+                              if (val.trim()) clearFieldError('fullName');
+                            }}
                             placeholder={isPersian ? 'مثال: علیرضا محمدی' : 'e.g. John Doe'}
                             startContent={<UserIcon className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                             variant="bordered"
@@ -744,10 +1106,13 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             label={isPersian ? 'نام کاربری (یکتا)' : 'Username (Unique)'}
                             labelPlacement="outside-top"
                             isRequired
+                            isInvalid={Boolean(fieldErrors.username)}
+                            errorMessage={fieldErrors.username}
                             value={formData.username}
-                            onValueChange={(val) =>
-                              setFormData((prev) => ({ ...prev, username: val.toLowerCase() }))
-                            }
+                            onValueChange={(val) => {
+                              setFormData((prev) => ({ ...prev, username: val.toLowerCase() }));
+                              if (val.trim()) clearFieldError('username');
+                            }}
                             startContent={<span className="text-brand-bronze dark:text-brand-gold text-xs font-mono font-bold me-3">@</span>}
                             placeholder="username"
                             variant="bordered"
@@ -764,10 +1129,13 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             label={isPersian ? 'آدرس ایمیل (اختیاری)' : 'Email Address (Optional)'}
                             labelPlacement="outside-top"
                             type="email"
+                            isInvalid={Boolean(fieldErrors.email)}
+                            errorMessage={fieldErrors.email}
                             value={formData.email}
-                            onValueChange={(val) =>
-                              setFormData((prev) => ({ ...prev, email: val.toLowerCase() }))
-                            }
+                            onValueChange={(val) => {
+                              setFormData((prev) => ({ ...prev, email: val.toLowerCase() }));
+                              clearFieldError('email');
+                            }}
                             startContent={<Mail className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                             placeholder="user@domain.com"
                             variant="bordered"
@@ -784,9 +1152,14 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             label={isPersian ? 'شماره تلفن همراه' : 'Mobile Phone'}
                             labelPlacement="outside-top"
                             type="tel"
+                            isInvalid={Boolean(fieldErrors.phone)}
+                            errorMessage={fieldErrors.phone}
                             maxLength={11}
                             value={formData.phone}
-                            onValueChange={(val) => setFormData((prev) => ({ ...prev, phone: toEnglishDigits(val).replace(/\D/g, '').slice(0, 11) }))}
+                            onValueChange={(val) => {
+                              setFormData((prev) => ({ ...prev, phone: toEnglishDigits(val).replace(/\D/g, '').slice(0, 11) }));
+                              clearFieldError('phone');
+                            }}
                             startContent={<Phone className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                             placeholder="09123456789"
                             variant="bordered"
@@ -949,8 +1322,13 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           <Input
                             aria-label={isPersian ? 'تنظیم کلمه عبور جدید' : 'Set New Password'}
                             type={showPassword ? 'text' : 'password'}
+                            isInvalid={Boolean(fieldErrors.password)}
+                            errorMessage={fieldErrors.password}
                             value={formData.password}
-                            onValueChange={(val) => setFormData((prev) => ({ ...prev, password: val }))}
+                            onValueChange={(val) => {
+                              setFormData((prev) => ({ ...prev, password: val }));
+                              if (!val || val.length >= 6) clearFieldError('password');
+                            }}
                             placeholder={
                               isPersian
                                 ? 'کلمه عبور جدید را وارد کنید (حداقل ۶ کاراکتر)...'
@@ -1074,25 +1452,65 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                       </div>
                     )}
 
+                    {selectedEditTab === 'addresses' && (
+                      <div className="space-y-4">
+                        <p className="text-xs text-brand-text-muted">
+                          {isPersian
+                            ? 'برای ویرایش یا حذف، نشانی موردنظر را انتخاب کنید.'
+                            : 'Choose an address to edit or delete it.'}
+                        </p>
+                        {renderAddressList('edit')}
+                      </div>
+                    )}
+
                     {/* EDIT TAB 3: SHIPPING ADDRESS */}
-                    {selectedEditTab === 'shipping' && (
+                    {selectedAddressId && selectedEditTab === 'shipping' && (
                       <div className="space-y-5">
+                        <Input
+                          label={isPersian ? 'عنوان نشانی *' : 'Address Title *'}
+                          labelPlacement="outside-top"
+                          isRequired
+                          isInvalid={Boolean(fieldErrors.title)}
+                          errorMessage={fieldErrors.title}
+                          value={formData.title}
+                          onValueChange={(value) => {
+                            setFormData((previous) => ({ ...previous, title: value }));
+                            clearFieldError('title');
+                          }}
+                          placeholder={isPersian ? 'مثلاً خانه، محل کار' : 'e.g. Home, Office'}
+                          startContent={<Building className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
+                          variant="bordered"
+                          radius="lg"
+                          classNames={{
+                            label: inputLabelClass,
+                            inputWrapper: inputWrapperClass,
+                            innerWrapper: 'gap-3',
+                            input: 'text-xs font-bold text-brand-text',
+                          }}
+                        />
+
                         {/* Province & City Select (matching BirthDatePicker custom dropdown) */}
                         <ProvinceCitySelect
                           province={formData.province}
                           city={formData.city}
+                          required
+                          provinceError={fieldErrors.province}
+                          cityError={fieldErrors.city}
                           onChangeProvince={(prov) => {
                             setFormData((prev) => ({
                               ...prev,
                               province: prov,
                               city: '',
                             }));
+                            clearFieldError('province');
+                            clearFieldError('city');
                           }}
                           onChangeCity={(cityName) => {
                             setFormData((prev) => ({
                               ...prev,
                               city: cityName,
                             }));
+                            clearFieldError('city');
                           }}
                         />
 
@@ -1106,8 +1524,13 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           </div>
                           <Textarea
                             aria-label={isPersian ? 'نشانی دقیق پستی (خیابان، کوچه، بن‌بست)' : 'Street Address'}
+                            isInvalid={Boolean(fieldErrors.address)}
+                            errorMessage={fieldErrors.address}
                             value={formData.address}
-                            onValueChange={(val) => setFormData((prev) => ({ ...prev, address: val }))}
+                            onValueChange={(val) => {
+                              setFormData((prev) => ({ ...prev, address: val }));
+                              if (val.trim()) clearFieldError('address');
+                            }}
                             disableAutosize
                             rows={3}
                             placeholder={
@@ -1132,8 +1555,13 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           <Input
                             label={isPersian ? 'کد پستی ۱۰ رقمی' : 'Postal Code'}
                             labelPlacement="outside-top"
+                            isInvalid={Boolean(fieldErrors.postalCode)}
+                            errorMessage={fieldErrors.postalCode}
                             value={formData.postalCode}
-                            onValueChange={(val) => setFormData((prev) => ({ ...prev, postalCode: toEnglishDigits(val).replace(/\D/g, '').slice(0, 10) }))}
+                            onValueChange={(val) => {
+                              setFormData((prev) => ({ ...prev, postalCode: toEnglishDigits(val).replace(/\D/g, '').slice(0, 10) }));
+                              clearFieldError('postalCode');
+                            }}
                             placeholder="1234567890"
                             maxLength={10}
                             startContent={<Hash className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
@@ -1187,7 +1615,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     )}
 
                     {/* EDIT TAB 4: RECIPIENT & NOTES */}
-                    {selectedEditTab === 'recipient' && (
+                    {selectedAddressId && selectedEditTab === 'shipping' && (
                       <div className="space-y-5">
                         <div className="p-3.5 rounded-2xl bg-brand-surface-elevated/50 dark:bg-[#182018] border border-brand-border/60 text-xs text-brand-text-muted flex items-center gap-2.5">
                           <Package className="w-4 h-4 text-brand-gold shrink-0" />
@@ -1222,10 +1650,15 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             label={isPersian ? 'شماره تماس تحویل‌گیرنده' : 'Recipient Phone Number'}
                             labelPlacement="outside-top"
                             type="tel"
+                            isInvalid={Boolean(fieldErrors.recipientPhone)}
+                            errorMessage={fieldErrors.recipientPhone}
                             maxLength={11}
                             value={formData.recipientPhone}
                             onValueChange={(val) =>
-                              setFormData((prev) => ({ ...prev, recipientPhone: toEnglishDigits(val).replace(/\D/g, '').slice(0, 11) }))
+                              {
+                                setFormData((prev) => ({ ...prev, recipientPhone: toEnglishDigits(val).replace(/\D/g, '').slice(0, 11) }));
+                                clearFieldError('recipientPhone');
+                              }
                             }
                             placeholder="09123456789"
                             startContent={<Phone className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
@@ -1244,10 +1677,13 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           label={isPersian ? 'ایمیل تحویل‌گیرنده (اختیاری)' : 'Recipient Email (Optional)'}
                           labelPlacement="outside-top"
                           type="email"
+                          isInvalid={Boolean(fieldErrors.recipientEmail)}
+                          errorMessage={fieldErrors.recipientEmail}
                           value={formData.recipientEmail}
-                          onValueChange={(val) =>
-                            setFormData((prev) => ({ ...prev, recipientEmail: val.toLowerCase() }))
-                          }
+                          onValueChange={(val) => {
+                            setFormData((prev) => ({ ...prev, recipientEmail: val.toLowerCase() }));
+                            clearFieldError('recipientEmail');
+                          }}
                           placeholder="recipient@domain.com"
                           startContent={<Mail className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                           variant="bordered"
@@ -1538,120 +1974,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
                     {/* TAB 2: SHIPPING ADDRESS VIEW */}
                     {selectedTab === 'address' && (
-                      <div className="space-y-4">
-                        {currentUserData.address || currentUserData.city || currentUserData.province ? (
-                          <div className="space-y-4">
-                            {/* Province & City Banner */}
-                            <div className="p-4 rounded-2xl bg-brand-surface-elevated/40 border border-brand-border/60 flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-2xl bg-brand-gold/15 flex items-center justify-center text-brand-gold shrink-0">
-                                <Home className="w-5 h-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <span className="text-[11px] text-brand-text-muted block">
-                                  {isPersian ? 'استان و شهر' : 'Province & City'}
-                                </span>
-                                <span className="font-black text-sm text-brand-text block mt-0.5">
-                                  {currentUserData.province || '—'} / {currentUserData.city || '—'}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Detailed Street Address */}
-                            <div className="p-4 rounded-2xl bg-brand-surface-elevated/40 border border-brand-border/60 space-y-2">
-                              <span className="text-[11px] text-brand-text-muted block">
-                                {isPersian ? 'نشانی دقیق پستی' : 'Street Address'}
-                              </span>
-                              <p className="text-xs font-bold text-brand-text leading-relaxed">
-                                {currentUserData.address || '—'}
-                              </p>
-                              <div className="flex items-center gap-4 text-xs text-brand-text-muted pt-2 border-t border-brand-border/40 flex-wrap">
-                                <span>
-                                  {isPersian ? 'پلاک:' : 'Building:'}{' '}
-                                  <strong className="text-brand-text">
-                                    {currentUserData.buildingNumber || '—'}
-                                  </strong>
-                                </span>
-                                <span>•</span>
-                                <span>
-                                  {isPersian ? 'واحد:' : 'Unit:'}{' '}
-                                  <strong className="text-brand-text">{currentUserData.unit || '—'}</strong>
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Postal Code & Recipient Info */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div className="p-4 rounded-2xl bg-brand-surface-elevated/40 border border-brand-border/60 flex items-start justify-between gap-2">
-                                <div>
-                                  <span className="text-[11px] text-brand-text-muted block">
-                                    {isPersian ? 'کد پستی ۱۰ رقمی' : 'Postal Code'}
-                                  </span>
-                                  <span className="font-black text-xs font-mono text-brand-text block mt-1">
-                                    {currentUserData.postalCode
-                                      ? toPersianDigits(currentUserData.postalCode)
-                                      : '—'}
-                                  </span>
-                                </div>
-                                {currentUserData.postalCode && (
-                                  <button
-                                    onClick={() =>
-                                      copyToClipboard(currentUserData.postalCode || '', 'postal')
-                                    }
-                                    className="p-1.5 rounded-lg hover:bg-brand-surface-elevated text-brand-text-muted hover:text-brand-text cursor-pointer transition-colors"
-                                    title={isPersian ? 'کپی کد پستی' : 'Copy'}
-                                  >
-                                    {copiedKey === 'postal' ? (
-                                      <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                    ) : (
-                                      <Copy className="w-3.5 h-3.5" />
-                                    )}
-                                  </button>
-                                )}
-                              </div>
-
-                              <div className="p-4 rounded-2xl bg-brand-surface-elevated/40 border border-brand-border/60">
-                                <span className="text-[11px] text-brand-text-muted block">
-                                  {isPersian ? 'نام و شماره تماس گیرنده' : 'Recipient Contact'}
-                                </span>
-                                <span className="font-bold text-xs text-brand-text block mt-1">
-                                  {currentUserData.recipientName || '—'}{' '}
-                                  {currentUserData.recipientPhone && (
-                                    <span className="font-mono text-brand-gold">
-                                      ({toPersianDigits(currentUserData.recipientPhone)})
-                                    </span>
-                                  )}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Delivery Notes if any */}
-                            {currentUserData.addressNotes && (
-                              <div className="p-4 rounded-2xl bg-brand-surface-elevated/20 border border-brand-border/40 text-xs">
-                                <span className="text-[11px] text-brand-text-muted block mb-1">
-                                  {isPersian ? 'توضیحات و نکات تحویل' : 'Delivery Notes'}
-                                </span>
-                                <p className="text-brand-text italic leading-relaxed">
-                                  &ldquo;{currentUserData.addressNotes}&rdquo;
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="py-16 text-center space-y-3">
-                            <div className="w-12 h-12 rounded-2xl bg-brand-surface-elevated mx-auto flex items-center justify-center text-brand-text-muted">
-                              <MapPin className="w-6 h-6" />
-                            </div>
-                            <h4 className="text-sm font-bold text-brand-text">
-                              {isPersian ? 'هیچ آدرسی ثبت نشده است' : 'No Address Registered'}
-                            </h4>
-                            <p className="text-xs text-brand-text-muted max-w-sm mx-auto">
-                              {isPersian
-                                ? 'این کاربر هنوز نشانی پستی در پروفایل خود ثبت نکرده است. شما می‌توانید با زدن دکمه ویرایش برای این کاربر آدرس ثبت کنید.'
-                                : 'This user has not registered a delivery address yet. You can click Edit to add one.'}
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                      <div className="space-y-4">{renderAddressList('view')}</div>
                     )}
 
                     {/* TAB 3: ORDER HISTORY VIEW */}
@@ -1742,11 +2065,27 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                   <Button
                     size="sm"
                     variant="flat"
-                    onPress={() => setIsEditing(false)}
+                    onPress={() => {
+                      setFieldErrors({});
+                      if (selectedAddressId && selectedEditTab === 'shipping') {
+                        setSelectedAddressId(null);
+                        if (addressEditOnly) {
+                          setAddressEditOnly(false);
+                          setIsEditing(false);
+                          setSelectedTab('address');
+                        } else {
+                          setSelectedEditTab('addresses');
+                        }
+                        return;
+                      }
+                      setIsEditing(false);
+                    }}
                     startContent={<X className="w-4 h-4" />}
                     className="font-bold text-xs bg-brand-surface-elevated text-brand-text border border-brand-border/60 rounded-xl h-9 cursor-pointer"
                   >
-                    {isPersian ? 'انصراف' : 'Cancel'}
+                    {selectedAddressId && selectedEditTab === 'shipping'
+                      ? isPersian ? 'بازگشت به فهرست نشانی‌ها' : 'Back to addresses'
+                      : isPersian ? 'انصراف' : 'Cancel'}
                   </Button>
 
                   <Button
@@ -1754,11 +2093,17 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     color="warning"
                     variant="solid"
                     isLoading={isSaving}
-                    onPress={handleSaveAll}
+                    onPress={
+                      selectedAddressId && selectedEditTab === 'shipping'
+                        ? handleSaveSelectedAddress
+                        : handleSaveAll
+                    }
                     startContent={!isSaving && <Save className="w-4 h-4" />}
                     className="font-black text-xs bg-brand-gold text-[#141914] shadow-md rounded-xl h-9 px-4 cursor-pointer hover:opacity-90 active:scale-95 transition-all"
                   >
-                    {isPersian ? 'ذخیره تمامی تغییرات' : 'Save All Changes'}
+                    {selectedAddressId && selectedEditTab === 'shipping'
+                      ? isPersian ? 'ذخیره این نشانی' : 'Save this address'
+                      : isPersian ? 'ذخیره تغییرات' : 'Save Changes'}
                   </Button>
                 </div>
               ) : (
@@ -1771,7 +2116,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                         color="danger"
                         variant="light"
                         onPress={() => {
-                          if (onClose) onClose();
+                          handleModalClose();
                           onDeleteUser(currentUserData._id, currentUserData.fullName);
                         }}
                         startContent={<Trash2 className="w-4 h-4" />}
@@ -1801,7 +2146,10 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                         size="sm"
                         color="warning"
                         variant="flat"
-                        onPress={() => setIsEditing(true)}
+                        onPress={() => {
+                          setSelectedEditTab('identity');
+                          setIsEditing(true);
+                        }}
                         startContent={<Pencil className="w-3.5 h-3.5" />}
                         className="font-black text-xs bg-brand-gold/15 text-brand-bronze dark:text-brand-gold border border-brand-gold/30 rounded-xl h-9 cursor-pointer hover:bg-brand-gold/25"
                       >
@@ -1812,7 +2160,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     <Button
                       size="sm"
                       variant="flat"
-                      onPress={onClose}
+                      onPress={handleModalClose}
                       className="font-bold text-xs bg-brand-surface-elevated text-brand-text border border-brand-border/60 rounded-xl h-9 cursor-pointer"
                     >
                       {isPersian ? 'بستن' : 'Close'}
@@ -1825,5 +2173,37 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
         )}
       </ModalContent>
     </Modal>
+    <AdminConfirmModal
+      isOpen={Boolean(addressToDelete)}
+      onOpenChange={(open) => {
+        if (!open) setAddressToDelete(null);
+      }}
+      title={isPersian ? 'حذف نشانی کاربر' : 'Delete user address'}
+      description={
+        isPersian ? (
+          <div>
+            <p>
+              آیا از حذف نشانی <strong>«{addressToDelete?.title || 'انتخاب‌شده'}»</strong> اطمینان دارید؟
+            </p>
+            <p className="mt-1 text-rose-500">
+              این عملیات قابل بازگشت نیست.
+            </p>
+          </div>
+        ) : (
+          <div>
+            <p>
+              Are you sure you want to delete <strong>&quot;{addressToDelete?.title || 'Selected address'}&quot;</strong>?
+            </p>
+            <p className="mt-1 text-rose-500">This action cannot be undone.</p>
+          </div>
+        )
+      }
+      confirmText={isPersian ? 'حذف نشانی' : 'Delete address'}
+      cancelText={isPersian ? 'انصراف' : 'Cancel'}
+      confirmColor="danger"
+      isLoading={isDeletingAddress}
+      onConfirm={handleConfirmDeleteAddress}
+    />
+    </>
   );
 };

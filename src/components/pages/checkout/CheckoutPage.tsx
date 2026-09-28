@@ -186,6 +186,21 @@ export function CheckoutPage() {
     if (e) e.preventDefault();
     const errors: Record<string, string> = {};
 
+    const addressTitle = newAddressForm.title.trim().replace(/\s+/g, ' ');
+    const addressTitleKey = addressTitle.toLowerCase();
+    if (!addressTitle) {
+      errors.title = isPersian ? 'عنوان نشانی الزامی است.' : 'Address title is required.';
+    } else if (
+      addresses.some(
+        (address) =>
+          (address.title || '').trim().replace(/\s+/g, ' ').toLowerCase() === addressTitleKey,
+      )
+    ) {
+      errors.title = isPersian
+        ? 'این عنوان برای یکی دیگر از نشانی‌های شما ثبت شده است.'
+        : 'You already use this title for another address.';
+    }
+
     if (!newAddressForm.recipientName.trim()) {
       errors.recipientName = isPersian ? 'نام و نام خانوادگی تحویل‌گیرنده الزامی است.' : 'Recipient full name is required.';
     }
@@ -226,7 +241,7 @@ export function CheckoutPage() {
     setSavingNewAddress(true);
     try {
       const res = await axiosInstance.post('/users/addresses', {
-        title: newAddressForm.title.trim() || undefined,
+        title: addressTitle,
         province: newAddressForm.province.trim(),
         city: newAddressForm.city.trim(),
         address: newAddressForm.address.trim(),
@@ -1175,14 +1190,18 @@ export function CheckoutPage() {
                     <div className="flex items-center gap-1.5 h-5">
                       <Building className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
                       <label className="text-xs font-bold text-brand-text">
-                        {isPersian ? 'عنوان نشانی (اختیاری)' : 'Address Title (Optional)'}
+                        {isPersian ? 'عنوان نشانی *' : 'Address Title *'}
                       </label>
                     </div>
                     <Input
                       aria-label={isPersian ? 'عنوان نشانی' : 'Address Title'}
                       placeholder={isPersian ? 'مثلاً خانه، محل کار...' : 'e.g. Home, Office...'}
                       value={newAddressForm.title}
-                      onValueChange={(val) => setNewAddressForm({ ...newAddressForm, title: val })}
+                      onValueChange={(val) => {
+                        setNewAddressForm({ ...newAddressForm, title: val });
+                        if (newAddressErrors.title) setNewAddressErrors((prev) => ({ ...prev, title: '' }));
+                      }}
+                      isInvalid={Boolean(newAddressErrors.title)}
                       variant="bordered"
                       radius="lg"
                       classNames={{
@@ -1190,6 +1209,7 @@ export function CheckoutPage() {
                         input: "text-xs font-semibold text-brand-text",
                       }}
                     />
+                    <AnimatedFieldError error={newAddressErrors.title} />
                   </div>
 
                   {/* Province & City */}

@@ -287,6 +287,22 @@ export function ProfilePage() {
     if (e) e.preventDefault();
     const errors: Record<string, string> = {};
 
+    const addressTitle = addressForm.title.trim().replace(/\s+/g, ' ');
+    const addressTitleKey = addressTitle.toLowerCase();
+    if (!addressTitle) {
+      errors.title = isPersian ? 'عنوان نشانی الزامی است.' : 'Address title is required.';
+    } else if (
+      addresses.some(
+        (address) =>
+          address._id !== editingAddress?._id &&
+          (address.title || '').trim().replace(/\s+/g, ' ').toLowerCase() === addressTitleKey,
+      )
+    ) {
+      errors.title = isPersian
+        ? 'این عنوان برای یکی دیگر از نشانی‌های شما ثبت شده است.'
+        : 'You already use this title for another address.';
+    }
+
     if (!addressForm.recipientName.trim()) {
       errors.recipientName = isPersian ? 'نام و نام خانوادگی تحویل‌گیرنده الزامی است.' : 'Recipient full name is required.';
     }
@@ -328,7 +344,7 @@ export function ProfilePage() {
     setSavingAddress(true);
     try {
       const payload = {
-        title: addressForm.title.trim() || undefined,
+        title: addressTitle,
         province: addressForm.province.trim(),
         city: addressForm.city.trim(),
         address: addressForm.address.trim(),
@@ -2696,14 +2712,18 @@ export function ProfilePage() {
                     <div className="flex items-center gap-1.5 h-5">
                       <Building className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
                       <label className="text-xs font-bold text-brand-text">
-                        {isPersian ? 'عنوان نشانی (اختیاری)' : 'Address Title (Optional)'}
+                        {isPersian ? 'عنوان نشانی *' : 'Address Title *'}
                       </label>
                     </div>
                     <Input
                       aria-label={isPersian ? 'عنوان نشانی' : 'Address Title'}
                       placeholder={isPersian ? 'مثلاً خانه، محل کار، شرکت...' : 'e.g. Home, Office, Work...'}
                       value={addressForm.title}
-                      onValueChange={(val) => setAddressForm({ ...addressForm, title: val })}
+                      onValueChange={(val) => {
+                        setAddressForm({ ...addressForm, title: val });
+                        if (addressErrors.title) setAddressErrors((prev) => ({ ...prev, title: '' }));
+                      }}
+                      isInvalid={Boolean(addressErrors.title)}
                       variant="bordered"
                       radius="lg"
                       classNames={{
@@ -2711,6 +2731,7 @@ export function ProfilePage() {
                         input: "text-xs font-semibold text-brand-text",
                       }}
                     />
+                    <AnimatedFieldError error={addressErrors.title} />
                   </div>
 
                   {/* Province & City */}
