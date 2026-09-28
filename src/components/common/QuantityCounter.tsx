@@ -3,6 +3,7 @@
 import React from 'react';
 import { Button } from '@heroui/react';
 import { Plus, Minus } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { addToCart, updateQuantity } from '@/stores/cart/cartSlice';
 import { IProduct } from '@/common/interfaces';
@@ -14,6 +15,7 @@ interface QuantityCounterProps {
 }
 
 export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) {
+  const reduceMotion = useReducedMotion();
   const dispatch = useAppDispatch();
   const cartItems = useAppSelector((state) =>
     state.cart.items.filter((item) => item.product._id === product._id),
@@ -81,65 +83,87 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
     }
   };
 
-  if (quantity === 0) {
-    return (
-      <Button
-        onPress={handleIncrement}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-        radius="full"
-        aria-label={isPersian ? `افزودن ${product.title} به سبد خرید` : `Add ${product.title} to bag`}
-        className={`w-full flex items-center justify-center gap-1.5 font-black transition-all duration-300 ease-out bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-xs hover:shadow-md min-h-[40px] rounded-full touch-manipulation active:scale-95 border border-brand-gold/40 ${
-          size === 'sm' ? 'py-1.5 px-3 text-xs' : size === 'lg' ? 'py-3 px-5 text-base' : 'py-2 px-4 text-xs'
-        }`}
-      >
-        <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-        <span>{isPersian ? 'افزودن به سبد' : 'Add to Bag'}</span>
-      </Button>
-    );
-  }
-
   return (
-    <div
-      className="w-full flex items-center justify-between p-0.5 rounded-full font-bold bg-brand-surface-elevated/90 border border-brand-gold/40 text-brand-text shadow-xs min-h-[40px]"
-    >
-      <Button
-        isIconOnly
-        radius="full"
-        variant="light"
-        onPress={handleDecrement}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-        aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
-        className="min-w-[32px] min-h-[32px] w-8 h-8 flex items-center justify-center rounded-full bg-brand-surface hover:bg-brand-champagne/60 text-brand-text transition-all duration-200 ease-out active:scale-90 touch-manipulation shadow-2xs"
-      >
-        <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
-      </Button>
+    <div className="w-full">
+      <AnimatePresence mode="wait" initial={false}>
+        {quantity === 0 ? (
+          <motion.div
+            key="add-to-cart"
+            initial={{ opacity: 0, y: reduceMotion ? 0 : 4, scale: reduceMotion ? 1 : 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: reduceMotion ? 0 : -3, scale: reduceMotion ? 1 : 0.98 }}
+            transition={{ duration: reduceMotion ? 0.1 : 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full"
+          >
+            <Button
+              onPress={handleIncrement}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              radius="full"
+              aria-label={isPersian ? `افزودن ${product.title} به سبد خرید` : `Add ${product.title} to bag`}
+              className={`w-full flex items-center justify-center gap-1.5 font-black transition-all duration-300 ease-out bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-xs hover:shadow-md min-h-[40px] rounded-full touch-manipulation active:scale-95 border border-brand-gold/40 ${
+                size === 'sm' ? 'py-1.5 px-3 text-xs' : size === 'lg' ? 'py-3 px-5 text-base' : 'py-2 px-4 text-xs'
+              }`}
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>{isPersian ? 'افزودن به سبد' : 'Add to Bag'}</span>
+            </Button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="quantity-counter"
+            initial={{ opacity: 0, y: reduceMotion ? 0 : 4, scale: reduceMotion ? 1 : 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: reduceMotion ? 0 : -3, scale: reduceMotion ? 1 : 0.98 }}
+            transition={{ duration: reduceMotion ? 0.1 : 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full"
+          >
+            <div className="w-full flex items-center justify-between p-0.5 rounded-full font-bold bg-brand-surface-elevated/90 border border-brand-gold/40 text-brand-text shadow-xs min-h-[40px]">
+              <Button
+                isIconOnly
+                radius="full"
+                variant="light"
+                onPress={handleDecrement}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
+                className="min-w-[32px] min-h-[32px] w-8 h-8 flex items-center justify-center rounded-full bg-brand-surface hover:bg-brand-champagne/60 text-brand-text transition-all duration-200 ease-out active:scale-90 touch-manipulation shadow-2xs"
+              >
+                <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
+              </Button>
 
-      <span
-        className="font-black text-xs px-2 text-brand-text dark:text-brand-gold min-w-[24px] text-center select-none"
-        aria-live="polite"
-      >
-        {isPersian ? toPersianDigits(quantity) : quantity}
-      </span>
+              <motion.span
+                key={quantity}
+                initial={{ scale: reduceMotion ? 1 : 0.8, opacity: 0.5 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: reduceMotion ? 0.1 : 0.14 }}
+                className="font-black text-xs px-2 text-brand-text dark:text-brand-gold min-w-[24px] text-center select-none"
+                aria-live="polite"
+              >
+                {isPersian ? toPersianDigits(quantity) : quantity}
+              </motion.span>
 
-      <Button
-        isIconOnly
-        radius="full"
-        onPress={handleIncrement}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-        aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
-        className="min-w-[32px] min-h-[32px] w-8 h-8 flex items-center justify-center rounded-full bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black shadow-xs transition-all duration-200 ease-out active:scale-90 touch-manipulation"
-      >
-        <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-      </Button>
+              <Button
+                isIconOnly
+                radius="full"
+                onPress={handleIncrement}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
+                className="min-w-[32px] min-h-[32px] w-8 h-8 flex items-center justify-center rounded-full bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black shadow-xs transition-all duration-200 ease-out active:scale-90 touch-manipulation"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

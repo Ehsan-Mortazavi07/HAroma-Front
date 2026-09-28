@@ -515,9 +515,13 @@ export default function AdminProductsPage() {
                         <div className="flex items-center gap-3">
                           <AdminThumbnail src={imageSrc} title={product.title} />
                           <div>
-                            <div className="font-bold text-sm text-brand-text">
+                            <Link
+                              href={PATHS.ADMIN_PRODUCT_EDIT(product._id)}
+                              className="font-bold text-sm text-brand-text hover:text-brand-gold hover:underline underline-offset-4 transition-colors"
+                              title={isPersian ? 'ویرایش محصول' : 'Edit product'}
+                            >
                               {isPersian ? product.title : product.titleEn || product.title}
-                            </div>
+                            </Link>
                             <div className="text-[11px] text-brand-text-muted font-sans">
                               {product.slug}
                             </div>
@@ -596,6 +600,19 @@ export default function AdminProductsPage() {
 
                       <TableCell className="text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
+                          <Button
+                            as={Link}
+                            href={PATHS.PRODUCT(product.slug || product._id)}
+                            size="sm"
+                            variant="flat"
+                            radius="full"
+                            startContent={<Eye className="w-3.5 h-3.5" />}
+                            className="bg-brand-surface-elevated text-brand-text hover:bg-brand-border/60 border border-brand-border cursor-pointer px-3 font-bold text-[11px]"
+                            title={isPersian ? 'مشاهده محصول در فروشگاه' : 'View product'}
+                            aria-label={isPersian ? `مشاهده ${product.title}` : `View ${product.titleEn || product.title}`}
+                          >
+                            {isPersian ? 'مشاهده' : 'View'}
+                          </Button>
                           <Button
                             as={Link}
                             href={PATHS.ADMIN_PRODUCT_EDIT(product._id)}

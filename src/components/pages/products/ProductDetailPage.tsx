@@ -22,8 +22,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ShoppingBag,
+  X,
 } from 'lucide-react';
-import { Button, Chip } from '@heroui/react';
+import { Button, Chip, Modal, ModalBody, ModalContent } from '@heroui/react';
 import { IProduct, IProductVariant } from '@/common/interfaces';
 import { PATHS } from '@/common/constants/PATHS';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
@@ -173,6 +174,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
   const user = useAppSelector((state) => state.auth.user);
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
 
   useEffect(() => {
     const title = isPersian ? product.title : product.titleEn || product.title;
@@ -375,13 +377,20 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
         {/* Left Column: Image Gallery & Thumbnails */}
         <div className="lg:col-span-5 space-y-3 sm:space-y-4 lg:sticky lg:top-24">
           <div className="relative w-full aspect-square sm:aspect-[4/3] md:h-[450px] rounded-2xl sm:rounded-3xl overflow-hidden bg-brand-surface-elevated/70 border border-brand-border/60">
-            <Image
-              src={images[selectedImageIndex]}
-              alt={isPersian ? product.title : product.titleEn || product.title}
-              fill
-              priority
-              className="object-contain sm:object-cover p-2.5 sm:p-0 transition-transform duration-300"
-            />
+            <button
+              type="button"
+              onClick={() => setIsImagePreviewOpen(true)}
+              aria-label={isPersian ? 'نمایش بزرگ تصویر محصول' : 'Enlarge product image'}
+              className="absolute inset-0 z-0 cursor-zoom-in"
+            >
+              <Image
+                src={images[selectedImageIndex]}
+                alt={isPersian ? product.title : product.titleEn || product.title}
+                fill
+                priority
+                className="pointer-events-none object-contain sm:object-cover p-2.5 sm:p-0 transition-transform duration-300"
+              />
+            </button>
 
             {/* Fast Delivery Ribbon */}
             <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 z-10">
@@ -808,6 +817,46 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
           </div>
         </div>
       )}
+
+      <Modal
+        isOpen={isImagePreviewOpen}
+        onOpenChange={setIsImagePreviewOpen}
+        size="5xl"
+        backdrop="blur"
+        hideCloseButton
+        classNames={{
+          backdrop: 'bg-black/80 backdrop-blur-md',
+          wrapper: 'p-3 sm:p-6',
+          base: 'bg-transparent shadow-none max-w-[96vw] my-0 overflow-visible',
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <div className="relative">
+              <Button
+                isIconOnly
+                type="button"
+                onPress={onClose}
+                aria-label={isPersian ? 'بستن تصویر' : 'Close image preview'}
+                className="absolute -top-3 -right-3 z-10 min-w-10 w-10 h-10 rounded-full bg-brand-surface text-brand-text border border-brand-border shadow-lg"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+              <ModalBody className="p-0 overflow-hidden rounded-2xl sm:rounded-3xl">
+                <div className="relative w-[min(92vw,1200px)] h-[min(82vh,900px)]">
+                  <Image
+                    src={images[selectedImageIndex]}
+                    alt={isPersian ? product.title : product.titleEn || product.title}
+                    fill
+                    sizes="92vw"
+                    className="object-contain"
+                  />
+                </div>
+              </ModalBody>
+            </div>
+          )}
+        </ModalContent>
+      </Modal>
 
       {/* Mobile Sticky Bottom Action Bar (Floating Purchase Island) */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-surface/95 backdrop-blur-lg border-t border-brand-border/80 px-4 py-2.5 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]">

@@ -106,7 +106,7 @@ export function AdminNavbar() {
   ];
 
   return (
-    <header className="sticky top-2 sm:top-4 z-50 w-full px-3 sm:px-4 lg:px-8 mb-4 sm:mb-6 transition-all pointer-events-none">
+    <header className="sticky top-2 sm:top-4 z-[70] w-full px-3 sm:px-4 lg:px-8 mb-4 sm:mb-6 transition-all pointer-events-none">
       <div className="max-w-[1600px] mx-auto relative pointer-events-auto" ref={navbarRef}>
         <HeroNavbar
           isBordered={false}
