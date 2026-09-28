@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
@@ -41,9 +42,13 @@ import { PATHS } from '@/common/constants/PATHS';
 import { ThemeToggle } from './ThemeToggle';
 import { BrandLogo } from './BrandLogo';
 import { VipBadge } from './VipBadge';
-import { SearchModal } from './SearchModal';
 import { formatToman, toPersianDigits, getLocalizedVariantTitle } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
+
+const SearchModal = dynamic(() =>
+  import('./SearchModal').then((module) => module.SearchModal),
+  { ssr: false },
+);
 
 // Pre-defined rich categories for the Mega Menu
 const megaMenuCategories = [
@@ -181,9 +186,15 @@ export function Navbar() {
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [hasOpenedSearch, setHasOpenedSearch] = useState(false);
 
   const navbarRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const openSearchModal = () => {
+    setHasOpenedSearch(true);
+    setIsSearchModalOpen(true);
+  };
 
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -528,7 +539,7 @@ export function Navbar() {
                   setIsMegaMenuOpen(false);
                   setIsProfileOpen(false);
                   if (isCartDrawerOpen) dispatch(toggleCartDrawer(false));
-                  setIsSearchModalOpen(true);
+                  openSearchModal();
                 }}
                 className="w-36 lg:w-44 xl:w-52 h-9 px-3 rounded-full bg-[#242c24]/90 border border-[#3e4c3e] hover:border-[#bfa27a]/60 flex items-center gap-2 text-[#a69c8e] hover:text-[#f7f4ee] transition-all shadow-inner group cursor-pointer"
                 aria-label="جست‌وجوی محصول یا برند"
@@ -558,7 +569,7 @@ export function Navbar() {
                 type="button"
                 onClick={() => {
                   setIsMegaMenuOpen(false);
-                  setIsSearchModalOpen(true);
+                  openSearchModal();
                 }}
                 className="w-full h-12 px-4 rounded-full bg-[#242c24] border border-[#3e4c3e] hover:border-[#bfa27a]/60 flex items-center justify-between text-[#a69c8e] transition-colors md:hidden mb-6 cursor-pointer shadow-inner"
               >
@@ -1003,10 +1014,12 @@ export function Navbar() {
         </AnimatePresence>
 
         {/* 3. Valira-Style Command Palette Search Modal */}
-        <SearchModal
-          isOpen={isSearchModalOpen}
-          onClose={() => setIsSearchModalOpen(false)}
-        />
+        {hasOpenedSearch && (
+          <SearchModal
+            isOpen={isSearchModalOpen}
+            onClose={() => setIsSearchModalOpen(false)}
+          />
+        )}
 
       </div>
     </header>

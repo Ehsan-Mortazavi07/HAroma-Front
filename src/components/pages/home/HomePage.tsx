@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { IProduct, ICategory, IPageSection } from '@/common/interfaces';
 import { HeroBanner } from './HeroBanner';

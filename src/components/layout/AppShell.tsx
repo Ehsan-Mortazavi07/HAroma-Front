@@ -1,11 +1,15 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { Navbar } from '@/components/common/Navbar';
-import { AdminNavbar } from '@/components/admin/AdminNavbar';
 import { AdminSidebarProvider } from '@/components/admin/AdminSidebarContext';
 import { Footer } from '@/components/common/Footer';
+
+const AdminNavbar = dynamic(() =>
+  import('@/components/admin/AdminNavbar').then((module) => module.AdminNavbar),
+);
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

@@ -4,6 +4,7 @@ import React from 'react';
 import { Button } from '@heroui/react';
 import { Plus, Minus } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { shallowEqual } from 'react-redux';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { addToCart, updateQuantity } from '@/stores/cart/cartSlice';
 import { IProduct } from '@/common/interfaces';
@@ -17,8 +18,9 @@ interface QuantityCounterProps {
 export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) {
   const reduceMotion = useReducedMotion();
   const dispatch = useAppDispatch();
-  const cartItems = useAppSelector((state) =>
-    state.cart.items.filter((item) => item.product._id === product._id),
+  const cartItems = useAppSelector(
+    (state) => state.cart.items.filter((item) => item.product._id === product._id),
+    shallowEqual,
   );
   const isPersian = useAppSelector((state) => state.ui.lang === 'fa');
 

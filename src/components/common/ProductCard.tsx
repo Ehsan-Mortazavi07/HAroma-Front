@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Star, Zap } from 'lucide-react';
 import { Card, CardBody } from '@heroui/react';
-import { motion } from 'framer-motion';
 import { IProduct } from '@/common/interfaces';
 import { PATHS } from '@/common/constants/PATHS';
 import { formatToman, toPersianDigits } from '@/common/utils';
@@ -20,7 +19,7 @@ interface ProductCardProps {
 const fallbackImage =
   'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop';
 
-export function ProductCard({ product }: ProductCardProps) {
+export const ProductCard = React.memo(function ProductCard({ product }: ProductCardProps) {
   const { t, isPersian } = useTranslation();
   const [imgSrc, setImgSrc] = useState<string>(
     product.images && product.images.length > 0 && product.images[0]
@@ -70,12 +69,7 @@ export function ProductCard({ product }: ProductCardProps) {
     : 0;
 
   return (
-    <motion.div
-      whileHover={{ y: -7 }}
-      whileTap={{ scale: 0.99 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-      className="h-full"
-    >
+    <div className="h-full transition-transform duration-200 ease-out hover:-translate-y-[7px] active:scale-[0.99]">
       <Card className="h-full group relative flex flex-col justify-between bg-brand-surface rounded-2xl sm:rounded-3xl p-3 sm:p-4 border border-brand-border/60 shadow-2xs hover:shadow-xl hover:border-brand-gold/80 transition-all duration-300 ease-out">
         {/* Badges */}
         <div className="absolute top-2.5 right-2.5 sm:top-3 sm:right-3 z-10 flex flex-col gap-1.5 items-start">
@@ -169,6 +163,6 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
-}
+});
