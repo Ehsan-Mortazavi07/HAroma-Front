@@ -211,6 +211,31 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
         )
       : ['https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop'];
 
+  useEffect(() => {
+    if (!isImagePreviewOpen || images.length < 2) return;
+
+    const handlePreviewKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsImagePreviewOpen(false);
+        return;
+      }
+
+      const nextKeys = isPersian ? ['ArrowLeft', 'ArrowDown'] : ['ArrowRight', 'ArrowDown'];
+      const previousKeys = isPersian ? ['ArrowRight', 'ArrowUp'] : ['ArrowLeft', 'ArrowUp'];
+
+      if (nextKeys.includes(event.key)) {
+        event.preventDefault();
+        setSelectedImageIndex((index) => (index + 1) % images.length);
+      } else if (previousKeys.includes(event.key)) {
+        event.preventDefault();
+        setSelectedImageIndex((index) => (index - 1 + images.length) % images.length);
+      }
+    };
+
+    window.addEventListener('keydown', handlePreviewKeyDown);
+    return () => window.removeEventListener('keydown', handlePreviewKeyDown);
+  }, [images.length, isImagePreviewOpen, isPersian]);
+
   const mainCategory =
     product.categories && product.categories.length > 0
       ? product.categories[0]
@@ -843,14 +868,60 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                 <X className="w-5 h-5" />
               </Button>
               <ModalBody className="p-0 overflow-hidden rounded-2xl sm:rounded-3xl">
-                <div className="relative w-[min(92vw,1200px)] h-[min(82vh,900px)]">
-                  <Image
-                    src={images[selectedImageIndex]}
-                    alt={isPersian ? product.title : product.titleEn || product.title}
-                    fill
-                    sizes="92vw"
-                    className="object-contain"
-                  />
+                <div
+                  dir={isPersian ? 'rtl' : 'ltr'}
+                  className="flex h-[min(82vh,900px)] w-[min(92vw,1200px)] flex-col gap-3 sm:flex-row"
+                >
+                  <div className="relative order-1 min-h-0 min-w-0 flex-1">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      aria-label={isPersian ? 'بستن پیش‌نمایش تصویر' : 'Close image preview'}
+                      className="absolute inset-0 cursor-zoom-out"
+                    >
+                      <Image
+                        src={images[selectedImageIndex]}
+                        alt={isPersian ? product.title : product.titleEn || product.title}
+                        fill
+                        sizes="(max-width: 640px) 92vw, 80vw"
+                        className="pointer-events-none object-contain"
+                      />
+                    </button>
+                  </div>
+                  {images.length > 1 && (
+                    <div
+                      role="group"
+                      aria-label={isPersian ? 'تصاویر دیگر محصول' : 'Other product images'}
+                      className="order-2 flex shrink-0 gap-2 overflow-x-auto pb-1 sm:w-16 sm:flex-col sm:overflow-x-hidden sm:overflow-y-auto sm:pb-0"
+                    >
+                      {images.map((image, index) => (
+                        <button
+                          key={`${image}-${index}`}
+                          type="button"
+                          onClick={() => setSelectedImageIndex(index)}
+                          aria-label={
+                            isPersian
+                              ? `نمایش تصویر ${toPersianDigits(index + 1)}`
+                              : `Show image ${index + 1}`
+                          }
+                          aria-pressed={selectedImageIndex === index}
+                          className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border-2 transition-colors sm:h-14 sm:w-14 ${
+                            selectedImageIndex === index
+                              ? 'border-brand-gold'
+                              : 'border-brand-border/60 hover:border-brand-gold/70'
+                          }`}
+                        >
+                          <Image
+                            src={image}
+                            alt=""
+                            fill
+                            sizes="56px"
+                            className="object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </ModalBody>
             </div>

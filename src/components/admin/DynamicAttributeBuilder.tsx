@@ -8,13 +8,12 @@ import {
   Sparkles,
   X,
   Check,
-  Tag } from 'lucide-react';
+  Tag,
+} from 'lucide-react';
 import {
   Card,
   CardBody,
   Button,
-  Select,
-  SelectItem,
   Modal,
   ModalContent,
   ModalHeader,
@@ -22,6 +21,8 @@ import {
   ModalFooter,
   Chip,
   Skeleton,
+  Select,
+  SelectItem,
 } from '@heroui/react';
 import { IAttribute, IProductAttribute } from '@/common/interfaces';
 import { adminApi } from '@/common/api/admin';
@@ -279,31 +280,51 @@ export function DynamicAttributeBuilder({
       <Card className="bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] shadow-none rounded-2xl overflow-visible">
         <CardBody className="p-4 sm:p-5 space-y-4 overflow-visible">
           <div className="flex flex-col sm:flex-row gap-3 items-center">
-            <Select
-              aria-label={isPersian ? 'انتخاب ویژگی' : 'Select Attribute'}
-              placeholder={isPersian ? 'انتخاب ویژگی تخصصی (گروه بویایی، نت، طبع، فصل...)' : 'Select Fragrance Attribute...'}
-              selectedKeys={selectedAttrId ? new Set([selectedAttrId]) : new Set([])}
-              onSelectionChange={(keys) => {
-                const selected = Array.from(keys)[0] as string;
-                setSelectedAttrId(selected || '');
-                setSelectedValues([]);
-                setCustomValueInput('');
-              }}
-              variant="bordered"
-              radius="full"
-              className="w-full sm:w-2/3"
-              classNames={{
-                trigger: 'bg-[#ffffff] dark:bg-[#1c231c] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold h-11 text-sm font-bold text-[#1d241d] dark:text-[#f7f4ee] rounded-full text-start shadow-xs',
-                value: 'text-sm font-bold text-start',
-                popoverContent: 'bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] rounded-2xl shadow-xl',
-              }}
-            >
-              {availableAttributes.map((a) => (
-                <SelectItem key={a._id} textValue={`${a.name} ${a.unit ? `(${a.unit})` : ''}`}>
-                  {a.name} {a.unit ? `(${a.unit})` : ''}
-                </SelectItem>
-              ))}
-            </Select>
+            <div className="w-full sm:w-2/3">
+              <Select
+                aria-label={isPersian ? 'انتخاب ویژگی' : 'Select Attribute'}
+                selectedKeys={selectedAttrId ? new Set([selectedAttrId]) : new Set([])}
+                isDisabled={loading || availableAttributes.length === 0}
+                onSelectionChange={(keys) => {
+                  const selected = Array.from(keys)[0] as string | undefined;
+                  setSelectedAttrId(selected || '');
+                  setSelectedValues([]);
+                  setCustomValueInput('');
+                }}
+                placeholder={
+                  loading
+                    ? isPersian ? 'در حال بارگذاری ویژگی‌ها…' : 'Loading attributes…'
+                    : availableAttributes.length === 0
+                    ? isPersian ? 'ویژگی‌ای برای انتخاب وجود ندارد' : 'No attributes available'
+                    : isPersian
+                    ? 'انتخاب ویژگی تخصصی (گروه بویایی، نت، طبع، فصل...)'
+                    : 'Select Fragrance Attribute...'
+                }
+                variant="bordered"
+                radius="full"
+                popoverProps={{
+                  placement: 'bottom',
+                  shouldFlip: false,
+                  isNonModal: true,
+                  shouldBlockScroll: false,
+                  className: 'z-40',
+                }}
+                classNames={{
+                  trigger: 'h-11 min-h-11 px-4 bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs text-sm font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                  value: 'text-sm font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                  popoverContent: 'bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] rounded-2xl shadow-xl',
+                }}
+              >
+                {availableAttributes.map((attribute) => (
+                  <SelectItem
+                    key={attribute._id}
+                    textValue={`${attribute.name}${attribute.unit ? ` (${attribute.unit})` : ''}`}
+                  >
+                    {attribute.name} {attribute.unit ? `(${attribute.unit})` : ''}
+                  </SelectItem>
+                ))}
+              </Select>
+            </div>
 
             <Button
               size="md"
