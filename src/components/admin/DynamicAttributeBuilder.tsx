@@ -1,13 +1,18 @@
 'use client';
 
+import { Input, Textarea } from '@/components/common/DirectionalFields';
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Sparkles, X, Check, Tag } from 'lucide-react';
+import {
+  Plus,
+  Trash2,
+  Sparkles,
+  X,
+  Check,
+  Tag } from 'lucide-react';
 import {
   Card,
   CardBody,
   Button,
-  Input,
-  Textarea,
   Select,
   SelectItem,
   Modal,

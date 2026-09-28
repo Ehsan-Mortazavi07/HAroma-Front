@@ -1,7 +1,9 @@
 'use client';
 
+import { Input, Textarea } from '@/components/common/DirectionalFields';
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import {
+  useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -26,13 +28,11 @@ import {
   Sparkles,
   Plus,
   Check,
-} from 'lucide-react';
+  } from 'lucide-react';
 import {
   Card,
   CardBody,
   Button,
-  Input,
-  Textarea,
   Chip,
   Modal,
   ModalContent,

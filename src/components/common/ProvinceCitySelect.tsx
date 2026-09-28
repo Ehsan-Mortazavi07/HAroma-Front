@@ -189,7 +189,7 @@ export function ProvinceCitySelect({
                 <div className="relative px-1 pt-1 pb-1">
                   <Search className="w-3.5 h-3.5 text-brand-text-muted absolute right-3.5 top-3.5 shrink-0 pointer-events-none" />
                   <input
-                    dir="auto"
+                    dir={provinceSearch.trim() ? 'auto' : isPersian ? 'rtl' : 'ltr'}
                     type="text"
                     autoFocus
                     value={provinceSearch}
@@ -297,7 +297,7 @@ export function ProvinceCitySelect({
                 <div className="relative px-1 pt-1 pb-1">
                   <Search className="w-3.5 h-3.5 text-brand-text-muted absolute right-3.5 top-3.5 shrink-0 pointer-events-none" />
                   <input
-                    dir="auto"
+                    dir={citySearch.trim() ? 'auto' : isPersian ? 'rtl' : 'ltr'}
                     type="text"
                     autoFocus
                     value={citySearch}

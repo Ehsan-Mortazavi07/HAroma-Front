@@ -1,7 +1,8 @@
 'use client';
 
+import { Input } from '@/components/common/DirectionalFields';
 import React, { useState, useEffect } from 'react';
-import { Input, InputProps } from '@heroui/react';
+import { InputProps } from '@heroui/react';
 import { toEnglishDigits, toPersianDigits } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 

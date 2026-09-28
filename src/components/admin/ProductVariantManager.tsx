@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/common/DirectionalFields';
 import React, { useState, useEffect } from 'react';
 import {
   Layers,
@@ -12,12 +13,11 @@ import {
   Check,
   BookmarkPlus,
   RefreshCw,
-} from 'lucide-react';
+  } from 'lucide-react';
 import {
   Card,
   CardBody,
   Button,
-  Input,
   Chip,
   Skeleton,
 } from '@heroui/react';

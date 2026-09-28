@@ -1,11 +1,16 @@
 'use client';
 
+import { Input } from '@/components/common/DirectionalFields';
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
-import { Upload, X, Image as ImageIcon, Link as LinkIcon, RefreshCw } from 'lucide-react';
+import {
+  Upload,
+  X,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  RefreshCw } from 'lucide-react';
 import {
   Button,
-  Input,
   Modal,
   ModalContent,
   ModalHeader,

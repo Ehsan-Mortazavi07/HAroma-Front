@@ -1,5 +1,6 @@
 'use client';
 
+import { Input, Textarea } from '@/components/common/DirectionalFields';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
@@ -13,8 +14,6 @@ import {
   Tab,
   Avatar,
   Skeleton,
-  Input,
-  Textarea,
 } from '@heroui/react';
 import {
   User as UserIcon,
@@ -117,8 +116,6 @@ const modalMotionProps = {
 const inputWrapperClass =
   'h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors';
 const inputLabelClass = 'text-xs font-bold text-brand-text mb-1.5 block text-right';
-
-
 export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   isOpen,
   onOpenChange,

@@ -1,5 +1,6 @@
 'use client';
 
+import { Input, Textarea } from '@/components/common/DirectionalFields';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
@@ -11,8 +12,6 @@ import {
   Chip,
   Tabs,
   Tab,
-  Input,
-  Textarea,
 } from '@heroui/react';
 import {
   User as UserIcon,

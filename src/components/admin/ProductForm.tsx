@@ -1,8 +1,11 @@
 'use client';
 
+import { Input, Textarea } from '@/components/common/DirectionalFields';
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Formik, Form } from 'formik';
+import {
+  useRouter } from 'next/navigation';
+import { Formik,
+  Form } from 'formik';
 import {
   Package,
   Crown,
@@ -16,14 +19,11 @@ import {
   Award,
   Plus,
   Tag,
-} from 'lucide-react';
+  } from 'lucide-react';
 import {
   Card,
   CardBody,
   Button,
-  Input,
-  Textarea,
-
   Select,
   SelectItem,
   Modal,

@@ -1,10 +1,19 @@
 'use client';
 
+import { Input } from '@/components/common/DirectionalFields';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Formik, Form } from 'formik';
-import { Card, CardBody, Input, Button, Tabs, Tab } from '@heroui/react';
+import {
+  useRouter,
+  useSearchParams } from 'next/navigation';
+import { Formik,
+  Form } from 'formik';
+import { Card,
+  CardBody,
+  Button,
+  Tabs,
+  Tab,
+} from '@heroui/react';
 import {
   Lock,
   User,

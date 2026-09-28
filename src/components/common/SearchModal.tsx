@@ -1,18 +1,23 @@
 'use client';
 
+import { Input } from '@/components/common/DirectionalFields';
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import {
+  useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion,
+  AnimatePresence } from 'framer-motion';
 import {
   Search,
   X,
   ChevronDown,
   ArrowLeft,
   Check,
-} from 'lucide-react';
-import { Button, Input, Skeleton } from '@heroui/react';
+  } from 'lucide-react';
+import { Button,
+  Skeleton,
+} from '@heroui/react';
 import { catalogApi } from '@/common/api/catalog';
 import { IProduct, IBrand } from '@/common/interfaces';
 import { PATHS } from '@/common/constants/PATHS';

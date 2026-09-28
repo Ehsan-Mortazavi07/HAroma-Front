@@ -1,8 +1,10 @@
 'use client';
 
+import { Input, Textarea } from '@/components/common/DirectionalFields';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import {
+  useRouter } from 'next/navigation';
 import {
   User,
   Crown,
@@ -45,12 +47,10 @@ import {
   X,
   Plus,
   Trash2,
-} from 'lucide-react';
+  } from 'lucide-react';
 import {
   Card,
   Button,
-  Input,
-  Textarea,
   Avatar,
   Chip,
   Modal,

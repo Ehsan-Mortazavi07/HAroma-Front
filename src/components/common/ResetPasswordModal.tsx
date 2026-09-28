@@ -1,11 +1,11 @@
 'use client';
 
+import { Input } from '@/components/common/DirectionalFields';
 import React, { useState, useEffect } from 'react';
 import {
   Modal,
   ModalContent,
   ModalHeader,
-  Input,
   Button,
 } from '@heroui/react';
 import {

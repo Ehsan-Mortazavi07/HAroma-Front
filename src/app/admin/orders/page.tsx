@@ -1,12 +1,14 @@
 'use client';
 
+import { Input } from '@/components/common/DirectionalFields';
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import {
+  motion,
+  AnimatePresence } from 'framer-motion';
 import {
   Card,
   CardBody,
   Button,
-  Input,
   Chip,
   Table,
   TableHeader,
