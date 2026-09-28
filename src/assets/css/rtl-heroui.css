@@ -20,12 +20,52 @@
   font-family: var(--font-sans), 'Vazirmatn', 'Vazir', system-ui, -apple-system, sans-serif !important;
 }
 
-[dir="rtl"] input:not([type="number"]):not([type="tel"]):not([type="password"]),
-[dir="rtl"] textarea,
-[dir="rtl"] [data-slot="input"],
-[dir="rtl"] [data-slot="value"],
-[dir="rtl"] [data-slot="item"] {
-  text-align: right;
+@layer base {
+  /* Keep RTL as the default while allowing per-field Tailwind alignment utilities to win. */
+  [dir="rtl"] input:not([type="number"]):not([type="tel"]):not([type="password"]):not([type="email"]):not([type="url"]):not(.text-left):not(.text-center):not(.text-start):not(.text-end):not(.text-right),
+  [dir="rtl"] textarea:not(.text-left):not(.text-center):not(.text-start):not(.text-end):not(.text-right) {
+    text-align: right;
+  }
+
+  /* Contact details and numeric values should keep an LTR caret and digit order in RTL forms. */
+  [dir="rtl"] input[type="number"],
+  [dir="rtl"] input[type="tel"],
+  [dir="rtl"] input[type="password"],
+  [dir="rtl"] input[type="email"],
+  [dir="rtl"] input[type="url"] {
+    direction: ltr;
+  }
+}
+
+/* Placeholders need enough contrast to remain readable in either theme. */
+input::placeholder,
+textarea::placeholder,
+[data-slot="input"]::placeholder {
+  color: var(--brand-text-muted) !important;
+  opacity: 1 !important;
+}
+
+/* Keep address-form values and hints readable, including fields disabled until a province is chosen. */
+.admin-address-fields :is(input, textarea, [data-slot="input"]) {
+  color: var(--brand-text) !important;
+  font-size: 0.875rem !important;
+  line-height: 1.5rem !important;
+  opacity: 1 !important;
+}
+
+.admin-address-fields :is(input, textarea, [data-slot="input"])::placeholder {
+  color: var(--brand-text-muted) !important;
+  opacity: 1 !important;
+}
+
+.admin-address-fields button:disabled {
+  color: var(--brand-text-muted) !important;
+  opacity: 1 !important;
+}
+
+.admin-address-fields textarea {
+  overflow-wrap: anywhere;
+  text-align: start !important;
 }
 
 [dir="rtl"] .heroui-modal-close-button {
@@ -204,17 +244,6 @@ html[dir="ltr"] [data-slot="label"] {
   width: 100% !important;
 }
 
-/* HeroUI Input & Textarea Inner Wrapper & Content RTL Spacing */
-[dir="rtl"] [data-slot="inner-wrapper"],
-[dir="rtl"] [data-slot="innerWrapper"],
-html[dir="rtl"] [data-slot="inner-wrapper"],
-html[dir="rtl"] [data-slot="innerWrapper"] {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 0.75rem !important; /* 12px clear spacing */
-}
-
 /* For Textarea, inner-wrapper and input-wrapper must align items to start, never center */
 [dir="rtl"] [data-slot="base"]:has(textarea) [data-slot="inner-wrapper"],
 [dir="rtl"] [data-slot="base"]:has(textarea) [data-slot="innerWrapper"],
@@ -241,14 +270,7 @@ html[dir="rtl"] [data-slot="inner-wrapper"] > svg,
 html[dir="rtl"] [data-slot="innerWrapper"] > svg,
 html[dir="rtl"] [data-slot="inner-wrapper"] > span,
 html[dir="rtl"] [data-slot="innerWrapper"] > span {
-  margin-inline-end: 0.75rem !important; /* 12px separation between icon and text */
   flex-shrink: 0 !important;
-}
-
-[dir="rtl"] input[data-slot="input"],
-html[dir="rtl"] input[data-slot="input"] {
-  padding-inline-start: 0.25rem !important;
-  padding-inline-end: 0.25rem !important;
 }
 
 /* ==========================================================================
@@ -343,14 +365,6 @@ html[dir="rtl"] [data-slot="trigger"] {
   padding-right: 0.75rem !important;
   padding-left: 2.25rem !important;
   position: relative !important;
-}
-
-[dir="rtl"] [data-slot="innerWrapper"],
-html[dir="rtl"] [data-slot="innerWrapper"] {
-  direction: rtl !important;
-  text-align: right !important;
-  justify-content: flex-start !important;
-  width: 100% !important;
 }
 
 [data-slot="value"] {
@@ -480,4 +494,3 @@ html.dark [dir="rtl"] [role="option"][data-selected="true"][data-hover="true"] {
     padding-inline-start: 0 !important;
   }
 }
-

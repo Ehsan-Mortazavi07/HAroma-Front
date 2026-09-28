@@ -217,6 +217,31 @@ body::-webkit-scrollbar,
   height: 0px !important;
 }
 
+/* Keep the admin user modal's long forms discoverable and scrollable. */
+.admin-details-scroll {
+  min-height: 0;
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--brand-bronze) transparent !important;
+  -ms-overflow-style: auto !important;
+}
+
+.admin-details-scroll::-webkit-scrollbar {
+  display: block !important;
+  width: 8px !important;
+  height: 8px !important;
+}
+
+.admin-details-scroll::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.admin-details-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid transparent !important;
+  border-radius: 9999px !important;
+  background-color: var(--brand-bronze) !important;
+  background-clip: padding-box !important;
+}
+
 .scrollbar-none {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
@@ -228,8 +253,7 @@ body::-webkit-scrollbar,
   height: 0px !important;
 }
 
-/* Prevent unwanted card body scrollbars from default HeroUI styles */
-[data-slot="body"],
+/* Prevent unwanted card body scrollbars without disabling modal-body scrolling. */
 [data-slot="card-body"],
 .heroui-card-body {
   overflow: visible !important;
@@ -361,5 +385,3 @@ textarea,
   border-color: rgba(244, 63, 94, 0.8) !important;
   background-color: rgba(244, 63, 94, 0.05) !important;
 }
-
-

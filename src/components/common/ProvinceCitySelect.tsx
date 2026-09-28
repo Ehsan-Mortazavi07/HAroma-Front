@@ -194,7 +194,7 @@ export function ProvinceCitySelect({
                     value={provinceSearch}
                     onChange={(e) => setProvinceSearch(e.target.value)}
                     placeholder={isPersian ? 'جستجوی استان...' : 'Search province...'}
-                    className="w-full h-9 pr-8 pl-3 text-xs font-semibold rounded-xl bg-brand-surface-elevated border border-brand-border text-brand-text placeholder:text-brand-text-muted/60 focus:outline-none focus:border-brand-gold"
+                    className="w-full h-9 pr-8 pl-3 text-xs font-semibold rounded-xl bg-brand-surface-elevated border border-brand-border text-brand-text focus:outline-none focus:border-brand-gold"
                   />
                   {provinceSearch && (
                     <button
@@ -301,7 +301,7 @@ export function ProvinceCitySelect({
                     value={citySearch}
                     onChange={(e) => setCitySearch(e.target.value)}
                     placeholder={isPersian ? 'جستجوی شهر...' : 'Search city...'}
-                    className="w-full h-9 pr-8 pl-3 text-xs font-semibold rounded-xl bg-brand-surface-elevated border border-brand-border text-brand-text placeholder:text-brand-text-muted/60 focus:outline-none focus:border-brand-gold"
+                    className="w-full h-9 pr-8 pl-3 text-xs font-semibold rounded-xl bg-brand-surface-elevated border border-brand-border text-brand-text focus:outline-none focus:border-brand-gold"
                   />
                   {citySearch && (
                     <button

@@ -832,7 +832,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
         // Stable, fixed-height container so switching tabs or modes NEVER causes jumping or resizing
         base: 'm-auto max-w-3xl w-full h-[680px] max-h-[90vh] bg-brand-surface dark:bg-[#141914] border border-brand-border dark:border-[#2a352a] text-brand-text rounded-3xl shadow-2xl overflow-hidden p-0 flex flex-col',
         header: 'p-0 border-b border-brand-border/60 dark:border-[#2a352a] shrink-0',
-        body: 'flex-1 p-5 sm:p-6 overflow-y-auto',
+        body: 'admin-details-scroll min-h-0 flex-1 p-5 sm:p-6 overflow-y-auto',
         footer:
           'p-4 sm:px-6 border-t border-brand-border/60 dark:border-[#2a352a] bg-brand-surface-elevated/30 dark:bg-[#101410] flex items-center justify-between gap-3 shrink-0',
         closeButton: 'top-4 end-4 text-brand-text-muted hover:bg-brand-surface-elevated rounded-xl z-20',
@@ -1111,7 +1111,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
             )}
 
             {/* Modal Body with smooth opacity transition and zero container jumping */}
-            <ModalBody className="p-5 sm:p-6 overflow-y-auto">
+            <ModalBody className="admin-details-scroll min-h-0 p-5 sm:p-6 overflow-y-auto">
               <AnimatePresence mode="wait">
                 {/* ========================================================================= */}
                 {/* ============================= EDIT MODE ================================= */}
@@ -1542,9 +1542,10 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
                     {/* EDIT TAB 3: SHIPPING ADDRESS */}
                     {(selectedAddressId || isCreatingAddress) && selectedEditTab === 'shipping' && (
-                      <div className="space-y-5">
+                      <div className="admin-address-fields space-y-5">
                         <Input
                           label={isPersian ? 'عنوان نشانی *' : 'Address Title *'}
+                          dir="auto"
                           labelPlacement="outside-top"
                           isRequired
                           isInvalid={Boolean(fieldErrors.title)}
@@ -1561,7 +1562,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             label: inputLabelClass,
                             inputWrapper: inputWrapperClass,
                             innerWrapper: 'gap-3',
-                            input: 'text-xs font-bold text-brand-text',
+                            input: 'text-sm font-bold text-brand-text text-start',
                           }}
                         />
                         <AnimatedFieldError error={fieldErrors.title} />
@@ -1601,6 +1602,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           </div>
                           <Textarea
                             aria-label={isPersian ? 'نشانی دقیق پستی (خیابان، کوچه، بن‌بست)' : 'Street Address'}
+                            dir="auto"
                             isInvalid={Boolean(fieldErrors.address)}
                             value={formData.address}
                             onValueChange={(val) => {
@@ -1621,7 +1623,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                 'p-3.5 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors h-24 min-h-[96px] !resize-none',
                               innerWrapper: 'items-start h-full',
                               input:
-                                'text-xs font-medium text-brand-text leading-relaxed text-right !resize-none resize-none overflow-y-auto pt-0',
+                                'text-sm font-medium text-brand-text leading-relaxed text-start !resize-none resize-none overflow-y-auto px-2 pt-0',
                             }}
                           />
                           <AnimatedFieldError error={fieldErrors.address} />
@@ -1656,6 +1658,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
                           <Input
                             label={isPersian ? 'پلاک' : 'Building / No'}
+                            dir="auto"
                             labelPlacement="outside-top"
                             value={formData.buildingNumber}
                             onValueChange={(val) =>
@@ -1669,12 +1672,13 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
                               innerWrapper: 'gap-3',
-                              input: 'text-xs font-bold text-brand-text',
+                              input: 'text-sm font-bold text-brand-text text-start',
                             }}
                           />
 
                           <Input
                             label={isPersian ? 'واحد' : 'Unit'}
+                            dir="auto"
                             labelPlacement="outside-top"
                             value={formData.unit}
                             onValueChange={(val) => setFormData((prev) => ({ ...prev, unit: val }))}
@@ -1686,7 +1690,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
                               innerWrapper: 'gap-3',
-                              input: 'text-xs font-bold text-brand-text',
+                              input: 'text-sm font-bold text-brand-text text-start',
                             }}
                           />
                         </div>
@@ -1695,7 +1699,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
                     {/* EDIT TAB 4: RECIPIENT & NOTES */}
                     {(selectedAddressId || isCreatingAddress) && selectedEditTab === 'shipping' && (
-                      <div className="space-y-5">
+                      <div className="admin-address-fields space-y-5">
                         <div className="p-3.5 rounded-2xl bg-brand-surface-elevated/50 dark:bg-[#182018] border border-brand-border/60 text-xs text-brand-text-muted flex items-center gap-2.5">
                           <Package className="w-4 h-4 text-brand-gold shrink-0" />
                           <span>
@@ -1708,6 +1712,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <Input
                             label={isPersian ? 'نام و نام خانوادگی تحویل‌گیرنده' : 'Recipient Full Name'}
+                            dir="auto"
                             labelPlacement="outside-top"
                             value={formData.recipientName}
                             onValueChange={(val) =>
@@ -1721,7 +1726,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               label: inputLabelClass,
                               inputWrapper: inputWrapperClass,
                               innerWrapper: 'gap-3',
-                              input: 'text-xs font-bold text-brand-text',
+                              input: 'text-sm font-bold text-brand-text text-start',
                             }}
                           />
 
@@ -1786,6 +1791,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           </div>
                           <Textarea
                             aria-label={isPersian ? 'توضیحات و یادداشت تحویل' : 'Delivery / Address Notes'}
+                            dir="auto"
                             value={formData.addressNotes}
                             onValueChange={(val) =>
                               setFormData((prev) => ({ ...prev, addressNotes: val }))
@@ -1804,7 +1810,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                 'p-3.5 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors h-24 min-h-[96px] !resize-none',
                               innerWrapper: 'items-start h-full',
                               input:
-                                'text-xs font-medium text-brand-text leading-relaxed text-right !resize-none resize-none overflow-y-auto pt-0',
+                                'text-sm font-medium text-brand-text leading-relaxed text-start !resize-none resize-none overflow-y-auto px-2 pt-0',
                             }}
                           />
                         </div>

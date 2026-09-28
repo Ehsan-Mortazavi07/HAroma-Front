@@ -539,7 +539,7 @@ export function ResetPasswordModal({
                               classNames={{
                                 inputWrapper:
                                   'h-10 px-4 bg-brand-surface-elevated/70 dark:bg-brand-surface-elevated/40 border border-brand-border hover:border-brand-bronze/80 dark:hover:border-brand-gold/80 focus-within:!border-brand-bronze dark:focus-within:!border-brand-gold rounded-full shadow-2xs transition-colors',
-                                input: 'text-xs font-semibold text-brand-text placeholder:text-brand-text-muted/60 text-start',
+                                input: 'text-xs font-semibold text-brand-text text-start',
                               }}
                             />
                             <AnimatedFieldError error={identifierError} />
