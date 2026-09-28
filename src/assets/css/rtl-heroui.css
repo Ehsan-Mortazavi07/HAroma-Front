@@ -379,6 +379,11 @@ html[dir="rtl"] [data-slot="innerWrapper"] > span {
   transform-origin: top center;
 }
 
+/* Keep the admin attribute menu below the sticky admin navbar without changing its layout. */
+[data-slot="base"].admin-attribute-select-overlay {
+  z-index: 40 !important;
+}
+
 [data-slot="trigger"] {
   text-align: start !important;
 }

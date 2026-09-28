@@ -307,7 +307,7 @@ export function DynamicAttributeBuilder({
                   shouldFlip: false,
                   isNonModal: true,
                   shouldBlockScroll: false,
-                  className: 'z-40',
+                  className: 'admin-attribute-select-overlay',
                 }}
                 classNames={{
                   trigger: 'h-11 min-h-11 px-4 bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs text-sm font-bold text-[#1d241d] dark:text-[#f7f4ee]',

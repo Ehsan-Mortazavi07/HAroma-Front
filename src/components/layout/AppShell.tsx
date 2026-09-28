@@ -17,6 +17,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <AdminSidebarProvider>
         <div className="min-h-screen flex flex-col bg-[#f8f5f0] dark:bg-[#141914] text-[#1d241d] dark:text-[#f7f4ee] font-sans transition-colors">
           <AdminNavbar />
+          <div aria-hidden="true" className="h-20 shrink-0 sm:h-[92px]" />
           <div className="flex-1 flex flex-col">
             {children}
           </div>
