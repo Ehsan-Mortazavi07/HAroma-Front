@@ -17,8 +17,6 @@ import { Card,
 import {
   Lock,
   User,
-  Eye,
-  EyeOff,
   ArrowLeft,
   ArrowRight,
   Smartphone,
@@ -37,7 +35,7 @@ import { toast, toPersianDigits, toEnglishDigits, getApiErrorMessage, storage } 
 import axiosInstance from '@/common/axiosInstance';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
-import { AnimatedPasswordToggle } from '@/components/common/AnimatedPasswordToggle';
+import { PasswordInput } from '@/components/common/PasswordInput';
 import { ResetPasswordModal } from '@/components/common/ResetPasswordModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/common/i18n';
@@ -752,9 +750,11 @@ export function SignInPage() {
                             {t.auth.forgotPassword}
                           </button>
                         </div>
-                        <Input
+                        <PasswordInput
                           name="password"
-                          type={showPassword ? 'text' : 'password'}
+                          isPersian={isPersian}
+                          isVisible={showPassword}
+                          onToggleVisibility={() => setShowPassword((prev) => !prev)}
                           aria-label={t.auth.password}
                           placeholder="••••••••"
                           value={values.password}
@@ -763,13 +763,7 @@ export function SignInPage() {
                           variant="bordered"
                           radius="lg"
                           startContent={<Lock className="w-4 h-4 text-brand-bronze shrink-0" />}
-                          endContent={
-                            <AnimatedPasswordToggle
-                              isVisible={showPassword}
-                              onToggle={() => setShowPassword((prev) => !prev)}
-                              ariaLabel={isPersian ? 'تغییر نمایش کلمه عبور' : 'Toggle password visibility'}
-                            />
-                          }
+                          toggleAriaLabel={isPersian ? 'تغییر نمایش کلمه عبور' : 'Toggle password visibility'}
                           isInvalid={Boolean(errors.password && (touched.password || submitCount > 0))}
                           classNames={{
                             inputWrapper: Boolean(errors.password && (touched.password || submitCount > 0))

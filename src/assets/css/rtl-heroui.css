@@ -22,16 +22,15 @@
 
 @layer base {
   /* Let each paragraph in free-text controls resolve its own direction in mixed RTL/LTR content. */
-  [dir="rtl"] input:not([dir="ltr"]):not([dir="rtl"]):not([type="number"]):not([type="tel"]):not([type="password"]):not([type="email"]):not([type="url"]):not(.text-left):not(.text-center):not(.text-start):not(.text-end):not(.text-right),
+  [dir="rtl"] input:not([dir="ltr"]):not([dir="rtl"]):not([type="number"]):not([type="tel"]):not([type="email"]):not([type="url"]):not(.text-left):not(.text-center):not(.text-start):not(.text-end):not(.text-right),
   [dir="rtl"] textarea:not([dir="ltr"]):not([dir="rtl"]):not(.text-left):not(.text-center):not(.text-start):not(.text-end):not(.text-right) {
     unicode-bidi: plaintext;
     text-align: start;
   }
 
-  /* Contact details and numeric values should keep an LTR caret and digit order in RTL forms. */
+  /* Contact details and numeric values keep an LTR caret and digit order in RTL forms. */
   [dir="rtl"] input[type="number"],
   [dir="rtl"] input[type="tel"],
-  [dir="rtl"] input[type="password"],
   [dir="rtl"] input[type="email"],
   [dir="rtl"] input[type="url"] {
     direction: ltr;

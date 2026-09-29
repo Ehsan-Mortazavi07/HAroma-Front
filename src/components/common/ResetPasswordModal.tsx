@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppSelector } from '@/stores/hooks';
-import { AnimatedPasswordToggle } from '@/components/common/AnimatedPasswordToggle';
+import { PasswordInput } from '@/components/common/PasswordInput';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import axiosInstance from '@/common/axiosInstance';
 import { toast, toPersianDigits, toEnglishDigits, getApiErrorMessage } from '@/common/utils';
@@ -878,8 +878,10 @@ export function ResetPasswordModal({
                           <Lock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
                           <span>{isPersian ? 'رمز عبور جدید (حداقل ۶ کاراکتر):' : 'New Password (min 6 chars):'}</span>
                         </label>
-                        <Input
-                          type={showNewPassword ? 'text' : 'password'}
+                        <PasswordInput
+                          isPersian={isPersian}
+                          isVisible={showNewPassword}
+                          onToggleVisibility={() => setShowNewPassword((prev) => !prev)}
                           aria-label={isPersian ? 'رمز عبور جدید' : 'New Password'}
                           placeholder="••••••••"
                           value={newPassword}
@@ -889,13 +891,7 @@ export function ResetPasswordModal({
                           }}
                           variant="bordered"
                           radius="full"
-                          endContent={
-                            <AnimatedPasswordToggle
-                              isVisible={showNewPassword}
-                              onToggle={() => setShowNewPassword((prev) => !prev)}
-                              ariaLabel={isPersian ? 'تغییر نمایش رمز جدید' : 'Toggle new password visibility'}
-                            />
-                          }
+                          toggleAriaLabel={isPersian ? 'تغییر نمایش رمز جدید' : 'Toggle new password visibility'}
                           classNames={{
                             inputWrapper:
                               'h-10 px-4 bg-brand-surface-elevated/70 dark:bg-brand-surface-elevated/40 border border-brand-border hover:border-brand-bronze/80 dark:hover:border-brand-gold/80 focus-within:!border-brand-bronze dark:focus-within:!border-brand-gold rounded-full shadow-2xs transition-colors',
@@ -911,8 +907,10 @@ export function ResetPasswordModal({
                           <Lock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
                           <span>{isPersian ? 'تکرار رمز عبور جدید:' : 'Confirm Password:'}</span>
                         </label>
-                        <Input
-                          type={showConfirmPassword ? 'text' : 'password'}
+                        <PasswordInput
+                          isPersian={isPersian}
+                          isVisible={showConfirmPassword}
+                          onToggleVisibility={() => setShowConfirmPassword((prev) => !prev)}
                           aria-label={isPersian ? 'تکرار رمز عبور جدید' : 'Confirm New Password'}
                           placeholder="••••••••"
                           value={confirmPassword}
@@ -922,13 +920,7 @@ export function ResetPasswordModal({
                           }}
                           variant="bordered"
                           radius="full"
-                          endContent={
-                            <AnimatedPasswordToggle
-                              isVisible={showConfirmPassword}
-                              onToggle={() => setShowConfirmPassword((prev) => !prev)}
-                              ariaLabel={isPersian ? 'تغییر نمایش تکرار رمز جدید' : 'Toggle confirm password visibility'}
-                            />
-                          }
+                          toggleAriaLabel={isPersian ? 'تغییر نمایش تکرار رمز جدید' : 'Toggle confirm password visibility'}
                           classNames={{
                             inputWrapper:
                               'h-10 px-4 bg-brand-surface-elevated/70 dark:bg-brand-surface-elevated/40 border border-brand-border hover:border-brand-bronze/80 dark:hover:border-brand-gold/80 focus-within:!border-brand-bronze dark:focus-within:!border-brand-gold rounded-full shadow-2xs transition-colors',

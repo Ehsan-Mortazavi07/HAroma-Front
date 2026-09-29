@@ -38,7 +38,6 @@ import {
   Pencil,
   Eye,
   Lock,
-  EyeOff,
   Sparkles,
   Save,
   X,
@@ -56,6 +55,7 @@ import { IRAN_PROVINCES } from '@/common/constants/iranProvinces';
 import { BirthDatePicker } from '@/components/common/BirthDatePicker';
 import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
+import { PasswordInput } from '@/components/common/PasswordInput';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1384,9 +1384,11 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             </Button>
                           </div>
 
-                          <Input
+                          <PasswordInput
+                            isPersian={isPersian}
+                            isVisible={showPassword}
+                            onToggleVisibility={() => setShowPassword((prev) => !prev)}
                             aria-label={isPersian ? 'تنظیم کلمه عبور جدید' : 'Set New Password'}
-                            type={showPassword ? 'text' : 'password'}
                             isInvalid={Boolean(fieldErrors.password)}
                             errorMessage={fieldErrors.password}
                             value={formData.password}
@@ -1400,16 +1402,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                 : 'Enter new password (min 6 characters)...'
                             }
                             startContent={<Lock className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
-                            endContent={
-                              <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="text-brand-text-muted hover:text-brand-text cursor-pointer p-1 ms-2"
-                                aria-label="Toggle password visibility"
-                              >
-                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                              </button>
-                            }
+                            toggleAriaLabel={isPersian ? 'تغییر نمایش کلمه عبور' : 'Toggle password visibility'}
                             variant="bordered"
                             radius="lg"
                             classNames={{

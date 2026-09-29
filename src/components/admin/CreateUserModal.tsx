@@ -23,8 +23,6 @@ import {
   ShieldAlert,
   Crown,
   Lock,
-  Eye,
-  EyeOff,
   Sparkles,
   ChevronDown,
   Building,
@@ -40,6 +38,7 @@ import { toPersianDigits, toEnglishDigits, toast } from '@/common/utils';
 import { parseIsoDate, gregorianToJalali } from '@/common/utils/date';
 import { IRAN_PROVINCES } from '@/common/constants/iranProvinces';
 import { BirthDatePicker } from '@/components/common/BirthDatePicker';
+import { PasswordInput } from '@/components/common/PasswordInput';
 import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -573,9 +572,11 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                     </div>
 
                     <div>
-                      <Input
+                      <PasswordInput
+                        isPersian={isPersian}
+                        isVisible={showPassword}
+                        onToggleVisibility={() => setShowPassword((prev) => !prev)}
                         aria-label={isPersian ? 'کلمه عبور' : 'Password'}
-                        type={showPassword ? 'text' : 'password'}
                         value={formData.password}
                         onValueChange={(val) => {
                           setFormData((prev) => ({ ...prev, password: val }));
@@ -589,16 +590,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                             : 'Enter password (min 6 characters)...'
                         }
                         startContent={<Lock className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
-                        endContent={
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="text-brand-text-muted hover:text-brand-text cursor-pointer p-1 ms-2 transition-colors"
-                            aria-label="Toggle password visibility"
-                          >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        }
+                        toggleAriaLabel={isPersian ? 'تغییر نمایش کلمه عبور' : 'Toggle password visibility'}
                         variant="bordered"
                         radius="lg"
                         isRequired

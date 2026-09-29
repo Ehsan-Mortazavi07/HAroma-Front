@@ -1161,16 +1161,16 @@ export function CheckoutPage() {
         backdrop="blur"
         scrollBehavior="inside"
         classNames={{
-          base: "bg-brand-surface border border-brand-border text-brand-text max-w-2xl rounded-3xl shadow-2xl",
-          header: "border-b border-brand-border pb-3",
-          body: "py-5 space-y-4",
-          footer: "border-t border-brand-border pt-3",
+          base: "flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] flex-col overflow-hidden bg-brand-surface border border-brand-border text-brand-text max-w-2xl rounded-3xl shadow-2xl",
+          header: "shrink-0 border-b border-brand-border pb-3",
+          body: "min-h-0 flex-1 overflow-y-auto overscroll-contain py-5 space-y-4",
+          footer: "shrink-0 border-t border-brand-border pt-3",
           closeButton: "hover:bg-brand-surface-elevated text-brand-text-muted rounded-xl cursor-pointer",
         }}
       >
         <ModalContent>
-          {(onClose) => (
-            <div>
+          {() => (
+            <>
               <ModalHeader className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-brand-gold/15 flex items-center justify-center text-brand-gold shrink-0">
                   <MapPin className="w-5 h-5" />
@@ -1467,7 +1467,7 @@ export function CheckoutPage() {
                     : isPersian ? 'ثبت و انتخاب این نشانی' : 'Save & Select Address'}
                 </Button>
               </ModalFooter>
-            </div>
+            </>
           )}
         </ModalContent>
       </Modal>

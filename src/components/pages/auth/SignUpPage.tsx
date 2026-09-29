@@ -15,8 +15,6 @@ import {
   Lock,
   User,
   Mail,
-  Eye,
-  EyeOff,
   ArrowLeft,
   ArrowRight,
   Smartphone,
@@ -37,7 +35,7 @@ import { toast, toEnglishDigits, toPersianDigits, getApiErrorMessage, storage } 
 import axiosInstance from '@/common/axiosInstance';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
-import { AnimatedPasswordToggle } from '@/components/common/AnimatedPasswordToggle';
+import { PasswordInput } from '@/components/common/PasswordInput';
 import { useTranslation } from '@/common/i18n';
 
 type SignUpStep = 'phone' | 'otp' | 'profile';
@@ -805,9 +803,11 @@ export function SignUpPage() {
                             {isPersian ? '(اختیاری - جهت ورود با رمز)' : '(Optional)'}
                           </span>
                         </div>
-                        <Input
+                        <PasswordInput
                           name="password"
-                          type={showPassword ? 'text' : 'password'}
+                          isPersian={isPersian}
+                          isVisible={showPassword}
+                          onToggleVisibility={() => setShowPassword((prev) => !prev)}
                           aria-label={t.auth.password}
                           placeholder="••••••••"
                           value={values.password}
@@ -816,13 +816,7 @@ export function SignUpPage() {
                           variant="bordered"
                           radius="lg"
                           startContent={<Lock className="w-4 h-4 text-brand-bronze shrink-0" />}
-                          endContent={
-                            <AnimatedPasswordToggle
-                              isVisible={showPassword}
-                              onToggle={() => setShowPassword(!showPassword)}
-                              ariaLabel={isPersian ? 'تغییر نمایش کلمه عبور' : 'Toggle password visibility'}
-                            />
-                          }
+                          toggleAriaLabel={isPersian ? 'تغییر نمایش کلمه عبور' : 'Toggle password visibility'}
                           isInvalid={Boolean(errors.password && (touched.password || submitCount > 0))}
                           classNames={{
                             inputWrapper: Boolean(errors.password && (touched.password || submitCount > 0))
@@ -840,9 +834,11 @@ export function SignUpPage() {
                           <label className="block text-xs font-bold text-brand-text mb-1.5">
                             {t.auth.confirmPassword} <span className="text-rose-500">*</span>
                           </label>
-                          <Input
+                          <PasswordInput
                             name="confirmPassword"
-                            type={showConfirmPassword ? 'text' : 'password'}
+                            isPersian={isPersian}
+                            isVisible={showConfirmPassword}
+                            onToggleVisibility={() => setShowConfirmPassword((prev) => !prev)}
                             aria-label={t.auth.confirmPassword}
                             placeholder="••••••••"
                             value={values.confirmPassword}
@@ -851,13 +847,7 @@ export function SignUpPage() {
                             variant="bordered"
                             radius="lg"
                             startContent={<Lock className="w-4 h-4 text-brand-bronze shrink-0" />}
-                            endContent={
-                              <AnimatedPasswordToggle
-                                isVisible={showConfirmPassword}
-                                onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
-                                ariaLabel={isPersian ? 'تغییر نمایش تکرار کلمه عبور' : 'Toggle confirm password visibility'}
-                              />
-                            }
+                            toggleAriaLabel={isPersian ? 'تغییر نمایش تکرار کلمه عبور' : 'Toggle confirm password visibility'}
                             isInvalid={Boolean(errors.confirmPassword && (touched.confirmPassword || submitCount > 0))}
                             classNames={{
                               inputWrapper: Boolean(errors.confirmPassword && (touched.confirmPassword || submitCount > 0))

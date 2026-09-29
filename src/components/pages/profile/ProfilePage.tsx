@@ -30,8 +30,6 @@ import {
   ArrowLeft,
   Settings,
   Package,
-  Eye,
-  EyeOff,
   CheckCircle2,
   Award,
   Zap,
@@ -70,7 +68,7 @@ import { isoToJalali } from '@/common/utils/date';
 import { BirthDatePicker } from '@/components/common/BirthDatePicker';
 import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
-import { AnimatedPasswordToggle } from '@/components/common/AnimatedPasswordToggle';
+import { PasswordInput } from '@/components/common/PasswordInput';
 import { ResetPasswordModal } from '@/components/common/ResetPasswordModal';
 import { IOrder, IUserAddress } from '@/common/interfaces';
 import axiosInstance from '@/common/axiosInstance';
@@ -2199,21 +2197,17 @@ export function ProfilePage() {
                               {isPersian ? 'کلمه عبور فعلی' : 'Current Password'}
                             </label>
                           </div>
-                          <Input
-                            type={showCurrentPassword ? 'text' : 'password'}
+                          <PasswordInput
+                            isPersian={isPersian}
+                            isVisible={showCurrentPassword}
+                            onToggleVisibility={() => setShowCurrentPassword((prev) => !prev)}
                             aria-label={isPersian ? 'کلمه عبور فعلی' : 'Current Password'}
                             placeholder={isPersian ? 'رمز عبور فعلی حساب' : 'Current password'}
                             value={currentPassword}
                             onValueChange={setCurrentPassword}
                             variant="bordered"
                             radius="lg"
-                            endContent={
-                              <AnimatedPasswordToggle
-                                isVisible={showCurrentPassword}
-                                onToggle={() => setShowCurrentPassword((prev) => !prev)}
-                                ariaLabel={isPersian ? 'تغییر نمایش کلمه عبور فعلی' : 'Toggle current password visibility'}
-                              />
-                            }
+                            toggleAriaLabel={isPersian ? 'تغییر نمایش کلمه عبور فعلی' : 'Toggle current password visibility'}
                             classNames={{
                               inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
                               input: "text-sm font-semibold text-brand-text",
@@ -2232,8 +2226,10 @@ export function ProfilePage() {
                               : (isPersian ? 'کلمه عبور' : 'Password')}
                           </label>
                         </div>
-                        <Input
-                          type={showNewPassword ? 'text' : 'password'}
+                        <PasswordInput
+                          isPersian={isPersian}
+                          isVisible={showNewPassword}
+                          onToggleVisibility={() => setShowNewPassword((prev) => !prev)}
                           aria-label={user?.hasPassword ? (isPersian ? 'کلمه عبور جدید' : 'New Password') : (isPersian ? 'کلمه عبور' : 'Password')}
                           placeholder={
                             user?.hasPassword
@@ -2244,13 +2240,7 @@ export function ProfilePage() {
                           onValueChange={setNewPassword}
                           variant="bordered"
                           radius="lg"
-                          endContent={
-                            <AnimatedPasswordToggle
-                              isVisible={showNewPassword}
-                              onToggle={() => setShowNewPassword((prev) => !prev)}
-                              ariaLabel={isPersian ? 'تغییر نمایش کلمه عبور جدید' : 'Toggle new password visibility'}
-                            />
-                          }
+                          toggleAriaLabel={isPersian ? 'تغییر نمایش کلمه عبور جدید' : 'Toggle new password visibility'}
                           classNames={{
                             inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
                             input: "text-sm font-semibold text-brand-text",
@@ -2268,21 +2258,17 @@ export function ProfilePage() {
                               : (isPersian ? 'تکرار کلمه عبور' : 'Confirm Password')}
                           </label>
                         </div>
-                        <Input
-                          type={showConfirmPassword ? 'text' : 'password'}
+                        <PasswordInput
+                          isPersian={isPersian}
+                          isVisible={showConfirmPassword}
+                          onToggleVisibility={() => setShowConfirmPassword((prev) => !prev)}
                           aria-label={user?.hasPassword ? (isPersian ? 'تکرار کلمه عبور جدید' : 'Confirm New Password') : (isPersian ? 'تکرار کلمه عبور' : 'Confirm Password')}
                           placeholder={isPersian ? 'تکرار رمز عبور' : 'Confirm password'}
                           value={confirmPassword}
                           onValueChange={setConfirmPassword}
                           variant="bordered"
                           radius="lg"
-                          endContent={
-                            <AnimatedPasswordToggle
-                              isVisible={showConfirmPassword}
-                              onToggle={() => setShowConfirmPassword((prev) => !prev)}
-                              ariaLabel={isPersian ? 'تغییر نمایش تکرار کلمه عبور' : 'Toggle confirm password visibility'}
-                            />
-                          }
+                          toggleAriaLabel={isPersian ? 'تغییر نمایش تکرار کلمه عبور' : 'Toggle confirm password visibility'}
                           classNames={{
                             inputWrapper: "h-12 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold/80 focus-within:!border-brand-gold rounded-2xl shadow-xs transition-colors",
                             input: "text-sm font-semibold text-brand-text",
