@@ -8,11 +8,11 @@ import {
   CardBody,
   Button,
   Skeleton,
-  Pagination,
 } from '@heroui/react';
 import { Filter, SlidersHorizontal, Sparkles, X, Check, ChevronDown } from 'lucide-react';
 import { IProduct, ICategory, IBrand } from '@/common/interfaces';
 import { ProductCard } from '@/components/common/ProductCard';
+import { PaginationControls } from '@/components/common/PaginationControls';
 import { useAppSelector } from '@/stores/hooks';
 import { toPersianDigits } from '@/common/utils';
 import { catalogApi } from '@/common/api/catalog';
@@ -826,21 +826,11 @@ export function ProductsPage({
                   : `Page ${currentPage} of ${totalPages} (${total} total products)`}
               </div>
 
-              <Pagination
-                total={totalPages}
-                page={currentPage}
-                onChange={handlePageChange}
-                showControls
-                color="warning"
-                radius="full"
-                size="md"
-                classNames={{
-                  wrapper: 'gap-1.5',
-                  item: 'bg-brand-surface text-brand-text font-bold text-xs hover:bg-brand-surface-elevated border border-brand-border/60 rounded-xl min-w-9 h-9',
-                  cursor: 'bg-brand-gold text-[#141914] font-black shadow-xs rounded-xl min-w-9 h-9',
-                  prev: 'bg-brand-surface text-brand-text border border-brand-border/60 rounded-xl min-w-9 h-9',
-                  next: 'bg-brand-surface text-brand-text border border-brand-border/60 rounded-xl min-w-9 h-9',
-                }}
+              <PaginationControls
+                totalPages={totalPages}
+                currentPage={currentPage}
+                isPersian={isPersian}
+                onPageChange={handlePageChange}
               />
             </div>
           )}

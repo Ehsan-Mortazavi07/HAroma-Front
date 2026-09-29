@@ -1,7 +1,7 @@
 'use client';
 
 import { Input } from '@/components/common/DirectionalFields';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -42,9 +42,12 @@ import { VipBadge } from '@/components/common/VipBadge';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
+import { PaginationControls } from '@/components/common/PaginationControls';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { useAppSelector } from '@/stores/hooks';
 import { toast, toPersianDigits, formatToman } from '@/common/utils';
+
+const PRODUCTS_PAGE_SIZE = 12;
 
 function AdminThumbnail({ src, title }: { src: string; title: string }) {
   const fallbackUrl =
@@ -84,6 +87,10 @@ export default function AdminProductsPage() {
   const isAdmin = currentUser?.role === 'admin';
 
   const [products, setProducts] = useState<IProduct[]>([]);
+  const productsRequestId = useRef(0);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -105,19 +112,50 @@ export default function AdminProductsPage() {
   } | null>(null);
   const [isConfirmLoading, setIsConfirmLoading] = useState(false);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (requestedPage = currentPage) => {
+    const requestId = ++productsRequestId.current;
     setLoading(true);
     try {
-      const res = await adminApi.getProducts({
+      const query = {
         q: searchQuery || undefined,
         category: selectedCategory || undefined,
-      });
+        includeUnpublished: 'true',
+        pageSize: PRODUCTS_PAGE_SIZE,
+      };
+      let page = Math.max(1, requestedPage);
+      let res = await adminApi.getProducts({ ...query, page });
+      if (requestId !== productsRequestId.current) return;
+
+      const total = Number(res?.total ?? res?.items?.length ?? 0);
+      const pageCount = Math.max(
+        1,
+        Number(res?.totalPages) || Math.ceil(total / PRODUCTS_PAGE_SIZE) || 1,
+      );
+
+      // If a deletion emptied the current last page, move back to the last valid page.
+      if (page > pageCount) {
+        page = pageCount;
+        res = await adminApi.getProducts({ ...query, page });
+        if (requestId !== productsRequestId.current) return;
+      }
+
       setProducts(res?.items || []);
+      setTotalProducts(Number(res?.total ?? 0));
+      setTotalPages(
+        Math.max(
+          1,
+          Number(res?.totalPages) ||
+            Math.ceil(Number(res?.total ?? 0) / PRODUCTS_PAGE_SIZE) ||
+            1,
+        ),
+      );
+      setCurrentPage(page);
     } catch (err) {
+      if (requestId !== productsRequestId.current) return;
       console.error(err);
       toast.error(isPersian ? 'خطا در بارگذاری محصولات.' : 'Failed to fetch products.');
     } finally {
-      setLoading(false);
+      if (requestId === productsRequestId.current) setLoading(false);
     }
   };
 
@@ -135,15 +173,18 @@ export default function AdminProductsPage() {
   }, []);
 
   useEffect(() => {
-    fetchProducts();
+    setCurrentPage(1);
+    setSelectedIds([]);
+    fetchProducts(1);
   }, [searchQuery, selectedCategory]);
 
   // Selection handlers
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(products.map((p) => p._id));
+      setSelectedIds((prev) => [...new Set([...prev, ...products.map((p) => p._id)])]);
     } else {
-      setSelectedIds([]);
+      const pageIds = new Set(products.map((product) => product._id));
+      setSelectedIds((prev) => prev.filter((id) => !pageIds.has(id)));
     }
   };
 
@@ -335,8 +376,11 @@ export default function AdminProductsPage() {
     }
   };
 
-  const isAllSelected = products.length > 0 && selectedIds.length === products.length;
-  const isIndeterminate = selectedIds.length > 0 && selectedIds.length < products.length;
+  const selectedOnPageCount = products.filter((product) => selectedIds.includes(product._id)).length;
+  const isAllSelected = products.length > 0 && selectedOnPageCount === products.length;
+  const isIndeterminate = selectedOnPageCount > 0 && selectedOnPageCount < products.length;
+  const firstProductNumber = totalProducts === 0 ? 0 : (currentPage - 1) * PRODUCTS_PAGE_SIZE + 1;
+  const lastProductNumber = Math.min(currentPage * PRODUCTS_PAGE_SIZE, totalProducts);
 
   return (
     <div className="space-y-6">
@@ -353,8 +397,8 @@ export default function AdminProductsPage() {
           </h1>
           <p className="text-xs text-brand-text-muted mt-1">
             {isPersian
-              ? `مجموعاً ${toPersianDigits(products.length)} محصول در پایگاه داده ثبت شده است`
-              : `Total ${products.length} products found in database`}
+              ? `مجموعاً ${toPersianDigits(totalProducts)} محصول در پایگاه داده ثبت شده است`
+              : `Total ${totalProducts} products found in database`}
           </p>
         </div>
 
@@ -657,6 +701,26 @@ export default function AdminProductsPage() {
             </Table>
           )}
         </CardBody>
+        {!loading && totalProducts > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-brand-border px-4 py-4 sm:px-6">
+            <p className="text-xs font-bold text-brand-text-muted" aria-live="polite">
+              {isPersian
+                ? `نمایش ${toPersianDigits(firstProductNumber)} تا ${toPersianDigits(lastProductNumber)} از ${toPersianDigits(totalProducts)} محصول`
+                : `Showing ${firstProductNumber}–${lastProductNumber} of ${totalProducts} products`}
+            </p>
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              isPersian={isPersian}
+              onPageChange={(page) => {
+                setCurrentPage(page);
+                fetchProducts(page);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              ariaLabel={isPersian ? 'صفحه‌بندی محصولات' : 'Product pagination'}
+            />
+          </div>
+        )}
       </Card>
       </motion.div>
 
