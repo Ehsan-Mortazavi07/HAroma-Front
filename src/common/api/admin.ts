@@ -1,5 +1,5 @@
 import axiosInstance from '../axiosInstance';
-import type { IUserAddress } from '../interfaces';
+import type { IPageSection, IPageSectionPriority, IUserAddress } from '../interfaces';
 
 export const adminApi = {
   // Products CRUD
@@ -293,7 +293,10 @@ export const adminApi = {
     const res = await axiosInstance.get('/admin/page-sections');
     return res.data;
   },
-  updatePageSection: async (sectionKey: string, data: any) => {
+  updatePageSection: async (
+    sectionKey: string,
+    data: Partial<IPageSection> & { priorityOrder?: IPageSectionPriority[] },
+  ) => {
     const res = await axiosInstance.patch(`/admin/page-sections/${sectionKey}`, data);
     return res.data;
   },

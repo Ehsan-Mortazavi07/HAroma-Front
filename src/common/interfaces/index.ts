@@ -242,6 +242,11 @@ export interface IPageSectionBanner {
   bgGradient?: string;
 }
 
+export interface IPageSectionPriority {
+  sectionKey: string;
+  order: number;
+}
+
 export interface ITrustFeatureContent {
   id: string;
   title: string;

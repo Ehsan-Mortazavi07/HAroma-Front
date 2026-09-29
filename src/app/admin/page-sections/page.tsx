@@ -36,10 +36,11 @@ import {
   TableRow,
   TableCell,
   Skeleton,
+  Checkbox,
   Textarea as HeroTextarea,
 } from '@heroui/react';
 import { adminApi } from '@/common/api/admin';
-import { IPageSection } from '@/common/interfaces';
+import { IPageSection, IPageSectionPriority } from '@/common/interfaces';
 import { toast, toPersianDigits } from '@/common/utils';
 import { VipBadge } from '@/components/common/VipBadge';
 import { useTranslation } from '@/common/i18n';
@@ -72,6 +73,66 @@ function ContentTextarea({ language, surface = 'elevated', ...props }: ContentTe
   );
 }
 
+interface PriorityPickerProps {
+  count: number;
+  value: number;
+  onChange: (priority: number) => void;
+  isPersian: boolean;
+  label: string;
+  hint: string;
+}
+
+function PriorityPicker({ count, value, onChange, isPersian, label, hint }: PriorityPickerProps) {
+  const priorities = Array.from({ length: Math.max(1, count) }, (_, index) => index + 1);
+
+  return (
+    <fieldset className="min-w-0 space-y-3" dir="rtl">
+      <legend className="text-xs font-bold text-brand-text">{label}</legend>
+      <p className="text-[11px] leading-6 text-brand-text-muted">{hint}</p>
+      <div className="flex flex-wrap gap-2">
+        {priorities.map((priority) => {
+          const displayPriority = isPersian ? toPersianDigits(priority) : priority;
+          return (
+            <Checkbox
+              key={priority}
+              size="sm"
+              color="warning"
+              isSelected={value === priority}
+              aria-label={isPersian ? `اولویت ${displayPriority}` : `Priority ${displayPriority}`}
+              onValueChange={(checked) => checked && onChange(priority)}
+              classNames={{
+                base: 'm-0 max-w-none cursor-pointer rounded-xl border border-brand-border bg-brand-surface-elevated px-3 py-2 transition-colors data-[selected=true]:border-brand-gold data-[selected=true]:bg-brand-gold/15',
+                wrapper: 'after:bg-brand-gold before:border-brand-border',
+                label: 'text-xs font-bold text-brand-text',
+              }}
+            >
+              {isPersian ? `اولویت ${displayPriority}` : `Priority ${displayPriority}`}
+            </Checkbox>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
+function moveItem<T>(items: T[], fromIndex: number, toIndex: number): T[] {
+  if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length) {
+    return items;
+  }
+  const next = [...items];
+  const [item] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, item);
+  return next;
+}
+
+function getPagePriorityOrder(sections: IPageSection[]) {
+  return sections
+    .filter((section) => section.sectionKey !== 'footer_settings')
+    .slice()
+    .sort((a, b) => a.order - b.order || a.sectionKey.localeCompare(b.sectionKey))
+    .map((section) => section.sectionKey);
+}
+
 export default function AdminPageSectionsPage() {
   const { isPersian } = useTranslation();
   const [sections, setSections] = useState<IPageSection[]>([]);
@@ -85,6 +146,7 @@ export default function AdminPageSectionsPage() {
   const [isVisible, setIsVisible] = useState(true);
   const [isVipOnly, setIsVipOnly] = useState(false);
   const [order, setOrder] = useState(1);
+  const [sectionPriorityOrder, setSectionPriorityOrder] = useState<string[]>([]);
   const [banners, setBanners] = useState<IPageSectionBanner[]>([]);
   const [features, setFeatures] = useState<ITrustFeatureContent[]>(DEFAULT_TRUST_FEATURES);
   const [vipPerksFa, setVipPerksFa] = useState(DEFAULT_VIP_PERKS.fa.join('\n'));
@@ -174,7 +236,13 @@ export default function AdminPageSectionsPage() {
     setTitleEn(sec.titleEn || '');
     setIsVisible(sec.isVisible);
     setIsVipOnly(sec.isVipOnly);
-    setOrder(sec.order || 1);
+    const nextPriorityOrder = getPagePriorityOrder(sections);
+    setSectionPriorityOrder(nextPriorityOrder);
+    setOrder(
+      sec.sectionKey === 'footer_settings'
+        ? sec.order || 1
+        : Math.max(1, nextPriorityOrder.indexOf(sec.sectionKey) + 1),
+    );
 
     const defaultBanners = sec.sectionKey === 'hero_banner'
       ? [DEFAULT_HERO_BANNER]
@@ -236,6 +304,14 @@ export default function AdminPageSectionsPage() {
         isVipOnly,
         order: Number(order),
       };
+
+      if (editingSection.sectionKey !== 'footer_settings') {
+        const priorityOrder: IPageSectionPriority[] = sectionPriorityOrder.map((sectionKey, index) => ({
+          sectionKey,
+          order: index + 1,
+        }));
+        payload.priorityOrder = priorityOrder;
+      }
 
       if (editingSection.sectionKey === 'footer_settings') {
         payload.config = {
@@ -443,14 +519,15 @@ export default function AdminPageSectionsPage() {
         isOpen={modalOpen}
         onOpenChange={setModalOpen}
         backdrop="blur"
-        placement="center"
+        placement="top"
         scrollBehavior="inside"
         size="3xl"
         classNames={{
-          base: 'bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl mx-4',
-          header: 'border-b border-brand-border pb-3 px-6 pt-5',
-          body: 'py-5 px-6',
-          footer: 'border-t border-brand-border pt-3 px-6 pb-5',
+          wrapper: 'items-start overflow-y-auto py-2 sm:py-4',
+          base: 'flex max-h-[calc(100dvh-1rem)] flex-col overflow-hidden bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl mx-4',
+          header: 'shrink-0 border-b border-brand-border pb-3 px-6 pt-5',
+          body: 'min-h-0 flex-1 overflow-y-auto overscroll-contain py-5 px-6',
+          footer: 'shrink-0 border-t border-brand-border pt-3 px-6 pb-5',
         }}
       >
         <ModalContent>
@@ -630,21 +707,20 @@ export default function AdminPageSectionsPage() {
                   </div>
                 ) : (
                   <>
-                    <Input
-                      label={isPersian ? 'اولویت چیدمان در صفحه' : 'Display Order'}
-                      labelPlacement="outside-top"
-                      type="number"
-                      min={1}
-                      value={String(order)}
-                      onValueChange={(val) => setOrder(Number(val))}
-                      variant="bordered"
-                      radius="full"
-                      classNames={{
-                        inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                        input: 'text-sm font-bold text-brand-text',
-                        label: 'text-xs font-bold text-brand-text mb-1',
-                      }}
-                    />
+                    {editingSection?.sectionKey !== 'footer_settings' && (
+                      <PriorityPicker
+                        count={sectionPriorityOrder.length}
+                        value={order}
+                        onChange={(priority) => {
+                          const currentIndex = sectionPriorityOrder.indexOf(editingSection?.sectionKey || '');
+                          setSectionPriorityOrder(moveItem(sectionPriorityOrder, currentIndex, priority - 1));
+                          setOrder(priority);
+                        }}
+                        isPersian={isPersian}
+                        label={isPersian ? 'اولویت نمایش این بخش' : 'Section display priority'}
+                        hint={isPersian ? 'یک اولویت را انتخاب کنید؛ بخش‌های دیگر به‌صورت خودکار جابه‌جا می‌شوند.' : 'Choose one priority. The other sections move automatically.'}
+                      />
+                    )}
 
                     {banners.length > 0 && (
                       <div className="space-y-4 border-t border-brand-border pt-5">
@@ -662,9 +738,19 @@ export default function AdminPageSectionsPage() {
                           };
                           return (
                             <div key={banner.id || index} className="space-y-4 rounded-2xl border border-brand-border bg-brand-surface-elevated/50 p-4">
-                              <h5 className="font-bold text-xs text-brand-gold">
-                                {isPersian ? `بنر ${index + 1}` : `Banner ${index + 1}`}
-                              </h5>
+                              <div className="space-y-3 border-b border-brand-border pb-4">
+                                <h5 className="font-bold text-xs text-brand-gold">
+                                  {isPersian ? `بنر ${toPersianDigits(index + 1)}` : `Banner ${index + 1}`}
+                                </h5>
+                                <PriorityPicker
+                                  count={banners.length}
+                                  value={index + 1}
+                                  onChange={(priority) => setBanners((current) => moveItem(current, index, priority - 1))}
+                                  isPersian={isPersian}
+                                  label={isPersian ? 'اولویت نمایش بنر' : 'Banner display priority'}
+                                  hint={isPersian ? 'با انتخاب اولویت، ترتیب بقیهٔ بنرها هم به‌روزرسانی می‌شود.' : 'Choosing a priority updates the order of the other banners.'}
+                                />
+                              </div>
                               <SingleImageUploader
                                 value={banner.imageUrl}
                                 onChange={(value) => updateBanner('imageUrl', value)}
