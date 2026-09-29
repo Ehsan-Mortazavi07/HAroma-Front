@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ShieldCheck, Truck, CreditCard, Sparkles } from 'lucide-react';
 import { DEFAULT_TRUST_FEATURES } from '@/common/constants/homepage-content';
 import { resolveMediaUrl } from '@/common/constants/URL';
@@ -17,6 +18,7 @@ const featureIcons = {
 
 export function TrustFeaturesBar({ section }: { section?: IPageSection }) {
   const { isPersian } = useTranslation();
+  const reduceMotion = useReducedMotion();
   const features = (section?.config?.features?.length ? section.config.features : DEFAULT_TRUST_FEATURES) as ITrustFeatureContent[];
 
   return (
@@ -25,9 +27,12 @@ export function TrustFeaturesBar({ section }: { section?: IPageSection }) {
         {features.map((item) => {
           const Icon = featureIcons[item.id as keyof typeof featureIcons] || Sparkles;
           return (
-            <div
+            <motion.div
               key={item.id}
-              className="group flex items-center gap-3 rounded-2xl border border-brand-border/70 bg-brand-surface p-3.5 shadow-2xs transition-[transform,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:border-brand-gold/60 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:transform-none sm:p-4"
+              initial={false}
+              whileHover={reduceMotion ? undefined : { y: -3, scale: 1.01 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+              className="group flex items-center gap-3 rounded-2xl border border-brand-border/70 bg-brand-surface p-3.5 shadow-2xs transition-[border-color,box-shadow] duration-300 hover:border-brand-gold/60 hover:shadow-md sm:p-4"
             >
               <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-brand-gold/30 bg-brand-surface-elevated text-brand-gold transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:transform-none sm:h-11 sm:w-11">
                 {item.imageUrl ? (
@@ -44,7 +49,7 @@ export function TrustFeaturesBar({ section }: { section?: IPageSection }) {
                   {isPersian ? item.description : item.descriptionEn || item.description}
                 </p>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>

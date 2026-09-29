@@ -1,6 +1,6 @@
 'use client';
 
-import { Input, Textarea } from '@/components/common/DirectionalFields';
+import { Input } from '@/components/common/DirectionalFields';
 import React, { useState, useEffect } from 'react';
 import {
   motion } from 'framer-motion';
@@ -36,6 +36,7 @@ import {
   TableRow,
   TableCell,
   Skeleton,
+  Textarea as HeroTextarea,
 } from '@heroui/react';
 import { adminApi } from '@/common/api/admin';
 import { IPageSection } from '@/common/interfaces';
@@ -46,6 +47,30 @@ import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { SingleImageUploader } from '@/components/admin/SingleImageUploader';
 import { DEFAULT_CAMPAIGN_BANNERS, DEFAULT_HERO_BANNER, DEFAULT_TRUST_FEATURES, DEFAULT_VIP_BANNER, DEFAULT_VIP_PERKS } from '@/common/constants/homepage-content';
 import { IPageSectionBanner, ITrustFeatureContent } from '@/common/interfaces';
+
+type ContentTextareaProps = Omit<React.ComponentProps<typeof HeroTextarea>, 'dir' | 'classNames'> & {
+  language: 'fa' | 'en';
+  surface?: 'default' | 'elevated';
+};
+
+function ContentTextarea({ language, surface = 'elevated', ...props }: ContentTextareaProps) {
+  const direction = language === 'fa' ? 'rtl' : 'ltr';
+  const surfaceClass = surface === 'elevated' ? 'bg-brand-surface-elevated' : 'bg-brand-surface';
+
+  return (
+    <HeroTextarea
+      {...props}
+      dir={direction}
+      classNames={{
+        base: 'w-full min-w-0',
+        label: 'mb-1 w-full text-xs font-bold text-brand-text',
+        inputWrapper: `!h-auto min-h-[7rem] items-stretch rounded-2xl border border-brand-border ${surfaceClass} p-3 shadow-xs transition-colors hover:border-brand-gold`,
+        innerWrapper: 'h-full w-full',
+        input: `!h-auto min-h-[5rem] w-full resize-y py-0 text-sm font-semibold leading-7 text-brand-text ${direction === 'rtl' ? 'text-right' : 'text-left'}`,
+      }}
+    />
+  );
+}
 
 export default function AdminPageSectionsPage() {
   const { isPersian } = useTranslation();
@@ -483,36 +508,26 @@ export default function AdminPageSectionsPage() {
                       <span>{isPersian ? 'متون و مشخصات فوتر' : 'Footer Content Details'}</span>
                     </div>
 
-                    <Textarea
-                      dir="auto"
+                    <ContentTextarea
+                      language="fa"
                       label={isPersian ? 'متن درباره برند در فوتر (فارسی)' : 'About Brand Bio (Persian)'}
                       labelPlacement="outside-top"
-                    minRows={3}
+                      minRows={3}
                       value={aboutFa}
                       onValueChange={setAboutFa}
                       variant="bordered"
                       radius="lg"
-                      classNames={{
-                        inputWrapper: 'p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs',
-                        input: 'text-sm font-semibold leading-relaxed text-brand-text',
-                        label: 'text-xs font-bold text-brand-text mb-1',
-                      }}
                     />
 
-                    <Textarea
-                      dir="auto"
+                    <ContentTextarea
+                      language="en"
                       label={isPersian ? 'متن درباره برند در فوتر (انگلیسی)' : 'About Brand Bio (English)'}
                       labelPlacement="outside-top"
-                    minRows={3}
+                      minRows={3}
                       value={aboutEn}
                       onValueChange={setAboutEn}
                       variant="bordered"
                       radius="lg"
-                      classNames={{
-                        inputWrapper: 'p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs',
-                        input: 'text-sm font-semibold leading-relaxed text-brand-text',
-                        label: 'text-xs font-bold text-brand-text mb-1',
-                      }}
                     />
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -657,11 +672,11 @@ export default function AdminPageSectionsPage() {
                                 aspectRatio="video"
                                 className="max-w-xl"
                               />
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
                                 <Input dir="auto" label={isPersian ? 'عنوان فارسی' : 'Persian title'} labelPlacement="outside-top" value={banner.title || ''} onValueChange={(value) => updateBanner('title', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
                                 <Input dir="auto" label={isPersian ? 'عنوان انگلیسی' : 'English title'} labelPlacement="outside-top" value={banner.titleEn || ''} onValueChange={(value) => updateBanner('titleEn', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
-                                <Textarea dir="auto" label={isPersian ? 'توضیح فارسی' : 'Persian description'} labelPlacement="outside-top" minRows={2} value={banner.subtitle || ''} onValueChange={(value) => updateBanner('subtitle', value)} variant="bordered" radius="lg" classNames={{ inputWrapper: 'p-3 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs', input: 'text-sm font-semibold leading-relaxed text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
-                                <Textarea dir="auto" label={isPersian ? 'توضیح انگلیسی' : 'English description'} labelPlacement="outside-top" minRows={2} value={banner.subtitleEn || ''} onValueChange={(value) => updateBanner('subtitleEn', value)} variant="bordered" radius="lg" classNames={{ inputWrapper: 'p-3 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs', input: 'text-sm font-semibold leading-relaxed text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                                <ContentTextarea language="fa" surface="default" label={isPersian ? 'توضیح فارسی' : 'Persian description'} labelPlacement="outside-top" minRows={3} value={banner.subtitle || ''} onValueChange={(value) => updateBanner('subtitle', value)} variant="bordered" radius="lg" />
+                                <ContentTextarea language="en" surface="default" label={isPersian ? 'توضیح انگلیسی' : 'English description'} labelPlacement="outside-top" minRows={3} value={banner.subtitleEn || ''} onValueChange={(value) => updateBanner('subtitleEn', value)} variant="bordered" radius="lg" />
                                 <Input dir="auto" label={isPersian ? 'برچسب فارسی' : 'Persian badge'} labelPlacement="outside-top" value={banner.badge || ''} onValueChange={(value) => updateBanner('badge', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
                                 <Input dir="auto" label={isPersian ? 'برچسب انگلیسی' : 'English badge'} labelPlacement="outside-top" value={banner.badgeEn || ''} onValueChange={(value) => updateBanner('badgeEn', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
                                 <Input dir="ltr" label={isPersian ? 'مسیر مقصد (مثال: /products)' : 'Destination path (e.g. /products)'} labelPlacement="outside-top" value={banner.link || ''} onValueChange={(value) => updateBanner('link', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
@@ -674,8 +689,8 @@ export default function AdminPageSectionsPage() {
 
                     {editingSection?.sectionKey === 'vip_club_banner' && (
                       <div className="grid grid-cols-1 gap-4 border-t border-brand-border pt-5 sm:grid-cols-2">
-                        <Textarea dir="auto" label={isPersian ? 'مزیت‌های VIP (فارسی؛ هر مورد در یک خط)' : 'VIP perks (Persian; one per line)'} labelPlacement="outside-top" minRows={4} value={vipPerksFa} onValueChange={setVipPerksFa} variant="bordered" radius="lg" classNames={{ inputWrapper: 'p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs', input: 'text-sm font-semibold leading-relaxed text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
-                        <Textarea dir="auto" label={isPersian ? 'مزیت‌های VIP (انگلیسی؛ هر مورد در یک خط)' : 'VIP perks (English; one per line)'} labelPlacement="outside-top" minRows={4} value={vipPerksEn} onValueChange={setVipPerksEn} variant="bordered" radius="lg" classNames={{ inputWrapper: 'p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs', input: 'text-sm font-semibold leading-relaxed text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                        <ContentTextarea language="fa" label={isPersian ? 'مزیت‌های VIP (فارسی؛ هر مورد در یک خط)' : 'VIP perks (Persian; one per line)'} labelPlacement="outside-top" minRows={4} value={vipPerksFa} onValueChange={setVipPerksFa} variant="bordered" radius="lg" />
+                        <ContentTextarea language="en" label={isPersian ? 'مزیت‌های VIP (انگلیسی؛ هر مورد در یک خط)' : 'VIP perks (English; one per line)'} labelPlacement="outside-top" minRows={4} value={vipPerksEn} onValueChange={setVipPerksEn} variant="bordered" radius="lg" />
                       </div>
                     )}
 
@@ -692,11 +707,11 @@ export default function AdminPageSectionsPage() {
                           return (
                             <div key={feature.id} className="grid grid-cols-1 gap-4 rounded-2xl border border-brand-border bg-brand-surface-elevated/50 p-4 sm:grid-cols-[180px_1fr]">
                               <SingleImageUploader value={feature.imageUrl || ''} onChange={(value) => updateFeature('imageUrl', value)} label={isPersian ? 'تصویر ویژگی' : 'Feature image'} aspectRatio="square" />
-                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                              <div className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
                                 <Input dir="auto" label={isPersian ? 'عنوان فارسی' : 'Persian title'} labelPlacement="outside-top" value={feature.title} onValueChange={(value) => updateFeature('title', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
                                 <Input dir="auto" label={isPersian ? 'عنوان انگلیسی' : 'English title'} labelPlacement="outside-top" value={feature.titleEn} onValueChange={(value) => updateFeature('titleEn', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
-                                <Textarea dir="auto" label={isPersian ? 'توضیح فارسی' : 'Persian description'} labelPlacement="outside-top" minRows={2} value={feature.description} onValueChange={(value) => updateFeature('description', value)} variant="bordered" radius="lg" classNames={{ inputWrapper: 'p-3 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs', input: 'text-sm font-semibold leading-relaxed text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
-                                <Textarea dir="auto" label={isPersian ? 'توضیح انگلیسی' : 'English description'} labelPlacement="outside-top" minRows={2} value={feature.descriptionEn} onValueChange={(value) => updateFeature('descriptionEn', value)} variant="bordered" radius="lg" classNames={{ inputWrapper: 'p-3 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs', input: 'text-sm font-semibold leading-relaxed text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                                <ContentTextarea language="fa" surface="default" label={isPersian ? 'توضیح فارسی' : 'Persian description'} labelPlacement="outside-top" minRows={3} value={feature.description} onValueChange={(value) => updateFeature('description', value)} variant="bordered" radius="lg" />
+                                <ContentTextarea language="en" surface="default" label={isPersian ? 'توضیح انگلیسی' : 'English description'} labelPlacement="outside-top" minRows={3} value={feature.descriptionEn} onValueChange={(value) => updateFeature('descriptionEn', value)} variant="bordered" radius="lg" />
                               </div>
                             </div>
                           );

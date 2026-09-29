@@ -38,12 +38,12 @@ export function HomePage({
       {isSectionVisible('hero_banner') && <HeroBanner section={getSection('hero_banner')} />}
       {isSectionVisible('trust_features') && <TrustFeaturesBar section={getSection('trust_features')} />}
       {isSectionVisible('quick_categories') && <QuickCategories categories={categories} />}
+      {isSectionVisible('promo_cards') && <CampaignBanners section={getSection('promo_cards')} />}
       {isSectionVisible('weekly_bestsellers') && (
         <WeeklyBestSellers
           products={bestSellers.length > 0 ? bestSellers : displayFeatured.slice(0, 12)}
         />
       )}
-      {isSectionVisible('promo_cards') && <CampaignBanners section={getSection('promo_cards')} />}
       {isSectionVisible('featured_perfumes') && (
         <YouMightNeedSection products={displayFeatured.slice(0, 20)} />
       )}
