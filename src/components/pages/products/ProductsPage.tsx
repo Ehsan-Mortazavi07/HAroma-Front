@@ -138,8 +138,6 @@ export function ProductsPage({
     initialTotalPages || Math.ceil((initialTotal || initialData?.total || 0) / pageSize) || 1,
   );
   const [loading, setLoading] = useState(false);
-  const [pageDirection, setPageDirection] = useState(1);
-  const [resultsRevision, setResultsRevision] = useState(0);
   const [brands, setBrands] = useState<IBrand[]>([]);
   const [brandsLoading, setBrandsLoading] = useState(true);
 
@@ -194,6 +192,7 @@ export function ProductsPage({
 
   const isFirstMount = useRef(true);
   const productsRequestId = useRef(0);
+  const productsSectionRef = useRef<HTMLElement>(null);
 
   // Sync state when URL searchParams change (e.g. from Footer / Navbar / Breadcrumbs)
   useEffect(() => {
@@ -281,7 +280,6 @@ export function ProductsPage({
       setTotal(res.total || 0);
       setTotalPages(res.totalPages || Math.ceil((res.total || 0) / pageSize) || 1);
       setCurrentPage(pageToFetch);
-      setResultsRevision((revision) => revision + 1);
       updateFilterUrl('page', pageToFetch > 1 ? String(pageToFetch) : '');
     } catch {
       // Keep existing
@@ -292,12 +290,12 @@ export function ProductsPage({
 
   const handlePageChange = (newPage: number) => {
     if (loading || newPage === currentPage) return;
-    setPageDirection(newPage > currentPage ? 1 : -1);
     fetchFilteredProducts(newPage);
+    productsSectionRef.current?.scrollIntoView({
+      behavior: shouldReduceMotion ? 'auto' : 'smooth',
+      block: 'start',
+    });
   };
-
-  const pageEntryOffset = (isPersian ? -1 : 1) * pageDirection * 14;
-  const pageMotionDuration = shouldReduceMotion ? 0.12 : 0.24;
 
   useEffect(() => {
     if (isFirstMount.current) {
@@ -751,16 +749,10 @@ export function ProductsPage({
         </aside>
 
         {/* Product Cards Grid */}
-        <motion.main
-          layout={!shouldReduceMotion}
-          transition={{
-            layout: {
-              duration: shouldReduceMotion ? 0.12 : 0.28,
-              ease: [0.16, 1, 0.3, 1],
-            },
-          }}
+        <main
+          ref={productsSectionRef}
           aria-busy={loading}
-          className="lg:col-span-3"
+          className="scroll-mt-28 lg:col-span-3"
         >
           {products.length === 0 && loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -800,33 +792,15 @@ export function ProductsPage({
               </CardBody>
             </Card>
           ) : (
-            <AnimatePresence initial={false} mode="popLayout" custom={pageEntryOffset}>
-              <motion.div
-                key={resultsRevision}
-                initial={{ opacity: 0, x: pageEntryOffset }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -pageEntryOffset }}
-                transition={{ duration: pageMotionDuration, ease: [0.16, 1, 0.3, 1] }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {products.map((product, index) => (
-                  <motion.div
-                    key={product._id}
-                    initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
-                    transition={{
-                      duration: pageMotionDuration,
-                      delay: shouldReduceMotion ? 0 : Math.min(index * 0.012, 0.12),
-                      ease: [0.16, 1, 0.3, 1],
-                    }}
-                    className="h-full"
-                  >
-                    <ProductCard product={product} />
-                  </motion.div>
-                ))}
-              </motion.div>
-            </AnimatePresence>
+            <div
+              className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-opacity duration-150 ease-out motion-reduce:transition-none ${
+                loading ? 'opacity-60' : 'opacity-100'
+              }`}
+            >
+              {products.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
           )}
 
           {/* Pagination Controls */}
@@ -857,7 +831,7 @@ export function ProductsPage({
               </span>
             </div>
           )}
-        </motion.main>
+        </main>
       </div>
     </div>
   );

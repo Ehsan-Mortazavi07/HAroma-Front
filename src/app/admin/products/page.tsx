@@ -7,7 +7,6 @@ import Image from 'next/image';
 import {
   motion,
   AnimatePresence,
-  useReducedMotion,
 } from 'framer-motion';
 import {
   Card,
@@ -85,7 +84,6 @@ function AdminThumbnail({ src, title }: { src: string; title: string }) {
 
 export default function AdminProductsPage() {
   const { isPersian } = useTranslation();
-  const shouldReduceMotion = useReducedMotion() ?? false;
   const currentUser = useAppSelector((state) => state.auth.user);
   const isAdmin = currentUser?.role === 'admin';
 
@@ -472,13 +470,7 @@ export default function AdminProductsPage() {
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{
-          duration: 0.35,
-          delay: 0.14,
-          ease: [0.16, 1, 0.3, 1],
-          layout: { duration: shouldReduceMotion ? 0 : 0.26, ease: [0.16, 1, 0.3, 1] },
-        }}
-        layout={!shouldReduceMotion}
+        transition={{ duration: 0.35, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
       >
       <Card className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs overflow-hidden">
         <CardBody className="p-0 overflow-visible">
