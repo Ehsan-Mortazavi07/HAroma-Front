@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion';
 import {
   Card,
   CardBody,
@@ -123,6 +123,7 @@ export function ProductsPage({
   const router = useRouter();
   const searchParams = useSearchParams();
   const isPersian = useAppSelector((state) => state.ui.lang === 'fa');
+  const shouldReduceMotion = useReducedMotion() ?? false;
 
   const [products, setProducts] = useState<IProduct[]>(
     initialProducts || initialData?.items || [],
@@ -137,6 +138,8 @@ export function ProductsPage({
     initialTotalPages || Math.ceil((initialTotal || initialData?.total || 0) / pageSize) || 1,
   );
   const [loading, setLoading] = useState(false);
+  const [pageDirection, setPageDirection] = useState(1);
+  const [resultsRevision, setResultsRevision] = useState(0);
   const [brands, setBrands] = useState<IBrand[]>([]);
   const [brandsLoading, setBrandsLoading] = useState(true);
 
@@ -190,6 +193,7 @@ export function ProductsPage({
   }, []);
 
   const isFirstMount = useRef(true);
+  const productsRequestId = useRef(0);
 
   // Sync state when URL searchParams change (e.g. from Footer / Navbar / Breadcrumbs)
   useEffect(() => {
@@ -258,6 +262,7 @@ export function ProductsPage({
   };
 
   const fetchFilteredProducts = async (pageToFetch = currentPage) => {
+    const requestId = ++productsRequestId.current;
     setLoading(true);
     try {
       const res = await catalogApi.getProducts({
@@ -270,22 +275,29 @@ export function ProductsPage({
         page: pageToFetch,
         pageSize,
       });
+      if (requestId !== productsRequestId.current) return;
+
       setProducts(res.items || []);
       setTotal(res.total || 0);
       setTotalPages(res.totalPages || Math.ceil((res.total || 0) / pageSize) || 1);
+      setCurrentPage(pageToFetch);
+      setResultsRevision((revision) => revision + 1);
+      updateFilterUrl('page', pageToFetch > 1 ? String(pageToFetch) : '');
     } catch {
       // Keep existing
     } finally {
-      setLoading(false);
+      if (requestId === productsRequestId.current) setLoading(false);
     }
   };
 
   const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-    updateFilterUrl('page', newPage > 1 ? String(newPage) : '');
+    if (loading || newPage === currentPage) return;
+    setPageDirection(newPage > currentPage ? 1 : -1);
     fetchFilteredProducts(newPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const pageEntryOffset = (isPersian ? -1 : 1) * pageDirection * 14;
+  const pageMotionDuration = shouldReduceMotion ? 0.12 : 0.24;
 
   useEffect(() => {
     if (isFirstMount.current) {
@@ -739,7 +751,17 @@ export function ProductsPage({
         </aside>
 
         {/* Product Cards Grid */}
-        <main className="lg:col-span-3">
+        <motion.main
+          layout={!shouldReduceMotion}
+          transition={{
+            layout: {
+              duration: shouldReduceMotion ? 0.12 : 0.28,
+              ease: [0.16, 1, 0.3, 1],
+            },
+          }}
+          aria-busy={loading}
+          className="lg:col-span-3"
+        >
           {products.length === 0 && loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
@@ -778,43 +800,33 @@ export function ProductsPage({
               </CardBody>
             </Card>
           ) : (
-            <motion.div
-              key={`${selectedBrand || 'all'}-${selectedCategory || 'all'}-${selectedSort}-${inStockOnly}-${isVipOnly}`}
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: {
-                    staggerChildren: 0.05,
-                    delayChildren: 0.02,
-                  },
-                },
-              }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {products.map((product) => (
-                <motion.div
-                  key={product._id}
-                  variants={{
-                    hidden: { opacity: 0, y: 16, scale: 0.98 },
-                    visible: {
-                      opacity: 1,
-                      y: 0,
-                      scale: 1,
-                      transition: {
-                        duration: 0.35,
-                        ease: [0.16, 1, 0.3, 1],
-                      },
-                    },
-                  }}
-                  className="h-full"
-                >
-                  <ProductCard product={product} />
-                </motion.div>
-              ))}
-            </motion.div>
+            <AnimatePresence initial={false} mode="popLayout" custom={pageEntryOffset}>
+              <motion.div
+                key={resultsRevision}
+                initial={{ opacity: 0, x: pageEntryOffset }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -pageEntryOffset }}
+                transition={{ duration: pageMotionDuration, ease: [0.16, 1, 0.3, 1] }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              >
+                {products.map((product, index) => (
+                  <motion.div
+                    key={product._id}
+                    initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
+                    transition={{
+                      duration: pageMotionDuration,
+                      delay: shouldReduceMotion ? 0 : Math.min(index * 0.012, 0.12),
+                      ease: [0.16, 1, 0.3, 1],
+                    }}
+                    className="h-full"
+                  >
+                    <ProductCard product={product} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
           )}
 
           {/* Pagination Controls */}
@@ -822,8 +834,8 @@ export function ProductsPage({
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-10 pt-6 border-t border-brand-border/60">
               <div className="text-xs font-bold text-brand-text-muted">
                 {isPersian
-                  ? `صفحه ${toPersianDigits(currentPage)} از ${toPersianDigits(totalPages)} (مجموع ${toPersianDigits(total)} محصول)`
-                  : `Page ${currentPage} of ${totalPages} (${total} total products)`}
+                  ? `صفحه ${toPersianDigits(currentPage)} از ${toPersianDigits(totalPages)} · ${toPersianDigits(products.length)} محصول در این صفحه`
+                  : `Page ${currentPage} of ${totalPages} · ${products.length} products on this page`}
               </div>
 
               <PaginationControls
@@ -831,20 +843,21 @@ export function ProductsPage({
                 currentPage={currentPage}
                 isPersian={isPersian}
                 onPageChange={handlePageChange}
+                isLoading={loading}
               />
             </div>
           )}
 
-          {totalPages <= 1 && total > 0 && (
+          {totalPages <= 1 && products.length > 0 && (
             <div className="flex items-center justify-center mt-10 pt-6 border-t border-brand-border/60">
               <span className="text-xs font-bold text-brand-text-muted">
                 {isPersian
-                  ? `نمایش تمام ${toPersianDigits(products.length)} محصول در این صفحه`
-                  : `Showing all ${products.length} products on this page`}
+                  ? `نمایش ${toPersianDigits(products.length)} محصول در این صفحه`
+                  : `${products.length} products on this page`}
               </span>
             </div>
           )}
-        </main>
+        </motion.main>
       </div>
     </div>
   );

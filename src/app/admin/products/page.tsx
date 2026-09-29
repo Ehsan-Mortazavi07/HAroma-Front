@@ -6,7 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   motion,
-  AnimatePresence } from 'framer-motion';
+  AnimatePresence,
+  useReducedMotion,
+} from 'framer-motion';
 import {
   Card,
   CardBody,
@@ -83,6 +85,7 @@ function AdminThumbnail({ src, title }: { src: string; title: string }) {
 
 export default function AdminProductsPage() {
   const { isPersian } = useTranslation();
+  const shouldReduceMotion = useReducedMotion() ?? false;
   const currentUser = useAppSelector((state) => state.auth.user);
   const isAdmin = currentUser?.role === 'admin';
 
@@ -379,9 +382,6 @@ export default function AdminProductsPage() {
   const selectedOnPageCount = products.filter((product) => selectedIds.includes(product._id)).length;
   const isAllSelected = products.length > 0 && selectedOnPageCount === products.length;
   const isIndeterminate = selectedOnPageCount > 0 && selectedOnPageCount < products.length;
-  const firstProductNumber = totalProducts === 0 ? 0 : (currentPage - 1) * PRODUCTS_PAGE_SIZE + 1;
-  const lastProductNumber = Math.min(currentPage * PRODUCTS_PAGE_SIZE, totalProducts);
-
   return (
     <div className="space-y-6">
       {/* Page Title & Add Button */}
@@ -472,11 +472,17 @@ export default function AdminProductsPage() {
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+        transition={{
+          duration: 0.35,
+          delay: 0.14,
+          ease: [0.16, 1, 0.3, 1],
+          layout: { duration: shouldReduceMotion ? 0 : 0.26, ease: [0.16, 1, 0.3, 1] },
+        }}
+        layout={!shouldReduceMotion}
       >
       <Card className="bg-brand-surface rounded-3xl border border-brand-border shadow-xs overflow-hidden">
         <CardBody className="p-0 overflow-visible">
-          {loading ? (
+          {loading && products.length === 0 ? (
             <div className="p-8 space-y-4">
               {[...Array(6)].map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full rounded-2xl bg-brand-surface-elevated" />
@@ -705,17 +711,16 @@ export default function AdminProductsPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-brand-border px-4 py-4 sm:px-6">
             <p className="text-xs font-bold text-brand-text-muted" aria-live="polite">
               {isPersian
-                ? `نمایش ${toPersianDigits(firstProductNumber)} تا ${toPersianDigits(lastProductNumber)} از ${toPersianDigits(totalProducts)} محصول`
-                : `Showing ${firstProductNumber}–${lastProductNumber} of ${totalProducts} products`}
+                ? `${toPersianDigits(products.length)} محصول در این صفحه`
+                : `${products.length} products on this page`}
             </p>
             <PaginationControls
               currentPage={currentPage}
               totalPages={totalPages}
               isPersian={isPersian}
+              isLoading={loading}
               onPageChange={(page) => {
-                setCurrentPage(page);
                 fetchProducts(page);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               ariaLabel={isPersian ? 'صفحه‌بندی محصولات' : 'Product pagination'}
             />
