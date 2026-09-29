@@ -36,7 +36,6 @@ import {
   TableRow,
   TableCell,
   Skeleton,
-  Checkbox,
   Textarea as HeroTextarea,
 } from '@heroui/react';
 import { adminApi } from '@/common/api/admin';
@@ -45,6 +44,7 @@ import { toast, toPersianDigits } from '@/common/utils';
 import { VipBadge } from '@/components/common/VipBadge';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { SingleImageUploader } from '@/components/admin/SingleImageUploader';
 import { DEFAULT_CAMPAIGN_BANNERS, DEFAULT_HERO_BANNER, DEFAULT_TRUST_FEATURES, DEFAULT_VIP_BANNER, DEFAULT_VIP_PERKS } from '@/common/constants/homepage-content';
 import { IPageSectionBanner, ITrustFeatureContent } from '@/common/interfaces';
@@ -93,21 +93,20 @@ function PriorityPicker({ count, value, onChange, isPersian, label, hint }: Prio
         {priorities.map((priority) => {
           const displayPriority = isPersian ? toPersianDigits(priority) : priority;
           return (
-            <Checkbox
+            <SmoothCheckbox
               key={priority}
               size="sm"
-              color="warning"
               isSelected={value === priority}
-              aria-label={isPersian ? `اولویت ${displayPriority}` : `Priority ${displayPriority}`}
+              ariaLabel={isPersian ? `اولویت ${displayPriority}` : `Priority ${displayPriority}`}
               onValueChange={(checked) => checked && onChange(priority)}
-              classNames={{
-                base: 'm-0 max-w-none cursor-pointer rounded-xl border border-brand-border bg-brand-surface-elevated px-3 py-2 transition-colors data-[selected=true]:border-brand-gold data-[selected=true]:bg-brand-gold/15',
-                wrapper: 'after:bg-brand-gold before:border-brand-border',
-                label: 'text-xs font-bold text-brand-text',
-              }}
+              className={`min-w-[3.5rem] justify-center rounded-xl border px-3 py-2 transition-all duration-200 active:scale-95 ${
+                value === priority
+                  ? 'border-brand-gold bg-brand-gold/15 shadow-sm'
+                  : 'border-brand-border bg-brand-surface-elevated hover:border-brand-gold/70 hover:bg-brand-gold/5'
+              }`}
             >
-              {isPersian ? `اولویت ${displayPriority}` : `Priority ${displayPriority}`}
-            </Checkbox>
+              {displayPriority}
+            </SmoothCheckbox>
           );
         })}
       </div>
