@@ -4,87 +4,54 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, ArrowRight, Crown, Gift, Sparkles, Truck } from 'lucide-react';
 import { PATHS } from '@/common/constants/PATHS';
+import { DEFAULT_CAMPAIGN_BANNERS, resolveHomepageLink } from '@/common/constants/homepage-content';
+import { resolveMediaUrl } from '@/common/constants/URL';
+import { IPageSection, IPageSectionBanner } from '@/common/interfaces';
 import { useTranslation } from '@/common/i18n';
 
-export function CampaignBanners() {
-  const { t, isPersian, isRTL } = useTranslation();
+const bannerIcons = { gift: Gift, vip: Crown, consultation: Sparkles, shipping: Truck };
 
-  const banners = [
-    {
-      id: 'gift',
-      tag: isPersian ? 'هدیه ویژه' : 'Gift Sets',
-      title: isPersian ? 'پک‌های کادویی لوکس' : 'Luxury Gift Sets',
-      description: isPersian
-        ? 'بهترین هدیه برای عزیزان با امکان انتخاب از تمام محصولات'
-        : 'Present a gift card and let them choose their favorite scent',
-      image: 'https://images.unsplash.com/photo-1512290900672-1f55b9ab0128?q=80&w=900&auto=format&fit=crop',
-      href: '/products?category=gift-sets',
-      icon: Gift,
-    },
-    {
-      id: 'vip',
-      tag: isPersian ? 'تخفیف ویژه VIP' : 'VIP 30% Off',
-      title: isPersian ? 'باشگاه مشتریان طلایی' : 'VIP Gold Club',
-      description: isPersian
-        ? 'تخفیف‌های دائمی، ارسال رایگان و دسترسی به عطرهای نیش'
-        : 'Enjoy exclusive discounts on luxury and niche fragrances',
-      image: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=900&auto=format&fit=crop',
-      href: PATHS.VIP,
-      icon: Crown,
-    },
-    {
-      id: 'consultation',
-      tag: isPersian ? 'مشاوره بویایی' : 'Expert Advice',
-      title: isPersian ? 'انتخاب رایحه امضا' : 'Find Your Signature Scent',
-      description: isPersian
-        ? 'طراحی امضای بویایی اختصاصی بر اساس تیپ شخصیتی شما'
-        : 'Get expert guidance to discover a fragrance that feels like you',
-      image: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?q=80&w=900&auto=format&fit=crop',
-      href: PATHS.PRODUCTS,
-      icon: Sparkles,
-    },
-    {
-      id: 'shipping',
-      tag: isPersian ? 'ارسال رایگان' : 'Free Shipping',
-      title: isPersian ? 'ارسال سریع و ایمن' : 'Fast, Secure Delivery',
-      description: isPersian
-        ? 'برای سفارش‌های بالای ۱ میلیون تومان در سراسر ایران'
-        : 'Free delivery on orders over the qualifying amount',
-      image: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=900&auto=format&fit=crop',
-      href: PATHS.PRODUCTS,
-      icon: Truck,
-    },
-  ];
+export function CampaignBanners({ section }: { section?: IPageSection }) {
+  const { t, isPersian, isRTL } = useTranslation();
+  const banners = section?.banners?.length ? section.banners : DEFAULT_CAMPAIGN_BANNERS;
+  const title = isPersian ? section?.title || 'خدمات و پیشنهادهای ویژه' : section?.titleEn || 'Services & Special Offers';
+  const subtitle = isPersian
+    ? section?.subtitle || 'برای انتخاب رایحه، هدیه‌دادن و خریدی آسوده‌تر'
+    : section?.subtitleEn || 'A little help choosing, gifting, and shopping with confidence';
 
   return (
     <section dir={isRTL ? 'rtl' : 'ltr'} className="w-full">
       <div className="mb-5 flex flex-col gap-2 border-b border-brand-border pb-4 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
         <h2 className="text-xl font-black text-brand-text sm:text-2xl">
-          {isPersian ? 'خدمات و پیشنهادهای ویژه' : 'Services & Special Offers'}
+          {title}
         </h2>
         <p className="max-w-xl text-xs leading-6 text-brand-text-muted sm:text-sm">
-          {isPersian
-            ? 'برای انتخاب رایحه، هدیه‌دادن و خریدی آسوده‌تر'
-            : 'A little help choosing, gifting, and shopping with confidence'}
+          {subtitle}
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
-        {banners.map((banner) => {
-          const Icon = banner.icon;
+        {banners.map((banner: IPageSectionBanner, index) => {
+          const id = banner.id || DEFAULT_CAMPAIGN_BANNERS[index]?.id || 'gift';
+          const fallback = DEFAULT_CAMPAIGN_BANNERS.find((item) => item.id === id) || DEFAULT_CAMPAIGN_BANNERS[index] || DEFAULT_CAMPAIGN_BANNERS[0];
+          const Icon = bannerIcons[id as keyof typeof bannerIcons] || Gift;
+          const cardTitle = isPersian ? banner.title || fallback.title : banner.titleEn || fallback.titleEn;
+          const cardDescription = isPersian ? banner.subtitle || fallback.subtitle : banner.subtitleEn || fallback.subtitleEn;
+          const badge = isPersian ? banner.badge || fallback.badge : banner.badgeEn || fallback.badgeEn;
+          const href = resolveHomepageLink(banner.link, PATHS.PRODUCTS);
 
           return (
             <Link
-              key={banner.id}
-              href={banner.href}
-              className="group relative isolate flex min-h-[17rem] overflow-hidden rounded-3xl border border-brand-border bg-brand-olive p-5 text-[#f7f4ee] shadow-xs transition-[transform,border-color,box-shadow] duration-500 ease-luxury hover:-translate-y-1 hover:border-brand-gold/70 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg sm:min-h-[19rem] sm:p-7 lg:min-h-[21rem]"
+              key={id}
+              href={href}
+              className="group relative isolate flex min-h-[17rem] overflow-hidden rounded-3xl border border-brand-border bg-brand-olive p-5 text-[#f7f4ee] shadow-xs transition-[transform,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-brand-gold/70 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg motion-reduce:transition-none motion-reduce:hover:transform-none sm:min-h-[19rem] sm:p-7 lg:min-h-[21rem]"
             >
               <Image
-                src={banner.image}
+                src={resolveMediaUrl(banner.imageUrl || fallback.imageUrl)}
                 alt=""
                 fill
                 sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 45vw"
-                className="-z-20 object-cover transition-transform duration-700 ease-luxury group-hover:scale-[1.04]"
+                className="-z-20 object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.035] motion-reduce:transition-none motion-reduce:group-hover:transform-none"
               />
               <div
                 aria-hidden="true"
@@ -96,17 +63,17 @@ export function CampaignBanners() {
               />
 
               <div className="relative z-10 flex w-full flex-col justify-between gap-8">
-                <span className="inline-flex w-fit items-center gap-2 rounded-full border border-brand-gold/35 bg-[#202620]/90 px-3 py-1.5 text-[11px] font-bold text-brand-champagne sm:text-xs">
+                <span className="inline-flex w-fit items-center gap-2 rounded-full border border-brand-gold/45 bg-[#202620]/95 px-3 py-1.5 text-[11px] font-bold text-[#f7f4ee] shadow-sm sm:text-xs">
                   <Icon aria-hidden="true" className="h-4 w-4 text-brand-gold" />
-                  {banner.tag}
+                  {badge}
                 </span>
 
                 <div className="max-w-md">
                   <h3 className="text-xl font-black leading-snug sm:text-2xl lg:text-3xl">
-                    {banner.title}
+                    {cardTitle}
                   </h3>
                   <p className="mt-2 max-w-lg text-xs font-medium leading-6 text-[#e6dcce] sm:text-sm sm:leading-7">
-                    {banner.description}
+                    {cardDescription}
                   </p>
                   <span className="mt-5 inline-flex items-center gap-2 text-xs font-black text-brand-gold transition-colors group-hover:text-brand-bronze-light sm:text-sm">
                     {t.common.seeMore}

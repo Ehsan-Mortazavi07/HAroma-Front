@@ -221,18 +221,34 @@ export interface IPageSection {
   title: string;
   titleEn?: string;
   subtitle?: string;
+  subtitleEn?: string;
   isVisible: boolean;
   isVipOnly: boolean;
   order: number;
-  banners?: Array<{
-    imageUrl: string;
-    link: string;
-    title?: string;
-    subtitle?: string;
-    badge?: string;
-    bgGradient?: string;
-  }>;
+  banners?: IPageSectionBanner[];
   config?: Record<string, any>;
+}
+
+export interface IPageSectionBanner {
+  id?: string;
+  imageUrl: string;
+  link: string;
+  title?: string;
+  titleEn?: string;
+  subtitle?: string;
+  subtitleEn?: string;
+  badge?: string;
+  badgeEn?: string;
+  bgGradient?: string;
+}
+
+export interface ITrustFeatureContent {
+  id: string;
+  title: string;
+  titleEn: string;
+  description: string;
+  descriptionEn: string;
+  imageUrl?: string;
 }
 
 export interface ICartItem {

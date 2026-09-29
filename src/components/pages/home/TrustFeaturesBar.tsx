@@ -1,66 +1,47 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { ShieldCheck, Truck, CreditCard, Sparkles } from 'lucide-react';
+import { DEFAULT_TRUST_FEATURES } from '@/common/constants/homepage-content';
+import { resolveMediaUrl } from '@/common/constants/URL';
+import { IPageSection, ITrustFeatureContent } from '@/common/interfaces';
 import { useTranslation } from '@/common/i18n';
 
-export function TrustFeaturesBar() {
-  const { isPersian } = useTranslation();
+const featureIcons = {
+  guarantee: ShieldCheck,
+  delivery: Truck,
+  installment: CreditCard,
+  consultation: Sparkles,
+};
 
-  const features = [
-    {
-      id: 'guarantee',
-      icon: ShieldCheck,
-      title: isPersian ? 'ضمانت اصالت ۱۰۰٪ فیزیکی' : '100% Genuine Authenticity',
-      description: isPersian
-        ? 'سنجش بارکد رسمی و ضمانت سلامت کالا'
-        : 'Official batch code & original perfume verification',
-    },
-    {
-      id: 'delivery',
-      icon: Truck,
-      title: isPersian ? 'ارسال سریع و ایمن' : 'Fast & Insured Delivery',
-      description: isPersian
-        ? 'بسته‌بندی ضربه‌گیر ویژه در سراسر کشور'
-        : 'Protective luxury packaging across the country',
-    },
-    {
-      id: 'installment',
-      icon: CreditCard,
-      title: isPersian ? 'پرداخت اقساطی ۴ ماهه' : '4x Interest-Free Installments',
-      description: isPersian
-        ? 'خرید بدون ضامن و کارمزد با اسنپ‌پی'
-        : 'Split your payment in 4 installments with SnapPay',
-    },
-    {
-      id: 'consultation',
-      icon: Sparkles,
-      title: isPersian ? 'مشاوره تخصصی بویایی' : 'Expert Scent Concierge',
-      description: isPersian
-        ? 'راهنمای انتخاب رایحه امضا متناسب با سلیقه شما'
-        : 'Discover your signature scent with certified perfumers',
-    },
-  ];
+export function TrustFeaturesBar({ section }: { section?: IPageSection }) {
+  const { isPersian } = useTranslation();
+  const features = (section?.config?.features?.length ? section.config.features : DEFAULT_TRUST_FEATURES) as ITrustFeatureContent[];
 
   return (
     <section className="w-full">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
         {features.map((item) => {
-          const Icon = item.icon;
+          const Icon = featureIcons[item.id as keyof typeof featureIcons] || Sparkles;
           return (
             <div
               key={item.id}
-              className="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl bg-brand-surface border border-brand-border/70 hover:border-brand-gold/60 transition-all shadow-2xs group"
+              className="group flex items-center gap-3 rounded-2xl border border-brand-border/70 bg-brand-surface p-3.5 shadow-2xs transition-[transform,border-color,box-shadow] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:border-brand-gold/60 hover:shadow-md motion-reduce:transition-none motion-reduce:hover:transform-none sm:p-4"
             >
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-brand-surface-elevated border border-brand-gold/30 text-brand-gold flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <Icon className="w-5 h-5" />
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-brand-gold/30 bg-brand-surface-elevated text-brand-gold transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:transform-none sm:h-11 sm:w-11">
+                {item.imageUrl ? (
+                  <Image src={resolveMediaUrl(item.imageUrl)} alt="" fill sizes="44px" className="object-cover" />
+                ) : (
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="font-extrabold text-xs sm:text-sm text-brand-text truncate">
-                  {item.title}
+                  {isPersian ? item.title : item.titleEn || item.title}
                 </h3>
                 <p className="text-[11px] text-brand-text-muted truncate mt-0.5 font-medium hidden sm:block">
-                  {item.description}
+                  {isPersian ? item.description : item.descriptionEn || item.description}
                 </p>
               </div>
             </div>

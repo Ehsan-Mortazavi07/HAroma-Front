@@ -432,7 +432,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                 size="sm"
                 variant="solid"
                 startContent={<Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current text-brand-gold" />}
-                className="bg-brand-olive text-brand-champagne text-[10px] sm:text-xs font-bold shadow-md border border-brand-gold/30 h-6 sm:h-7"
+                className="bg-[#202620]/95 text-[#f7f4ee] text-[10px] sm:text-xs font-bold shadow-md border border-brand-gold/50 h-6 sm:h-7"
               >
                 {t.common.fastDelivery}
               </Chip>

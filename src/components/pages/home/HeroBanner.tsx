@@ -1,5 +1,9 @@
 'use client';
 
+import { usePointerGlow } from '@/common/hooks/usePointerGlow';
+import { DEFAULT_HERO_BANNER, resolveHomepageLink } from '@/common/constants/homepage-content';
+import { resolveMediaUrl } from '@/common/constants/URL';
+import { IPageSection } from '@/common/interfaces';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@heroui/react';
@@ -7,17 +11,36 @@ import { Sparkles, ArrowLeft, ArrowRight, ShieldCheck, Crown } from 'lucide-reac
 import { PATHS } from '@/common/constants/PATHS';
 import { useTranslation } from '@/common/i18n';
 
-export function HeroBanner() {
+export function HeroBanner({ section }: { section?: IPageSection }) {
   const { t, isRTL } = useTranslation();
+  const { glowRef, onPointerEnter, onPointerMove, onPointerLeave } = usePointerGlow<HTMLElement>();
+  const banner = section?.banners?.[0] ?? DEFAULT_HERO_BANNER;
+  const title = isRTL
+    ? banner.title || `${t.hero.titleMain} ${t.hero.titleBrand} ${t.hero.titleEnd}`.trim()
+    : banner.titleEn || `${t.hero.titleMain} ${t.hero.titleBrand} ${t.hero.titleEnd}`.trim();
+  const brandName = isRTL ? 'هاتف آروما' : 'Hatef Aroma';
+  const brandIndex = title.indexOf(brandName);
+  const highlightedTitle = brandIndex < 0 ? title : (
+    <>
+      {title.slice(0, brandIndex)}
+      <span className="font-black text-[#d4be9b]">{brandName}</span>
+      {title.slice(brandIndex + brandName.length)}
+    </>
+  );
+  const description = isRTL ? banner.subtitle || t.hero.description : banner.subtitleEn || t.hero.description;
+  const imageUrl = resolveMediaUrl(banner.imageUrl || DEFAULT_HERO_BANNER.imageUrl);
 
   return (
     <section
+      onPointerMove={onPointerMove}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
       className="relative overflow-hidden rounded-3xl bg-[#181f18] text-[#f7f4ee] p-5 sm:p-8 lg:p-12 shadow-2xl border border-brand-gold/30 group"
     >
-      {/* Static ambient light keeps the hero polished without pointer-driven updates. */}
       <div
+        ref={glowRef}
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-out"
         style={{
           background: 'radial-gradient(600px circle at 70% 35%, rgba(212, 190, 155, 0.14), transparent 70%)',
         }}
@@ -32,23 +55,21 @@ export function HeroBanner() {
         <div className="lg:col-span-7 space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#202820] border border-brand-gold/40 text-xs font-extrabold text-[#d4be9b] shadow-sm">
             <Crown className="w-4 h-4 text-brand-gold" />
-            <span>{t.hero.tag}</span>
+            <span>{isRTL ? banner.badge || t.hero.tag : banner.badgeEn || t.hero.tag}</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight sm:leading-tight text-[#f7f4ee]">
-            {t.hero.titleMain}{' '}
-            <span className="text-[#d4be9b] font-black">{t.hero.titleBrand}</span>{' '}
-            {t.hero.titleEnd}
+            {highlightedTitle}
           </h1>
 
           <p className="text-sm sm:text-base text-[#e6dcce] max-w-xl leading-relaxed font-medium">
-            {t.hero.description}
+            {description}
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Button
               as={Link}
-              href={PATHS.PRODUCTS}
+              href={resolveHomepageLink(banner.link, PATHS.PRODUCTS)}
               radius="full"
               className="px-7 py-3.5 h-12 font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-sm shadow-xl shadow-brand-gold/20 flex items-center gap-2 transition-transform hover:scale-105 active:scale-95"
             >
@@ -85,8 +106,8 @@ export function HeroBanner() {
         <div className="lg:col-span-5 relative flex justify-center">
           <div className="relative w-full max-w-sm h-64 sm:h-80 lg:h-96 rounded-3xl overflow-hidden shadow-2xl border border-brand-gold/30">
             <Image
-              src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop"
-              alt="Hatef Aroma Niche Perfume"
+              src={imageUrl}
+              alt={title}
               fill
               priority
               className="object-cover object-center"

@@ -1,5 +1,9 @@
 'use client';
 
+import { usePointerGlow } from '@/common/hooks/usePointerGlow';
+import { DEFAULT_VIP_BANNER, DEFAULT_VIP_PERKS, resolveHomepageLink } from '@/common/constants/homepage-content';
+import { resolveMediaUrl } from '@/common/constants/URL';
+import { IPageSection } from '@/common/interfaces';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Crown, Sparkles, CheckCircle2, ArrowLeft, ArrowRight } from 'lucide-react';
@@ -7,26 +11,38 @@ import { Button, Chip } from '@heroui/react';
 import { PATHS } from '@/common/constants/PATHS';
 import { useTranslation } from '@/common/i18n';
 
-export function VipClubBanner() {
+export function VipClubBanner({ section }: { section?: IPageSection }) {
   const { t, isPersian, isRTL } = useTranslation();
+  const { glowRef, onPointerEnter, onPointerMove, onPointerLeave } = usePointerGlow<HTMLElement>();
+  const banner = section?.banners?.[0] ?? DEFAULT_VIP_BANNER;
+  const title = isPersian ? banner.title || t.home.vipBannerTitle : banner.titleEn || t.home.vipBannerTitle;
+  const subtitle = isPersian ? banner.subtitle || t.home.vipBannerSub : banner.subtitleEn || t.home.vipBannerSub;
+  const badge = isPersian ? banner.badge || t.vip.title : banner.badgeEn || t.vip.title;
+  const imageUrl = resolveMediaUrl(banner.imageUrl || DEFAULT_VIP_BANNER.imageUrl);
 
-  const perks = [
+  const defaultPerks = [
     t.vip.permanentDiscountPerkSub,
     t.vip.freeShippingPerkSub,
     t.vip.samplesPerkSub,
     t.vip.consultationPerkSub,
   ];
+  const configuredPerks = isPersian ? section?.config?.perksFa : section?.config?.perksEn;
+  const perks: string[] = Array.isArray(configuredPerks) && configuredPerks.length
+    ? configuredPerks
+    : isPersian ? DEFAULT_VIP_PERKS.fa : defaultPerks;
 
   return (
     <section
+      onPointerMove={onPointerMove}
+      onPointerEnter={onPointerEnter}
+      onPointerLeave={onPointerLeave}
       className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#181f18] text-[#f7f4ee] p-6 sm:p-10 lg:p-12 shadow-2xl border border-brand-gold/30 group w-full"
     >
-      {/* Static ambient light keeps the banner decorative without rerendering on pointer movement. */}
       <div
+        ref={glowRef}
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out"
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-out"
         style={{
-          opacity: 0.6,
           background: 'radial-gradient(600px circle at 80% 30%, rgba(212, 190, 155, 0.14), transparent 70%)',
         }}
       />
@@ -41,13 +57,13 @@ export function VipClubBanner() {
             variant="bordered"
             className="bg-[#202820] border-brand-gold/40 text-[#d4be9b] text-xs font-black h-8 px-3"
           >
-            {t.vip.title}
+            {badge}
           </Chip>
 
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black leading-snug text-[#f7f4ee]">
-            {t.home.vipBannerTitle}
+            {title}
             <span className="block text-[#d4be9b] text-lg sm:text-xl font-bold mt-1">
-              {t.home.vipBannerSub}
+              {subtitle}
             </span>
           </h2>
 
@@ -63,7 +79,7 @@ export function VipClubBanner() {
           <div className="pt-4 flex flex-wrap items-center gap-4">
             <Button
               as={Link}
-              href={PATHS.VIP}
+              href={resolveHomepageLink(banner.link, PATHS.VIP)}
               radius="full"
               className="px-7 py-3.5 h-12 font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] text-sm shadow-xl shadow-brand-gold/20 hover:scale-105 active:scale-95 transition-all duration-300 ease-out flex items-center gap-2 border border-[#d4be9b]/30"
             >
@@ -78,7 +94,7 @@ export function VipClubBanner() {
           <div className="relative w-40 h-40 sm:w-52 sm:h-52 lg:w-60 lg:h-60 rounded-full bg-[#202620] border-2 border-brand-gold/40 p-3 sm:p-4 flex items-center justify-center shadow-2xl">
             <div className="relative w-full h-full rounded-full overflow-hidden">
               <Image
-                src="https://images.unsplash.com/photo-1547887537-6158d64c35b3?q=80&w=600&auto=format&fit=crop"
+                src={imageUrl}
                 alt="VIP Niche Perfume"
                 fill
                 className="object-cover"

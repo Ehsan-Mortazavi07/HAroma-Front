@@ -6,3 +6,10 @@ export const SERVER_BASE_API_URL =
 
 export const MEDIA_BASE_URL =
   process.env.NEXT_PUBLIC_MEDIA_URL || 'http://127.0.0.1:7731';
+
+export const resolveMediaUrl = (path: string): string => {
+  if (!path) return '';
+  return path.startsWith('http://') || path.startsWith('https://')
+    ? path
+    : `${MEDIA_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+};

@@ -31,22 +31,23 @@ export function HomePage({
     const found = sections.find((s) => s.sectionKey === key);
     return found ? found.isVisible : true;
   };
+  const getSection = (key: string) => sections.find((section) => section.sectionKey === key);
 
   return (
     <div className="space-y-14 pb-20 pt-4 sm:space-y-20 sm:pb-24 sm:pt-6">
-      {isSectionVisible('hero_banner') && <HeroBanner />}
-      <TrustFeaturesBar />
+      {isSectionVisible('hero_banner') && <HeroBanner section={getSection('hero_banner')} />}
+      {isSectionVisible('trust_features') && <TrustFeaturesBar section={getSection('trust_features')} />}
       {isSectionVisible('quick_categories') && <QuickCategories categories={categories} />}
       {isSectionVisible('weekly_bestsellers') && (
         <WeeklyBestSellers
           products={bestSellers.length > 0 ? bestSellers : displayFeatured.slice(0, 12)}
         />
       )}
-      {isSectionVisible('promo_cards') && <CampaignBanners />}
+      {isSectionVisible('promo_cards') && <CampaignBanners section={getSection('promo_cards')} />}
       {isSectionVisible('featured_perfumes') && (
         <YouMightNeedSection products={displayFeatured.slice(0, 20)} />
       )}
-      {isSectionVisible('vip_club_banner') && <VipClubBanner />}
+      {isSectionVisible('vip_club_banner') && <VipClubBanner section={getSection('vip_club_banner')} />}
     </div>
   );
 }

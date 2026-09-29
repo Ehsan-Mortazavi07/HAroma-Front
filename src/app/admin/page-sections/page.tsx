@@ -43,6 +43,9 @@ import { toast, toPersianDigits } from '@/common/utils';
 import { VipBadge } from '@/components/common/VipBadge';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
+import { SingleImageUploader } from '@/components/admin/SingleImageUploader';
+import { DEFAULT_CAMPAIGN_BANNERS, DEFAULT_HERO_BANNER, DEFAULT_TRUST_FEATURES, DEFAULT_VIP_BANNER, DEFAULT_VIP_PERKS } from '@/common/constants/homepage-content';
+import { IPageSectionBanner, ITrustFeatureContent } from '@/common/interfaces';
 
 export default function AdminPageSectionsPage() {
   const { isPersian } = useTranslation();
@@ -57,6 +60,10 @@ export default function AdminPageSectionsPage() {
   const [isVisible, setIsVisible] = useState(true);
   const [isVipOnly, setIsVipOnly] = useState(false);
   const [order, setOrder] = useState(1);
+  const [banners, setBanners] = useState<IPageSectionBanner[]>([]);
+  const [features, setFeatures] = useState<ITrustFeatureContent[]>(DEFAULT_TRUST_FEATURES);
+  const [vipPerksFa, setVipPerksFa] = useState(DEFAULT_VIP_PERKS.fa.join('\n'));
+  const [vipPerksEn, setVipPerksEn] = useState(DEFAULT_VIP_PERKS.en.join('\n'));
 
   // Footer Settings State
   const [aboutFa, setAboutFa] = useState('');
@@ -144,6 +151,26 @@ export default function AdminPageSectionsPage() {
     setIsVipOnly(sec.isVipOnly);
     setOrder(sec.order || 1);
 
+    const defaultBanners = sec.sectionKey === 'hero_banner'
+      ? [DEFAULT_HERO_BANNER]
+      : sec.sectionKey === 'promo_cards'
+        ? DEFAULT_CAMPAIGN_BANNERS
+        : sec.sectionKey === 'vip_club_banner'
+          ? [DEFAULT_VIP_BANNER]
+          : [];
+    const sectionBanners = sec.banners?.length ? sec.banners : defaultBanners;
+    setBanners(sectionBanners.map((banner, index) => ({
+      ...(defaultBanners.find((item) => item.id === banner.id) || defaultBanners[index] || {}),
+      ...banner,
+    })));
+    const savedFeatures: ITrustFeatureContent[] = Array.isArray(sec.config?.features) ? sec.config.features : [];
+    setFeatures(DEFAULT_TRUST_FEATURES.map((feature) => ({
+      ...feature,
+      ...(savedFeatures.find((item) => item.id === feature.id) || {}),
+    })));
+    setVipPerksFa(Array.isArray(sec.config?.perksFa) ? sec.config.perksFa.join('\n') : DEFAULT_VIP_PERKS.fa.join('\n'));
+    setVipPerksEn(Array.isArray(sec.config?.perksEn) ? sec.config.perksEn.join('\n') : DEFAULT_VIP_PERKS.en.join('\n'));
+
     if (sec.sectionKey === 'footer_settings' && sec.config) {
       setAboutFa(sec.config.aboutFa || '');
       setAboutEn(sec.config.aboutEn || '');
@@ -195,6 +222,22 @@ export default function AdminPageSectionsPage() {
           addressEn: addressEn.trim(),
           copyrightFa: copyrightFa.trim(),
           copyrightEn: copyrightEn.trim(),
+        };
+      }
+
+      if (['hero_banner', 'promo_cards', 'vip_club_banner'].includes(editingSection.sectionKey)) {
+        payload.banners = banners;
+      }
+
+      if (editingSection.sectionKey === 'trust_features') {
+        payload.config = { ...editingSection.config, features };
+      }
+
+      if (editingSection.sectionKey === 'vip_club_banner') {
+        payload.config = {
+          ...editingSection.config,
+          perksFa: vipPerksFa.split('\n').map((perk) => perk.trim()).filter(Boolean),
+          perksEn: vipPerksEn.split('\n').map((perk) => perk.trim()).filter(Boolean),
         };
       }
 
@@ -571,21 +614,96 @@ export default function AdminPageSectionsPage() {
                     </div>
                   </div>
                 ) : (
-                  <Input
-                    label={isPersian ? 'اولویت چیدمان در صفحه' : 'Display Order'}
-                    labelPlacement="outside-top"
-                    type="number"
-                    min={1}
-                    value={String(order)}
-                    onValueChange={(val) => setOrder(Number(val))}
-                    variant="bordered"
-                    radius="full"
-                    classNames={{
-                      inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
-                      input: 'text-sm font-bold text-brand-text',
-                      label: 'text-xs font-bold text-brand-text mb-1',
-                    }}
-                  />
+                  <>
+                    <Input
+                      label={isPersian ? 'اولویت چیدمان در صفحه' : 'Display Order'}
+                      labelPlacement="outside-top"
+                      type="number"
+                      min={1}
+                      value={String(order)}
+                      onValueChange={(val) => setOrder(Number(val))}
+                      variant="bordered"
+                      radius="full"
+                      classNames={{
+                        inputWrapper: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs',
+                        input: 'text-sm font-bold text-brand-text',
+                        label: 'text-xs font-bold text-brand-text mb-1',
+                      }}
+                    />
+
+                    {banners.length > 0 && (
+                      <div className="space-y-4 border-t border-brand-border pt-5">
+                        <div className="space-y-1">
+                          <h4 className="font-bold text-sm text-brand-text">
+                            {isPersian ? 'محتوا و تصاویر بنرها' : 'Banner Content & Images'}
+                          </h4>
+                          <p className="text-[11px] leading-relaxed text-brand-text-muted">
+                            {isPersian ? 'متن‌ها برای هر زبان جداگانه ذخیره می‌شوند. تصویر و مسیر دکمه نیز از همین‌جا قابل تغییر است.' : 'Edit the copy per language, the image, and its destination.'}
+                          </p>
+                        </div>
+                        {banners.map((banner, index) => {
+                          const updateBanner = (key: keyof IPageSectionBanner, value: string) => {
+                            setBanners((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item));
+                          };
+                          return (
+                            <div key={banner.id || index} className="space-y-4 rounded-2xl border border-brand-border bg-brand-surface-elevated/50 p-4">
+                              <h5 className="font-bold text-xs text-brand-gold">
+                                {isPersian ? `بنر ${index + 1}` : `Banner ${index + 1}`}
+                              </h5>
+                              <SingleImageUploader
+                                value={banner.imageUrl}
+                                onChange={(value) => updateBanner('imageUrl', value)}
+                                label={isPersian ? 'تصویر بنر' : 'Banner image'}
+                                aspectRatio="video"
+                                className="max-w-xl"
+                              />
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <Input dir="auto" label={isPersian ? 'عنوان فارسی' : 'Persian title'} labelPlacement="outside-top" value={banner.title || ''} onValueChange={(value) => updateBanner('title', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                                <Input dir="auto" label={isPersian ? 'عنوان انگلیسی' : 'English title'} labelPlacement="outside-top" value={banner.titleEn || ''} onValueChange={(value) => updateBanner('titleEn', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                                <Textarea dir="auto" label={isPersian ? 'توضیح فارسی' : 'Persian description'} labelPlacement="outside-top" minRows={2} value={banner.subtitle || ''} onValueChange={(value) => updateBanner('subtitle', value)} variant="bordered" radius="lg" classNames={{ inputWrapper: 'p-3 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs', input: 'text-sm font-semibold leading-relaxed text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                                <Textarea dir="auto" label={isPersian ? 'توضیح انگلیسی' : 'English description'} labelPlacement="outside-top" minRows={2} value={banner.subtitleEn || ''} onValueChange={(value) => updateBanner('subtitleEn', value)} variant="bordered" radius="lg" classNames={{ inputWrapper: 'p-3 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs', input: 'text-sm font-semibold leading-relaxed text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                                <Input dir="auto" label={isPersian ? 'برچسب فارسی' : 'Persian badge'} labelPlacement="outside-top" value={banner.badge || ''} onValueChange={(value) => updateBanner('badge', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                                <Input dir="auto" label={isPersian ? 'برچسب انگلیسی' : 'English badge'} labelPlacement="outside-top" value={banner.badgeEn || ''} onValueChange={(value) => updateBanner('badgeEn', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                                <Input dir="ltr" label={isPersian ? 'مسیر مقصد (مثال: /products)' : 'Destination path (e.g. /products)'} labelPlacement="outside-top" value={banner.link || ''} onValueChange={(value) => updateBanner('link', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {editingSection?.sectionKey === 'vip_club_banner' && (
+                      <div className="grid grid-cols-1 gap-4 border-t border-brand-border pt-5 sm:grid-cols-2">
+                        <Textarea dir="auto" label={isPersian ? 'مزیت‌های VIP (فارسی؛ هر مورد در یک خط)' : 'VIP perks (Persian; one per line)'} labelPlacement="outside-top" minRows={4} value={vipPerksFa} onValueChange={setVipPerksFa} variant="bordered" radius="lg" classNames={{ inputWrapper: 'p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs', input: 'text-sm font-semibold leading-relaxed text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                        <Textarea dir="auto" label={isPersian ? 'مزیت‌های VIP (انگلیسی؛ هر مورد در یک خط)' : 'VIP perks (English; one per line)'} labelPlacement="outside-top" minRows={4} value={vipPerksEn} onValueChange={setVipPerksEn} variant="bordered" radius="lg" classNames={{ inputWrapper: 'p-3 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs', input: 'text-sm font-semibold leading-relaxed text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                      </div>
+                    )}
+
+                    {editingSection?.sectionKey === 'trust_features' && (
+                      <div className="space-y-4 border-t border-brand-border pt-5">
+                        <div className="space-y-1">
+                          <h4 className="font-bold text-sm text-brand-text">{isPersian ? 'محتوا و تصاویر ویژگی‌ها' : 'Feature Content & Images'}</h4>
+                          <p className="text-[11px] leading-relaxed text-brand-text-muted">{isPersian ? 'تصویر هر ویژگی اختیاری است؛ در صورت خالی بودن، آیکون فعلی نمایش داده می‌شود.' : 'Feature images are optional; the current icon remains when no image is set.'}</p>
+                        </div>
+                        {features.map((feature, index) => {
+                          const updateFeature = (key: keyof ITrustFeatureContent, value: string) => {
+                            setFeatures((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item));
+                          };
+                          return (
+                            <div key={feature.id} className="grid grid-cols-1 gap-4 rounded-2xl border border-brand-border bg-brand-surface-elevated/50 p-4 sm:grid-cols-[180px_1fr]">
+                              <SingleImageUploader value={feature.imageUrl || ''} onChange={(value) => updateFeature('imageUrl', value)} label={isPersian ? 'تصویر ویژگی' : 'Feature image'} aspectRatio="square" />
+                              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <Input dir="auto" label={isPersian ? 'عنوان فارسی' : 'Persian title'} labelPlacement="outside-top" value={feature.title} onValueChange={(value) => updateFeature('title', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                                <Input dir="auto" label={isPersian ? 'عنوان انگلیسی' : 'English title'} labelPlacement="outside-top" value={feature.titleEn} onValueChange={(value) => updateFeature('titleEn', value)} variant="bordered" radius="full" classNames={{ inputWrapper: 'h-11 px-4 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-full shadow-xs', input: 'text-sm font-semibold text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                                <Textarea dir="auto" label={isPersian ? 'توضیح فارسی' : 'Persian description'} labelPlacement="outside-top" minRows={2} value={feature.description} onValueChange={(value) => updateFeature('description', value)} variant="bordered" radius="lg" classNames={{ inputWrapper: 'p-3 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs', input: 'text-sm font-semibold leading-relaxed text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                                <Textarea dir="auto" label={isPersian ? 'توضیح انگلیسی' : 'English description'} labelPlacement="outside-top" minRows={2} value={feature.descriptionEn} onValueChange={(value) => updateFeature('descriptionEn', value)} variant="bordered" radius="lg" classNames={{ inputWrapper: 'p-3 bg-brand-surface border border-brand-border hover:border-brand-gold rounded-2xl shadow-xs', input: 'text-sm font-semibold leading-relaxed text-brand-text', label: 'text-xs font-bold text-brand-text mb-1' }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Toggles using HeroUI Switch */}
