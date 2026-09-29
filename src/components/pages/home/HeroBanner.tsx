@@ -7,7 +7,7 @@ import { IPageSection } from '@/common/interfaces';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@heroui/react';
-import { Sparkles, ArrowLeft, ArrowRight, ShieldCheck, Crown } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Crown } from 'lucide-react';
 import { PATHS } from '@/common/constants/PATHS';
 import { useTranslation } from '@/common/i18n';
 
@@ -89,17 +89,6 @@ export function HeroBanner({ section }: { section?: IPageSection }) {
             </Button>
           </div>
 
-          {/* Quick Perks Pill */}
-          <div className="pt-4 border-t border-[#2e3a2e] flex flex-wrap gap-4 text-xs font-semibold text-[#e6dcce]">
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-brand-gold" />
-              <span>{t.common.authenticityGuarantee}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-brand-gold" />
-              <span>{t.common.installment4x}</span>
-            </div>
-          </div>
         </div>
 
         {/* Right Hero Image Card */}

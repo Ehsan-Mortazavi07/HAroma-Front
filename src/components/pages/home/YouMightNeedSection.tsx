@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Sparkles, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardBody, Button } from '@heroui/react';
-import { IProduct } from '@/common/interfaces';
+import { IPageSection, IProduct } from '@/common/interfaces';
 import { ProductCard } from '@/components/common/ProductCard';
 import { PATHS } from '@/common/constants/PATHS';
 import { useTranslation } from '@/common/i18n';
@@ -12,9 +12,10 @@ import { useDraggableScroll } from '@/common/hooks/useDraggableScroll';
 
 interface YouMightNeedSectionProps {
   products: IProduct[];
+  section?: IPageSection;
 }
 
-export function YouMightNeedSection({ products }: YouMightNeedSectionProps) {
+export function YouMightNeedSection({ products, section }: YouMightNeedSectionProps) {
   const { t, isPersian, isRTL } = useTranslation();
 
   const {
@@ -24,6 +25,10 @@ export function YouMightNeedSection({ products }: YouMightNeedSectionProps) {
     handleScroll,
     dragHandlers,
   } = useDraggableScroll({ isRTL, friction: 0.88 });
+  const title = isPersian ? section?.title || 'پیشنهاد شگفت‌انگیز و منتخب' : section?.titleEn || t.home.curatedPicks;
+  const subtitle = isPersian
+    ? section?.subtitle || 'شاهکارهای اصیل عطر با تخفیف استثنایی و ضمانت اصالت ۱۰۰٪'
+    : section?.subtitleEn || t.home.curatedPicksSub;
 
   return (
     <section className="w-full">
@@ -36,7 +41,7 @@ export function YouMightNeedSection({ products }: YouMightNeedSectionProps) {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl sm:text-2xl font-black text-brand-text">
-                {isPersian ? 'پیشنهاد شگفت‌انگیز و منتخب' : t.home.curatedPicks}
+                {title}
               </h2>
               <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-brand-bronze text-[#f7f4ee] border border-brand-gold/40 shadow-xs">
                 <Sparkles className="w-3 h-3 text-brand-gold" />
@@ -44,9 +49,7 @@ export function YouMightNeedSection({ products }: YouMightNeedSectionProps) {
               </span>
             </div>
             <p className="text-xs text-brand-text-muted mt-0.5">
-              {isPersian
-                ? 'شاهکارهای اصیل عطر با تخفیف استثنایی و ضمانت اصالت ۱۰۰٪ فیزیکی'
-                : t.home.curatedPicksSub}
+              {subtitle}
             </p>
           </div>
         </div>

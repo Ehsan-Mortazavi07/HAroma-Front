@@ -117,12 +117,12 @@ export const getVipPlans = async (): Promise<IVipPlan[]> => {
   }
 };
 
-export const getPageSections = async (): Promise<IPageSection[]> => {
+export const getPageSections = async (): Promise<IPageSection[] | null> => {
   try {
     const res = await axiosInstance.get('/page-sections');
     return res.data || [];
   } catch {
-    return [];
+    return null;
   }
 };
 

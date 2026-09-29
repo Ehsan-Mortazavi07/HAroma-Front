@@ -2,20 +2,28 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Award, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Award, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button, Card, CardBody } from '@heroui/react';
-import { IProduct } from '@/common/interfaces';
+import { IPageSection, IProduct } from '@/common/interfaces';
 import { ProductCard } from '@/components/common/ProductCard';
 import { PATHS } from '@/common/constants/PATHS';
 import { useTranslation } from '@/common/i18n';
+import { useDraggableScroll } from '@/common/hooks/useDraggableScroll';
 
 interface WeeklyBestSellersProps {
   products: IProduct[];
+  section?: IPageSection;
 }
 
-export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
+export function WeeklyBestSellers({ products, section }: WeeklyBestSellersProps) {
   const { t, isPersian, isRTL } = useTranslation();
   const [activeTab, setActiveTab] = useState('all');
+  const { scrollRef, canScrollPrev, canScrollNext, handleScroll, dragHandlers } = useDraggableScroll({
+    isRTL,
+    friction: 0.88,
+  });
+  const title = isPersian ? section?.title || t.home.bestSellers : section?.titleEn || t.home.bestSellers;
+  const subtitle = isPersian ? section?.subtitle || t.home.bestSellersSub : section?.subtitleEn || t.home.bestSellersSub;
 
   const tabs = [
     { id: 'all', label: t.home.allCategories },
@@ -35,28 +43,56 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
   return (
     <section className="w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 sm:mb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 mb-4 sm:mb-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-brand-surface-elevated text-brand-gold flex items-center justify-center border border-brand-gold/30 shadow-xs">
+          <div className="w-10 h-10 shrink-0 rounded-2xl bg-brand-surface-elevated text-brand-gold flex items-center justify-center border border-brand-gold/30 shadow-xs">
             <Award className="w-5 h-5 text-brand-gold" />
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl font-black text-brand-text">
-              {t.home.bestSellers}
+              {title}
             </h2>
             <p className="text-xs text-brand-text-muted">
-              {t.home.bestSellersSub}
+              {subtitle}
             </p>
           </div>
         </div>
 
-        <Link
-          href={PATHS.PRODUCTS}
-          className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand-bronze dark:text-brand-gold hover:text-brand-bronze-dark dark:hover:text-brand-text transition-colors self-end sm:self-auto"
-        >
-          <span>{t.common.seeMore}</span>
-          {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-        </Link>
+        <div className="flex items-center justify-between gap-3 sm:justify-end">
+          <Link
+            href={PATHS.PRODUCTS}
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-brand-bronze dark:text-brand-gold hover:text-brand-bronze-dark dark:hover:text-brand-text transition-colors"
+          >
+            <span>{t.common.seeMore}</span>
+            {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+          </Link>
+          <div className="hidden sm:flex items-center gap-1.5">
+            <Button
+              isIconOnly
+              radius="full"
+              variant="flat"
+              size="sm"
+              aria-label={isPersian ? 'قبلی' : 'Previous'}
+              isDisabled={!canScrollPrev}
+              onPress={() => handleScroll('prev', 280)}
+              className="w-8 h-8 min-w-8 bg-brand-surface border border-brand-border/80 hover:border-brand-gold hover:bg-brand-surface-elevated text-brand-text disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
+            >
+              {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            </Button>
+            <Button
+              isIconOnly
+              radius="full"
+              variant="flat"
+              size="sm"
+              aria-label={isPersian ? 'بعدی' : 'Next'}
+              isDisabled={!canScrollNext}
+              onPress={() => handleScroll('next', 280)}
+              className="w-8 h-8 min-w-8 bg-brand-surface border border-brand-border/80 hover:border-brand-gold hover:bg-brand-surface-elevated text-brand-text disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
+            >
+              {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Filter Tabs */}
@@ -91,9 +127,17 @@ export function WeeklyBestSellers({ products }: WeeklyBestSellersProps) {
           </CardBody>
         </Card>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+        <div
+          ref={scrollRef}
+          {...dragHandlers}
+          style={{ touchAction: 'pan-y' }}
+          aria-label={title}
+          className="flex items-stretch gap-3 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory py-2 px-0.5 select-none cursor-grab active:cursor-grabbing sm:gap-4 lg:gap-5"
+        >
           {filteredProducts.map((product) => (
-            <ProductCard key={product._id} product={product} />
+            <div key={product._id} className="flex w-[min(78vw,236px)] shrink-0 snap-start flex-col sm:w-[230px] lg:w-[245px]">
+              <ProductCard product={product} />
+            </div>
           ))}
         </div>
       )}

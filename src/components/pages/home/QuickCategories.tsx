@@ -23,16 +23,17 @@ import {
   Compass,
   Wind,
 } from 'lucide-react';
-import { ICategory } from '@/common/interfaces';
+import { ICategory, IPageSection } from '@/common/interfaces';
 import { useTranslation } from '@/common/i18n';
 import { PATHS } from '@/common/constants/PATHS';
 import { useDraggableScroll } from '@/common/hooks/useDraggableScroll';
 
 interface QuickCategoriesProps {
   categories: ICategory[];
+  section?: IPageSection;
 }
 
-export function QuickCategories({ categories }: QuickCategoriesProps) {
+export function QuickCategories({ categories, section }: QuickCategoriesProps) {
   const { t, isPersian, isRTL } = useTranslation();
 
   const {
@@ -73,6 +74,8 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
         return <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#bfa27a]" />;
     }
   };
+  const title = isPersian ? section?.title || t.home.quickCategories : section?.titleEn || t.home.quickCategories;
+  const subtitle = isPersian ? section?.subtitle || t.home.quickCategoriesSub : section?.subtitleEn || t.home.quickCategoriesSub;
 
   return (
     <section className="w-full">
@@ -84,10 +87,10 @@ export function QuickCategories({ categories }: QuickCategoriesProps) {
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl font-black text-brand-text">
-              {t.home.quickCategories}
+              {title}
             </h2>
             <p className="text-xs text-brand-text-muted">
-              {t.home.quickCategoriesSub}
+              {subtitle}
             </p>
           </div>
         </div>
