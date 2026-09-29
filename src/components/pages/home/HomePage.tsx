@@ -4,7 +4,7 @@ import { HeroBanner } from './HeroBanner';
 import { TrustFeaturesBar } from './TrustFeaturesBar';
 import { QuickCategories } from './QuickCategories';
 import { YouMightNeedSection } from './YouMightNeedSection';
-import { PromoCardsArches } from './PromoCardsArches';
+import { CampaignBanners } from './CampaignBanners';
 import { WeeklyBestSellers } from './WeeklyBestSellers';
 import { VipClubBanner } from './VipClubBanner';
 
@@ -33,18 +33,18 @@ export function HomePage({
   };
 
   return (
-    <div className="min-h-screen space-y-12 sm:space-y-16 pb-16 pt-2 sm:pt-4">
+    <div className="space-y-14 pb-20 pt-4 sm:space-y-20 sm:pb-24 sm:pt-6">
       {isSectionVisible('hero_banner') && <HeroBanner />}
       <TrustFeaturesBar />
       {isSectionVisible('quick_categories') && <QuickCategories categories={categories} />}
-      {isSectionVisible('featured_perfumes') && (
-        <YouMightNeedSection products={displayFeatured.slice(0, 20)} />
-      )}
-      {isSectionVisible('promo_cards') && <PromoCardsArches />}
       {isSectionVisible('weekly_bestsellers') && (
         <WeeklyBestSellers
           products={bestSellers.length > 0 ? bestSellers : displayFeatured.slice(0, 12)}
         />
+      )}
+      {isSectionVisible('promo_cards') && <CampaignBanners />}
+      {isSectionVisible('featured_perfumes') && (
+        <YouMightNeedSection products={displayFeatured.slice(0, 20)} />
       )}
       {isSectionVisible('vip_club_banner') && <VipClubBanner />}
     </div>

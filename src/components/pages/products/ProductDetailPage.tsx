@@ -7,8 +7,6 @@ import {
   Star,
   Zap,
   ShieldCheck,
-  Crown,
-  Clock,
   CheckCircle2,
   Share2,
   ArrowRight,
@@ -18,7 +16,6 @@ import {
   Plus,
   Minus,
   Trash2,
-  Check,
   ChevronLeft,
   ChevronRight,
   ShoppingBag,
@@ -33,7 +30,7 @@ import { addToCart, updateQuantity, removeFromCart } from '@/stores/cart/cartSli
 import { VipBadge } from '@/components/common/VipBadge';
 import { ProductCard } from '@/components/common/ProductCard';
 import { useTranslation } from '@/common/i18n';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 interface ProductDetailPageProps {
   product: IProduct;
@@ -171,6 +168,7 @@ function translateAttributeValue(val: string): string {
 export function ProductDetailPage({ product, relatedProducts = [] }: ProductDetailPageProps) {
   const dispatch = useAppDispatch();
   const { t, isPersian } = useTranslation();
+  const reduceMotion = useReducedMotion();
   const user = useAppSelector((state) => state.auth.user);
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -398,23 +396,34 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
       </nav>
 
       {/* Main Product Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 lg:gap-10 bg-brand-surface p-3.5 sm:p-7 lg:p-10 rounded-2xl sm:rounded-3xl border border-brand-border/60 shadow-xs mb-8 sm:mb-12 items-start">
+      <div className="grid grid-cols-1 items-start gap-6 rounded-2xl border border-brand-border/60 bg-brand-surface p-3.5 shadow-xs sm:mb-12 sm:gap-10 sm:rounded-3xl sm:p-7 lg:grid-cols-12 lg:gap-12 lg:p-10 mb-8">
         {/* Left Column: Image Gallery & Thumbnails */}
         <div className="lg:col-span-5 space-y-3 sm:space-y-4 lg:sticky lg:top-24">
-          <div className="relative w-full aspect-square sm:aspect-[4/3] md:h-[450px] rounded-2xl sm:rounded-3xl overflow-hidden bg-brand-surface-elevated/70 border border-brand-border/60">
+            <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-brand-border/60 bg-brand-surface-elevated/70 sm:aspect-[4/3] sm:rounded-3xl md:h-[450px]">
             <button
               type="button"
               onClick={() => setIsImagePreviewOpen(true)}
               aria-label={isPersian ? 'نمایش بزرگ تصویر محصول' : 'Enlarge product image'}
               className="absolute inset-0 z-0 cursor-zoom-in"
             >
-              <Image
-                src={images[selectedImageIndex]}
-                alt={isPersian ? product.title : product.titleEn || product.title}
-                fill
-                priority
-                className="pointer-events-none object-contain sm:object-cover p-2.5 sm:p-0 transition-transform duration-300"
-              />
+              <AnimatePresence mode="sync" initial={false}>
+                <motion.div
+                  key={`${product._id}-${selectedImageIndex}`}
+                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 1.015 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
+                  className="absolute inset-0"
+                >
+                  <Image
+                    src={images[selectedImageIndex]}
+                    alt={isPersian ? product.title : product.titleEn || product.title}
+                    fill
+                    priority
+                    className="pointer-events-none object-contain p-2.5 sm:object-cover sm:p-0"
+                  />
+                </motion.div>
+              </AnimatePresence>
             </button>
 
             {/* Fast Delivery Ribbon */}
@@ -468,8 +477,8 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
         </div>
 
         {/* Right Column: Product Info & Actions */}
-        <div className="lg:col-span-7 space-y-4 sm:space-y-6">
-          <div>
+        <div className="flex flex-col gap-4 sm:gap-6 lg:col-span-7">
+          <div className="order-1">
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1.5">
               <span className="text-[11px] sm:text-xs font-bold text-brand-bronze">
                 {mainCategory
@@ -522,7 +531,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
           </div>
 
           {/* Ratings & Stock Status */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-semibold">
+          <div className="order-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-semibold">
             <div className="flex items-center gap-1 text-amber-500">
               <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
               <span className="font-extrabold text-xs sm:text-sm">
@@ -534,24 +543,30 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
               {isPersian ? 'دیدگاه' : 'reviews'})
             </span>
             <span className="text-brand-border">•</span>
-            <span
-              className={`text-[11px] sm:text-xs font-bold ${
-                isAvailable
-                  ? 'text-brand-bronze'
-                  : 'text-rose-600 dark:text-rose-400'
-              }`}
-            >
-              {isAvailable
-                ? isPersian
-                  ? `${t.productDetail.inStock} (${toPersianDigits(activeStockCount || 10)} عدد)`
-                  : `In Stock at Vault (${activeStockCount || 10} units)`
-                : t.common.outOfStock}
-            </span>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={`${selectedVariant?.id || 'product'}-${isAvailable}`}
+                initial={{ opacity: 0, y: reduceMotion ? 0 : 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: reduceMotion ? 0 : -4 }}
+                transition={{ duration: reduceMotion ? 0 : 0.18, ease: [0.22, 1, 0.36, 1] }}
+                aria-live="polite"
+                className={`text-[11px] font-bold sm:text-xs ${
+                  isAvailable ? 'text-brand-bronze' : 'text-rose-600 dark:text-rose-400'
+                }`}
+              >
+                {isAvailable
+                  ? isPersian
+                    ? `${t.productDetail.inStock} (${toPersianDigits(activeStockCount || 10)} عدد)`
+                    : `In Stock at Vault (${activeStockCount || 10} units)`
+                  : t.common.outOfStock}
+              </motion.span>
+            </AnimatePresence>
           </div>
 
           {/* Multi-Volume / Variant Selector (Mobile-Optimized Grid) */}
           {product.variants && product.variants.length > 0 && (
-            <div className="space-y-2.5 p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-brand-surface-elevated/80 border border-brand-border/60">
+            <div className="order-3 space-y-2.5 rounded-2xl border border-brand-border/60 bg-brand-surface-elevated/80 p-3.5 sm:rounded-3xl sm:p-5">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-black text-brand-text flex items-center gap-1.5">
                   <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-bronze" />
@@ -578,28 +593,41 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                       type="button"
                       disabled={isOutOfStock}
                       onClick={() => setSelectedVariant(v)}
-                      className={`relative w-full sm:w-auto min-h-[56px] sm:min-w-[135px] py-2 px-2.5 sm:py-3 sm:px-4 flex flex-col items-center justify-center text-center gap-0.5 rounded-xl sm:rounded-2xl border transition-all duration-200 cursor-pointer ${
+                      aria-pressed={isSelected}
+                      className={`relative isolate flex min-h-[56px] w-full flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl border px-2.5 py-2 text-center transition-[border-color,box-shadow] duration-300 ease-luxury motion-reduce:transition-none sm:min-w-[135px] sm:w-auto sm:rounded-2xl sm:px-4 sm:py-3 ${
                         isSelected
-                          ? 'bg-brand-gold text-[#141914] border-brand-gold shadow-md font-black ring-2 ring-brand-gold/40'
+                          ? 'border-brand-gold font-black shadow-md ring-2 ring-brand-gold/40'
                           : isOutOfStock
-                          ? 'opacity-40 line-through bg-[#f0eae0] dark:bg-[#181f18] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e] cursor-not-allowed'
-                          : 'bg-white dark:bg-[#202620] text-[#1d241d] dark:text-[#f7f4ee] border-[#e6dcce] dark:border-[#344034] hover:border-brand-gold'
+                          ? 'cursor-not-allowed border-brand-border bg-brand-surface-elevated text-brand-text-muted opacity-40 line-through'
+                          : 'border-brand-border bg-brand-surface text-brand-text hover:border-brand-gold/80 hover:shadow-xs'
                       }`}
                     >
+                      {isSelected && (
+                        <motion.span
+                          layoutId={`selected-variant-${product._id}`}
+                          aria-hidden="true"
+                          transition={
+                            reduceMotion
+                              ? { duration: 0 }
+                              : { type: 'spring', stiffness: 520, damping: 42 }
+                          }
+                          className="absolute inset-0 z-0 rounded-[inherit] bg-brand-gold"
+                        />
+                      )}
                       <span
-                        className={`leading-tight text-[11px] sm:text-xs ${
+                        className={`relative z-10 leading-tight text-[11px] transition-colors duration-200 sm:text-xs ${
                           isSelected
                             ? 'text-[#141914] font-black'
-                            : 'text-[#1d241d] dark:text-[#f7f4ee] font-bold'
+                            : 'text-brand-text font-bold'
                         }`}
                       >
                         {localizedTitle}
                       </span>
                       <span
-                        className={`text-[11px] sm:text-xs font-extrabold whitespace-nowrap mt-0.5 ${
+                        className={`relative z-10 mt-0.5 whitespace-nowrap text-[11px] font-extrabold transition-colors duration-200 sm:text-xs ${
                           isSelected
                             ? 'text-[#141914]'
-                            : 'text-[#9f815b] dark:text-[#d4be9b]'
+                            : 'text-brand-bronze dark:text-brand-gold'
                         }`}
                       >
                         {formatToman(vPrice, isPersian)}
@@ -612,43 +640,54 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
           )}
 
           {/* Pricing Box */}
-          <div className="p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl bg-brand-surface-elevated border border-brand-border/60 flex items-center justify-between gap-2">
-            <div>
-              <span className="text-[11px] sm:text-xs text-brand-text-muted block mb-0.5 sm:mb-1">
-                {isPersian ? 'قیمت برای مصرف‌کننده:' : 'Retail Price:'}
-              </span>
-              {hasDiscount ? (
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <span className="text-xs sm:text-sm text-brand-text-muted line-through">
-                    {formatToman(activePrice, isPersian)}
+          <div className="order-4 overflow-hidden rounded-2xl border border-brand-border/60 bg-brand-surface-elevated p-3.5 sm:rounded-3xl sm:p-5">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={selectedVariant?.id || 'base-price'}
+                initial={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: reduceMotion ? 0 : -6 }}
+                transition={{ duration: reduceMotion ? 0 : 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="flex min-h-[3.5rem] items-center justify-between gap-2"
+              >
+                <div>
+                  <span className="mb-0.5 block text-[11px] text-brand-text-muted sm:mb-1 sm:text-xs">
+                    {isPersian ? 'قیمت برای مصرف‌کننده:' : 'Retail Price:'}
                   </span>
-                  <span className="text-xl sm:text-3xl font-black text-brand-text">
-                    {formatToman(activeDiscountPrice, isPersian)}
-                  </span>
+                  {hasDiscount ? (
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <span className="text-xs text-brand-text-muted line-through sm:text-sm">
+                        {formatToman(activePrice, isPersian)}
+                      </span>
+                      <span className="text-xl font-black text-brand-text sm:text-3xl">
+                        {formatToman(activeDiscountPrice, isPersian)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xl font-black text-brand-text sm:text-3xl">
+                      {formatToman(activePrice, isPersian)}
+                    </span>
+                  )}
                 </div>
-              ) : (
-                <span className="text-xl sm:text-3xl font-black text-brand-text">
-                  {formatToman(activePrice, isPersian)}
-                </span>
-              )}
-            </div>
 
-            {hasDiscount && (
-              <span className="px-2.5 py-1 sm:px-3 sm:py-1 rounded-full bg-brand-bronze text-[#f7f4ee] text-[11px] sm:text-xs font-black shrink-0 shadow-xs">
-                {isPersian
-                  ? `${toPersianDigits(
-                      Math.round(((activePrice - (activeDiscountPrice || 0)) / activePrice) * 100),
-                    )}٪ تخفیف`
-                  : `${Math.round(
-                      ((activePrice - (activeDiscountPrice || 0)) / activePrice) * 100,
-                    )}% OFF`}
-              </span>
-            )}
+                {hasDiscount && (
+                  <span className="shrink-0 rounded-full bg-brand-bronze px-2.5 py-1 text-[11px] font-black text-[#f7f4ee] shadow-xs sm:px-3 sm:text-xs">
+                    {isPersian
+                      ? `${toPersianDigits(
+                          Math.round(((activePrice - (activeDiscountPrice || 0)) / activePrice) * 100),
+                        )}٪ تخفیف`
+                      : `${Math.round(
+                          ((activePrice - (activeDiscountPrice || 0)) / activePrice) * 100,
+                        )}% OFF`}
+                  </span>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Dynamic Attributes Table (Specifications Grid) */}
           {product.attributes && product.attributes.length > 0 && (
-            <div className="space-y-2">
+            <div className="order-6 space-y-2">
               <h4 className="font-bold text-xs text-brand-text">
                 {t.productDetail.specifications}
               </h4>
@@ -697,7 +736,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
           )}
 
           {/* Inline Action Buttons (Zero Layout Shift with Fluid Motion) */}
-          <div className="pt-2 sm:pt-4 border-t border-brand-border/60">
+          <div className="order-5 border-t border-brand-border/60 pt-2 sm:pt-4">
             <div className="relative w-full h-12 sm:h-14">
               <AnimatePresence mode="wait" initial={false}>
                 {cartQuantity > 0 ? (
@@ -800,7 +839,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
           </div>
 
           {/* Trust Highlights */}
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-1 text-[11px] sm:text-xs text-brand-text-muted">
+          <div className="order-7 grid grid-cols-2 gap-2 pt-1 text-[11px] text-brand-text-muted sm:gap-3 sm:text-xs">
             <div className="flex items-center gap-1.5 p-2 rounded-xl bg-brand-surface-elevated/50 sm:bg-transparent sm:p-0">
               <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-bronze shrink-0" />
               <span className="truncate">{t.common.authenticityGuarantee}</span>

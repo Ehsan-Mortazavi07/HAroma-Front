@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Crown, Sparkles, CheckCircle2, ArrowLeft, ArrowRight } from 'lucide-react';
@@ -10,18 +9,6 @@ import { useTranslation } from '@/common/i18n';
 
 export function VipClubBanner() {
   const { t, isPersian, isRTL } = useTranslation();
-  const sectionRef = React.useRef<HTMLElement>(null);
-  const [mousePos, setMousePos] = React.useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = React.useState(false);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    if (!sectionRef.current) return;
-    const rect = sectionRef.current.getBoundingClientRect();
-    setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
-  };
 
   const perks = [
     t.vip.permanentDiscountPerkSub,
@@ -32,20 +19,15 @@ export function VipClubBanner() {
 
   return (
     <section
-      ref={sectionRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#181f18] text-[#f7f4ee] p-6 sm:p-10 lg:p-12 shadow-2xl border border-brand-gold/30 group w-full"
     >
-      {/* Interactive Cursor-Tracking Golden Spotlight */}
+      {/* Static ambient light keeps the banner decorative without rerendering on pointer movement. */}
       <div
+        aria-hidden="true"
         className="pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out"
         style={{
-          opacity: isHovered ? 1 : 0.45,
-          background: isHovered
-            ? `radial-gradient(650px circle at ${mousePos.x}px ${mousePos.y}px, rgba(212, 190, 155, 0.22), rgba(159, 129, 91, 0.08) 40%, transparent 75%)`
-            : `radial-gradient(600px circle at 80% 30%, rgba(212, 190, 155, 0.14), transparent 70%)`,
+          opacity: 0.6,
+          background: 'radial-gradient(600px circle at 80% 30%, rgba(212, 190, 155, 0.14), transparent 70%)',
         }}
       />
 

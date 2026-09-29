@@ -1,48 +1,25 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 import { Button } from '@heroui/react';
 import { Sparkles, ArrowLeft, ArrowRight, ShieldCheck, Crown } from 'lucide-react';
 import { PATHS } from '@/common/constants/PATHS';
 import { useTranslation } from '@/common/i18n';
 
 export function HeroBanner() {
-  const { t, isPersian, isRTL } = useTranslation();
-  const sectionRef = React.useRef<HTMLElement>(null);
-  const spotlightRef = React.useRef<HTMLDivElement>(null);
-  const [isHovered, setIsHovered] = React.useState(false);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
-    if (!sectionRef.current || !spotlightRef.current) return;
-    const rect = sectionRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    spotlightRef.current.style.background = `radial-gradient(650px circle at ${x}px ${y}px, rgba(212, 190, 155, 0.22), rgba(159, 129, 91, 0.08) 40%, transparent 75%)`;
-  };
+  const { t, isRTL } = useTranslation();
 
   return (
     <section
-      ref={sectionRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        setIsHovered(false);
-        if (spotlightRef.current) {
-          spotlightRef.current.style.background = `radial-gradient(600px circle at 70% 35%, rgba(212, 190, 155, 0.14), transparent 70%)`;
-        }
-      }}
       className="relative overflow-hidden rounded-3xl bg-[#181f18] text-[#f7f4ee] p-5 sm:p-8 lg:p-12 shadow-2xl border border-brand-gold/30 group"
     >
-      {/* Interactive Cursor-Tracking Golden Spotlight - Hardware Accelerated without React Re-renders */}
+      {/* Static ambient light keeps the hero polished without pointer-driven updates. */}
       <div
-        ref={spotlightRef}
-        className="pointer-events-none absolute inset-0 transition-opacity duration-300 ease-out will-change-transform"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
         style={{
-          opacity: isHovered ? 1 : 0.45,
-          background: `radial-gradient(600px circle at 70% 35%, rgba(212, 190, 155, 0.14), transparent 70%)`,
+          background: 'radial-gradient(600px circle at 70% 35%, rgba(212, 190, 155, 0.14), transparent 70%)',
         }}
       />
 
