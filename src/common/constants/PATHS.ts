@@ -7,7 +7,6 @@ export const PATHS = {
   CHECKOUT: '/checkout',
   VIP: '/vip',
   PROFILE: '/profile',
-  PROFILE_ORDER: (orderId: string) => `/profile/orders/${encodeURIComponent(orderId)}`,
   SIGN_IN: '/auth/sign-in',
   SIGN_UP: '/auth/sign-up',
   FORBIDDEN: '/forbidden',

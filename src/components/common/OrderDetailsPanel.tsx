@@ -2,9 +2,11 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Calendar, CreditCard, ExternalLink, MapPin, Package, Truck } from 'lucide-react';
 import { IOrder } from '@/common/interfaces';
 import { PATHS } from '@/common/constants/PATHS';
+import { resolveMediaUrl } from '@/common/constants/URL';
 import { formatToman, toPersianDigits } from '@/common/utils';
 
 interface OrderDetailsPanelProps {
@@ -29,6 +31,31 @@ const safeHttpUrl = (value?: string) => {
     return undefined;
   }
 };
+
+function OrderItemImage({ src, alt }: { src?: string; alt: string }) {
+  const [hasError, setHasError] = React.useState(false);
+  const imageUrl = src ? resolveMediaUrl(src) : '';
+
+  return (
+    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-brand-border bg-brand-surface-elevated">
+      {imageUrl && !hasError ? (
+        <Image
+          src={imageUrl}
+          alt={alt}
+          fill
+          sizes="56px"
+          unoptimized
+          className="object-cover"
+          onError={() => setHasError(true)}
+        />
+      ) : (
+        <span className="flex h-full w-full items-center justify-center text-brand-text-muted" aria-hidden="true">
+          <Package className="h-5 w-5" />
+        </span>
+      )}
+    </div>
+  );
+}
 
 export function OrderDetailsPanel({ order, isPersian }: OrderDetailsPanelProps) {
   const address = order.deliveryAddress;
@@ -88,21 +115,24 @@ export function OrderDetailsPanel({ order, isPersian }: OrderDetailsPanelProps) 
           <div className="divide-y divide-brand-border/70">
             {(order.items || []).map((item, index) => (
               <div key={`${item.product}-${index}`} className="grid grid-cols-2 gap-x-3 gap-y-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_5rem_9rem_9rem] sm:items-center">
-                <div className="min-w-0 col-span-2 sm:col-span-1">
-                  <Link
-                    href={PATHS.PRODUCT(item.product)}
-                    className="truncate text-xs font-black text-brand-text underline-offset-4 transition-colors hover:text-brand-bronze hover:underline dark:hover:text-brand-gold"
-                  >
-                    {item.title}
-                  </Link>
-                  <div className="mt-0.5 text-[10px] font-medium text-brand-text-muted">
-                    {isPersian ? 'مشاهدهٔ اطلاعات و موجودی فعلی محصول' : 'View current product details and stock'}
-                  </div>
-                  {(item.selectedAttributes || item.selectedVariant?.title) && (
-                    <div className="mt-1 text-[11px] text-brand-text-muted">
-                      {item.selectedAttributes || (isPersian ? item.selectedVariant?.title : item.selectedVariant?.titleEn || item.selectedVariant?.title)}
+                <div className="col-span-2 flex min-w-0 items-center gap-3 sm:col-span-1">
+                  <OrderItemImage src={item.image} alt={item.title} />
+                  <div className="min-w-0">
+                    <Link
+                      href={PATHS.PRODUCT(item.product)}
+                      className="line-clamp-2 text-xs font-black text-brand-text underline-offset-4 transition-colors hover:text-brand-bronze hover:underline dark:hover:text-brand-gold"
+                    >
+                      {item.title}
+                    </Link>
+                    <div className="mt-0.5 text-[10px] font-medium text-brand-text-muted">
+                      {isPersian ? 'مشاهدهٔ اطلاعات و موجودی فعلی محصول' : 'View current product details and stock'}
                     </div>
-                  )}
+                    {(item.selectedAttributes || item.selectedVariant?.title) && (
+                      <div className="mt-1 text-[11px] text-brand-text-muted">
+                        {item.selectedAttributes || (isPersian ? item.selectedVariant?.title : item.selectedVariant?.titleEn || item.selectedVariant?.title)}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="text-xs font-bold text-brand-text-muted sm:text-center">
                   <span className="sm:hidden">{isPersian ? 'تعداد: ' : 'Qty: '}</span>

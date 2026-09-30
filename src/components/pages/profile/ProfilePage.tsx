@@ -3,6 +3,7 @@
 import { Input, Textarea } from '@/components/common/DirectionalFields';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { OrderDetailsPanel } from '@/components/common/OrderDetailsPanel';
 import {
   useRouter } from 'next/navigation';
 import {
@@ -123,6 +124,8 @@ export function ProfilePage() {
 
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
+  const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
 
   // Edit Profile Mode & Form State
   const [isEditing, setIsEditing] = useState(false);
@@ -1443,7 +1446,10 @@ export function ProfilePage() {
                             <Button
                               size="sm"
                               variant="flat"
-                              onPress={() => router.push(PATHS.PROFILE_ORDER(order._id))}
+                              onPress={() => {
+                                setSelectedOrder(order);
+                                setIsOrderDetailsOpen(true);
+                              }}
                               className="h-9 rounded-xl bg-brand-surface hover:bg-brand-gold/10 px-3 text-xs font-bold text-brand-bronze dark:text-brand-gold"
                             >
                               {isPersian ? 'جزئیات کامل سفارش' : 'Full order details'}
@@ -2446,6 +2452,56 @@ export function ProfilePage() {
         onClose={() => setResetModalOpen(false)}
         initialIdentifier={user?.phone || user?.email || user?.username || ''}
       />
+
+      {/* Order details stay in the profile context so closing the dialog returns to the same list position. */}
+      <Modal
+        isOpen={isOrderDetailsOpen}
+        onOpenChange={(open) => {
+          setIsOrderDetailsOpen(open);
+          if (!open) setSelectedOrder(null);
+        }}
+        backdrop="blur"
+        placement="center"
+        scrollBehavior="inside"
+        classNames={{
+          base: 'mx-3 max-h-[92vh] max-w-5xl overflow-hidden rounded-3xl border border-brand-border bg-brand-surface text-brand-text shadow-2xl',
+          header: 'border-b border-brand-border pb-3',
+          body: 'max-h-[72vh] overflow-y-auto py-5',
+          footer: 'border-t border-brand-border pt-3',
+          closeButton: 'text-brand-text-muted hover:bg-brand-surface-elevated',
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1 text-start">
+                <h3 className="text-base font-black text-brand-text">
+                  {selectedOrder && (isPersian
+                    ? `جزئیات سفارش #${toPersianDigits(selectedOrder.orderNumber)}`
+                    : `Order details #${selectedOrder.orderNumber}`)}
+                </h3>
+                {selectedOrder && (
+                  <span className="text-[11px] font-normal text-brand-text-muted">
+                    {new Date(selectedOrder.createdAt).toLocaleDateString(isPersian ? 'fa-IR' : 'en-US')}
+                  </span>
+                )}
+              </ModalHeader>
+              <ModalBody>
+                {selectedOrder && <OrderDetailsPanel order={selectedOrder} isPersian={isPersian} />}
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="flat"
+                  onPress={onClose}
+                  className="h-10 rounded-xl bg-brand-surface-elevated px-5 text-xs font-bold text-brand-text"
+                >
+                  {isPersian ? 'بستن' : 'Close'}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
 
       {/* Phone Verification Modal */}
       <Modal
