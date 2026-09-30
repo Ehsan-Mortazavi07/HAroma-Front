@@ -219,8 +219,16 @@ export const adminApi = {
     const res = await axiosInstance.get('/admin/orders/dashboard-stats');
     return res.data;
   },
-  updateOrderStatus: async (id: string, status: string, trackingCode?: string) => {
-    const res = await axiosInstance.patch(`/admin/orders/${id}/status`, { status, trackingCode });
+  updateOrderStatus: async (
+    id: string,
+    updates: {
+      status: string;
+      trackingCode?: string;
+      shippingProvider?: string;
+      trackingUrl?: string;
+    },
+  ) => {
+    const res = await axiosInstance.patch(`/admin/orders/${id}/status`, updates);
     return res.data;
   },
   bulkUpdateOrdersStatus: async (ids: string[], status: string) => {

@@ -44,6 +44,7 @@ import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
+import { OrderDetailsPanel } from '@/components/common/OrderDetailsPanel';
 import { useAppSelector } from '@/stores/hooks';
 
 export default function AdminOrdersPage() {
@@ -77,6 +78,8 @@ export default function AdminOrdersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [trackingCode, setTrackingCode] = useState('');
+  const [shippingProvider, setShippingProvider] = useState('');
+  const [trackingUrl, setTrackingUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   // Dropdown states
@@ -138,6 +141,8 @@ export default function AdminOrdersPage() {
     setSelectedOrder(order);
     setNewStatus(order.status);
     setTrackingCode(order.trackingCode || '');
+    setShippingProvider(order.shippingProvider || '');
+    setTrackingUrl(order.trackingUrl || '');
     setIsStatusDropdownOpen(false);
     setModalOpen(true);
   };
@@ -161,11 +166,12 @@ export default function AdminOrdersPage() {
 
     setSubmitting(true);
     try {
-      await adminApi.updateOrderStatus(
-        orderId,
-        newStatus,
-        trackingCode ? trackingCode.trim() : undefined,
-      );
+      await adminApi.updateOrderStatus(orderId, {
+        status: newStatus,
+        trackingCode: trackingCode.trim(),
+        shippingProvider: shippingProvider.trim(),
+        trackingUrl: trackingUrl.trim(),
+      });
       toast.success(isPersian ? 'وضعیت سفارش با موفقیت به‌روزرسانی شد.' : 'Order status updated successfully.');
       setModalOpen(false);
       loadOrders();
@@ -711,9 +717,9 @@ export default function AdminOrdersPage() {
         backdrop="blur"
         placement="center"
         classNames={{
-          base: "bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl max-w-xl mx-4 overflow-visible",
+          base: "bg-brand-surface border border-brand-border text-brand-text rounded-3xl shadow-2xl max-w-5xl mx-4 max-h-[92vh] overflow-hidden",
           header: "border-b border-brand-border pb-3",
-          body: "py-5 overflow-visible",
+          body: "py-5 max-h-[72vh] overflow-y-auto",
           footer: "border-t border-brand-border pt-3",
         }}
       >
@@ -733,46 +739,10 @@ export default function AdminOrdersPage() {
                 )}
               </ModalHeader>
 
-              <ModalBody className="space-y-4 overflow-visible">
+              <ModalBody className="space-y-5">
                 {selectedOrder && (
                   <>
-                    {/* Order Items List */}
-                    <div className="space-y-2">
-                      <h4 className="font-bold text-xs text-brand-text-muted">
-                        {isPersian ? 'اقلام سفارش داده شده:' : 'Ordered Items:'}
-                      </h4>
-                      <div className="p-3 rounded-2xl bg-brand-surface-elevated border border-brand-border divide-y divide-brand-border max-h-48 overflow-y-auto">
-                        {selectedOrder.items?.map((item: any, idx: number) => (
-                          <div key={idx} className="py-2 first:pt-0 last:pb-0 flex items-center justify-between text-xs">
-                            <div>
-                              <div className="font-bold text-brand-text">{item.title}</div>
-                              {item.selectedAttributes && (
-                                <div className="text-[10px] text-brand-text-muted">{item.selectedAttributes}</div>
-                              )}
-                            </div>
-                            <div className="text-right">
-                              <div className="font-bold text-brand-bronze dark:text-brand-gold">
-                                {isPersian
-                                  ? `${toPersianDigits(item.quantity)} × ${formatToman(item.price, isPersian)}`
-                                  : `${item.quantity} × ${formatToman(item.price, isPersian)}`}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Delivery Address Details */}
-                    {selectedOrder.deliveryAddress && (
-                      <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border text-xs space-y-1">
-                        <div className="font-bold text-brand-text">
-                          {isPersian ? 'تحویل‌گیرنده:' : 'Recipient:'} {selectedOrder.deliveryAddress.fullName} ({selectedOrder.deliveryAddress.phone})
-                        </div>
-                        <div className="text-brand-text-muted">
-                          {selectedOrder.deliveryAddress.province}، {selectedOrder.deliveryAddress.city} — {selectedOrder.deliveryAddress.addressDetail}
-                        </div>
-                      </div>
-                    )}
+                    <OrderDetailsPanel order={selectedOrder} isPersian={isPersian} />
 
                     {/* Status Update Form Elements */}
                     <div className="space-y-4 pt-2 border-t border-brand-border">
@@ -885,6 +855,39 @@ export default function AdminOrdersPage() {
                           label: 'text-xs font-bold text-brand-text mb-1',
                         }}
                       />
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Input
+                          dir="auto"
+                          label={isPersian ? 'شرکت حمل یا روش ارسال' : 'Carrier or shipping provider'}
+                          labelPlacement="outside-top"
+                          value={shippingProvider}
+                          onValueChange={setShippingProvider}
+                          placeholder={isPersian ? 'مثال: پست، تیپاکس' : 'e.g. National Post'}
+                          variant="bordered"
+                          radius="lg"
+                          classNames={{
+                            inputWrapper: 'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/70 focus-within:!border-brand-gold focus-within:!ring-2 focus-within:!ring-brand-gold/20 rounded-2xl shadow-xs transition-all',
+                            input: 'text-sm font-semibold text-brand-text',
+                            label: 'text-xs font-bold text-brand-text mb-1',
+                          }}
+                        />
+                        <Input
+                          dir="ltr"
+                          type="url"
+                          label={isPersian ? 'لینک پیگیری مرسوله' : 'Shipment tracking URL'}
+                          labelPlacement="outside-top"
+                          value={trackingUrl}
+                          onValueChange={setTrackingUrl}
+                          placeholder="https://..."
+                          variant="bordered"
+                          radius="lg"
+                          classNames={{
+                            inputWrapper: 'h-12 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/70 focus-within:!border-brand-gold focus-within:!ring-2 focus-within:!ring-brand-gold/20 rounded-2xl shadow-xs transition-all',
+                            input: 'text-sm font-mono font-semibold text-brand-text',
+                            label: 'text-xs font-bold text-brand-text mb-1',
+                          }}
+                        />
+                      </div>
                     </div>
                   </>
                 )}

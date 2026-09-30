@@ -56,6 +56,7 @@ import { BirthDatePicker } from '@/components/common/BirthDatePicker';
 import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import { PasswordInput } from '@/components/common/PasswordInput';
+import { OrderDetailsPanel } from '@/components/common/OrderDetailsPanel';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -135,6 +136,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   const [selectedEditTab, setSelectedEditTab] = useState<string>('identity');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [orders, setOrders] = useState<IOrder[]>([]);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [addressLoadFailed, setAddressLoadFailed] = useState(false);
@@ -280,6 +282,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       fetchUserOrders(currentUserData._id);
     } else {
       setOrders([]);
+      setExpandedOrderId(null);
       setSelectedTab('profile');
       setSelectedEditTab('identity');
       setShowPassword(false);
@@ -2102,47 +2105,77 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             {orders.map((order) => (
                               <div
                                 key={order._id}
-                                className="p-4 rounded-2xl border border-brand-border/60 bg-brand-surface-elevated/30 hover:bg-brand-surface-elevated/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                                className="p-4 rounded-2xl border border-brand-border/60 bg-brand-surface-elevated/30 hover:bg-brand-surface-elevated/50 transition-colors space-y-3"
                               >
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-mono font-bold text-xs text-brand-text">
-                                      #{order.orderNumber || order._id.slice(-8).toUpperCase()}
-                                    </span>
-                                    <Chip
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-mono font-bold text-xs text-brand-text">
+                                        #{order.orderNumber || order._id.slice(-8).toUpperCase()}
+                                      </span>
+                                      <Chip
+                                        size="sm"
+                                        variant="flat"
+                                        className={`text-[10px] font-black h-5 ${
+                                          order.status === 'delivered'
+                                            ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30'
+                                            : order.status === 'shipped'
+                                            ? 'bg-sky-500/15 text-sky-600 border-sky-500/30'
+                                            : order.status === 'cancelled'
+                                            ? 'bg-rose-500/15 text-rose-600 border-rose-500/30'
+                                            : 'bg-amber-500/15 text-amber-600 border-amber-500/30'
+                                        }`}
+                                      >
+                                        {order.status}
+                                      </Chip>
+                                    </div>
+                                    <div className="text-[11px] text-brand-text-muted flex items-center gap-3">
+                                      <span>{formatDateTime(order.createdAt)}</span>
+                                      <span>•</span>
+                                      <span>
+                                        {toPersianDigits(order.items?.length || 0)}{' '}
+                                        {isPersian ? 'قلم کالا' : 'items'}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center justify-between gap-3 sm:justify-end">
+                                    <div className="text-start sm:text-end shrink-0">
+                                      <span className="text-[11px] text-brand-text-muted block">
+                                        {isPersian ? 'مبلغ کل سفارش' : 'Total Amount'}
+                                      </span>
+                                      <span className="font-black text-sm text-brand-bronze dark:text-brand-gold">
+                                        {formatToman(order.total, isPersian)}
+                                      </span>
+                                    </div>
+                                    <Button
                                       size="sm"
                                       variant="flat"
-                                      className={`text-[10px] font-black h-5 ${
-                                        order.status === 'delivered'
-                                          ? 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30'
-                                          : order.status === 'shipped'
-                                          ? 'bg-sky-500/15 text-sky-600 border-sky-500/30'
-                                          : order.status === 'cancelled'
-                                          ? 'bg-rose-500/15 text-rose-600 border-rose-500/30'
-                                          : 'bg-amber-500/15 text-amber-600 border-amber-500/30'
-                                      }`}
+                                      aria-expanded={expandedOrderId === order._id}
+                                      onPress={() => setExpandedOrderId((current) => current === order._id ? null : order._id)}
+                                      endContent={<ChevronDown className={`h-4 w-4 transition-transform ${expandedOrderId === order._id ? 'rotate-180' : ''}`} />}
+                                      className="h-9 rounded-xl bg-brand-surface px-3 text-xs font-bold text-brand-bronze dark:text-brand-gold"
                                     >
-                                      {order.status}
-                                    </Chip>
-                                  </div>
-                                  <div className="text-[11px] text-brand-text-muted flex items-center gap-3">
-                                    <span>{formatDateTime(order.createdAt)}</span>
-                                    <span>•</span>
-                                    <span>
-                                      {toPersianDigits(order.items?.length || 0)}{' '}
-                                      {isPersian ? 'قلم کالا' : 'items'}
-                                    </span>
+                                      {expandedOrderId === order._id
+                                        ? (isPersian ? 'بستن جزئیات' : 'Hide details')
+                                        : (isPersian ? 'جزئیات کامل' : 'Full details')}
+                                    </Button>
                                   </div>
                                 </div>
-
-                                <div className="text-start sm:text-end shrink-0">
-                                  <span className="text-[11px] text-brand-text-muted block">
-                                    {isPersian ? 'مبلغ کل سفارش' : 'Total Amount'}
-                                  </span>
-                                  <span className="font-black text-sm text-brand-bronze dark:text-brand-gold">
-                                    {formatToman(order.total, isPersian)}
-                                  </span>
-                                </div>
+                                <AnimatePresence initial={false}>
+                                  {expandedOrderId === order._id && (
+                                    <motion.div
+                                      key={`order-details-${order._id}`}
+                                      initial={{ opacity: 0, y: 8 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: 6 }}
+                                      transition={{ duration: 0.18, ease: 'easeOut' }}
+                                      className="border-t border-brand-border pt-4"
+                                    >
+                                      <OrderDetailsPanel order={order} isPersian={isPersian} />
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
                               </div>
                             ))}
                           </div>

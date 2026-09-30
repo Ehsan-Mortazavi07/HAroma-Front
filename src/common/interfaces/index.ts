@@ -191,8 +191,16 @@ export interface IDeliveryAddress {
   province: string;
   city: string;
   postalCode?: string;
+  buildingNumber?: string;
+  unit?: string;
   addressDetail: string;
   description?: string;
+}
+
+export interface IOrderStatusHistoryEntry {
+  status: IOrder['status'];
+  changedAt: string;
+  note?: string;
 }
 
 export interface IOrder {
@@ -210,9 +218,16 @@ export interface IOrder {
   tax: number;
   total: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shippingMethod?: string;
+  shippingProvider?: string;
   trackingCode?: string;
+  trackingUrl?: string;
+  shippedAt?: string | null;
+  deliveredAt?: string | null;
+  statusHistory?: IOrderStatusHistoryEntry[];
   notes?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface IPageSection {
