@@ -230,6 +230,28 @@ export interface IOrder {
   updatedAt?: string;
 }
 
+export type IAdminOrderUpdate = Pick<
+  IOrder,
+  | 'orderNumber'
+  | 'items'
+  | 'deliveryAddress'
+  | 'paymentMethod'
+  | 'shippingFee'
+  | 'couponDiscount'
+  | 'vipDiscount'
+  | 'couponCode'
+  | 'tax'
+  | 'status'
+  | 'shippingMethod'
+  | 'shippingProvider'
+  | 'trackingCode'
+  | 'trackingUrl'
+  | 'shippedAt'
+  | 'deliveredAt'
+  | 'notes'
+  | 'createdAt'
+> & { statusNote?: string };
+
 export interface IPageSection {
   _id?: string;
   sectionKey: string;

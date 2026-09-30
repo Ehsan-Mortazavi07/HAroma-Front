@@ -1,5 +1,5 @@
 import axiosInstance from '../axiosInstance';
-import type { IPageSection, IPageSectionPriority, IUserAddress } from '../interfaces';
+import type { IAdminOrderUpdate, IPageSection, IPageSectionPriority, IUserAddress } from '../interfaces';
 
 export const adminApi = {
   // Products CRUD
@@ -213,6 +213,10 @@ export const adminApi = {
   },
   getOrder: async (id: string) => {
     const res = await axiosInstance.get(`/admin/orders/${id}`);
+    return res.data;
+  },
+  updateOrder: async (id: string, data: IAdminOrderUpdate) => {
+    const res = await axiosInstance.patch(`/admin/orders/${id}`, data);
     return res.data;
   },
   getDashboardStats: async () => {

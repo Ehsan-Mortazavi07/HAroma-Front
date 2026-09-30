@@ -45,6 +45,7 @@ import { useTranslation } from '@/common/i18n';
 import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { OrderDetailsPanel } from '@/components/common/OrderDetailsPanel';
+import { OrderEditForm } from '@/components/admin/OrderEditForm';
 import { useAppSelector } from '@/stores/hooks';
 
 export default function AdminOrdersPage() {
@@ -76,6 +77,7 @@ export default function AdminOrdersPage() {
   // View / Edit Modal
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [isEditingFullOrder, setIsEditingFullOrder] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [trackingCode, setTrackingCode] = useState('');
   const [shippingProvider, setShippingProvider] = useState('');
@@ -139,6 +141,7 @@ export default function AdminOrdersPage() {
 
   const openOrderModal = (order: IOrder) => {
     setSelectedOrder(order);
+    setIsEditingFullOrder(false);
     setNewStatus(order.status);
     setTrackingCode(order.trackingCode || '');
     setShippingProvider(order.shippingProvider || '');
@@ -712,6 +715,7 @@ export default function AdminOrdersPage() {
           setModalOpen(open);
           if (!open) {
             setIsStatusDropdownOpen(false);
+            setIsEditingFullOrder(false);
           }
         }}
         backdrop="blur"
@@ -728,9 +732,11 @@ export default function AdminOrdersPage() {
             <>
               <ModalHeader className="flex flex-col gap-1">
                 <h3 className="font-black text-base text-brand-text">
-                  {selectedOrder && (isPersian
-                    ? `جزئیات سفارش #${toPersianDigits(selectedOrder.orderNumber)}`
-                    : `Order Details #${selectedOrder.orderNumber}`)}
+                  {selectedOrder && (isEditingFullOrder
+                    ? (isPersian ? `ویرایش کامل سفارش #${toPersianDigits(selectedOrder.orderNumber)}` : `Edit order #${selectedOrder.orderNumber}`)
+                    : isPersian
+                      ? `جزئیات سفارش #${toPersianDigits(selectedOrder.orderNumber)}`
+                      : `Order Details #${selectedOrder.orderNumber}`)}
                 </h3>
                 {selectedOrder && (
                   <span className="text-[11px] text-brand-text-muted font-normal">
@@ -741,8 +747,33 @@ export default function AdminOrdersPage() {
 
               <ModalBody className="space-y-5">
                 {selectedOrder && (
+                  isEditingFullOrder ? (
+                    <OrderEditForm
+                      order={selectedOrder}
+                      isPersian={isPersian}
+                      onCancel={() => setIsEditingFullOrder(false)}
+                      onSaved={(updatedOrder) => {
+                        setSelectedOrder(updatedOrder);
+                        setOrders((previous) => previous.map((order) => order._id === updatedOrder._id ? updatedOrder : order));
+                        setIsEditingFullOrder(false);
+                        void loadOrders();
+                      }}
+                    />
+                  ) : (
                   <>
                     <OrderDetailsPanel order={selectedOrder} isPersian={isPersian} />
+
+                    {isAdmin && (
+                      <div className="flex justify-end border-t border-brand-border pt-4">
+                        <Button
+                          variant="flat"
+                          onPress={() => setIsEditingFullOrder(true)}
+                          className="h-10 rounded-xl border border-brand-gold/30 bg-brand-gold/10 px-4 text-xs font-black text-brand-bronze dark:text-brand-gold"
+                        >
+                          {isPersian ? 'ویرایش همه مشخصات سفارش' : 'Edit all order details'}
+                        </Button>
+                      </div>
+                    )}
 
                     {/* Status Update Form Elements */}
                     <div className="space-y-4 pt-2 border-t border-brand-border">
@@ -890,10 +921,11 @@ export default function AdminOrdersPage() {
                       </div>
                     </div>
                   </>
+                  )
                 )}
               </ModalBody>
 
-              <ModalFooter className="flex items-center justify-between">
+              {!isEditingFullOrder && <ModalFooter className="flex items-center justify-between">
                 {isAdmin && selectedOrder ? (
                   <Button
                     variant="light"
@@ -924,7 +956,7 @@ export default function AdminOrdersPage() {
                     {isPersian ? 'ثبت و ارسال پیامک به مشتری' : 'Update & Notify Customer'}
                   </Button>
                 </div>
-              </ModalFooter>
+              </ModalFooter>}
             </>
           )}
         </ModalContent>

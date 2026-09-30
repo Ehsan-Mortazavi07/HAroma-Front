@@ -57,6 +57,7 @@ import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import { PasswordInput } from '@/components/common/PasswordInput';
 import { OrderDetailsPanel } from '@/components/common/OrderDetailsPanel';
+import { OrderEditForm } from '@/components/admin/OrderEditForm';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -124,7 +125,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   user,
   initialMode = 'view',
   isPersian = true,
-  isAdmin = true,
+  isAdmin = false,
   isSelf = false,
   onUserUpdated,
   onToggleVip,
@@ -137,6 +138,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [addressLoadFailed, setAddressLoadFailed] = useState(false);
@@ -216,6 +218,8 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
     setSelectedTab('profile');
     setSelectedEditTab('identity');
+    setExpandedOrderId(null);
+    setEditingOrderId(null);
     setAddressLoadFailed(false);
     setFieldErrors({});
     setAddressToDelete(null);
@@ -283,6 +287,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     } else {
       setOrders([]);
       setExpandedOrderId(null);
+      setEditingOrderId(null);
       setSelectedTab('profile');
       setSelectedEditTab('identity');
       setShowPassword(false);
@@ -2172,7 +2177,34 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                       transition={{ duration: 0.18, ease: 'easeOut' }}
                                       className="border-t border-brand-border pt-4"
                                     >
-                                      <OrderDetailsPanel order={order} isPersian={isPersian} />
+                                      {editingOrderId === order._id ? (
+                                        <OrderEditForm
+                                          order={order}
+                                          isPersian={isPersian}
+                                          onCancel={() => setEditingOrderId(null)}
+                                          onSaved={(updatedOrder) => {
+                                            setOrders((previous) => previous.map((item) => item._id === updatedOrder._id ? updatedOrder : item));
+                                            setEditingOrderId(null);
+                                          }}
+                                        />
+                                      ) : (
+                                        <>
+                                          <OrderDetailsPanel order={order} isPersian={isPersian} />
+                                          {isAdmin && (
+                                            <div className="flex justify-end pt-4">
+                                              <Button
+                                                size="sm"
+                                                variant="flat"
+                                                onPress={() => setEditingOrderId(order._id)}
+                                                startContent={<Pencil className="h-3.5 w-3.5" />}
+                                                className="h-9 rounded-xl border border-brand-gold/30 bg-brand-gold/10 px-3 text-xs font-black text-brand-bronze dark:text-brand-gold"
+                                              >
+                                                {isPersian ? 'ویرایش همه مشخصات سفارش' : 'Edit all order details'}
+                                              </Button>
+                                            </div>
+                                          )}
+                                        </>
+                                      )}
                                     </motion.div>
                                   )}
                                 </AnimatePresence>
