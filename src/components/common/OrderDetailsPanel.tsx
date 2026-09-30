@@ -120,6 +120,8 @@ export function OrderDetailsPanel({ order, isPersian }: OrderDetailsPanelProps) 
                   <div className="min-w-0">
                     <Link
                       href={PATHS.PRODUCT(item.product)}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="line-clamp-2 text-xs font-black text-brand-text underline-offset-4 transition-colors hover:text-brand-bronze hover:underline dark:hover:text-brand-gold"
                     >
                       {item.title}
