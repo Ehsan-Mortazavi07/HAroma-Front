@@ -2279,7 +2279,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                         color="danger"
                         variant="light"
                         onPress={() => {
-                          handleModalClose();
                           onDeleteUser(currentUserData._id, currentUserData.fullName);
                         }}
                         startContent={<Trash2 className="w-4 h-4" />}

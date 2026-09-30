@@ -205,6 +205,7 @@ export interface IOrderStatusHistoryEntry {
 
 export interface IOrder {
   _id: string;
+  __v?: number;
   orderNumber: string;
   user: IUser;
   items: IOrderItem[];
@@ -230,27 +231,12 @@ export interface IOrder {
   updatedAt?: string;
 }
 
-export type IAdminOrderUpdate = Pick<
-  IOrder,
-  | 'orderNumber'
-  | 'items'
-  | 'deliveryAddress'
-  | 'paymentMethod'
-  | 'shippingFee'
-  | 'couponDiscount'
-  | 'vipDiscount'
-  | 'couponCode'
-  | 'tax'
-  | 'status'
-  | 'shippingMethod'
-  | 'shippingProvider'
-  | 'trackingCode'
-  | 'trackingUrl'
-  | 'shippedAt'
-  | 'deliveredAt'
-  | 'notes'
-  | 'createdAt'
-> & { statusNote?: string };
+export type IAdminOrderUpdate = Pick<IOrder, 'deliveryAddress'> & {
+  /** Version used to reject stale item indexes when an order changed elsewhere. */
+  version: number;
+  /** Indexes refer to the order's original item array; order items have no subdocument IDs. */
+  removeItemIndexes: number[];
+};
 
 export interface IPageSection {
   _id?: string;

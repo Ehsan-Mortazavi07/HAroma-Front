@@ -745,7 +745,7 @@ export default function AdminOrdersPage() {
                 )}
               </ModalHeader>
 
-              <ModalBody className="space-y-5">
+              <ModalBody className="admin-details-scroll min-h-0 space-y-5 overflow-y-auto">
                 {selectedOrder && (
                   isEditingFullOrder ? (
                     <OrderEditForm

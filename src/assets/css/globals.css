@@ -201,7 +201,7 @@
   border-top-right-radius: 9999px;
 }
 
-/* Complete scrollbar elimination globally across all browsers */
+/* Keep default scrollbars out of the storefront; admin surfaces opt back into slim scrollbars below. */
 html,
 body,
 * {
@@ -227,8 +227,8 @@ body::-webkit-scrollbar,
 
 .admin-details-scroll::-webkit-scrollbar {
   display: block !important;
-  width: 8px !important;
-  height: 8px !important;
+  width: 6px !important;
+  height: 6px !important;
 }
 
 .admin-details-scroll::-webkit-scrollbar-track {
@@ -240,6 +240,40 @@ body::-webkit-scrollbar,
   border-radius: 9999px !important;
   background-color: var(--brand-bronze) !important;
   background-clip: padding-box !important;
+}
+
+/* Admin tables and long panels keep a subtle scrollbar and support mouse dragging. */
+[data-admin-panel] * {
+  scrollbar-width: thin !important;
+  scrollbar-color: color-mix(in srgb, var(--brand-bronze) 72%, transparent) transparent !important;
+  -ms-overflow-style: auto !important;
+}
+
+[data-admin-panel] *::-webkit-scrollbar {
+  display: block !important;
+  width: 5px !important;
+  height: 5px !important;
+}
+
+[data-admin-panel] *::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+[data-admin-panel] *::-webkit-scrollbar-thumb {
+  border: 1px solid transparent !important;
+  border-radius: 9999px !important;
+  background-color: color-mix(in srgb, var(--brand-bronze) 72%, transparent) !important;
+  background-clip: padding-box !important;
+}
+
+[data-admin-panel] [data-admin-scroll-drag="true"] {
+  cursor: grab;
+}
+
+[data-admin-panel] .admin-scroll-dragging,
+[data-admin-panel] .admin-scroll-dragging * {
+  cursor: grabbing !important;
+  user-select: none !important;
 }
 
 .scrollbar-none {

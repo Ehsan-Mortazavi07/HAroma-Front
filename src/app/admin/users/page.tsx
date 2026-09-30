@@ -566,6 +566,10 @@ export default function AdminUsersPage() {
       toast.success(isPersian ? 'کاربر با موفقیت حذف شد.' : 'User deleted successfully.');
       setDeleteModalOpen(false);
       setUserToDelete(null);
+      if (selectedUserForDetails?._id === userToDelete.id) {
+        setDetailsModalOpen(false);
+        setSelectedUserForDetails(null);
+      }
       loadUsers();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || (isPersian ? 'خطا در حذف کاربر.' : 'Failed to delete user.'));
@@ -1000,7 +1004,6 @@ export default function AdminUsersPage() {
         onToggleVip={handleToggleVip}
         onRoleChange={handleRoleChange}
         onDeleteUser={(userId, userName) => {
-          setDetailsModalOpen(false);
           handleDeleteClick(userId, userName);
         }}
       />
