@@ -26,7 +26,6 @@ import {
   MapPin,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
   ArrowRight,
   ArrowLeft,
   Settings,
@@ -71,7 +70,6 @@ import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import { PasswordInput } from '@/components/common/PasswordInput';
 import { ResetPasswordModal } from '@/components/common/ResetPasswordModal';
-import { OrderDetailsPanel } from '@/components/common/OrderDetailsPanel';
 import { IOrder, IUserAddress } from '@/common/interfaces';
 import axiosInstance from '@/common/axiosInstance';
 import { useTranslation } from '@/common/i18n';
@@ -124,7 +122,6 @@ export function ProfilePage() {
   };
 
   const [orders, setOrders] = useState<IOrder[]>([]);
-  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Edit Profile Mode & Form State
@@ -1446,30 +1443,12 @@ export function ProfilePage() {
                             <Button
                               size="sm"
                               variant="flat"
-                              aria-expanded={expandedOrderId === order._id}
-                              onPress={() => setExpandedOrderId((current) => current === order._id ? null : order._id)}
-                              endContent={<ChevronDown className={`h-4 w-4 transition-transform ${expandedOrderId === order._id ? 'rotate-180' : ''}`} />}
+                              onPress={() => router.push(PATHS.PROFILE_ORDER(order._id))}
                               className="h-9 rounded-xl bg-brand-surface hover:bg-brand-gold/10 px-3 text-xs font-bold text-brand-bronze dark:text-brand-gold"
                             >
-                              {expandedOrderId === order._id
-                                ? (isPersian ? 'بستن جزئیات' : 'Hide details')
-                                : (isPersian ? 'جزئیات کامل سفارش' : 'Full order details')}
+                              {isPersian ? 'جزئیات کامل سفارش' : 'Full order details'}
                             </Button>
                           </div>
-                          <AnimatePresence initial={false}>
-                            {expandedOrderId === order._id && (
-                              <motion.div
-                                key={`details-${order._id}`}
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 6 }}
-                                transition={{ duration: 0.18, ease: 'easeOut' }}
-                                className="border-t border-brand-border pt-4"
-                              >
-                                <OrderDetailsPanel order={order} isPersian={isPersian} />
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
                         </div>
                       </Card>
                     ))}

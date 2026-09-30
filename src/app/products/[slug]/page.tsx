@@ -1,7 +1,8 @@
 import React from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { ProductDetailPage } from '@/components/pages/products/ProductDetailPage';
 import { getProductBySlug, getRelatedProducts } from '@/common/api/catalog';
+import { PATHS } from '@/common/constants/PATHS';
 
 interface ProductDetailRouteProps {
   params: Promise<{ slug: string }>;
@@ -24,6 +25,10 @@ export default async function ProductDetailRoute({ params }: ProductDetailRouteP
 
   if (!product) {
     notFound();
+  }
+
+  if (slug !== product.slug) {
+    redirect(PATHS.PRODUCT(product.slug));
   }
 
   const related = await getRelatedProducts(product._id);
