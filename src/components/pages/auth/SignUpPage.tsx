@@ -224,7 +224,7 @@ export function SignUpPage() {
                     isVisible={showPassword}
                     onToggleVisibility={() => setShowPassword((visible) => !visible)}
                     aria-label={t.auth.password}
-                    placeholder={isPersian ? 'حداقل ۱۲ کاراکتر' : 'At least 12 characters'}
+                    placeholder={isPersian ? 'حداقل ۸ کاراکتر' : 'At least 8 characters'}
                     value={values.password}
                     onChange={handleChange}
                     onBlur={handleBlur}

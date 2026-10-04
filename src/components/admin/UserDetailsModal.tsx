@@ -658,8 +658,8 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
         : 'Phone number must be an 11-digit Iranian mobile number (09...).';
     }
 
-    if (formData.password && formData.password.length < 12) {
-      errors.password = isPersian ? 'رمز عبور باید حداقل ۱۲ کاراکتر باشد.' : 'Password must be at least 12 characters long.';
+    if (formData.password && formData.password.length < 8) {
+      errors.password = isPersian ? 'رمز عبور باید حداقل ۸ کاراکتر باشد.' : 'Password must be at least 8 characters long.';
     }
 
     setFieldErrors(errors);
@@ -1435,12 +1435,12 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             value={formData.password}
                             onValueChange={(val) => {
                               setFormData((prev) => ({ ...prev, password: val }));
-                              if (!val || val.length >= 6) clearFieldError('password');
+                              if (!val || val.length >= 8) clearFieldError('password');
                             }}
                             placeholder={
                               isPersian
-                                ? 'کلمه عبور جدید را وارد کنید (حداقل ۱۲ کاراکتر)...'
-                                : 'Enter new password (min 12 characters)...'
+                                ? 'کلمه عبور جدید را وارد کنید (حداقل ۸ کاراکتر)...'
+                                : 'Enter new password (min 8 characters)...'
                             }
                             startContent={<Lock className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                             toggleAriaLabel={isPersian ? 'تغییر نمایش کلمه عبور' : 'Toggle password visibility'}

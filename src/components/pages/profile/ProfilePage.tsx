@@ -605,11 +605,11 @@ export function ProfilePage() {
         );
         return;
       }
-      if (newPassword.length < 12) {
+      if (newPassword.length < 8) {
         toast.error(
           isPersian
-            ? 'رمز عبور جدید باید حداقل ۱۲ کاراکتر باشد.'
-            : 'New password must be at least 12 characters.',
+            ? 'رمز عبور جدید باید حداقل ۸ کاراکتر باشد.'
+            : 'New password must be at least 8 characters.',
         );
         return;
       }
@@ -2255,8 +2255,8 @@ export function ProfilePage() {
                           aria-label={user?.hasPassword ? (isPersian ? 'کلمه عبور جدید' : 'New Password') : (isPersian ? 'کلمه عبور' : 'Password')}
                           placeholder={
                             user?.hasPassword
-                              ? (isPersian ? 'رمز عبور جدید (حداقل ۱۲ کاراکتر)' : 'New password (min 12 chars)')
-                              : (isPersian ? 'رمز عبور (حداقل ۱۲ کاراکتر)' : 'Password (min 12 chars)')
+                              ? (isPersian ? 'رمز عبور جدید (حداقل ۸ کاراکتر)' : 'New password (min 8 chars)')
+                              : (isPersian ? 'رمز عبور (حداقل ۸ کاراکتر)' : 'Password (min 8 chars)')
                           }
                           value={newPassword}
                           onValueChange={setNewPassword}

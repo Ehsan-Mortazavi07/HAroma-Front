@@ -222,11 +222,11 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
       return;
     }
 
-    if (formData.password.length < 12) {
+    if (formData.password.length < 8) {
       toast.error(
         isPersian
-          ? 'رمز عبور باید حداقل ۱۲ کاراکتر باشد.'
-          : 'Password must be at least 12 characters long.',
+          ? 'رمز عبور باید حداقل ۸ کاراکتر باشد.'
+          : 'Password must be at least 8 characters long.',
       );
       setSelectedTab('identity');
       return;
@@ -551,8 +551,8 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                           </span>
                           <p className="text-[11px] text-brand-text-muted mt-0.5">
                             {isPersian
-                              ? 'حداقل ۱۲ کاراکتر شامل حروف و اعداد، یا استفاده از دکمه تولید رمز امن'
-                              : 'At least 12 characters, or click generate for a secure random password'}
+                              ? 'حداقل ۸ کاراکتر، یا استفاده از دکمه تولید رمز امن'
+                              : 'At least 8 characters, or click generate for a secure random password'}
                           </p>
                         </div>
                       </div>
@@ -583,8 +583,8 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         isInvalid={touched.password && !formData.password}
                         placeholder={
                           isPersian
-                            ? 'کلمه عبور را وارد کنید (حداقل ۱۲ کاراکتر)...'
-                            : 'Enter password (min 12 characters)...'
+                            ? 'کلمه عبور را وارد کنید (حداقل ۸ کاراکتر)...'
+                            : 'Enter password (min 8 characters)...'
                         }
                         startContent={<Lock className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                         toggleAriaLabel={isPersian ? 'تغییر نمایش کلمه عبور' : 'Toggle password visibility'}

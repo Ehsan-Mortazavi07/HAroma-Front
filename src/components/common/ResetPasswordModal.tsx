@@ -300,9 +300,9 @@ export function ResetPasswordModal({
       return;
     }
 
-    if (!newPassword || newPassword.length < 12) {
+    if (!newPassword || newPassword.length < 8) {
       setNewPasswordError(
-        isPersian ? 'رمز عبور جدید باید حداقل ۱۲ کاراکتر باشد.' : 'Password must be at least 12 characters.',
+        isPersian ? 'رمز عبور جدید باید حداقل ۸ کاراکتر باشد.' : 'Password must be at least 8 characters.',
       );
       return;
     }
@@ -876,7 +876,7 @@ export function ResetPasswordModal({
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-brand-text flex items-center gap-1">
                           <Lock className="w-3.5 h-3.5 text-brand-bronze dark:text-brand-gold shrink-0" />
-                          <span>{isPersian ? 'رمز عبور جدید (حداقل ۱۲ کاراکتر):' : 'New Password (min 12 chars):'}</span>
+                          <span>{isPersian ? 'رمز عبور جدید (حداقل ۸ کاراکتر):' : 'New Password (min 8 chars):'}</span>
                         </label>
                         <PasswordInput
                           isPersian={isPersian}

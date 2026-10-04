@@ -80,7 +80,7 @@ export const getSignUpSchema = (isPersian = true) =>
       .email(isPersian ? 'فرمت ایمیل نامعتبر است.' : 'Invalid email address format.')
       .optional(),
     password: Yup.string()
-      .min(12, isPersian ? 'رمز عبور باید حداقل ۱۲ کاراکتر باشد.' : 'Password must be at least 12 characters.')
+      .min(8, isPersian ? 'رمز عبور باید حداقل ۸ کاراکتر باشد.' : 'Password must be at least 8 characters.')
       .required(isPersian ? 'وارد کردن رمز عبور ضروری است.' : 'Password is required.'),
     confirmPassword: Yup.string().when('password', {
       is: (val: string) => Boolean(val && val.length > 0),
