@@ -381,7 +381,7 @@ export default function AdminProductsPage() {
   const isAllSelected = products.length > 0 && selectedOnPageCount === products.length;
   const isIndeterminate = selectedOnPageCount > 0 && selectedOnPageCount < products.length;
   return (
-    <div className="space-y-6">
+    <div dir={isPersian ? 'rtl' : 'ltr'} className="space-y-6">
       {/* Page Title & Add Button */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}

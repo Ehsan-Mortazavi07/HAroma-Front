@@ -2,12 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Button } from '@heroui/react';
+import { Button, Select, SelectItem } from '@heroui/react';
 import { Check, Trash2, X } from 'lucide-react';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { Input, Textarea } from '@/components/common/DirectionalFields';
 import { adminApi } from '@/common/api/admin';
 import type { IAdminOrderUpdate, IOrder } from '@/common/interfaces';
+import { IRAN_PROVINCES } from '@/common/constants/iranProvinces';
 import { formatToman, toast } from '@/common/utils';
 
 const inputClassNames = {
@@ -37,6 +38,19 @@ export function OrderEditForm({ order, isPersian, onCancel, onSaved }: OrderEdit
 
   const updateAddress = (key: keyof IOrder['deliveryAddress'], value: string) => {
     setDeliveryAddress((previous) => ({ ...previous, [key]: value }));
+  };
+
+  const setProvince = (province: string) => {
+    setDeliveryAddress((previous) => {
+      const nextProvince = IRAN_PROVINCES.find((item) => item.name === province);
+      return {
+        ...previous,
+        province,
+        city: province === previous.province || nextProvince?.cities.includes(previous.city)
+          ? previous.city
+          : '',
+      };
+    });
   };
 
   const confirmRemoveItem = () => {
@@ -100,7 +114,7 @@ export function OrderEditForm({ order, isPersian, onCancel, onSaved }: OrderEdit
     label: string,
     value: string,
     onValueChange: (value: string) => void,
-    dir: 'auto' | 'ltr' | 'rtl' = 'auto',
+    dir: 'ltr' | 'rtl' = isPersian ? 'rtl' : 'ltr',
   ) => (
     <Input
       label={label}
@@ -117,6 +131,22 @@ export function OrderEditForm({ order, isPersian, onCancel, onSaved }: OrderEdit
   const visibleItems = (order.items || [])
     .map((item, index) => ({ item, index }))
     .filter(({ index }) => !removedIndexes.includes(index));
+  const provinceNames = IRAN_PROVINCES.map((province) => province.name);
+  const provinceOptions = deliveryAddress.province && !provinceNames.includes(deliveryAddress.province)
+    ? [deliveryAddress.province, ...provinceNames]
+    : provinceNames;
+  const selectedProvince = IRAN_PROVINCES.find((province) => province.name === deliveryAddress.province);
+  const cityOptions = selectedProvince?.cities || (deliveryAddress.city ? [deliveryAddress.city] : []);
+  const availableCityOptions = deliveryAddress.city && !cityOptions.includes(deliveryAddress.city)
+    ? [deliveryAddress.city, ...cityOptions]
+    : cityOptions;
+  const selectClassNames = {
+    trigger: 'min-h-11 h-11 px-3 bg-brand-surface border border-brand-border hover:border-brand-gold/70 data-[focus=true]:border-brand-gold rounded-xl shadow-none transition-colors',
+    value: 'text-xs font-semibold text-brand-text text-start',
+    label: 'text-[11px] font-bold text-brand-text-muted',
+    popoverContent: 'border border-brand-border bg-brand-surface text-brand-text rounded-xl shadow-xl',
+    listbox: 'p-1',
+  };
 
   return (
     <form dir={isPersian ? 'rtl' : 'ltr'} onSubmit={submit} className="space-y-5 text-start">
@@ -135,8 +165,41 @@ export function OrderEditForm({ order, isPersian, onCancel, onSaved }: OrderEdit
           {textField(isPersian ? 'نام تحویل‌گیرنده' : 'Recipient name', deliveryAddress.fullName, (value) => updateAddress('fullName', value))}
           {textField(isPersian ? 'شماره تماس' : 'Phone number', deliveryAddress.phone, (value) => updateAddress('phone', value), 'ltr')}
           {textField(isPersian ? 'ایمیل' : 'Email', deliveryAddress.email || '', (value) => updateAddress('email', value), 'ltr')}
-          {textField(isPersian ? 'استان' : 'Province', deliveryAddress.province, (value) => updateAddress('province', value))}
-          {textField(isPersian ? 'شهر' : 'City', deliveryAddress.city, (value) => updateAddress('city', value))}
+          <Select
+            dir={isPersian ? 'rtl' : 'ltr'}
+            label={isPersian ? 'استان' : 'Province'}
+            labelPlacement="outside-top"
+            selectedKeys={deliveryAddress.province ? new Set([deliveryAddress.province]) : new Set()}
+            onSelectionChange={(keys) => {
+              const selected = Array.from(keys)[0];
+              if (typeof selected === 'string') setProvince(selected);
+            }}
+            variant="bordered"
+            radius="lg"
+            classNames={selectClassNames}
+          >
+            {provinceOptions.map((province) => (
+              <SelectItem key={province} textValue={province}>{province}</SelectItem>
+            ))}
+          </Select>
+          <Select
+            dir={isPersian ? 'rtl' : 'ltr'}
+            label={isPersian ? 'شهر' : 'City'}
+            labelPlacement="outside-top"
+            selectedKeys={deliveryAddress.city ? new Set([deliveryAddress.city]) : new Set()}
+            onSelectionChange={(keys) => {
+              const selected = Array.from(keys)[0];
+              if (typeof selected === 'string') updateAddress('city', selected);
+            }}
+            isDisabled={!deliveryAddress.province}
+            variant="bordered"
+            radius="lg"
+            classNames={selectClassNames}
+          >
+            {availableCityOptions.map((city) => (
+              <SelectItem key={city} textValue={city}>{city}</SelectItem>
+            ))}
+          </Select>
           {textField(isPersian ? 'کد پستی' : 'Postal code', deliveryAddress.postalCode || '', (value) => updateAddress('postalCode', value), 'ltr')}
           {textField(isPersian ? 'پلاک' : 'Building number', deliveryAddress.buildingNumber || '', (value) => updateAddress('buildingNumber', value))}
           {textField(isPersian ? 'واحد' : 'Unit', deliveryAddress.unit || '', (value) => updateAddress('unit', value))}
@@ -144,6 +207,7 @@ export function OrderEditForm({ order, isPersian, onCancel, onSaved }: OrderEdit
             <Textarea
               label={isPersian ? 'نشانی دقیق' : 'Full address'}
               labelPlacement="outside-top"
+              dir={isPersian ? 'rtl' : 'ltr'}
               value={deliveryAddress.addressDetail}
               onValueChange={(value) => updateAddress('addressDetail', value)}
               minRows={2}
@@ -157,6 +221,7 @@ export function OrderEditForm({ order, isPersian, onCancel, onSaved }: OrderEdit
             <Textarea
               label={isPersian ? 'توضیحات نشانی' : 'Address notes'}
               labelPlacement="outside-top"
+              dir={isPersian ? 'rtl' : 'ltr'}
               value={deliveryAddress.description || ''}
               onValueChange={(value) => updateAddress('description', value)}
               minRows={2}

@@ -579,7 +579,7 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div dir={isPersian ? 'rtl' : 'ltr'} className="space-y-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -813,10 +813,12 @@ export default function AdminUsersPage() {
                       </TableCell>
 
                       <TableCell>
-                      <div
+                      <button
+                        type="button"
                         onClick={() => handleOpenDetails(user)}
-                        className="flex items-center gap-3 cursor-pointer group select-none"
+                        className="group flex w-full items-center gap-3 rounded-xl text-start cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold/60"
                         title={isPersian ? 'کلیک جهت مشاهده تمام جزئیات کاربر' : 'Click to view user details'}
+                        aria-label={isPersian ? `مشاهده جزئیات ${user.fullName || user.username}` : `View details for ${user.fullName || user.username}`}
                       >
                         <div className="w-10 h-10 rounded-2xl bg-brand-gold text-[#141914] font-black flex items-center justify-center text-xs shadow-sm shrink-0 group-hover:scale-105 transition-transform">
                           {user.fullName ? user.fullName.charAt(0) : (user.username ? user.username.charAt(0) : 'U')}
@@ -830,7 +832,7 @@ export default function AdminUsersPage() {
                             @{user.username}
                           </div>
                         </div>
-                      </div>
+                      </button>
                     </TableCell>
 
                     <TableCell>

@@ -22,6 +22,8 @@ import {
   ModalBody,
   ModalFooter,
   Skeleton,
+  Select,
+  SelectItem,
 } from '@heroui/react';
 import {
   ShoppingBag,
@@ -87,16 +89,11 @@ export default function AdminOrdersPage() {
   // Dropdown states
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
-  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-  const statusDropdownRef = useRef<HTMLDivElement>(null);
 
   // Outside click & Escape key handler for custom animated dropdowns
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent | PointerEvent) => {
       const target = e.target as Node;
-      if (statusDropdownRef.current && !statusDropdownRef.current.contains(target)) {
-        setIsStatusDropdownOpen(false);
-      }
       if (filterDropdownRef.current && !filterDropdownRef.current.contains(target)) {
         setIsFilterDropdownOpen(false);
       }
@@ -104,7 +101,6 @@ export default function AdminOrdersPage() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setIsStatusDropdownOpen(false);
         setIsFilterDropdownOpen(false);
       }
     };
@@ -146,7 +142,6 @@ export default function AdminOrdersPage() {
     setTrackingCode(order.trackingCode || '');
     setShippingProvider(order.shippingProvider || '');
     setTrackingUrl(order.trackingUrl || '');
-    setIsStatusDropdownOpen(false);
     setModalOpen(true);
   };
 
@@ -445,7 +440,7 @@ export default function AdminOrdersPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div dir={isPersian ? 'rtl' : 'ltr'} className="space-y-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -714,7 +709,6 @@ export default function AdminOrdersPage() {
         onOpenChange={(open) => {
           setModalOpen(open);
           if (!open) {
-            setIsStatusDropdownOpen(false);
             setIsEditingFullOrder(false);
           }
         }}
@@ -727,7 +721,7 @@ export default function AdminOrdersPage() {
           footer: "border-t border-brand-border pt-3",
         }}
       >
-        <ModalContent>
+        <ModalContent dir={isPersian ? 'rtl' : 'ltr'}>
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
@@ -761,108 +755,47 @@ export default function AdminOrdersPage() {
                     />
                   ) : (
                   <>
-                    <OrderDetailsPanel order={selectedOrder} isPersian={isPersian} />
-
-                    {isAdmin && (
-                      <div className="flex justify-end border-t border-brand-border pt-4">
+                    <OrderDetailsPanel
+                      order={selectedOrder}
+                      isPersian={isPersian}
+                      headerActions={isAdmin ? (
                         <Button
                           variant="flat"
                           onPress={() => setIsEditingFullOrder(true)}
-                          className="h-10 rounded-xl border border-brand-gold/30 bg-brand-gold/10 px-4 text-xs font-black text-brand-bronze dark:text-brand-gold"
+                          className="h-9 rounded-xl border border-brand-gold/30 bg-brand-gold/10 px-3 text-xs font-black text-brand-bronze dark:text-brand-gold"
                         >
-                          {isPersian ? 'ویرایش همه مشخصات سفارش' : 'Edit all order details'}
+                          {isPersian ? 'ویرایش گیرنده و اقلام' : 'Edit recipient and items'}
                         </Button>
-                      </div>
-                    )}
+                      ) : null}
+                    />
 
                     {/* Status Update Form Elements */}
                     <div className="space-y-4 pt-2 border-t border-brand-border">
-                      <div ref={statusDropdownRef} className="space-y-1.5 relative">
-                        <label className="block text-xs font-bold text-brand-text">
-                          {isPersian ? 'تغییر وضعیت سفارش' : 'Update Status'}
-                        </label>
-                        <div className="relative">
-                          {(() => {
-                            const currentOpt =
-                              orderStatusOptions.find((o) => o.key === newStatus) ||
-                              orderStatusOptions[0];
-                            const CurrentIcon = currentOpt.icon;
-                            return (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => setIsStatusDropdownOpen((prev) => !prev)}
-                                  className={`w-full h-12 px-4 rounded-2xl bg-brand-surface-elevated border transition-all flex items-center justify-between gap-2 text-right cursor-pointer select-none ${
-                                    isStatusDropdownOpen
-                                      ? 'border-brand-gold ring-2 ring-brand-gold/20 shadow-sm'
-                                      : 'border-brand-border hover:border-brand-gold/70'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2.5 truncate">
-                                    <CurrentIcon
-                                      className={`w-4 h-4 shrink-0 ${currentOpt.color}`}
-                                    />
-                                    <span className="text-xs font-bold text-brand-text truncate">
-                                      {isPersian ? currentOpt.labelFa : currentOpt.labelEn}
-                                    </span>
-                                  </div>
-                                  <ChevronDown
-                                    className={`w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 transition-transform duration-200 ${
-                                      isStatusDropdownOpen ? 'rotate-180 text-brand-gold' : 'opacity-70'
-                                    }`}
-                                  />
-                                </button>
-
-                                <AnimatePresence>
-                                  {isStatusDropdownOpen && (
-                                    <motion.div
-                                      initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                                      exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                                      className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 space-y-1 overscroll-contain origin-top"
-                                    >
-                                      {orderStatusOptions.map((item) => {
-                                        const isSelected = newStatus === item.key;
-                                        const Icon = item.icon;
-                                        return (
-                                          <button
-                                            key={item.key}
-                                            type="button"
-                                            onClick={() => {
-                                              setNewStatus(item.key);
-                                              setIsStatusDropdownOpen(false);
-                                            }}
-                                            className={`w-full text-right px-3.5 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
-                                              isSelected
-                                                ? 'bg-brand-gold text-[#141914]'
-                                                : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
-                                            }`}
-                                          >
-                                            <div className="flex items-center gap-2.5 truncate">
-                                              <Icon
-                                                className={`w-4 h-4 shrink-0 ${
-                                                  isSelected ? 'text-[#141914]' : item.color
-                                                }`}
-                                              />
-                                              <span className="truncate">
-                                                {isPersian ? item.labelFa : item.labelEn}
-                                              </span>
-                                            </div>
-                                            {isSelected && (
-                                              <span className="w-1.5 h-1.5 rounded-full bg-[#141914] shrink-0" />
-                                            )}
-                                          </button>
-                                        );
-                                      })}
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
-                              </>
-                            );
-                          })()}
-                        </div>
-                      </div>
+                      <Select
+                        dir={isPersian ? 'rtl' : 'ltr'}
+                        label={isPersian ? 'تغییر وضعیت سفارش' : 'Update Status'}
+                        labelPlacement="outside-top"
+                        selectedKeys={newStatus ? new Set([newStatus]) : new Set()}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0];
+                          if (typeof selected === 'string') setNewStatus(selected);
+                        }}
+                        variant="bordered"
+                        radius="lg"
+                        classNames={{
+                          trigger: 'h-12 min-h-12 rounded-2xl border-brand-border bg-brand-surface-elevated px-4 text-xs font-bold text-brand-text data-[focus=true]:border-brand-gold',
+                          value: 'text-xs font-bold text-brand-text text-start',
+                          label: 'text-xs font-bold text-brand-text',
+                          popoverContent: 'rounded-2xl border border-brand-border bg-brand-surface text-brand-text',
+                          listbox: 'p-1',
+                        }}
+                      >
+                        {orderStatusOptions.map((item) => (
+                          <SelectItem key={item.key} textValue={isPersian ? item.labelFa : item.labelEn}>
+                            {isPersian ? item.labelFa : item.labelEn}
+                          </SelectItem>
+                        ))}
+                      </Select>
 
                       <Input
                         dir="auto"

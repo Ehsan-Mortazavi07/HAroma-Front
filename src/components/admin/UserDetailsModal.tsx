@@ -10,6 +10,8 @@ import {
   ModalFooter,
   Button,
   Chip,
+  Select,
+  SelectItem,
   Tabs,
   Tab,
   Avatar,
@@ -56,7 +58,7 @@ import { BirthDatePicker } from '@/components/common/BirthDatePicker';
 import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import { PasswordInput } from '@/components/common/PasswordInput';
-import { OrderDetailsPanel } from '@/components/common/OrderDetailsPanel';
+import { getOrderStatusLabel, OrderDetailsPanel } from '@/components/common/OrderDetailsPanel';
 import { OrderEditForm } from '@/components/admin/OrderEditForm';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
@@ -139,6 +141,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
+  const [updatingOrderStatusId, setUpdatingOrderStatusId] = useState<string | null>(null);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [addressLoadFailed, setAddressLoadFailed] = useState(false);
@@ -304,6 +307,23 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       setOrders([]);
     } finally {
       setLoadingOrders(false);
+    }
+  };
+
+  const handleOrderStatusChange = async (order: IOrder, status: IOrder['status']) => {
+    if (!isAdmin || status === order.status || updatingOrderStatusId) return;
+
+    setUpdatingOrderStatusId(order._id);
+    try {
+      const updatedOrder = await adminApi.updateOrderStatus(order._id, { status }) as IOrder;
+      setOrders((previous) => previous.map((item) => (
+        item._id === order._id ? { ...item, ...updatedOrder, status } : item
+      )));
+      toast.success(isPersian ? 'وضعیت سفارش تغییر کرد.' : 'Order status updated.');
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || (isPersian ? 'تغییر وضعیت سفارش انجام نشد.' : 'Could not update order status.'));
+    } finally {
+      setUpdatingOrderStatusId(null);
     }
   };
 
@@ -2131,8 +2151,37 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                             : 'bg-amber-500/15 text-amber-600 border-amber-500/30'
                                         }`}
                                       >
-                                        {order.status}
+                                        {getOrderStatusLabel(order.status, isPersian)}
                                       </Chip>
+                                      {isAdmin && (
+                                        <Select
+                                          aria-label={isPersian ? 'تغییر وضعیت سفارش' : 'Change order status'}
+                                          dir={isPersian ? 'rtl' : 'ltr'}
+                                          size="sm"
+                                          selectedKeys={new Set([order.status])}
+                                          onSelectionChange={(keys) => {
+                                            const selected = Array.from(keys)[0] as IOrder['status'] | undefined;
+                                            if (selected) void handleOrderStatusChange(order, selected);
+                                          }}
+                                          isDisabled={updatingOrderStatusId !== null}
+                                          isLoading={updatingOrderStatusId === order._id}
+                                          variant="bordered"
+                                          radius="lg"
+                                          classNames={{
+                                            base: 'w-40',
+                                            trigger: 'h-8 min-h-8 rounded-lg border-brand-border bg-brand-surface px-2 text-[10px] font-bold text-brand-text',
+                                            value: 'text-[10px] font-bold text-brand-text text-start',
+                                            popoverContent: 'rounded-xl border border-brand-border bg-brand-surface text-brand-text',
+                                            listbox: 'p-1',
+                                          }}
+                                        >
+                                          {(['pending', 'processing', 'shipped', 'delivered', 'cancelled'] as const).map((status) => (
+                                            <SelectItem key={status} textValue={getOrderStatusLabel(status, isPersian)}>
+                                              {getOrderStatusLabel(status, isPersian)}
+                                            </SelectItem>
+                                          ))}
+                                        </Select>
+                                      )}
                                     </div>
                                     <div className="text-[11px] text-brand-text-muted flex items-center gap-3">
                                       <span>{formatDateTime(order.createdAt)}</span>
@@ -2189,9 +2238,10 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                         />
                                       ) : (
                                         <>
-                                          <OrderDetailsPanel order={order} isPersian={isPersian} />
-                                          {isAdmin && (
-                                            <div className="flex justify-end pt-4">
+                                          <OrderDetailsPanel
+                                            order={order}
+                                            isPersian={isPersian}
+                                            headerActions={isAdmin ? (
                                               <Button
                                                 size="sm"
                                                 variant="flat"
@@ -2199,10 +2249,10 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                                 startContent={<Pencil className="h-3.5 w-3.5" />}
                                                 className="h-9 rounded-xl border border-brand-gold/30 bg-brand-gold/10 px-3 text-xs font-black text-brand-bronze dark:text-brand-gold"
                                               >
-                                                {isPersian ? 'ویرایش همه مشخصات سفارش' : 'Edit all order details'}
+                                                {isPersian ? 'ویرایش گیرنده و اقلام' : 'Edit recipient and items'}
                                               </Button>
-                                            </div>
-                                          )}
+                                            ) : null}
+                                          />
                                         </>
                                       )}
                                     </motion.div>

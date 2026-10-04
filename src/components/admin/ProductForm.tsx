@@ -264,7 +264,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto pb-16">
+    <div dir={isRTL ? 'rtl' : 'ltr'} className="space-y-8 max-w-5xl mx-auto pb-16">
       {/* Top Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -298,7 +298,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
         enableReinitialize
       >
         {({ values, errors, touched, setFieldValue, handleSubmit: formikSubmit }) => (
-          <Form onSubmit={formikSubmit} className="space-y-8">
+          <Form dir={isRTL ? 'rtl' : 'ltr'} onSubmit={formikSubmit} className="space-y-8">
             {/* 1. Basic Info Section */}
             <Card className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
               <CardBody className="p-6 sm:p-8 space-y-5">
@@ -830,7 +830,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
           footer: 'border-t border-[#e6dcce] dark:border-[#2e3a2e] pt-3',
         }}
       >
-        <ModalContent>
+        <ModalContent dir={isRTL ? 'rtl' : 'ltr'}>
           {(onClose) => (
             <>
               <ModalHeader className="flex items-center gap-2">
@@ -955,7 +955,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
           footer: 'border-t border-[#e6dcce] dark:border-[#2e3a2e] pt-3',
         }}
       >
-        <ModalContent>
+        <ModalContent dir={isRTL ? 'rtl' : 'ltr'}>
           {(onClose) => (
             <>
               <ModalHeader className="flex items-center gap-2">

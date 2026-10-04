@@ -1,26 +1,29 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, CreditCard, ExternalLink, MapPin, Package, Truck } from 'lucide-react';
 import { IOrder } from '@/common/interfaces';
-import { PATHS } from '@/common/constants/PATHS';
 import { resolveMediaUrl } from '@/common/constants/URL';
 import { formatToman, toPersianDigits } from '@/common/utils';
 
 interface OrderDetailsPanelProps {
   order: IOrder;
   isPersian: boolean;
+  headerActions?: React.ReactNode;
 }
 
 const statusLabels: Record<IOrder['status'], { fa: string; en: string }> = {
-  pending: { fa: 'در انتظار تأیید', en: 'Pending' },
-  processing: { fa: 'در حال آماده‌سازی', en: 'Processing' },
-  shipped: { fa: 'ارسال شده', en: 'Shipped' },
-  delivered: { fa: 'تحویل شده', en: 'Delivered' },
+  pending: { fa: 'در انتظار پرداخت', en: 'Pending' },
+  processing: { fa: 'در حال پردازش', en: 'Processing' },
+  shipped: { fa: 'تحویل پست شده', en: 'Shipped' },
+  delivered: { fa: 'تحویل داده شده', en: 'Delivered' },
   cancelled: { fa: 'لغو شده', en: 'Cancelled' },
 };
+
+export function getOrderStatusLabel(status: IOrder['status'], isPersian: boolean) {
+  return statusLabels[status]?.[isPersian ? 'fa' : 'en'] || status;
+}
 
 const safeHttpUrl = (value?: string) => {
   if (!value) return undefined;
@@ -57,7 +60,7 @@ function OrderItemImage({ src, alt }: { src?: string; alt: string }) {
   );
 }
 
-export function OrderDetailsPanel({ order, isPersian }: OrderDetailsPanelProps) {
+export function OrderDetailsPanel({ order, isPersian, headerActions }: OrderDetailsPanelProps) {
   const address = order.deliveryAddress;
   const unknown = isPersian ? 'ثبت نشده' : 'Not recorded';
   const dateTime = (value?: string | null) => {
@@ -104,7 +107,10 @@ export function OrderDetailsPanel({ order, isPersian }: OrderDetailsPanelProps) 
   return (
     <div dir={isPersian ? 'rtl' : 'ltr'} className="space-y-5 text-start">
       <section className="space-y-3">
-        <SectionTitle icon={Package}>{isPersian ? 'اقلام سفارش' : 'Order items'}</SectionTitle>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <SectionTitle icon={Package}>{isPersian ? 'اقلام سفارش' : 'Order items'}</SectionTitle>
+          {headerActions}
+        </div>
         <div className="overflow-hidden rounded-2xl border border-brand-border bg-brand-surface">
           <div className="hidden grid-cols-[minmax(0,1fr)_5rem_9rem_9rem] gap-3 border-b border-brand-border bg-brand-surface-elevated/60 px-4 py-2.5 text-[11px] font-black text-brand-text-muted sm:grid">
             <span>{isPersian ? 'محصول' : 'Product'}</span>
@@ -118,17 +124,9 @@ export function OrderDetailsPanel({ order, isPersian }: OrderDetailsPanelProps) 
                 <div className="col-span-2 flex min-w-0 items-center gap-3 sm:col-span-1">
                   <OrderItemImage src={item.image} alt={item.title} />
                   <div className="min-w-0">
-                    <Link
-                      href={PATHS.PRODUCT(item.product)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="line-clamp-2 text-xs font-black text-brand-text underline-offset-4 transition-colors hover:text-brand-bronze hover:underline dark:hover:text-brand-gold"
-                    >
+                    <p className="line-clamp-2 text-xs font-black text-brand-text">
                       {item.title}
-                    </Link>
-                    <div className="mt-0.5 text-[10px] font-medium text-brand-text-muted">
-                      {isPersian ? 'مشاهدهٔ اطلاعات و موجودی فعلی محصول' : 'View current product details and stock'}
-                    </div>
+                    </p>
                     {(item.selectedAttributes || item.selectedVariant?.title) && (
                       <div className="mt-1 text-[11px] text-brand-text-muted">
                         {item.selectedAttributes || (isPersian ? item.selectedVariant?.title : item.selectedVariant?.titleEn || item.selectedVariant?.title)}
@@ -169,7 +167,7 @@ export function OrderDetailsPanel({ order, isPersian }: OrderDetailsPanelProps) 
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-brand-border/70 bg-brand-surface-elevated/50 px-3.5 py-3 text-xs">
           <span className="font-bold text-brand-text-muted">{isPersian ? 'وضعیت فعلی:' : 'Current status:'}</span>
           <span className="rounded-full border border-brand-gold/30 bg-brand-gold/10 px-2.5 py-1 font-black text-brand-bronze dark:text-brand-gold">
-            {statusLabels[order.status]?.[isPersian ? 'fa' : 'en'] || order.status}
+            {getOrderStatusLabel(order.status, isPersian)}
           </span>
         </div>
         {history.length > 0 && (
@@ -177,7 +175,7 @@ export function OrderDetailsPanel({ order, isPersian }: OrderDetailsPanelProps) 
             {history.map((entry, index) => (
               <li key={`${entry.status}-${entry.changedAt}-${index}`} className="flex flex-wrap items-center justify-between gap-2 text-xs">
                 <span className="font-bold text-brand-text">
-                  {statusLabels[entry.status]?.[isPersian ? 'fa' : 'en'] || entry.status}
+                  {getOrderStatusLabel(entry.status, isPersian)}
                   {entry.note ? <span className="font-normal text-brand-text-muted"> — {entry.note}</span> : null}
                 </span>
                 <time className="text-brand-text-muted">{dateTime(entry.changedAt)}</time>

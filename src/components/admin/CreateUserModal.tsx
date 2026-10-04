@@ -350,7 +350,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
         closeButton: 'hover:bg-brand-gold/15 active:bg-brand-gold/25 text-brand-text-muted hover:text-brand-text rounded-full p-2 top-5 right-5',
       }}
     >
-      <ModalContent>
+      <ModalContent dir={isPersian ? 'rtl' : 'ltr'}>
         {() => (
           <>
             {/* Modal Header */}
