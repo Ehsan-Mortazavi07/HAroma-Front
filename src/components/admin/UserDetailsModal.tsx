@@ -64,6 +64,7 @@ import { OrderStatusSelect } from '@/components/admin/OrderStatusSelect';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { generateSecurePassword } from '@/common/utils/secureRandom';
 
 export interface UserDetailsModalProps {
   isOpen: boolean;
@@ -406,11 +407,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   };
 
   const generateRandomPassword = () => {
-    const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*';
-    let pwd = '';
-    for (let i = 0; i < 12; i++) {
-      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    const pwd = generateSecurePassword(16);
     setFormData((prev) => ({ ...prev, password: pwd }));
     setShowPassword(true);
     toast.success(isPersian ? 'رمز عبور تصادفی امن تولید شد.' : 'Strong random password generated.');
@@ -661,8 +658,8 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
         : 'Phone number must be an 11-digit Iranian mobile number (09...).';
     }
 
-    if (formData.password && formData.password.length < 6) {
-      errors.password = isPersian ? 'رمز عبور باید حداقل ۶ کاراکتر باشد.' : 'Password must be at least 6 characters long.';
+    if (formData.password && formData.password.length < 12) {
+      errors.password = isPersian ? 'رمز عبور باید حداقل ۱۲ کاراکتر باشد.' : 'Password must be at least 12 characters long.';
     }
 
     setFieldErrors(errors);
@@ -1442,8 +1439,8 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                             }}
                             placeholder={
                               isPersian
-                                ? 'کلمه عبور جدید را وارد کنید (حداقل ۶ کاراکتر)...'
-                                : 'Enter new password (min 6 characters)...'
+                                ? 'کلمه عبور جدید را وارد کنید (حداقل ۱۲ کاراکتر)...'
+                                : 'Enter new password (min 12 characters)...'
                             }
                             startContent={<Lock className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                             toggleAriaLabel={isPersian ? 'تغییر نمایش کلمه عبور' : 'Toggle password visibility'}

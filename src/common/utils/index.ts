@@ -1,33 +1,4 @@
-import Cookies from 'js-cookie';
-
-export const TOKEN_KEY = 'hatefaroma_token';
-export const USER_KEY = 'hatefaroma_user';
 export const CART_KEY = 'hatefaroma_cart';
-
-export const storage = {
-  getToken: () => Cookies.get(TOKEN_KEY) || null,
-  setToken: (token: string) => Cookies.set(TOKEN_KEY, token, { expires: 7 }),
-  removeToken: () => Cookies.remove(TOKEN_KEY),
-
-  getUser: () => {
-    try {
-      const user = localStorage.getItem(USER_KEY);
-      return user ? JSON.parse(user) : null;
-    } catch {
-      return null;
-    }
-  },
-  setUser: (user: any) => {
-    try {
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-    } catch {}
-  },
-  removeUser: () => {
-    try {
-      localStorage.removeItem(USER_KEY);
-    } catch {}
-  },
-};
 
 export function toPersianDigits(n: number | string | undefined | null): string {
   if (n === undefined || n === null) return '';

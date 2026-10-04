@@ -11,6 +11,7 @@ export function AdminGuardClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const isLoading = useAppSelector((state) => state.auth.isLoading);
   const { isPersian } = useTranslation();
 
   const hasAdminPanelRole = isAuthenticated && (user?.role === 'admin' || user?.role === 'editor');
@@ -20,12 +21,12 @@ export function AdminGuardClient({ children }: { children: React.ReactNode }) {
   const isAuthorized = hasAdminPanelRole && !isRestrictedForEditor;
 
   useEffect(() => {
-    if (!isAuthorized) {
+    if (!isLoading && !isAuthorized) {
       router.replace(PATHS.FORBIDDEN);
     }
-  }, [isAuthorized, router]);
+  }, [isAuthorized, isLoading, router]);
 
-  if (!isAuthorized) {
+  if (isLoading || !isAuthorized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#141914] text-[#f7f4ee]">
         <div className="flex flex-col items-center gap-3">

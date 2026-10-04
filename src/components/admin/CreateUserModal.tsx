@@ -42,6 +42,7 @@ import { PasswordInput } from '@/components/common/PasswordInput';
 import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { motion, AnimatePresence } from 'framer-motion';
+import { generateSecurePassword } from '@/common/utils/secureRandom';
 
 export interface CreateUserModalProps {
   isOpen: boolean;
@@ -158,11 +159,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
   }, [isOpen]);
 
   const generateRandomPassword = () => {
-    const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*';
-    let pwd = '';
-    for (let i = 0; i < 12; i++) {
-      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    const pwd = generateSecurePassword(16);
     setFormData((prev) => ({ ...prev, password: pwd }));
     setShowPassword(true);
     toast.success(isPersian ? 'کلمه عبور تصادفی ایجاد شد.' : 'Random secure password generated.');
@@ -225,11 +222,11 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
       return;
     }
 
-    if (formData.password.length < 6) {
+    if (formData.password.length < 12) {
       toast.error(
         isPersian
-          ? 'رمز عبور باید حداقل ۶ کاراکتر باشد.'
-          : 'Password must be at least 6 characters long.',
+          ? 'رمز عبور باید حداقل ۱۲ کاراکتر باشد.'
+          : 'Password must be at least 12 characters long.',
       );
       setSelectedTab('identity');
       return;
@@ -554,8 +551,8 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                           </span>
                           <p className="text-[11px] text-brand-text-muted mt-0.5">
                             {isPersian
-                              ? 'حداقل ۶ کاراکتر شامل حروف و اعداد، یا استفاده از دکمه تولید رمز امن'
-                              : 'At least 6 characters, or click generate for a secure random password'}
+                              ? 'حداقل ۱۲ کاراکتر شامل حروف و اعداد، یا استفاده از دکمه تولید رمز امن'
+                              : 'At least 12 characters, or click generate for a secure random password'}
                           </p>
                         </div>
                       </div>
@@ -586,8 +583,8 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                         isInvalid={touched.password && !formData.password}
                         placeholder={
                           isPersian
-                            ? 'کلمه عبور را وارد کنید (حداقل ۶ کاراکتر)...'
-                            : 'Enter password (min 6 characters)...'
+                            ? 'کلمه عبور را وارد کنید (حداقل ۱۲ کاراکتر)...'
+                            : 'Enter password (min 12 characters)...'
                         }
                         startContent={<Lock className="w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 me-3" />}
                         toggleAriaLabel={isPersian ? 'تغییر نمایش کلمه عبور' : 'Toggle password visibility'}

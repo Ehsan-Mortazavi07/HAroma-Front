@@ -58,8 +58,8 @@ export const getSignUpSchema = (isPersian = true) =>
     password: Yup.string()
       .test(
         'valid-password',
-        isPersian ? 'رمز عبور باید حداقل ۶ کاراکتر باشد.' : 'Password must be at least 6 characters.',
-        (val) => !val || val.length >= 6,
+        isPersian ? 'رمز عبور باید حداقل ۱۲ کاراکتر باشد.' : 'Password must be at least 12 characters.',
+        (val) => !val || val.length >= 12,
       )
       .optional(),
     confirmPassword: Yup.string().when('password', {

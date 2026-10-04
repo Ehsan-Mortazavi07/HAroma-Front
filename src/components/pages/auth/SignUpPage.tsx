@@ -31,7 +31,7 @@ import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { setAuth } from '@/stores/auth/authSlice';
 import { getSignUpSchema } from '@/common/validators';
 import { PATHS } from '@/common/constants/PATHS';
-import { toast, toEnglishDigits, toPersianDigits, getApiErrorMessage, storage } from '@/common/utils';
+import { toast, toEnglishDigits, toPersianDigits, getApiErrorMessage } from '@/common/utils';
 import axiosInstance from '@/common/axiosInstance';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
@@ -48,7 +48,7 @@ export function SignUpPage() {
 
   // If already logged in, redirect to profile
   useEffect(() => {
-    if (isAuthenticated || (typeof window !== 'undefined' && storage.getToken())) {
+    if (isAuthenticated) {
       router.replace(PATHS.PROFILE);
     }
   }, [isAuthenticated, router]);
@@ -262,10 +262,7 @@ export function SignUpPage() {
       });
 
       dispatch(
-        setAuth({
-          user: res.data.user,
-          token: res.data.accessToken,
-        }),
+        setAuth({ user: res.data.user }),
       );
 
       toast.success(
@@ -283,7 +280,7 @@ export function SignUpPage() {
     }
   };
 
-  if (isAuthenticated || (typeof window !== 'undefined' && storage.getToken())) {
+  if (isAuthenticated) {
     return (
       <div className="w-full min-h-[50vh] flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-brand-gold border-t-transparent animate-spin" />

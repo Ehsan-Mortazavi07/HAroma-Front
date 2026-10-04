@@ -278,7 +278,7 @@ export function CheckoutPage() {
   };
 
   const [isEditingAddress, setIsEditingAddress] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod' | 'installment'>('online');
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod' | 'installment'>('cod');
   const [isStoreReviewOpen, setIsStoreReviewOpen] = useState(true);
 
   // Promo Code / Coupons
@@ -418,6 +418,7 @@ export function CheckoutPage() {
             selectedAttributes: item.selectedVariant
               ? getLocalizedVariantTitle(item.selectedVariant.title, isPersian)
               : item.selectedAttributes || '',
+            variantId: item.selectedVariant?.id,
           };
         }),
         deliveryAddress,
@@ -970,8 +971,8 @@ export function CheckoutPage() {
 
             <div className="space-y-2.5">
               <div
-                onClick={() => setPaymentMethod('online')}
-                className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
+                aria-disabled="true"
+                className={`flex items-center justify-between p-4 rounded-2xl border opacity-60 cursor-not-allowed ${
                   paymentMethod === 'online'
                     ? 'border-brand-gold bg-brand-surface-elevated shadow-xs'
                     : 'border-brand-border hover:border-brand-gold/40'
@@ -981,15 +982,16 @@ export function CheckoutPage() {
                   <input
                     type="radio"
                     checked={paymentMethod === 'online'}
-                    onChange={() => setPaymentMethod('online')}
-                    className="w-4 h-4 accent-brand-gold cursor-pointer"
+                    disabled
+                    readOnly
+                    className="w-4 h-4 accent-brand-gold cursor-not-allowed"
                   />
                   <div>
                     <span className="font-bold text-xs text-brand-text block">
                       {t.checkout.onlinePayment}
                     </span>
                     <span className="text-[11px] text-brand-text-muted">
-                      {isPersian ? 'متصل به درگاه مستقیم شاپرک / زرین‌پال' : 'Direct Shaparak Payment Gateway'}
+                      {isPersian ? 'به‌زودی فعال می‌شود' : 'Coming soon'}
                     </span>
                   </div>
                 </div>
@@ -997,8 +999,8 @@ export function CheckoutPage() {
               </div>
 
               <div
-                onClick={() => setPaymentMethod('installment')}
-                className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition-all ${
+                aria-disabled="true"
+                className={`flex items-center justify-between p-4 rounded-2xl border opacity-60 cursor-not-allowed ${
                   paymentMethod === 'installment'
                     ? 'border-brand-gold bg-brand-surface-elevated shadow-xs'
                     : 'border-brand-border hover:border-brand-gold/40'
@@ -1008,15 +1010,16 @@ export function CheckoutPage() {
                   <input
                     type="radio"
                     checked={paymentMethod === 'installment'}
-                    onChange={() => setPaymentMethod('installment')}
-                    className="w-4 h-4 accent-brand-gold cursor-pointer"
+                    disabled
+                    readOnly
+                    className="w-4 h-4 accent-brand-gold cursor-not-allowed"
                   />
                   <div>
                     <span className="font-bold text-xs text-brand-text block">
                       {t.checkout.installmentPayment}
                     </span>
                     <span className="text-[11px] text-brand-text-muted">
-                      {isPersian ? 'پرداخت در ۴ قسط بدون سود و ضامن با اسنپ‌پی' : 'Pay in 4 interest-free installments'}
+                      {isPersian ? 'به‌زودی فعال می‌شود' : 'Coming soon'}
                     </span>
                   </div>
                 </div>

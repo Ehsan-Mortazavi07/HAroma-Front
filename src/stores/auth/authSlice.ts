@@ -1,31 +1,24 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { IUser } from '@/common/interfaces';
-import { storage } from '@/common/utils';
 import axiosInstance from '@/common/axiosInstance';
 
 interface AuthState {
   user: IUser | null;
-  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
 }
 
-const initialToken = typeof window !== 'undefined' ? storage.getToken() : null;
-const initialUser = typeof window !== 'undefined' ? storage.getUser() : null;
-
 const initialState: AuthState = {
-  user: initialUser,
-  token: initialToken,
-  isAuthenticated: !!initialToken,
-  isLoading: false,
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
   error: null,
 };
 
 export const fetchProfile = createAsyncThunk('auth/fetchProfile', async (_, { rejectWithValue }) => {
   try {
     const res = await axiosInstance.get('/users/profile');
-    storage.setUser(res.data);
     return res.data;
   } catch (error: any) {
     return rejectWithValue(error?.response?.data?.message || 'خطا در دریافت اطلاعات کاربر');
@@ -36,23 +29,18 @@ export const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setAuth: (state, action: PayloadAction<{ user: IUser; token: string }>) => {
+    setAuth: (state, action: PayloadAction<{ user: IUser }>) => {
       state.user = action.payload.user;
-      state.token = action.payload.token;
       state.isAuthenticated = true;
-      storage.setToken(action.payload.token);
-      storage.setUser(action.payload.user);
+      state.isLoading = false;
     },
     updateUser: (state, action: PayloadAction<IUser>) => {
       state.user = action.payload;
-      storage.setUser(action.payload);
     },
-    logout: (state) => {
+    clearAuth: (state) => {
       state.user = null;
-      state.token = null;
       state.isAuthenticated = false;
-      storage.removeToken();
-      storage.removeUser();
+      state.isLoading = false;
     },
   },
   extraReducers: (builder) => {
@@ -60,17 +48,27 @@ export const authSlice = createSlice({
       .addCase(fetchProfile.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
+        state.isLoading = false;
+      })
+      .addCase(fetchProfile.pending, (state) => {
+        state.isLoading = true;
       })
       .addCase(fetchProfile.rejected, (state) => {
-        // if token invalid, cleanup
         state.user = null;
-        state.token = null;
         state.isAuthenticated = false;
-        storage.removeToken();
-        storage.removeUser();
+        state.isLoading = false;
       });
   },
 });
 
-export const { setAuth, updateUser, logout } = authSlice.actions;
+export const logout = createAsyncThunk('auth/logout', async (_, { dispatch }) => {
+  dispatch(authSlice.actions.clearAuth());
+  try {
+    await axiosInstance.post('/auth/logout');
+  } catch {
+    // Local auth state is cleared even if the server is unavailable.
+  }
+});
+
+export const { setAuth, updateUser } = authSlice.actions;
 export default authSlice.reducer;

@@ -10,6 +10,8 @@ interface ToastItem {
   message: string;
 }
 
+let nextToastId = 0;
+
 export function ToastContainer() {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
@@ -17,7 +19,7 @@ export function ToastContainer() {
     const handleToast = (e: Event) => {
       const customEvent = e as CustomEvent<{ type: 'success' | 'error' | 'info'; message: string }>;
       const newToast: ToastItem = {
-        id: `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        id: `${Date.now()}_${nextToastId++}`,
         type: customEvent.detail.type || 'info',
         message: customEvent.detail.message,
       };

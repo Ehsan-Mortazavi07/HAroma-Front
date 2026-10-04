@@ -31,7 +31,7 @@ import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { setAuth } from '@/stores/auth/authSlice';
 import { getSignInSchema } from '@/common/validators';
 import { PATHS } from '@/common/constants/PATHS';
-import { toast, toPersianDigits, toEnglishDigits, getApiErrorMessage, storage } from '@/common/utils';
+import { toast, toPersianDigits, toEnglishDigits, getApiErrorMessage } from '@/common/utils';
 import axiosInstance from '@/common/axiosInstance';
 import { BrandLogo } from '@/components/common/BrandLogo';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
@@ -50,7 +50,7 @@ export function SignInPage() {
 
   // If already logged in, redirect to profile or target page
   useEffect(() => {
-    if (isAuthenticated || (typeof window !== 'undefined' && storage.getToken())) {
+    if (isAuthenticated) {
       const destination = redirectUrl && !redirectUrl.startsWith('/auth') ? redirectUrl : PATHS.PROFILE;
       router.replace(destination);
     }
@@ -229,10 +229,7 @@ export function SignInPage() {
       });
 
       dispatch(
-        setAuth({
-          user: res.data.user,
-          token: res.data.accessToken,
-        }),
+        setAuth({ user: res.data.user }),
       );
 
       toast.success(
@@ -272,10 +269,7 @@ export function SignInPage() {
       });
 
       dispatch(
-        setAuth({
-          user: res.data.user,
-          token: res.data.accessToken,
-        }),
+        setAuth({ user: res.data.user }),
       );
 
       toast.success(
@@ -304,7 +298,7 @@ export function SignInPage() {
     }
   };
 
-  if (isAuthenticated || (typeof window !== 'undefined' && storage.getToken())) {
+  if (isAuthenticated) {
     return (
       <div className="w-full min-h-[50vh] flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-brand-gold border-t-transparent animate-spin" />

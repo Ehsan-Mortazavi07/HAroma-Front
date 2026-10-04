@@ -70,7 +70,7 @@ export function ProductVariantManager({
     }
 
     const newVariant: IProductVariant = {
-      id: `var-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      id: `var-${crypto.randomUUID()}`,
       title,
       titleEn: tpl.titleEn || undefined,
       price: tpl.defaultPrice || (basePrice > 0 ? basePrice : 1000000),
@@ -86,7 +86,7 @@ export function ProductVariantManager({
 
   const handleAddNewEmpty = () => {
     const newVariant: IProductVariant = {
-      id: `var-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      id: `var-${crypto.randomUUID()}`,
       title: isPersian ? `حجم ${variants.length + 1}` : `Size ${variants.length + 1}`,
       price: basePrice > 0 ? basePrice : 1000000,
       discountPrice: null,
