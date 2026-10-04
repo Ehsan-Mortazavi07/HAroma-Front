@@ -21,6 +21,7 @@ import {
 import { adminApi } from '@/common/api/admin';
 import { toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
+import { resolveMediaUrl } from '@/common/constants/URL';
 
 interface ImageUploaderProps {
   images: string[];
@@ -94,7 +95,7 @@ export function ImageUploader({ images = [], onChange, maxImages = 8 }: ImageUpl
       {/* Thumbnails Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
         {images.map((img, idx) => {
-          const displayUrl = img.startsWith('http') ? img : `http://127.0.0.1:7731${img}`;
+          const displayUrl = resolveMediaUrl(img);
           return (
             <div
               key={idx}

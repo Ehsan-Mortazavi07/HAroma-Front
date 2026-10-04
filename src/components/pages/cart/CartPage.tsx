@@ -8,6 +8,7 @@ import { ShoppingBag, Trash2, ArrowLeft, ArrowRight, ShieldCheck, Zap, Minus, Pl
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { updateQuantity, removeFromCart, clearCart } from '@/stores/cart/cartSlice';
 import { PATHS } from '@/common/constants/PATHS';
+import { resolveMediaUrl } from '@/common/constants/URL';
 import { formatToman, toPersianDigits, getLocalizedVariantTitle } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 
@@ -100,9 +101,7 @@ export function CartPage() {
                   typeof product.images[0] === 'string';
 
                 const itemImage = hasValidImage
-                  ? product.images[0].startsWith('http')
-                    ? product.images[0]
-                    : `http://127.0.0.1:7731${product.images[0]}`
+                  ? resolveMediaUrl(product.images[0])
                   : 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop';
 
                 const itemKey = `${product._id || idx}-${selectedVariant?.id || 'base'}`;

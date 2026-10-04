@@ -39,6 +39,7 @@ import {
 import { adminApi } from '@/common/api/admin';
 import { IProduct, ICategory } from '@/common/interfaces';
 import { PATHS } from '@/common/constants/PATHS';
+import { resolveMediaUrl } from '@/common/constants/URL';
 import { VipBadge } from '@/components/common/VipBadge';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
@@ -525,9 +526,7 @@ export default function AdminProductsPage() {
 
                   const imageSrc =
                     product.images && product.images.length > 0
-                      ? product.images[0].startsWith('http')
-                        ? product.images[0]
-                        : `http://127.0.0.1:7731${product.images[0]}`
+                      ? resolveMediaUrl(product.images[0])
                       : '';
 
                   const allBrands =

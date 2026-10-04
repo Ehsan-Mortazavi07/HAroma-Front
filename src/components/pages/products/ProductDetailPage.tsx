@@ -24,6 +24,7 @@ import {
 import { Button, Chip, Modal, ModalBody, ModalContent } from '@heroui/react';
 import { IProduct, IProductVariant } from '@/common/interfaces';
 import { PATHS } from '@/common/constants/PATHS';
+import { resolveMediaUrl } from '@/common/constants/URL';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { addToCart, updateQuantity, removeFromCart } from '@/stores/cart/cartSlice';
@@ -204,9 +205,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
 
   const images =
     product.images && product.images.length > 0
-      ? product.images.map((img) =>
-          img.startsWith('http') ? img : `http://127.0.0.1:7731${img}`,
-        )
+      ? product.images.map(resolveMediaUrl)
       : ['https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop'];
 
   useEffect(() => {

@@ -16,6 +16,7 @@ import { PaginationControls } from '@/components/common/PaginationControls';
 import { useAppSelector } from '@/stores/hooks';
 import { toPersianDigits } from '@/common/utils';
 import { catalogApi } from '@/common/api/catalog';
+import { resolveMediaUrl } from '@/common/constants/URL';
 
 // Unified fluid motion variants matching Navbar Profile Dropdown
 const floatingPanelVariants: Variants = {
@@ -648,11 +649,7 @@ export function ProductsPage({
 
                     {brands.map((b) => {
                       const isBrandActive = selectedBrand === b.slug;
-                      const logoSrc = b.logo
-                        ? b.logo.startsWith('http')
-                          ? b.logo
-                          : `http://127.0.0.1:7731${b.logo}`
-                        : null;
+                      const logoSrc = b.logo ? resolveMediaUrl(b.logo) : null;
 
                       const initialLetter = (b.name || 'B').trim().charAt(0).toUpperCase();
 

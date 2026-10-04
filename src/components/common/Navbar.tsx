@@ -39,6 +39,7 @@ import { toggleCartDrawer } from '@/stores/ui/uiSlice';
 import { updateQuantity, removeFromCart } from '@/stores/cart/cartSlice';
 import { logout } from '@/stores/auth/authSlice';
 import { PATHS } from '@/common/constants/PATHS';
+import { resolveMediaUrl } from '@/common/constants/URL';
 import { ThemeToggle } from './ThemeToggle';
 import { BrandLogo } from './BrandLogo';
 import { VipBadge } from './VipBadge';
@@ -775,9 +776,7 @@ export function Navbar() {
 
                       const itemImage =
                         product.images && product.images.length > 0
-                          ? product.images[0].startsWith('http')
-                            ? product.images[0]
-                            : `http://127.0.0.1:7731${product.images[0]}`
+                          ? resolveMediaUrl(product.images[0])
                           : 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop';
 
                       const itemKey = `${product._id}-${selectedVariant?.id || 'base'}`;

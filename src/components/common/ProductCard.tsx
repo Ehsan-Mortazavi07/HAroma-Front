@@ -7,6 +7,7 @@ import { Star, Zap } from 'lucide-react';
 import { Card, CardBody } from '@heroui/react';
 import { IProduct } from '@/common/interfaces';
 import { PATHS } from '@/common/constants/PATHS';
+import { resolveMediaUrl } from '@/common/constants/URL';
 import { formatToman, toPersianDigits } from '@/common/utils';
 import { QuantityCounter } from './QuantityCounter';
 import { VipBadge } from './VipBadge';
@@ -23,9 +24,7 @@ export const ProductCard = React.memo(function ProductCard({ product }: ProductC
   const { t, isPersian } = useTranslation();
   const [imgSrc, setImgSrc] = useState<string>(
     product.images && product.images.length > 0 && product.images[0]
-      ? product.images[0].startsWith('http')
-        ? product.images[0]
-        : `http://127.0.0.1:7731${product.images[0]}`
+      ? resolveMediaUrl(product.images[0])
       : fallbackImage,
   );
 

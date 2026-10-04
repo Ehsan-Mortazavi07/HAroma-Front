@@ -21,6 +21,7 @@ import { Button,
 import { catalogApi } from '@/common/api/catalog';
 import { IProduct, IBrand } from '@/common/interfaces';
 import { PATHS } from '@/common/constants/PATHS';
+import { resolveMediaUrl } from '@/common/constants/URL';
 import { formatToman, toPersianDigits } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 
@@ -652,9 +653,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                           : prod.price;
                       const prodImage =
                         prod.images && prod.images.length > 0
-                          ? prod.images[0].startsWith('http')
-                            ? prod.images[0]
-                            : `http://127.0.0.1:7731${prod.images[0]}`
+                          ? resolveMediaUrl(prod.images[0])
                           : 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop';
 
                       return (
