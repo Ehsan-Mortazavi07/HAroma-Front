@@ -506,7 +506,7 @@ export function ProfilePage() {
     if (isAuthLoading) return;
 
     if (!isAuthenticated) {
-      router.replace(PATHS.SIGN_IN);
+      router.replace(`${PATHS.SIGN_IN}?redirect=${encodeURIComponent(PATHS.PROFILE)}`);
       return;
     }
 
