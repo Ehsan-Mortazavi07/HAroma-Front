@@ -105,9 +105,11 @@ export function ProfilePage() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const isAuthLoading = useAppSelector((state) => state.auth.isLoading);
   const { t, isPersian } = useTranslation();
 
-  const [activeTab, setActiveTab] = useState<TabType>(() => getInitialProfileTab());
+  // Restore URL and saved tab preferences in the existing effect after hydration.
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
@@ -498,12 +500,15 @@ export function ProfilePage() {
   };
 
   useEffect(() => {
+    // Wait for the app-wide session check before treating the user as signed out.
+    // Otherwise a direct visit to /profile can redirect before the HttpOnly
+    // session cookie has been checked by AuthInitializer.
+    if (isAuthLoading) return;
+
     if (!isAuthenticated) {
-      router.push(PATHS.SIGN_IN);
+      router.replace(PATHS.SIGN_IN);
       return;
     }
-
-    dispatch(fetchProfile());
 
     const fetchOrders = async () => {
       try {
@@ -517,7 +522,7 @@ export function ProfilePage() {
     };
 
     fetchOrders();
-  }, [isAuthenticated, router]);
+  }, [dispatch, isAuthLoading, isAuthenticated, router]);
 
   if (!user) return null;
 

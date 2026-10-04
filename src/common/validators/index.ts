@@ -52,16 +52,36 @@ export const getSignUpSchema = (isPersian = true) =>
         (val) => !val || !val.trim() || val.trim().length >= 3,
       )
       .optional(),
+    phone: Yup.string().test(
+      'valid-optional-phone',
+      isPersian
+        ? 'شماره موبایل باید ۱۱ رقم بوده و با ۰۹ شروع شود.'
+        : 'Mobile number must be 11 digits starting with 09.',
+      (value) => {
+        if (!value?.trim()) return true;
+
+        const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
+        const arabicDigits = '٠١٢٣٤٥٦٧٨٩';
+        let digits = value.trim();
+        for (let index = 0; index < 10; index += 1) {
+          digits = digits.replace(new RegExp(persianDigits[index], 'g'), String(index));
+          digits = digits.replace(new RegExp(arabicDigits[index], 'g'), String(index));
+        }
+        digits = digits.replace(/\D/g, '');
+
+        if (digits.startsWith('0098')) digits = `0${digits.slice(4)}`;
+        else if (digits.startsWith('98') && digits.length === 12) digits = `0${digits.slice(2)}`;
+        else if (digits.startsWith('9') && digits.length === 10) digits = `0${digits}`;
+
+        return /^09\d{9}$/.test(digits);
+      },
+    ),
     email: Yup.string()
       .email(isPersian ? 'فرمت ایمیل نامعتبر است.' : 'Invalid email address format.')
       .optional(),
     password: Yup.string()
-      .test(
-        'valid-password',
-        isPersian ? 'رمز عبور باید حداقل ۱۲ کاراکتر باشد.' : 'Password must be at least 12 characters.',
-        (val) => !val || val.length >= 12,
-      )
-      .optional(),
+      .min(12, isPersian ? 'رمز عبور باید حداقل ۱۲ کاراکتر باشد.' : 'Password must be at least 12 characters.')
+      .required(isPersian ? 'وارد کردن رمز عبور ضروری است.' : 'Password is required.'),
     confirmPassword: Yup.string().when('password', {
       is: (val: string) => Boolean(val && val.length > 0),
       then: (schema) =>
@@ -71,7 +91,7 @@ export const getSignUpSchema = (isPersian = true) =>
             isPersian ? 'تکرار رمز عبور با رمز عبور مطابقت ندارد.' : 'Passwords do not match.',
           )
           .required(isPersian ? 'تکرار رمز عبور الزامی است.' : 'Please confirm your password.'),
-      otherwise: (schema) => schema.optional(),
+      otherwise: (schema) => schema.required(isPersian ? 'تکرار رمز عبور الزامی است.' : 'Please confirm your password.'),
     }),
   });
 

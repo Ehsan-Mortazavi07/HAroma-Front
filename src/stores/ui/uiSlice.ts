@@ -10,19 +10,11 @@ interface UiState {
   isSearchModalOpen: boolean;
 }
 
-const getSavedTheme = (): ThemeMode => {
-  if (typeof window === 'undefined') return 'dark';
-  return (localStorage.getItem('hatefaroma_theme') as ThemeMode) || 'dark';
-};
-
-const getSavedLang = (): LangMode => {
-  if (typeof window === 'undefined') return 'fa';
-  return (localStorage.getItem('hatefaroma_lang') as LangMode) || 'fa';
-};
-
 const initialState: UiState = {
-  theme: typeof window !== 'undefined' ? getSavedTheme() : 'dark',
-  lang: typeof window !== 'undefined' ? getSavedLang() : 'fa',
+  // Keep the first render identical on the server and browser. Preferences are
+  // restored by ThemeProvider after hydration.
+  theme: 'dark',
+  lang: 'fa',
   isCartDrawerOpen: false,
   isSearchModalOpen: false,
 };
@@ -31,6 +23,10 @@ export const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
+    hydratePreferences: (state, action: PayloadAction<{ theme: ThemeMode; lang: LangMode }>) => {
+      state.theme = action.payload.theme;
+      state.lang = action.payload.lang;
+    },
     setTheme: (state, action: PayloadAction<ThemeMode>) => {
       state.theme = action.payload;
       if (typeof window !== 'undefined') {
@@ -54,5 +50,5 @@ export const uiSlice = createSlice({
   },
 });
 
-export const { setTheme, setLang, toggleCartDrawer, toggleSearchModal } = uiSlice.actions;
+export const { hydratePreferences, setTheme, setLang, toggleCartDrawer, toggleSearchModal } = uiSlice.actions;
 export default uiSlice.reducer;

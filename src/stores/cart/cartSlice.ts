@@ -6,7 +6,7 @@ interface CartState {
   items: ICartItem[];
 }
 
-const loadCartFromStorage = (): ICartItem[] => {
+export const loadCartFromStorage = (): ICartItem[] => {
   if (typeof window === 'undefined') return [];
   try {
     const data = localStorage.getItem(CART_KEY);
@@ -29,13 +29,17 @@ const saveCartToStorage = (items: ICartItem[]) => {
 };
 
 const initialState: CartState = {
-  items: typeof window !== 'undefined' ? loadCartFromStorage() : [],
+  // Keep server and browser initial state identical; storage is restored after hydration.
+  items: [],
 };
 
 export const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
+    hydrateCart: (state, action: PayloadAction<ICartItem[]>) => {
+      state.items = action.payload;
+    },
     addToCart: (
       state,
       action: PayloadAction<{
@@ -121,5 +125,5 @@ export const cartSlice = createSlice({
   },
 });
 
-export const { addToCart, updateQuantity, removeFromCart, clearCart } = cartSlice.actions;
+export const { hydrateCart, addToCart, updateQuantity, removeFromCart, clearCart } = cartSlice.actions;
 export default cartSlice.reducer;
