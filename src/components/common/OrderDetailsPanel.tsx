@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Calendar, CreditCard, ExternalLink, MapPin, Package, Truck } from 'lucide-react';
-import { IOrder } from '@/common/interfaces';
+import { IAdminOrderChangeNote, IOrder } from '@/common/interfaces';
 import { resolveMediaUrl } from '@/common/constants/URL';
 import { formatToman, toPersianDigits } from '@/common/utils';
 
@@ -11,6 +11,7 @@ interface OrderDetailsPanelProps {
   order: IOrder;
   isPersian: boolean;
   headerActions?: React.ReactNode;
+  adminChangeNotes?: IAdminOrderChangeNote[];
 }
 
 const statusLabels: Record<IOrder['status'], { fa: string; en: string }> = {
@@ -60,7 +61,7 @@ function OrderItemImage({ src, alt }: { src?: string; alt: string }) {
   );
 }
 
-export function OrderDetailsPanel({ order, isPersian, headerActions }: OrderDetailsPanelProps) {
+export function OrderDetailsPanel({ order, isPersian, headerActions, adminChangeNotes = order.adminChangeNotes || [] }: OrderDetailsPanelProps) {
   const address = order.deliveryAddress;
   const unknown = isPersian ? 'ثبت نشده' : 'Not recorded';
   const dateTime = (value?: string | null) => {
@@ -261,6 +262,25 @@ export function OrderDetailsPanel({ order, isPersian, headerActions }: OrderDeta
         <section className="space-y-2">
           <h4 className="text-xs font-black text-brand-text">{isPersian ? 'یادداشت سفارش' : 'Order notes'}</h4>
           <p className="rounded-xl border border-brand-border/70 bg-brand-surface-elevated/50 px-3.5 py-3 text-xs leading-6 text-brand-text">{order.notes}</p>
+        </section>
+      )}
+
+      {adminChangeNotes.length > 0 && (
+        <section className="space-y-2 border-t border-brand-border pt-4">
+          <h4 className="text-xs font-black text-brand-text">
+            {isPersian ? 'یادداشت‌های داخلی مدیریت' : 'Internal admin notes'}
+          </h4>
+          <ol className="space-y-2">
+            {adminChangeNotes.map((entry, index) => (
+              <li key={`${entry.createdAt}-${index}`} className="rounded-xl border border-brand-border/70 bg-brand-surface-elevated/50 px-3.5 py-3">
+                <p className="whitespace-pre-wrap break-words text-xs leading-6 text-brand-text">{entry.note}</p>
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-[10px] text-brand-text-muted">
+                  <span>{entry.adminName}</span>
+                  <time>{dateTime(entry.createdAt)}</time>
+                </div>
+              </li>
+            ))}
+          </ol>
         </section>
       )}
     </div>

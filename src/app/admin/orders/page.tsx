@@ -1,7 +1,7 @@
 'use client';
 
 import { Input } from '@/components/common/DirectionalFields';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   motion,
   AnimatePresence } from 'framer-motion';
@@ -22,8 +22,6 @@ import {
   ModalBody,
   ModalFooter,
   Skeleton,
-  Select,
-  SelectItem,
 } from '@heroui/react';
 import {
   ShoppingBag,
@@ -32,11 +30,7 @@ import {
   Truck,
   CheckCircle2,
   X,
-  ChevronDown,
-  Clock,
   Package,
-  XCircle,
-  Filter,
   Check,
   Trash2,
 } from 'lucide-react';
@@ -48,6 +42,7 @@ import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { OrderDetailsPanel } from '@/components/common/OrderDetailsPanel';
 import { OrderEditForm } from '@/components/admin/OrderEditForm';
+import { OrderStatusSelect } from '@/components/admin/OrderStatusSelect';
 import { useAppSelector } from '@/stores/hooks';
 
 export default function AdminOrdersPage() {
@@ -78,6 +73,7 @@ export default function AdminOrdersPage() {
 
   // View / Edit Modal
   const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null);
+  const [adminChangeNotesByOrder, setAdminChangeNotesByOrder] = useState<Record<string, IOrder['adminChangeNotes']>>({});
   const [modalOpen, setModalOpen] = useState(false);
   const [isEditingFullOrder, setIsEditingFullOrder] = useState(false);
   const [newStatus, setNewStatus] = useState('');
@@ -85,33 +81,6 @@ export default function AdminOrdersPage() {
   const [shippingProvider, setShippingProvider] = useState('');
   const [trackingUrl, setTrackingUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  // Dropdown states
-  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
-  const filterDropdownRef = useRef<HTMLDivElement>(null);
-
-  // Outside click & Escape key handler for custom animated dropdowns
-  useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent | PointerEvent) => {
-      const target = e.target as Node;
-      if (filterDropdownRef.current && !filterDropdownRef.current.contains(target)) {
-        setIsFilterDropdownOpen(false);
-      }
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsFilterDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('pointerdown', handleOutsideClick, true);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', handleOutsideClick, true);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
 
   const loadOrders = async () => {
     setLoading(true);
@@ -143,6 +112,11 @@ export default function AdminOrdersPage() {
     setShippingProvider(order.shippingProvider || '');
     setTrackingUrl(order.trackingUrl || '');
     setModalOpen(true);
+    if (isAdmin && !Object.prototype.hasOwnProperty.call(adminChangeNotesByOrder, order._id)) {
+      void adminApi.getOrderAdminChangeNotes(order._id)
+        .then((notes) => setAdminChangeNotesByOrder((previous) => ({ ...previous, [order._id]: notes })))
+        .catch(() => toast.error(isPersian ? 'یادداشت داخلی سفارش بارگذاری نشد.' : 'Could not load internal order notes.'));
+    }
   };
 
   const handleUpdateStatus = async (e?: any) => {
@@ -392,53 +366,6 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const orderStatusOptions = [
-    {
-      key: 'pending',
-      labelFa: 'در انتظار پرداخت',
-      labelEn: 'Pending',
-      icon: Clock,
-      color: 'text-amber-500',
-    },
-    {
-      key: 'processing',
-      labelFa: 'در حال پردازش',
-      labelEn: 'Processing',
-      icon: Package,
-      color: 'text-blue-500',
-    },
-    {
-      key: 'shipped',
-      labelFa: 'تحویل پست شده',
-      labelEn: 'Shipped',
-      icon: Truck,
-      color: 'text-purple-500',
-    },
-    {
-      key: 'delivered',
-      labelFa: 'تحویل داده شده',
-      labelEn: 'Delivered',
-      icon: CheckCircle2,
-      color: 'text-emerald-500',
-    },
-    {
-      key: 'cancelled',
-      labelFa: 'لغو شده',
-      labelEn: 'Cancelled',
-      icon: XCircle,
-      color: 'text-rose-500',
-    },
-  ];
-
-  const statusFilterOptions = [
-    { id: '', label: isPersian ? 'همه وضعیت‌ها' : 'All Statuses', icon: Filter, color: 'text-brand-text-muted' },
-    { id: 'pending', label: isPersian ? 'در انتظار پرداخت' : 'Pending', icon: Clock, color: 'text-amber-500' },
-    { id: 'processing', label: isPersian ? 'در حال پردازش' : 'Processing', icon: Package, color: 'text-blue-500' },
-    { id: 'shipped', label: isPersian ? 'تحویل پست شده' : 'Shipped', icon: Truck, color: 'text-purple-500' },
-    { id: 'delivered', label: isPersian ? 'تحویل داده شده' : 'Delivered', icon: CheckCircle2, color: 'text-emerald-500' },
-    { id: 'cancelled', label: isPersian ? 'لغو شده' : 'Cancelled', icon: XCircle, color: 'text-rose-500' },
-  ];
-
   return (
     <div dir={isPersian ? 'rtl' : 'ltr'} className="space-y-6">
       {/* Header */}
@@ -481,82 +408,16 @@ export default function AdminOrdersPage() {
           />
 
           {/* Custom Status Filter Dropdown */}
-          <div ref={filterDropdownRef} className="relative w-full sm:w-52">
-            {(() => {
-              const currentFilter =
-                statusFilterOptions.find((opt) => opt.id === statusFilter) || statusFilterOptions[0];
-              const FilterIcon = currentFilter.icon;
-              return (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setIsFilterDropdownOpen((prev) => !prev)}
-                    className={`w-full h-11 px-4 rounded-full bg-brand-surface-elevated border transition-all flex items-center justify-between gap-2 text-right cursor-pointer select-none ${
-                      isFilterDropdownOpen
-                        ? 'border-brand-gold ring-2 ring-brand-gold/20 shadow-xs'
-                        : 'border-brand-border hover:border-brand-gold/70 shadow-xs'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <FilterIcon className={`w-3.5 h-3.5 shrink-0 ${currentFilter.color}`} />
-                      <span className="text-xs font-bold text-brand-text truncate">
-                        {currentFilter.label}
-                      </span>
-                    </div>
-                    <ChevronDown
-                      className={`w-4 h-4 text-brand-bronze dark:text-brand-gold shrink-0 transition-transform duration-200 ${
-                        isFilterDropdownOpen ? 'rotate-180 text-brand-gold' : 'opacity-70'
-                      }`}
-                    />
-                  </button>
-
-                  <AnimatePresence>
-                    {isFilterDropdownOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -6, scale: 0.98 }}
-                        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                        className="absolute top-full mt-2 right-0 w-full z-50 bg-brand-surface border border-brand-border rounded-2xl shadow-2xl p-1.5 space-y-1 origin-top"
-                      >
-                        {statusFilterOptions.map((opt) => {
-                          const isSelected = statusFilter === opt.id;
-                          const OptIcon = opt.icon;
-                          return (
-                            <button
-                              key={opt.id}
-                              type="button"
-                              onClick={() => {
-                                setStatusFilter(opt.id);
-                                setIsFilterDropdownOpen(false);
-                              }}
-                              className={`w-full text-right px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center justify-between ${
-                                isSelected
-                                  ? 'bg-brand-gold text-[#141914]'
-                                  : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-gold'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 truncate">
-                                <OptIcon
-                                  className={`w-3.5 h-3.5 shrink-0 ${
-                                    isSelected ? 'text-[#141914]' : opt.color
-                                  }`}
-                                />
-                                <span className="truncate">{opt.label}</span>
-                              </div>
-                              {isSelected && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#141914] shrink-0" />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </>
-              );
-            })()}
-          </div>
+          <OrderStatusSelect
+            value={statusFilter as '' | IOrder['status']}
+            onChange={(value) => {
+              setStatusFilter(value);
+              setPage(1);
+            }}
+            isPersian={isPersian}
+            includeAll
+            className="w-full sm:w-52"
+          />
         </CardBody>
       </Card>
       </motion.div>
@@ -748,6 +609,10 @@ export default function AdminOrdersPage() {
                       onCancel={() => setIsEditingFullOrder(false)}
                       onSaved={(updatedOrder) => {
                         setSelectedOrder(updatedOrder);
+                        setAdminChangeNotesByOrder((previous) => ({
+                          ...previous,
+                          [updatedOrder._id]: updatedOrder.adminChangeNotes || previous[updatedOrder._id] || [],
+                        }));
                         setOrders((previous) => previous.map((order) => order._id === updatedOrder._id ? updatedOrder : order));
                         setIsEditingFullOrder(false);
                         void loadOrders();
@@ -758,6 +623,7 @@ export default function AdminOrdersPage() {
                     <OrderDetailsPanel
                       order={selectedOrder}
                       isPersian={isPersian}
+                      adminChangeNotes={adminChangeNotesByOrder[selectedOrder._id]}
                       headerActions={isAdmin ? (
                         <Button
                           variant="flat"
@@ -771,31 +637,17 @@ export default function AdminOrdersPage() {
 
                     {/* Status Update Form Elements */}
                     <div className="space-y-4 pt-2 border-t border-brand-border">
-                      <Select
-                        dir={isPersian ? 'rtl' : 'ltr'}
-                        label={isPersian ? 'تغییر وضعیت سفارش' : 'Update Status'}
-                        labelPlacement="outside-top"
-                        selectedKeys={newStatus ? new Set([newStatus]) : new Set()}
-                        onSelectionChange={(keys) => {
-                          const selected = Array.from(keys)[0];
-                          if (typeof selected === 'string') setNewStatus(selected);
-                        }}
-                        variant="bordered"
-                        radius="lg"
-                        classNames={{
-                          trigger: 'h-12 min-h-12 rounded-2xl border-brand-border bg-brand-surface-elevated px-4 text-xs font-bold text-brand-text data-[focus=true]:border-brand-gold',
-                          value: 'text-xs font-bold text-brand-text text-start',
-                          label: 'text-xs font-bold text-brand-text',
-                          popoverContent: 'rounded-2xl border border-brand-border bg-brand-surface text-brand-text',
-                          listbox: 'p-1',
-                        }}
-                      >
-                        {orderStatusOptions.map((item) => (
-                          <SelectItem key={item.key} textValue={isPersian ? item.labelFa : item.labelEn}>
-                            {isPersian ? item.labelFa : item.labelEn}
-                          </SelectItem>
-                        ))}
-                      </Select>
+                      <div className="space-y-2">
+                        <label className="block text-xs font-bold text-brand-text">
+                          {isPersian ? 'تغییر وضعیت سفارش' : 'Update status'}
+                        </label>
+                        <OrderStatusSelect
+                          value={newStatus as IOrder['status'] | ''}
+                          onChange={(value) => setNewStatus(value)}
+                          isPersian={isPersian}
+                          className="w-full"
+                        />
+                      </div>
 
                       <Input
                         dir="auto"

@@ -180,6 +180,7 @@ export interface IOrderItem {
   price: number;
   quantity: number;
   image?: string;
+  variantId?: string;
   selectedVariant?: IProductVariant;
   selectedAttributes?: string;
 }
@@ -201,6 +202,13 @@ export interface IOrderStatusHistoryEntry {
   status: IOrder['status'];
   changedAt: string;
   note?: string;
+}
+
+export interface IAdminOrderChangeNote {
+  note: string;
+  adminId: string;
+  adminName: string;
+  createdAt: string;
 }
 
 export interface IOrder {
@@ -227,6 +235,7 @@ export interface IOrder {
   deliveredAt?: string | null;
   statusHistory?: IOrderStatusHistoryEntry[];
   notes?: string;
+  adminChangeNotes?: IAdminOrderChangeNote[];
   createdAt: string;
   updatedAt?: string;
 }
@@ -236,6 +245,9 @@ export type IAdminOrderUpdate = Pick<IOrder, 'deliveryAddress'> & {
   version: number;
   /** Indexes refer to the order's original item array; order items have no subdocument IDs. */
   removeItemIndexes: number[];
+  itemQuantityUpdates: Array<{ index: number; quantity: number }>;
+  addItems: Array<{ productId: string; quantity: number; variantId?: string }>;
+  adminNote?: string;
 };
 
 export interface IPageSection {

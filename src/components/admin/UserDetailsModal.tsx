@@ -60,6 +60,7 @@ import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import { PasswordInput } from '@/components/common/PasswordInput';
 import { getOrderStatusLabel, OrderDetailsPanel } from '@/components/common/OrderDetailsPanel';
 import { OrderEditForm } from '@/components/admin/OrderEditForm';
+import { OrderStatusSelect } from '@/components/admin/OrderStatusSelect';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -139,6 +140,8 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   const [selectedEditTab, setSelectedEditTab] = useState<string>('identity');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [orders, setOrders] = useState<IOrder[]>([]);
+  const [adminChangeNotesByOrder, setAdminChangeNotesByOrder] = useState<Record<string, IOrder['adminChangeNotes']>>({});
+  const [loadingAdminNotesId, setLoadingAdminNotesId] = useState<string | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [updatingOrderStatusId, setUpdatingOrderStatusId] = useState<string | null>(null);
@@ -307,6 +310,19 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       setOrders([]);
     } finally {
       setLoadingOrders(false);
+    }
+  };
+
+  const loadAdminChangeNotes = async (orderId: string) => {
+    if (!isAdmin || Object.prototype.hasOwnProperty.call(adminChangeNotesByOrder, orderId) || loadingAdminNotesId === orderId) return;
+    setLoadingAdminNotesId(orderId);
+    try {
+      const notes = await adminApi.getOrderAdminChangeNotes(orderId);
+      setAdminChangeNotesByOrder((previous) => ({ ...previous, [orderId]: notes }));
+    } catch {
+      toast.error(isPersian ? 'یادداشت داخلی سفارش بارگذاری نشد.' : 'Could not load internal order notes.');
+    } finally {
+      setLoadingAdminNotesId(null);
     }
   };
 
@@ -2154,33 +2170,18 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                         {getOrderStatusLabel(order.status, isPersian)}
                                       </Chip>
                                       {isAdmin && (
-                                        <Select
-                                          aria-label={isPersian ? 'تغییر وضعیت سفارش' : 'Change order status'}
-                                          dir={isPersian ? 'rtl' : 'ltr'}
-                                          size="sm"
-                                          selectedKeys={new Set([order.status])}
-                                          onSelectionChange={(keys) => {
-                                            const selected = Array.from(keys)[0] as IOrder['status'] | undefined;
-                                            if (selected) void handleOrderStatusChange(order, selected);
+                                        <OrderStatusSelect
+                                          value={order.status}
+                                          onChange={(status) => {
+                                            if (status) void handleOrderStatusChange(order, status);
                                           }}
-                                          isDisabled={updatingOrderStatusId !== null}
-                                          isLoading={updatingOrderStatusId === order._id}
-                                          variant="bordered"
-                                          radius="lg"
-                                          classNames={{
-                                            base: 'w-40',
-                                            trigger: 'h-8 min-h-8 rounded-lg border-brand-border bg-brand-surface px-2 text-[10px] font-bold text-brand-text',
-                                            value: 'text-[10px] font-bold text-brand-text text-start',
-                                            popoverContent: 'rounded-xl border border-brand-border bg-brand-surface text-brand-text',
-                                            listbox: 'p-1',
-                                          }}
-                                        >
-                                          {(['pending', 'processing', 'shipped', 'delivered', 'cancelled'] as const).map((status) => (
-                                            <SelectItem key={status} textValue={getOrderStatusLabel(status, isPersian)}>
-                                              {getOrderStatusLabel(status, isPersian)}
-                                            </SelectItem>
-                                          ))}
-                                        </Select>
+                                          isPersian={isPersian}
+                                          compact
+                                          className="w-40"
+                                          loading={updatingOrderStatusId === order._id}
+                                          disabled={updatingOrderStatusId !== null && updatingOrderStatusId !== order._id}
+                                          ariaLabel={isPersian ? 'تغییر وضعیت سفارش' : 'Change order status'}
+                                        />
                                       )}
                                     </div>
                                     <div className="text-[11px] text-brand-text-muted flex items-center gap-3">
@@ -2206,7 +2207,11 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                       size="sm"
                                       variant="flat"
                                       aria-expanded={expandedOrderId === order._id}
-                                      onPress={() => setExpandedOrderId((current) => current === order._id ? null : order._id)}
+                                      onPress={() => {
+                                        const willExpand = expandedOrderId !== order._id;
+                                        setExpandedOrderId(willExpand ? order._id : null);
+                                        if (willExpand) void loadAdminChangeNotes(order._id);
+                                      }}
                                       endContent={<ChevronDown className={`h-4 w-4 transition-transform ${expandedOrderId === order._id ? 'rotate-180' : ''}`} />}
                                       className="h-9 rounded-xl bg-brand-surface px-3 text-xs font-bold text-brand-bronze dark:text-brand-gold"
                                     >
@@ -2233,6 +2238,10 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                           onCancel={() => setEditingOrderId(null)}
                                           onSaved={(updatedOrder) => {
                                             setOrders((previous) => previous.map((item) => item._id === updatedOrder._id ? updatedOrder : item));
+                                            setAdminChangeNotesByOrder((previous) => ({
+                                              ...previous,
+                                              [updatedOrder._id]: updatedOrder.adminChangeNotes || previous[updatedOrder._id] || [],
+                                            }));
                                             setEditingOrderId(null);
                                           }}
                                         />
@@ -2241,6 +2250,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                           <OrderDetailsPanel
                                             order={order}
                                             isPersian={isPersian}
+                                            adminChangeNotes={adminChangeNotesByOrder[order._id]}
                                             headerActions={isAdmin ? (
                                               <Button
                                                 size="sm"

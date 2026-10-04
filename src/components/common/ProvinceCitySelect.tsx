@@ -155,6 +155,8 @@ export function ProvinceCitySelect({
           <button
             type="button"
             disabled={disabled}
+            aria-haspopup="listbox"
+            aria-expanded={openDropdown === 'province'}
             aria-invalid={Boolean(provinceError)}
             onClick={() => setOpenDropdown(openDropdown === 'province' ? null : 'province')}
             className={`w-full h-12 px-4 rounded-2xl bg-brand-surface border transition-all flex items-center justify-between gap-2 text-right cursor-pointer select-none ${
@@ -261,6 +263,8 @@ export function ProvinceCitySelect({
           <button
             type="button"
             disabled={disabled || !province}
+            aria-haspopup="listbox"
+            aria-expanded={openDropdown === 'city'}
             aria-invalid={Boolean(cityError)}
             onClick={() => setOpenDropdown(openDropdown === 'city' ? null : 'city')}
             className={`w-full h-12 px-4 rounded-2xl bg-brand-surface border transition-all flex items-center justify-between gap-2 text-right cursor-pointer select-none ${

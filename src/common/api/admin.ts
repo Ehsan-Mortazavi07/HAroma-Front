@@ -1,5 +1,11 @@
 import axiosInstance from '../axiosInstance';
-import type { IAdminOrderUpdate, IPageSection, IPageSectionPriority, IUserAddress } from '../interfaces';
+import type {
+  IAdminOrderChangeNote,
+  IAdminOrderUpdate,
+  IPageSection,
+  IPageSectionPriority,
+  IUserAddress,
+} from '../interfaces';
 
 export const adminApi = {
   // Products CRUD
@@ -213,6 +219,10 @@ export const adminApi = {
   },
   getOrder: async (id: string) => {
     const res = await axiosInstance.get(`/admin/orders/${id}`);
+    return res.data;
+  },
+  getOrderAdminChangeNotes: async (id: string): Promise<IAdminOrderChangeNote[]> => {
+    const res = await axiosInstance.get(`/admin/orders/${id}/admin-notes`);
     return res.data;
   },
   updateOrder: async (id: string, data: IAdminOrderUpdate) => {
