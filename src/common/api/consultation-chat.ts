@@ -7,6 +7,13 @@ import type {
 const sessionHeaders = (sessionToken: string) => ({ 'X-Chat-Session': sessionToken });
 
 export const consultationChatApi = {
+  getConversations: async (sessionToken: string) => {
+    const response = await axiosInstance.get<IConsultationConversation[]>(
+      '/consultation-chat/conversations',
+      { headers: sessionHeaders(sessionToken) },
+    );
+    return response.data;
+  },
   getCurrentConversation: async (sessionToken: string) => {
     const response = await axiosInstance.get<IConsultationConversation | null>(
       '/consultation-chat/current',

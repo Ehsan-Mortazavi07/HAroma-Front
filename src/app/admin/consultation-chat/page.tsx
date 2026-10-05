@@ -13,6 +13,7 @@ import {
   Send,
 } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
+import { ChatEmojiPicker } from '@/components/chat/ChatEmojiPicker';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import type { IConsultationConversation, IConsultationMessage } from '@/common/interfaces';
 import { toPersianDigits } from '@/common/utils';
@@ -97,12 +98,14 @@ export default function AdminConsultationChatPage() {
           lastMessageIdRef.current || undefined,
         );
         if (cancelled || !incoming.length) return;
+        const newestIncomingId = incoming.at(-1)?.id;
+        if (newestIncomingId && newestIncomingId > lastMessageIdRef.current) {
+          lastMessageIdRef.current = newestIncomingId;
+        }
         setMessages((current) => {
           const known = new Set(current.map((message) => message.id));
           const additions = incoming.filter((message) => !known.has(message.id));
-          const combined = [...current, ...additions].sort((a, b) => a.id.localeCompare(b.id));
-          lastMessageIdRef.current = combined.at(-1)?.id || lastMessageIdRef.current;
-          return combined;
+          return [...current, ...additions].sort((a, b) => a.id.localeCompare(b.id));
         });
       } catch {
         // Keep the current messages visible and retry on the next poll.
@@ -145,11 +148,10 @@ export default function AdminConsultationChatPage() {
     setError('');
     try {
       const message = await adminApi.sendConsultationMessage(selectedId, body);
+      if (message.id > lastMessageIdRef.current) lastMessageIdRef.current = message.id;
       setMessages((current) => {
         if (current.some((item) => item.id === message.id)) return current;
-        const next = [...current, message].sort((a, b) => a.id.localeCompare(b.id));
-        lastMessageIdRef.current = next.at(-1)?.id || lastMessageIdRef.current;
-        return next;
+        return [...current, message].sort((a, b) => a.id.localeCompare(b.id));
       });
       setDraft('');
       void loadConversations();
@@ -158,6 +160,10 @@ export default function AdminConsultationChatPage() {
     } finally {
       setSending(false);
     }
+  };
+
+  const addEmoji = (emoji: string) => {
+    setDraft((current) => `${current}${current && !/\s$/.test(current) ? ' ' : ''}${emoji}`);
   };
 
   const updateStatus = async (
@@ -373,6 +379,7 @@ export default function AdminConsultationChatPage() {
                           input: 'py-2 text-sm leading-6 text-brand-text placeholder:text-brand-text-muted',
                         }}
                       />
+                      <ChatEmojiPicker onSelect={addEmoji} isDisabled={sending} />
                       <Button
                         isIconOnly
                         type="submit"

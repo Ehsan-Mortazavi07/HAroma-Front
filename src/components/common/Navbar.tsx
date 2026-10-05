@@ -354,11 +354,11 @@ export function Navbar() {
                 <span className="whitespace-nowrap">کالکشن نیش VIP</span>
               </Link>
               <Link
-                href="/about"
+                href="/consultation"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#e6dcce] hover:text-[#f7f4ee] hover:bg-[#242c24]/70 transition-all whitespace-nowrap shrink-0 group"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#bfa27a] shrink-0 group-hover:scale-110 transition-transform" />
-                <span className="whitespace-nowrap">مشاوره تخصصی</span>
+                <span className="whitespace-nowrap">مشاوره و چت آنلاین</span>
               </Link>
               <Link
                 href="/blog"
