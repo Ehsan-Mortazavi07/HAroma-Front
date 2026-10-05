@@ -20,6 +20,7 @@ export const PATHS = {
   ADMIN_BRANDS: '/admin/brands',
   ADMIN_ATTRIBUTES: '/admin/attributes',
   ADMIN_ORDERS: '/admin/orders',
+  ADMIN_CONSULTATION_CHAT: '/admin/consultation-chat',
   ADMIN_COUPONS: '/admin/coupons',
   ADMIN_VIP_PLANS: '/admin/vip-plans',
   ADMIN_USERS: '/admin/users',

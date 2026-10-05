@@ -1,5 +1,7 @@
 import axiosInstance from '../axiosInstance';
 import type {
+  IConsultationConversation,
+  IConsultationMessage,
   IAdminOrderChangeNote,
   IAdminOrderUpdate,
   IPageSection,
@@ -8,6 +10,36 @@ import type {
 } from '../interfaces';
 
 export const adminApi = {
+  // Customer consultation chat
+  getConsultationConversations: async (status: 'open' | 'closed' | 'all' = 'open') => {
+    const res = await axiosInstance.get<IConsultationConversation[]>(
+      '/admin/consultation-chat/conversations',
+      { params: { status } },
+    );
+    return res.data;
+  },
+  getConsultationMessages: async (conversationId: string, afterId?: string) => {
+    const res = await axiosInstance.get<IConsultationMessage[]>(
+      `/admin/consultation-chat/conversations/${encodeURIComponent(conversationId)}/messages`,
+      { params: afterId ? { afterId } : undefined },
+    );
+    return res.data;
+  },
+  sendConsultationMessage: async (conversationId: string, body: string) => {
+    const res = await axiosInstance.post<IConsultationMessage>(
+      `/admin/consultation-chat/conversations/${encodeURIComponent(conversationId)}/messages`,
+      { body },
+    );
+    return res.data;
+  },
+  setConsultationConversationStatus: async (conversationId: string, status: 'open' | 'closed') => {
+    const res = await axiosInstance.patch<IConsultationConversation>(
+      `/admin/consultation-chat/conversations/${encodeURIComponent(conversationId)}/status`,
+      { status },
+    );
+    return res.data;
+  },
+
   // Products CRUD
   getProducts: async (params?: Record<string, any>) => {
     const res = await axiosInstance.get('/admin/products', { params });

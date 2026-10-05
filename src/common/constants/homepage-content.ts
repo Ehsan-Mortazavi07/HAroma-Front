@@ -22,7 +22,7 @@ export const DEFAULT_CAMPAIGN_BANNERS: IPageSectionBanner[] = [
     title: 'باشگاه مشتریان طلایی', titleEn: 'VIP Gold Club', subtitle: 'تخفیف‌های دائمی، ارسال رایگان و دسترسی به عطرهای نیش', subtitleEn: 'Enjoy exclusive discounts on luxury and niche fragrances', badge: 'تخفیف ویژه VIP', badgeEn: 'VIP 30% Off',
   },
   {
-    id: 'consultation', imageUrl: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?q=80&w=900&auto=format&fit=crop', link: '/products',
+    id: 'consultation', imageUrl: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?q=80&w=900&auto=format&fit=crop', link: '/about',
     title: 'انتخاب رایحه امضا', titleEn: 'Find Your Signature Scent', subtitle: 'طراحی امضای بویایی اختصاصی بر اساس تیپ شخصیتی شما', subtitleEn: 'Get expert guidance to discover a fragrance that feels like you', badge: 'مشاوره بویایی', badgeEn: 'Expert Advice',
   },
   {

@@ -1,5 +1,32 @@
 export type UserRole = 'admin' | 'editor' | 'user';
 
+export type ConsultationConversationStatus = 'open' | 'closed';
+
+export interface IConsultationConversation {
+  id: string;
+  guestName: string;
+  status: ConsultationConversationStatus;
+  lastMessageText: string;
+  lastMessageAt: string;
+  unreadForAdmin: number;
+  unreadForGuest: number;
+  closedAt: string | null;
+  closedByAdminId: string | null;
+  closedByAdminName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IConsultationMessage {
+  id: string;
+  conversationId: string;
+  senderRole: 'customer' | 'admin';
+  senderId: string | null;
+  senderName: string;
+  body: string;
+  createdAt: string;
+}
+
 export interface IUserAddress {
   _id: string;
   title: string;
