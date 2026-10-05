@@ -232,7 +232,7 @@ export const adminApi = {
     return res.data;
   },
   getUserOrders: async (userId: string, params?: Record<string, any>) => {
-    const res = await axiosInstance.get('/admin/orders', { params: { ...params, userId } });
+    const res = await axiosInstance.get(`/admin/users/${encodeURIComponent(userId)}/orders`, { params });
     return res.data;
   },
   deleteUser: async (id: string) => {
