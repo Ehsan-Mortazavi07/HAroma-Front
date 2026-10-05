@@ -4,11 +4,15 @@ import { FormEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } fr
 import { Button, Card, CardBody, Chip, Spinner, Textarea } from '@heroui/react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
+  ArrowRight,
   Archive,
+  Check,
   CheckCheck,
   CircleDot,
+  Clock3,
   Inbox,
   MessageCircle,
+  Trash2,
   RotateCcw,
   Send,
 } from 'lucide-react';
@@ -19,7 +23,13 @@ import type { IConsultationConversation, IConsultationMessage } from '@/common/i
 import { toPersianDigits } from '@/common/utils';
 import { useAppSelector } from '@/stores/hooks';
 
-type ConversationFilter = 'open' | 'closed' | 'all';
+type ConversationFilter = 'pending' | 'open' | 'closed' | 'all';
+
+function statusLabel(status: IConsultationConversation['status']) {
+  if (status === 'pending') return 'در انتظار تأیید';
+  if (status === 'open') return 'باز';
+  return 'بسته';
+}
 
 function shortTime(value: string) {
   const date = new Date(value);
@@ -38,15 +48,18 @@ export default function AdminConsultationChatPage() {
   const user = useAppSelector((state) => state.auth.user);
   const isAdmin = user?.role === 'admin';
   const reduceMotion = useReducedMotion();
-  const [filter, setFilter] = useState<ConversationFilter>('open');
+  const [filter, setFilter] = useState<ConversationFilter>('all');
   const [conversations, setConversations] = useState<IConsultationConversation[]>([]);
   const [selectedId, setSelectedId] = useState('');
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
   const [messages, setMessages] = useState<IConsultationMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [loadingInbox, setLoadingInbox] = useState(true);
   const [sending, setSending] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [deletingConversation, setDeletingConversation] = useState(false);
   const [conversationToClose, setConversationToClose] = useState<IConsultationConversation | null>(null);
+  const [conversationToDelete, setConversationToDelete] = useState<IConsultationConversation | null>(null);
   const [error, setError] = useState('');
   const lastMessageIdRef = useRef('');
   const conversationRequestIdRef = useRef(0);
@@ -174,7 +187,14 @@ export default function AdminConsultationChatPage() {
     setUpdatingStatus(true);
     try {
       const updated = await adminApi.setConsultationConversationStatus(conversationId, nextStatus);
-      setConversations((current) => current.map((item) => item.id === updated.id ? updated : item));
+      const closedAt = new Date().toISOString();
+      setConversations((current) => current.map((item) => {
+        if (item.id === updated.id) return updated;
+        if (nextStatus === 'open' && updated.userId && item.userId === updated.userId && item.status === 'open') {
+          return { ...item, status: 'closed', closedAt, closedByAdminId: null, closedByAdminName: '' };
+        }
+        return item;
+      }));
       setFilter(nextStatus);
       setError('');
       return true;
@@ -183,6 +203,27 @@ export default function AdminConsultationChatPage() {
       return false;
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const deleteConversation = async () => {
+    if (!conversationToDelete || deletingConversation) return;
+    setDeletingConversation(true);
+    try {
+      await adminApi.deleteConsultationConversation(conversationToDelete.id);
+      const remaining = conversations.filter((item) => item.id !== conversationToDelete.id);
+      setConversations(remaining);
+      if (selectedId === conversationToDelete.id) {
+        setSelectedId(remaining[0]?.id || '');
+        setMessages([]);
+        setMobileDetailOpen(false);
+      }
+      setConversationToDelete(null);
+      setError('');
+    } catch (requestError: any) {
+      setError(requestError?.response?.data?.message || 'حذف گفت‌وگو انجام نشد.');
+    } finally {
+      setDeletingConversation(false);
     }
   };
 
@@ -217,10 +258,11 @@ export default function AdminConsultationChatPage() {
 
       <Card className="overflow-hidden rounded-3xl border border-brand-border bg-brand-surface shadow-sm">
         <div className="grid min-h-[min(76vh,820px)] lg:grid-cols-[340px_minmax(0,1fr)]">
-          <aside className="flex min-h-0 flex-col border-b border-brand-border lg:border-b-0 lg:border-l">
+          <aside className={`${mobileDetailOpen ? 'hidden' : 'flex'} min-h-0 flex-col border-b border-brand-border lg:flex lg:border-b-0 lg:border-l`}>
             <div className="border-b border-brand-border p-4">
-              <div className="grid grid-cols-3 gap-1 rounded-2xl bg-brand-surface-elevated p-1">
+              <div className="grid grid-cols-4 gap-1 rounded-2xl bg-brand-surface-elevated p-1">
                 {([
+                  ['pending', 'در انتظار'],
                   ['open', 'باز'],
                   ['closed', 'بسته'],
                   ['all', 'همه'],
@@ -231,7 +273,7 @@ export default function AdminConsultationChatPage() {
                     size="sm"
                     variant={filter === value ? 'solid' : 'light'}
                     onPress={() => setFilter(value)}
-                    className={`h-9 min-w-0 rounded-xl text-xs font-bold ${filter === value ? 'bg-brand-gold text-brand-olive' : 'text-brand-text-muted'}`}
+                    className={`h-11 min-w-0 rounded-xl text-[11px] font-bold ${filter === value ? 'bg-brand-gold text-brand-olive' : 'text-brand-text-muted'}`}
                   >
                     {label}
                   </Button>
@@ -256,7 +298,10 @@ export default function AdminConsultationChatPage() {
                       <button
                         type="button"
                         key={item.id}
-                        onClick={() => setSelectedId(item.id)}
+                        onClick={() => {
+                          setSelectedId(item.id);
+                          setMobileDetailOpen(true);
+                        }}
                         className={`w-full px-4 py-4 text-right transition-colors hover:bg-brand-surface-elevated ${selected ? 'bg-brand-surface-elevated' : 'bg-transparent'}`}
                       >
                         <div className="flex items-start gap-3">
@@ -268,13 +313,21 @@ export default function AdminConsultationChatPage() {
                               <span className="truncate text-sm font-extrabold text-brand-text">{item.guestName || 'مشتری مهمان'}</span>
                               <time className="shrink-0 text-[10px] text-brand-text-muted" dateTime={item.lastMessageAt}>{shortTime(item.lastMessageAt)}</time>
                             </span>
+                            <span className="mt-1 block truncate text-[11px] font-bold text-brand-gold">{item.subject || 'مشاوره'}</span>
                             <span className="mt-1 flex items-center justify-between gap-2">
-                              <span className="truncate text-xs text-brand-text-muted">{item.lastMessageText || 'گفت‌وگو آغاز شده است'}</span>
+                              <span className="truncate text-xs text-brand-text-muted">{item.lastMessageText || (item.status === 'pending' ? 'درخواست مشاوره ثبت شده' : 'گفت‌وگو آغاز شده است')}</span>
                               {!!item.unreadForAdmin && (
                                 <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand-gold px-1.5 text-[10px] font-black text-brand-olive">
                                   {toPersianDigits(item.unreadForAdmin)}
                                 </span>
                               )}
+                            </span>
+                            <span className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${item.status === 'pending' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300' : item.status === 'open' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-default-100 text-default-500'}`}>
+                              {statusLabel(item.status)}
+                            </span>
+                            <span className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-brand-text-muted" dir="ltr">
+                              {item.guestPhone && <span>{item.guestPhone}</span>}
+                              {item.guestEmail && <span className="max-w-[180px] truncate">{item.guestEmail}</span>}
                             </span>
                           </span>
                         </div>
@@ -286,44 +339,89 @@ export default function AdminConsultationChatPage() {
             </div>
           </aside>
 
-          <section className="flex min-h-[550px] min-w-0 flex-col lg:min-h-0">
+          <section className={`${mobileDetailOpen ? 'flex' : 'hidden'} min-h-[min(76vh,820px)] min-w-0 flex-col lg:flex lg:min-h-0`}>
             {selectedConversation ? (
               <>
-                <header className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-border px-4 py-3 sm:px-5">
+                <header className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-border px-3 py-3 sm:px-5">
                   <div className="flex min-w-0 items-center gap-3">
+                    <Button
+                      type="button"
+                      isIconOnly
+                      aria-label="بازگشت به فهرست گفتگوها"
+                      onPress={() => setMobileDetailOpen(false)}
+                      className="h-11 min-w-11 shrink-0 rounded-2xl bg-brand-surface-elevated text-brand-text lg:hidden"
+                    >
+                      <ArrowRight className="h-5 w-5" />
+                    </Button>
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-olive font-extrabold text-brand-gold">
                       {(selectedConversation.guestName || 'م').slice(0, 1)}
                     </span>
                     <div className="min-w-0">
                       <h2 className="truncate text-sm font-extrabold text-brand-text">{selectedConversation.guestName || 'مشتری مهمان'}</h2>
+                      <p className="mt-0.5 truncate text-[11px] font-bold text-brand-gold">موضوع: {selectedConversation.subject || 'مشاوره'}</p>
                       <p className="mt-0.5 text-[11px] text-brand-text-muted">
-                        {selectedConversation.status === 'open'
-                          ? `گفت‌وگوی باز · شروع ${shortTime(selectedConversation.createdAt)}`
-                          : `پایان ${selectedConversation.closedAt ? shortTime(selectedConversation.closedAt) : ''}${selectedConversation.closedByAdminName ? ` توسط ${selectedConversation.closedByAdminName}` : ''}`}
+                        {selectedConversation.status === 'pending'
+                          ? `درخواست ثبت‌شده · ${shortTime(selectedConversation.createdAt)}`
+                          : selectedConversation.status === 'open'
+                            ? `گفت‌وگوی باز · شروع ${shortTime(selectedConversation.createdAt)}`
+                            : `پایان ${selectedConversation.closedAt ? shortTime(selectedConversation.closedAt) : ''}${selectedConversation.closedByAdminName ? ` توسط ${selectedConversation.closedByAdminName}` : ''}`}
                       </p>
+                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-brand-text-muted">
+                        {selectedConversation.guestPhone && <span dir="ltr">{selectedConversation.guestPhone}</span>}
+                        {selectedConversation.guestEmail && <span dir="ltr">{selectedConversation.guestEmail}</span>}
+                        {selectedConversation.guestUsername && <span dir="ltr">@{selectedConversation.guestUsername}</span>}
+                        {(selectedConversation.guestCity || selectedConversation.guestProvince) && (
+                          <span>{[selectedConversation.guestCity, selectedConversation.guestProvince].filter(Boolean).join('، ')}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="flat"
-                    isDisabled={updatingStatus}
-                    onPress={() => {
-                      if (selectedConversation.status === 'open') {
-                        setConversationToClose(selectedConversation);
-                      } else {
-                        void updateStatus(selectedConversation.id, 'open');
-                      }
-                    }}
-                    startContent={selectedConversation.status === 'open' ? <Archive className="h-4 w-4" /> : <RotateCcw className="h-4 w-4" />}
-                    className="rounded-full bg-brand-surface-elevated font-bold text-brand-text"
-                  >
-                    {selectedConversation.status === 'open' ? 'بستن گفت‌وگو' : 'بازگشایی'}
-                  </Button>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="flat"
+                      isDisabled={updatingStatus}
+                      onPress={() => {
+                        if (selectedConversation.status === 'open') {
+                          setConversationToClose(selectedConversation);
+                        } else {
+                          void updateStatus(selectedConversation.id, 'open');
+                        }
+                      }}
+                      startContent={selectedConversation.status === 'pending'
+                        ? <Check className="h-4 w-4" />
+                        : selectedConversation.status === 'open'
+                          ? <Archive className="h-4 w-4" />
+                          : <RotateCcw className="h-4 w-4" />}
+                      className="min-h-11 rounded-full bg-brand-surface-elevated font-bold text-brand-text"
+                    >
+                      {selectedConversation.status === 'pending'
+                        ? 'تأیید و شروع چت'
+                        : selectedConversation.status === 'open' ? 'بستن گفت‌وگو' : 'بازگشایی'}
+                    </Button>
+                    <Button
+                      type="button"
+                      isIconOnly
+                      size="sm"
+                      aria-label="حذف گفت‌وگو"
+                      isDisabled={deletingConversation}
+                      onPress={() => setConversationToDelete(selectedConversation)}
+                      className="h-11 min-w-11 rounded-full text-rose-600 hover:bg-rose-500/10 dark:text-rose-400"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </header>
 
                 <div className="flex-1 space-y-3 overflow-y-auto bg-brand-surface-elevated/35 px-3 py-4 sm:px-6">
-                  {messages.length === 0 && (
+                  {selectedConversation.status === 'pending' ? (
+                    <div className="flex h-full min-h-48 flex-col items-center justify-center text-center">
+                      <Clock3 className="h-8 w-8 text-amber-600 dark:text-amber-300" />
+                      <p className="mt-3 text-sm font-bold text-brand-text">درخواست منتظر تأیید شماست</p>
+                      <p className="mt-1 max-w-sm text-xs leading-6 text-brand-text-muted">پس از تأیید، مشتری می‌تواند در همین گفتگو پیام بفرستد.</p>
+                    </div>
+                  ) : messages.length === 0 && (
                     <div className="flex h-full min-h-48 items-center justify-center text-sm text-brand-text-muted">هنوز پیامی ارسال نشده است.</div>
                   )}
                   <AnimatePresence initial={false}>
@@ -344,7 +442,10 @@ export default function AdminConsultationChatPage() {
                             </div>
                             <div className="mt-1 flex items-center gap-1 px-1 text-[10px] text-brand-text-muted">
                               <time dateTime={message.createdAt}>{fullTime(message.createdAt)}</time>
-                              {mine && <CheckCheck className="h-3 w-3 text-brand-gold" />}
+                              {mine && (selectedConversation.lastAdminMessageReadAt
+                                && new Date(selectedConversation.lastAdminMessageReadAt).getTime() >= new Date(message.createdAt).getTime()
+                                ? <CheckCheck aria-label="خوانده‌شده" className="h-3.5 w-3.5 text-brand-gold" />
+                                : <Check aria-label="ارسال‌شده" className="h-3.5 w-3.5" />)}
                             </div>
                           </div>
                         </motion.div>
@@ -360,6 +461,7 @@ export default function AdminConsultationChatPage() {
                   <form onSubmit={(event) => void sendReply(event)} className="border-t border-brand-border p-3 sm:p-4">
                     <div className="flex items-end gap-2 sm:gap-3">
                       <Textarea
+                        className="min-w-0 flex-1"
                         aria-label="پاسخ به مشتری"
                         value={draft}
                         onValueChange={setDraft}
@@ -393,6 +495,8 @@ export default function AdminConsultationChatPage() {
                     </div>
                     <p className="mt-2 px-1 text-[10px] text-brand-text-muted">Enter برای ارسال · Shift + Enter برای خط جدید</p>
                   </form>
+                ) : selectedConversation.status === 'pending' ? (
+                  <div className="border-t border-brand-border p-4 text-center text-sm text-brand-text-muted">با تأیید درخواست، کادر ارسال پاسخ فعال می‌شود.</div>
                 ) : (
                   <div className="border-t border-brand-border p-4 text-center text-sm text-brand-text-muted">برای پاسخ‌دادن، ابتدا گفت‌وگو را بازگشایی کن.</div>
                 )}
@@ -429,6 +533,24 @@ export default function AdminConsultationChatPage() {
           const closed = await updateStatus(conversationToClose.id, 'closed');
           if (closed) setConversationToClose(null);
         }}
+      />
+      <AdminConfirmModal
+        isOpen={conversationToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open && !deletingConversation) setConversationToDelete(null);
+        }}
+        title="حذف گفت‌وگو"
+        description={(
+          <p>
+            گفت‌وگوی «<strong>{conversationToDelete?.subject || 'مشاوره'}</strong>» و تمام پیام‌های آن حذف می‌شوند. این کار قابل بازگشت نیست.
+          </p>
+        )}
+        confirmText="حذف گفت‌وگو"
+        cancelText="انصراف"
+        confirmColor="danger"
+        icon={<Trash2 className="h-4 w-4" />}
+        isLoading={deletingConversation}
+        onConfirm={deleteConversation}
       />
     </main>
   );

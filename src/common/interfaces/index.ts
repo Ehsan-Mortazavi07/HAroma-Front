@@ -1,15 +1,24 @@
 export type UserRole = 'admin' | 'editor' | 'user';
 
-export type ConsultationConversationStatus = 'open' | 'closed';
+export type ConsultationConversationStatus = 'pending' | 'open' | 'closed';
 
 export interface IConsultationConversation {
   id: string;
   guestName: string;
+  subject: string;
+  userId: string | null;
+  guestPhone: string;
+  guestEmail: string;
+  guestUsername: string;
+  guestProvince: string;
+  guestCity: string;
   status: ConsultationConversationStatus;
   lastMessageText: string;
   lastMessageAt: string;
   unreadForAdmin: number;
   unreadForGuest: number;
+  lastCustomerMessageReadAt: string | null;
+  lastAdminMessageReadAt: string | null;
   closedAt: string | null;
   closedByAdminId: string | null;
   closedByAdminName: string;

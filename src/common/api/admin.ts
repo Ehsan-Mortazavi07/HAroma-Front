@@ -11,7 +11,7 @@ import type {
 
 export const adminApi = {
   // Customer consultation chat
-  getConsultationConversations: async (status: 'open' | 'closed' | 'all' = 'open') => {
+  getConsultationConversations: async (status: 'pending' | 'open' | 'closed' | 'all' = 'all') => {
     const res = await axiosInstance.get<IConsultationConversation[]>(
       '/admin/consultation-chat/conversations',
       { params: { status } },
@@ -36,6 +36,12 @@ export const adminApi = {
     const res = await axiosInstance.patch<IConsultationConversation>(
       `/admin/consultation-chat/conversations/${encodeURIComponent(conversationId)}/status`,
       { status },
+    );
+    return res.data;
+  },
+  deleteConsultationConversation: async (conversationId: string) => {
+    const res = await axiosInstance.delete<{ id: string; deleted: boolean }>(
+      `/admin/consultation-chat/conversations/${encodeURIComponent(conversationId)}`,
     );
     return res.data;
   },

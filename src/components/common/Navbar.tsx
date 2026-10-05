@@ -33,6 +33,7 @@ import {
   Trash2,
   Minus,
   Plus,
+  MessageCircle,
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { toggleCartDrawer } from '@/stores/ui/uiSlice';
@@ -450,6 +451,14 @@ export function Navbar() {
                               <span>پروفایل کاربری و سفارش‌ها</span>
                             </Link>
                             <Link
+                              href="/consultation"
+                              onClick={() => setIsProfileOpen(false)}
+                              className="flex items-center gap-2.5 p-2.5 rounded-xl text-[#f7f4ee] hover:bg-[#242c24] hover:text-[#bfa27a] transition-colors"
+                            >
+                              <MessageCircle className="w-4 h-4 text-[#bfa27a]" />
+                              <span>مشاوره و چت آنلاین</span>
+                            </Link>
+                            <Link
                               href={PATHS.VIP}
                               onClick={() => setIsProfileOpen(false)}
                               className="flex items-center gap-2.5 p-2.5 rounded-xl text-[#f7f4ee] hover:bg-[#242c24] transition-colors"
@@ -490,6 +499,14 @@ export function Navbar() {
                           >
                             <Sparkles className="w-4 h-4 text-[#a69c8e]" />
                             <span>ثبت‌نام در هاتف آروما</span>
+                          </Link>
+                          <Link
+                            href="/consultation"
+                            onClick={() => setIsProfileOpen(false)}
+                            className="flex items-center gap-2.5 p-2.5 rounded-xl text-[#f7f4ee] hover:bg-[#242c24] hover:text-[#bfa27a] transition-colors"
+                          >
+                            <MessageCircle className="w-4 h-4 text-[#bfa27a]" />
+                            <span>مشاوره و چت آنلاین</span>
                           </Link>
                           <Link
                             href={PATHS.VIP}

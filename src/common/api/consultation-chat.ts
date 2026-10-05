@@ -21,10 +21,10 @@ export const consultationChatApi = {
     );
     return response.data;
   },
-  startConversation: async (sessionToken: string, guestName: string) => {
+  startConversation: async (sessionToken: string, subject: string, guestName?: string) => {
     const response = await axiosInstance.post<IConsultationConversation>(
       '/consultation-chat/current',
-      { guestName },
+      { subject, guestName },
       { headers: sessionHeaders(sessionToken) },
     );
     return response.data;

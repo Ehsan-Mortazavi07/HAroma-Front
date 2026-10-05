@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import dynamic from 'next/dynamic';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@heroui/react';
+import { EmojiClickData, EmojiStyle, Theme } from 'emoji-picker-react';
+import { createPortal } from 'react-dom';
 import { Smile } from 'lucide-react';
 
-const EMOJIS = ['😊', '😍', '🥰', '🌸', '🌹', '✨', '💐', '👋', '🙏', '👍', '❤️', '🎁'];
+const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 
 interface ChatEmojiPickerProps {
   onSelect: (emoji: string) => void;
@@ -13,46 +16,88 @@ interface ChatEmojiPickerProps {
 
 export function ChatEmojiPicker({ onSelect, isDisabled = false }: ChatEmojiPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState({ left: 12, top: 12, width: 350, height: 430 });
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const updatePosition = () => {
+      const trigger = triggerRef.current;
+      if (!trigger) return;
+      const bounds = trigger.getBoundingClientRect();
+      const width = Math.min(360, window.innerWidth - 24);
+      const height = Math.min(440, window.innerHeight * 0.58);
+      const left = Math.max(12, Math.min(bounds.right - width, window.innerWidth - width - 12));
+      const top = bounds.top >= height + 16
+        ? bounds.top - height - 10
+        : Math.min(bounds.bottom + 10, window.innerHeight - height - 12);
+      setPosition({ left, top: Math.max(12, top), width, height });
+    };
+
+    const dismissOutside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!pickerRef.current?.contains(target) && !triggerRef.current?.contains(target)) {
+        setIsOpen(false);
+      }
+    };
+
+    updatePosition();
+    document.addEventListener('pointerdown', dismissOutside);
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, { capture: true, passive: true });
+    return () => {
+      document.removeEventListener('pointerdown', dismissOutside);
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [isOpen]);
+
+  const onEmojiClick = (emojiData: EmojiClickData) => {
+    onSelect(emojiData.emoji);
+    setIsOpen(false);
+  };
 
   return (
-    <div className="relative shrink-0">
+    <>
       <Button
+        ref={triggerRef}
         type="button"
         isIconOnly
         aria-label="افزودن ایموجی"
         aria-expanded={isOpen}
+        aria-haspopup="dialog"
         isDisabled={isDisabled}
         onPress={() => setIsOpen((open) => !open)}
-        className="h-11 min-w-11 rounded-2xl border border-brand-border bg-brand-surface-elevated text-brand-text-muted hover:text-brand-gold"
+        className="h-11 min-w-11 shrink-0 rounded-2xl border border-brand-border bg-brand-surface-elevated text-brand-text-muted hover:text-brand-gold"
       >
         <Smile className="h-5 w-5" />
       </Button>
 
-      {isOpen && (
+      {isOpen && typeof document !== 'undefined' && createPortal(
         <div
+          ref={pickerRef}
           role="dialog"
           aria-label="انتخاب ایموجی"
-          className="absolute bottom-full right-0 z-30 mb-2 w-56 rounded-2xl border border-brand-border bg-brand-surface p-3 shadow-xl"
+          dir="ltr"
+          className="fixed z-[10020] overflow-hidden rounded-2xl border border-brand-border bg-brand-surface shadow-2xl"
+          style={{ left: position.left, top: position.top, width: position.width, height: position.height }}
         >
-          <p className="mb-2 text-xs font-bold text-brand-text-muted">یک ایموجی انتخاب کن</p>
-          <div className="grid grid-cols-6 gap-1">
-            {EMOJIS.map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                aria-label={emoji}
-                onClick={() => {
-                  onSelect(emoji);
-                  setIsOpen(false);
-                }}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-lg transition-colors hover:bg-brand-surface-elevated focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold"
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        </div>
+          <EmojiPicker
+            onEmojiClick={onEmojiClick}
+            emojiStyle={EmojiStyle.APPLE}
+            theme={Theme.AUTO}
+            lazyLoadEmojis
+            searchPlaceHolder="جست‌وجوی ایموجی"
+            searchClearButtonLabel="پاک‌کردن جست‌وجو"
+            previewConfig={{ showPreview: false }}
+            width="100%"
+            height="100%"
+          />
+        </div>,
+        document.body,
       )}
-    </div>
+    </>
   );
 }
