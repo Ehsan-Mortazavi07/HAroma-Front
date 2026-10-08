@@ -19,7 +19,6 @@ import {
 import { consultationChatApi } from '@/common/api/consultation-chat';
 import type { IConsultationConversation, IConsultationMessage } from '@/common/interfaces';
 import { toPersianDigits } from '@/common/utils';
-import { ChatEmojiPicker } from '@/components/chat/ChatEmojiPicker';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { useAppSelector } from '@/stores/hooks';
 
@@ -326,10 +325,6 @@ export function ConsultationChat() {
     }
   };
 
-  const addEmoji = (emoji: string) => {
-    setDraft((current) => `${current}${current && !/\s$/.test(current) ? ' ' : ''}${emoji}`);
-  };
-
   const renderRequestForm = () => (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6">
       <div className="mb-5 flex items-start gap-3">
@@ -547,7 +542,6 @@ export function ConsultationChat() {
               input: 'py-2 text-sm leading-6 text-brand-text placeholder:text-brand-text-muted',
             }}
           />
-          <ChatEmojiPicker onSelect={addEmoji} isDisabled={loadingConversations || loadingMessages || sending} />
           <Button
             isIconOnly
             type="submit"

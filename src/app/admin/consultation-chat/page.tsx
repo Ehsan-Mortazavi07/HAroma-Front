@@ -17,7 +17,6 @@ import {
   Send,
 } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
-import { ChatEmojiPicker } from '@/components/chat/ChatEmojiPicker';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import type { IConsultationConversation, IConsultationMessage } from '@/common/interfaces';
 import { toPersianDigits } from '@/common/utils';
@@ -173,10 +172,6 @@ export default function AdminConsultationChatPage() {
     } finally {
       setSending(false);
     }
-  };
-
-  const addEmoji = (emoji: string) => {
-    setDraft((current) => `${current}${current && !/\s$/.test(current) ? ' ' : ''}${emoji}`);
   };
 
   const updateStatus = async (
@@ -481,7 +476,6 @@ export default function AdminConsultationChatPage() {
                           input: 'py-2 text-sm leading-6 text-brand-text placeholder:text-brand-text-muted',
                         }}
                       />
-                      <ChatEmojiPicker onSelect={addEmoji} isDisabled={sending} />
                       <Button
                         isIconOnly
                         type="submit"

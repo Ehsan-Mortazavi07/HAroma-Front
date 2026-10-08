@@ -240,18 +240,18 @@ export function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMegaMenuOpen, isProfileOpen, isCartDrawerOpen, dispatch]);
 
-  // Lock body scroll on small screens only when open
+  // The category panel has its own scroll area. Only lock the page for the cart drawer.
   useEffect(() => {
-    const isAnyOpen = isMegaMenuOpen || isCartDrawerOpen;
-    if (!isAnyOpen) return;
+    if (!isCartDrawerOpen) return;
 
     if (window.innerWidth < 1024) {
+      const previousOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
       return () => {
-        document.body.style.overflow = '';
+        document.body.style.overflow = previousOverflow;
       };
     }
-  }, [isMegaMenuOpen, isCartDrawerOpen]);
+  }, [isCartDrawerOpen]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -581,7 +581,9 @@ export function Navbar() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="absolute top-full left-0 right-0 mt-3 sm:mt-4 w-full bg-[#1c231c]/95 dark:bg-[#151a15]/95 backdrop-blur-3xl border border-[#2e3a2e] rounded-[32px] p-5 sm:p-7 lg:p-8 shadow-2xl z-50 lg:max-h-[85vh] overflow-y-auto will-change-transform"
+              tabIndex={0}
+              aria-label="دسته‌بندی‌های فروشگاه"
+              className="absolute top-full left-0 right-0 mt-3 sm:mt-4 w-full bg-[#1c231c]/95 dark:bg-[#151a15]/95 backdrop-blur-3xl border border-[#2e3a2e] rounded-[32px] p-5 sm:p-7 lg:p-8 shadow-2xl z-50 max-h-[calc(100dvh-7rem-env(safe-area-inset-bottom))] lg:max-h-[85vh] overflow-x-hidden overflow-y-auto overscroll-contain touch-pan-y [-webkit-overflow-scrolling:touch] will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#bfa27a]"
             >
               <button
                 type="button"

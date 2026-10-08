@@ -226,11 +226,6 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
   };
 
   const handleSubmit = async (values: any) => {
-    if (images.length === 0) {
-      toast.error(isPersian ? 'حداقل یک تصویر برای محصول آپلود نمایید.' : 'Upload at least one product image.');
-      return;
-    }
-
     setLoading(true);
     try {
       const payload: any = {
@@ -275,8 +270,8 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
           </h1>
           <p className="text-xs text-[#73695c] dark:text-[#a69c8e] mt-1">
             {isPersian
-              ? 'اطلاعات عمومی، تصاویر، دسته‌بندی‌ها، حجم‌های متنوع، توضیحات دوزبانه و ویژگی‌های داینامیک را وارد نمایید'
-              : 'Fill in details, upload images, configure volume variants, bilingual descriptions & dynamic attributes'}
+              ? 'اطلاعات عمومی، تصاویر اختیاری، دسته‌بندی‌ها، حجم‌های متنوع، توضیحات دوزبانه و ویژگی‌های داینامیک را وارد نمایید'
+              : 'Enter product details, add optional images, configure volume variants, and provide descriptions & attributes'}
           </p>
         </div>
 

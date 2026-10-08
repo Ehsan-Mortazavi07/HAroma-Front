@@ -17,7 +17,6 @@
     "@tiptap/starter-kit": "^3.31.4",
     "axios": "^1.20.0",
     "clsx": "^2.1.1",
-    "emoji-picker-react": "^4.22.3",
     "formik": "^2.4.6",
     "framer-motion": "^12.4.7",
     "js-cookie": "^3.0.5",

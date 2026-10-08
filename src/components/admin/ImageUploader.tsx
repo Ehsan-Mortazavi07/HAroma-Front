@@ -72,11 +72,11 @@ export function ImageUploader({ images = [], onChange, maxImages = 8 }: ImageUpl
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-brand-border">
+      <div className="flex flex-col items-start gap-2 pb-3 border-b border-brand-border sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <ImageIcon className="w-5 h-5 text-brand-bronze" />
           <h3 className="font-black text-base text-brand-text">
-            {isPersian ? 'گالری و تصاویر باکیفیت محصول' : 'Product Media & High-Res Gallery'}
+            {isPersian ? 'گالری تصاویر محصول (اختیاری)' : 'Product Images (Optional)'}
           </h3>
         </div>
 
@@ -91,6 +91,11 @@ export function ImageUploader({ images = [], onChange, maxImages = 8 }: ImageUpl
           {isPersian ? '+ افزودن لینک اینترنتی تصویر' : '+ Add Image URL'}
         </Button>
       </div>
+      <p className="text-xs leading-5 text-brand-text-muted">
+        {isPersian
+          ? 'افزودن تصویر اختیاری است؛ در صورت خالی بودن، تصویر پیش‌فرض محصول نمایش داده می‌شود.'
+          : 'Images are optional. Products without an image use the default product image.'}
+      </p>
 
       {/* Thumbnails Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
