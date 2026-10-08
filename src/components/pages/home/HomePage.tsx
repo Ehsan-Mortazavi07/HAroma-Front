@@ -34,7 +34,9 @@ export function HomePage({
     'vip_club_banner',
   ];
   const sectionsByKey = new Map((sections ?? []).map((section) => [section.sectionKey, section]));
-  const hasSectionSettings = sections !== null;
+  // An empty response means the homepage has not been configured yet.
+  // Keep the storefront visible with its built-in section order until it is seeded.
+  const hasSectionSettings = sections !== null && sections.length > 0;
 
   const orderedSectionKeys = defaultSectionOrder
     .filter((key) => {
