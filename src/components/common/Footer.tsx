@@ -3,11 +3,97 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Phone, Mail, MapPin, ShieldCheck, Sparkles, Crown, ChevronDown } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { PATHS } from '@/common/constants/PATHS';
 import { BrandLogo } from './BrandLogo';
 import { useTranslation } from '@/common/i18n';
 import axiosInstance from '@/common/axiosInstance';
 import { IPageSection } from '@/common/interfaces';
+
+interface MobileFooterAccordionProps {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+}
+
+function MobileFooterAccordion({ id, title, children }: MobileFooterAccordionProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
+  const motionEase = [0.22, 1, 0.36, 1] as const;
+  const revealEase = [0.16, 1, 0.3, 1] as const;
+  const transition = prefersReducedMotion
+    ? {
+        height: { duration: 0 },
+        opacity: { duration: 0.12, ease: 'easeOut' as const },
+      }
+    : {
+        height: isOpen
+          ? { type: 'spring' as const, visualDuration: 0.46, bounce: 0, restDelta: 0.5, restSpeed: 8 }
+          : { type: 'spring' as const, visualDuration: 0.24, bounce: 0, restDelta: 8, restSpeed: 100 },
+        opacity: isOpen
+          ? { duration: 0.34, delay: 0.04, ease: revealEase }
+          : { duration: 0.16, ease: 'easeOut' as const },
+      };
+  const iconTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: 0.28, ease: motionEase };
+  const contentTransition = prefersReducedMotion
+    ? { opacity: { duration: 0.12 }, y: { duration: 0 } }
+    : {
+        opacity: { duration: 0.34, delay: 0.06, ease: revealEase },
+        y: { duration: 0.42, delay: 0.04, ease: revealEase },
+      };
+
+  return (
+    <section>
+      <button
+        id={`${id}-trigger`}
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls={id}
+        onClick={() => setIsOpen((open) => !open)}
+        className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 text-right font-bold text-sm"
+      >
+        <span>{title}</span>
+        <motion.span
+          aria-hidden="true"
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={iconTransition}
+          className="flex h-4 w-4 shrink-0 items-center justify-center text-brand-bronze"
+        >
+          <ChevronDown className="h-4 w-4" />
+        </motion.span>
+      </button>
+
+      <div aria-hidden={!isOpen} inert={!isOpen}>
+        <AnimatePresence initial={false}>
+          {isOpen && (
+            <motion.div
+              id={id}
+              key={id}
+              role="region"
+              aria-labelledby={`${id}-trigger`}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={transition}
+              className="overflow-hidden"
+            >
+              <motion.div
+                initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={contentTransition}
+                className="pb-4"
+              >
+                {children}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </section>
+  );
+}
 
 export function Footer() {
   const { t, isPersian } = useTranslation();
@@ -55,11 +141,7 @@ export function Footer() {
           </div>
 
           <div className="mt-2 divide-y divide-brand-border border-y border-brand-border">
-            <details className="group">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-bold text-sm marker:hidden [&::-webkit-details-marker]:hidden">
-                <span>{isPersian ? 'دسته‌بندی‌های اصلی' : 'Categories'}</span>
-                <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-brand-bronze transition-transform group-open:rotate-180" />
-              </summary>
+            <MobileFooterAccordion id="mobile-footer-categories" title={isPersian ? 'دسته‌بندی‌های اصلی' : 'Categories'}>
               <ul className="grid grid-cols-2 gap-x-3 gap-y-1 pb-3 text-xs">
                 <li><Link href="/products?category=men-perfumes" className="flex min-h-10 items-center leading-5 text-brand-text-muted hover:text-brand-bronze dark:hover:text-brand-gold">{t.nav.menPerfumes}</Link></li>
                 <li><Link href="/products?category=women-perfumes" className="flex min-h-10 items-center leading-5 text-brand-text-muted hover:text-brand-bronze dark:hover:text-brand-gold">{t.nav.womenPerfumes}</Link></li>
@@ -68,38 +150,26 @@ export function Footer() {
                 <li><Link href="/products?category=skin-care" className="flex min-h-10 items-center leading-5 text-brand-text-muted hover:text-brand-bronze dark:hover:text-brand-gold">{t.nav.skinCare}</Link></li>
                 <li><Link href="/products?category=gift-sets" className="flex min-h-10 items-center leading-5 text-brand-text-muted hover:text-brand-bronze dark:hover:text-brand-gold">{t.nav.giftSets}</Link></li>
               </ul>
-            </details>
+            </MobileFooterAccordion>
 
-            <details className="group">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-bold text-sm marker:hidden [&::-webkit-details-marker]:hidden">
-                <span>{isPersian ? 'خدمات مشتریان' : 'Customer service'}</span>
-                <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-brand-bronze transition-transform group-open:rotate-180" />
-              </summary>
+            <MobileFooterAccordion id="mobile-footer-services" title={isPersian ? 'خدمات مشتریان' : 'Customer service'}>
               <ul className="grid grid-cols-2 gap-x-3 gap-y-1 pb-3 text-xs">
                 <li><Link href={PATHS.VIP} className="flex min-h-10 items-center gap-1 leading-5 font-bold text-brand-bronze dark:text-brand-gold"><Crown className="h-3.5 w-3.5 shrink-0" />{t.nav.vipClub}</Link></li>
                 <li><Link href={PATHS.PROFILE} className="flex min-h-10 items-center leading-5 text-brand-text-muted hover:text-brand-bronze dark:hover:text-brand-gold">{t.nav.myProfile}</Link></li>
                 <li><Link href={PATHS.CART} className="flex min-h-10 items-center leading-5 text-brand-text-muted hover:text-brand-bronze dark:hover:text-brand-gold">{t.nav.cartTitle}</Link></li>
                 <li><Link href={PATHS.SIGN_IN} className="flex min-h-10 items-center leading-5 text-brand-text-muted hover:text-brand-bronze dark:hover:text-brand-gold">{t.nav.signIn}</Link></li>
               </ul>
-            </details>
+            </MobileFooterAccordion>
 
-            <details className="group">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-bold text-sm marker:hidden [&::-webkit-details-marker]:hidden">
-                <span>{isPersian ? 'ارتباط با ما' : 'Contact us'}</span>
-                <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-brand-bronze transition-transform group-open:rotate-180" />
-              </summary>
+            <MobileFooterAccordion id="mobile-footer-contact" title={isPersian ? 'ارتباط با ما' : 'Contact us'}>
               <ul className="space-y-3 pb-4 text-xs text-brand-text-muted">
                 <li className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0 text-brand-bronze" /><span className="break-all font-mono">{phoneText}</span></li>
                 <li className="flex items-center gap-2"><Mail className="h-4 w-4 shrink-0 text-brand-bronze" /><span className="break-all font-sans">{emailText}</span></li>
                 <li className="flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-bronze" /><span className="leading-relaxed">{addressText}</span></li>
               </ul>
-            </details>
+            </MobileFooterAccordion>
 
-            <details className="group">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-bold text-sm marker:hidden [&::-webkit-details-marker]:hidden">
-                <span>{isPersian ? 'درباره و ضمانت اعتماد' : 'About & trust'}</span>
-                <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-brand-bronze transition-transform group-open:rotate-180" />
-              </summary>
+            <MobileFooterAccordion id="mobile-footer-about" title={isPersian ? 'درباره و ضمانت اعتماد' : 'About & trust'}>
               <div className="space-y-3 pb-4">
                 <p className="text-xs leading-6 text-brand-text-muted">{aboutText}</p>
                 <div>
@@ -119,7 +189,7 @@ export function Footer() {
                   </div>
                 </div>
               </div>
-            </details>
+            </MobileFooterAccordion>
           </div>
 
           <div className="mt-2 space-y-1 pt-1">
