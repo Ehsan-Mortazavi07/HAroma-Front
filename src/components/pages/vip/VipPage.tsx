@@ -104,11 +104,18 @@ export function VipPage({ plans }: VipPageProps) {
             : plan.perks;
 
           return (
-            <Card
+            <motion.div
               key={plan._id}
-              className={`relative overflow-visible rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ease-out ${
+              whileHover={{ y: -3, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+              className={`relative h-full hover:z-20 ${isPopular ? 'z-10' : 'z-0'}`}
+            >
+            <Card
+              style={{ overflow: 'visible' }}
+              className={`relative h-full rounded-3xl p-8 flex flex-col justify-between transition-colors duration-300 ease-out ${
                 isPopular
-                  ? 'bg-brand-surface border-2 border-brand-gold shadow-2xl scale-102 z-10'
+                  ? 'bg-brand-surface border-2 border-brand-gold shadow-2xl'
                   : 'bg-brand-surface border border-brand-border shadow-md hover:border-brand-gold'
               }`}
             >
@@ -180,13 +187,14 @@ export function VipPage({ plans }: VipPageProps) {
                 </Button>
               </CardBody>
             </Card>
+            </motion.div>
           );
         })}
       </div>
 
       {/* Perks Comparison Matrix */}
-      <Card className="bg-brand-surface rounded-3xl p-8 border border-brand-border shadow-sm">
-        <CardBody className="p-0">
+      <Card style={{ overflow: 'visible' }} className="bg-brand-surface rounded-3xl p-8 border border-brand-border shadow-sm">
+        <CardBody style={{ overflow: 'visible' }} className="p-0">
           <h3 className="text-xl font-black text-brand-text mb-6 text-center">
             {t.vip.matrixTitle}
           </h3>
@@ -196,7 +204,7 @@ export function VipPage({ plans }: VipPageProps) {
               whileHover={{ y: -3, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 350, damping: 26 }}
-              className="relative z-0 h-full hover:z-10"
+              className="relative z-0 h-full hover:z-20"
             >
               <div className="group h-full p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-all duration-200 hover:border-brand-gold/80 hover:shadow-md">
                 <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
@@ -215,7 +223,7 @@ export function VipPage({ plans }: VipPageProps) {
               whileHover={{ y: -3, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 350, damping: 26 }}
-              className="relative z-0 h-full hover:z-10"
+              className="relative z-0 h-full hover:z-20"
             >
               <div className="group h-full p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-all duration-200 hover:border-brand-gold/80 hover:shadow-md">
                 <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
@@ -234,7 +242,7 @@ export function VipPage({ plans }: VipPageProps) {
               whileHover={{ y: -3, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 350, damping: 26 }}
-              className="relative z-0 h-full hover:z-10"
+              className="relative z-0 h-full hover:z-20"
             >
               <div className="group h-full p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-all duration-200 hover:border-brand-gold/80 hover:shadow-md">
                 <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
@@ -253,7 +261,7 @@ export function VipPage({ plans }: VipPageProps) {
               whileHover={{ y: -3, scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: 'spring', stiffness: 350, damping: 26 }}
-              className="relative z-0 h-full hover:z-10"
+              className="relative z-0 h-full hover:z-20"
             >
               <div className="group h-full p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-all duration-200 hover:border-brand-gold/80 hover:shadow-md">
                 <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
