@@ -120,6 +120,9 @@ export function useDraggableScroll({
 
   // Drag Pointer Handlers
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    // Keep touch input native so mobile browsers can perform inertial horizontal scrolling.
+    // This hook only adds custom dragging for a mouse/trackpad pointer.
+    if (e.pointerType !== 'mouse') return;
     if (e.button !== 0 && e.pointerType === 'mouse') return;
 
     const el = scrollRef.current;

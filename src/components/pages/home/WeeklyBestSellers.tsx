@@ -96,7 +96,7 @@ export function WeeklyBestSellers({ products, section }: WeeklyBestSellersProps)
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-3 mb-5 sm:mb-6 scrollbar-none" role="tablist" aria-label={t.home.bestSellers}>
+      <div className="flex items-center gap-2 overflow-x-auto overscroll-x-contain pb-2 sm:pb-3 mb-5 sm:mb-6 px-1 scrollbar-none [-webkit-overflow-scrolling:touch]" role="tablist" aria-label={t.home.bestSellers}>
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -107,7 +107,7 @@ export function WeeklyBestSellers({ products, section }: WeeklyBestSellersProps)
               role="tab"
               aria-selected={isActive}
               onPress={() => setActiveTab(tab.id)}
-              className={`px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold whitespace-nowrap transition-all duration-200 ease-out h-8 sm:h-9 ${
+              className={`min-w-max shrink-0 px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs font-bold whitespace-nowrap transition-all duration-200 ease-out h-8 sm:h-9 ${
                 isActive
                   ? 'bg-brand-gold text-[#141914] shadow-xs font-black'
                   : 'bg-brand-surface text-brand-text-muted hover:bg-brand-surface-elevated border border-brand-border/70'
@@ -130,9 +130,8 @@ export function WeeklyBestSellers({ products, section }: WeeklyBestSellersProps)
         <div
           ref={scrollRef}
           {...dragHandlers}
-          style={{ touchAction: 'pan-y' }}
           aria-label={title}
-          className="flex items-stretch gap-3 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory py-2 px-0.5 select-none cursor-grab active:cursor-grabbing sm:gap-4 lg:gap-5"
+          className="flex items-stretch gap-3 overflow-x-auto overscroll-x-contain scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory py-2 px-1 [-webkit-overflow-scrolling:touch] select-none cursor-grab active:cursor-grabbing sm:gap-4 lg:gap-5"
         >
           {filteredProducts.map((product) => (
             <div key={product._id} className="flex w-[min(78vw,236px)] shrink-0 snap-start flex-col sm:w-[230px] lg:w-[245px]">

@@ -138,8 +138,7 @@ export function QuickCategories({ categories, section }: QuickCategoriesProps) {
       <div
         ref={scrollRef}
         {...dragHandlers}
-        style={{ touchAction: 'pan-y' }}
-        className="flex items-stretch gap-3 sm:gap-4 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory py-2 px-0.5 select-none cursor-grab active:cursor-grabbing"
+        className="flex items-stretch gap-3 sm:gap-4 overflow-x-auto overscroll-x-contain scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory py-2 px-1 [-webkit-overflow-scrolling:touch] select-none cursor-grab active:cursor-grabbing"
       >
         {categories.map((cat) => (
           <div key={cat._id} className="shrink-0 w-28 sm:w-32 lg:w-36 snap-start">

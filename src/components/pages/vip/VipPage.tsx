@@ -105,14 +105,14 @@ export function VipPage({ plans }: VipPageProps) {
           return (
             <Card
               key={plan._id}
-              className={`relative rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ease-out ${
+              className={`relative overflow-visible rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ease-out ${
                 isPopular
                   ? 'bg-brand-surface border-2 border-brand-gold shadow-2xl scale-102 z-10'
                   : 'bg-brand-surface border border-brand-border shadow-md hover:border-brand-gold'
               }`}
             >
               {isPopular && (
-                <div className="absolute -top-3.5 right-1/2 translate-x-1/2 z-20">
+                <div className="absolute -top-3.5 right-1/2 translate-x-1/2 z-20 pointer-events-none">
                   <Chip
                     className="bg-brand-gold text-[#141914] font-black text-xs shadow-md border-none"
                     size="sm"
@@ -191,8 +191,8 @@ export function VipPage({ plans }: VipPageProps) {
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2">
-              <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
+            <div className="group relative z-0 p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:z-10 hover:scale-[1.05] hover:shadow-xl hover:border-brand-gold/70 motion-reduce:transition-none">
+              <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none">
                 <Zap className="w-5 h-5 text-brand-gold" />
               </div>
               <h4 className="font-bold text-sm text-brand-text">
@@ -203,8 +203,8 @@ export function VipPage({ plans }: VipPageProps) {
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2">
-              <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
+            <div className="group relative z-0 p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:z-10 hover:scale-[1.05] hover:shadow-xl hover:border-brand-gold/70 motion-reduce:transition-none">
+              <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none">
                 <Star className="w-5 h-5 text-brand-gold" />
               </div>
               <h4 className="font-bold text-sm text-brand-text">
@@ -215,8 +215,8 @@ export function VipPage({ plans }: VipPageProps) {
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2">
-              <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
+            <div className="group relative z-0 p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:z-10 hover:scale-[1.05] hover:shadow-xl hover:border-brand-gold/70 motion-reduce:transition-none">
+              <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none">
                 <Gift className="w-5 h-5 text-brand-gold" />
               </div>
               <h4 className="font-bold text-sm text-brand-text">
@@ -227,8 +227,8 @@ export function VipPage({ plans }: VipPageProps) {
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2">
-              <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
+            <div className="group relative z-0 p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:z-10 hover:scale-[1.05] hover:shadow-xl hover:border-brand-gold/70 motion-reduce:transition-none">
+              <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none">
                 <ShieldCheck className="w-5 h-5 text-brand-gold" />
               </div>
               <h4 className="font-bold text-sm text-brand-text">

@@ -97,8 +97,7 @@ export function YouMightNeedSection({ products, section }: YouMightNeedSectionPr
       <div
         ref={scrollRef}
         {...dragHandlers}
-        style={{ touchAction: 'pan-y' }}
-        className="flex items-stretch gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory py-2.5 px-0.5 select-none cursor-grab active:cursor-grabbing"
+        className="flex items-stretch gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto overscroll-x-contain scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory py-2.5 px-1 [-webkit-overflow-scrolling:touch] select-none cursor-grab active:cursor-grabbing"
       >
         {products.map((product) => (
           <div
