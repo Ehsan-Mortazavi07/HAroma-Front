@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
-import { Button, Card, CardBody, Chip, Spinner, Textarea } from '@heroui/react';
+import { Button, Card, CardBody, Chip, Input, Spinner, Textarea } from '@heroui/react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowRight,
@@ -12,14 +12,18 @@ import {
   Clock3,
   Inbox,
   MessageCircle,
+  Plus,
+  Search,
   Trash2,
   RotateCcw,
   Send,
+  UserRound,
+  X,
 } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
 import { connectConsultationSocket, emitConsultationSocket, type ConsultationSocket } from '@/common/socket/consultation-chat';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
-import type { IConsultationConversation, IConsultationMessage } from '@/common/interfaces';
+import type { IConsultationConversation, IConsultationMessage, IUser } from '@/common/interfaces';
 import { toPersianDigits } from '@/common/utils';
 import { useAppSelector } from '@/stores/hooks';
 
@@ -62,9 +66,20 @@ export default function AdminConsultationChatPage() {
   const [conversationToDelete, setConversationToDelete] = useState<IConsultationConversation | null>(null);
   const [error, setError] = useState('');
   const [realtimeConnected, setRealtimeConnected] = useState(false);
+  const [isNewConversationOpen, setIsNewConversationOpen] = useState(false);
+  const [userSearch, setUserSearch] = useState('');
+  const [users, setUsers] = useState<IUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
+  const [newConversationSubject, setNewConversationSubject] = useState('');
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [startingConversation, setStartingConversation] = useState(false);
+  const [userSearchError, setUserSearchError] = useState('');
+  const [newConversationError, setNewConversationError] = useState('');
   const lastMessageIdRef = useRef('');
   const conversationRequestIdRef = useRef(0);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesPaneRef = useRef<HTMLDivElement>(null);
+  const shouldAutoScrollRef = useRef(true);
+  const userSearchRequestIdRef = useRef(0);
   const socketRef = useRef<ConsultationSocket | null>(null);
   const selectedIdRef = useRef('');
   const filterRef = useRef<ConversationFilter>(filter);
@@ -247,10 +262,98 @@ export default function AdminConsultationChatPage() {
   }, [selectedId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'end' });
+    shouldAutoScrollRef.current = true;
+  }, [selectedId]);
+
+  useEffect(() => {
+    const pane = messagesPaneRef.current;
+    if (!pane || !shouldAutoScrollRef.current) return;
+    const frame = window.requestAnimationFrame(() => {
+      const currentPane = messagesPaneRef.current;
+      currentPane?.scrollTo({
+        top: currentPane.scrollHeight,
+        behavior: reduceMotion ? 'auto' : 'smooth',
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [messages, reduceMotion]);
 
+  useEffect(() => {
+    if (!isNewConversationOpen) return;
+    const requestId = ++userSearchRequestIdRef.current;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      setLoadingUsers(true);
+      setUserSearchError('');
+      void adminApi.getUsers({
+        page: 1,
+        pageSize: 12,
+        role: 'user',
+        q: userSearch.trim() || undefined,
+      }).then((result: { items?: IUser[] }) => {
+        if (!cancelled && requestId === userSearchRequestIdRef.current) {
+          setUsers(Array.isArray(result?.items) ? result.items : []);
+        }
+      }).catch((requestError: any) => {
+        if (!cancelled && requestId === userSearchRequestIdRef.current) {
+          setUserSearchError(requestError?.response?.data?.message || 'فهرست کاربران بارگذاری نشد.');
+        }
+      }).finally(() => {
+        if (!cancelled && requestId === userSearchRequestIdRef.current) setLoadingUsers(false);
+      });
+    }, userSearch.trim() ? 250 : 0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [isNewConversationOpen, userSearch]);
+
   const selectedConversation = conversations.find((conversation) => conversation.id === selectedId) || null;
+
+  const startConversationForUser = async (event: FormEvent) => {
+    event.preventDefault();
+    const subject = newConversationSubject.trim();
+    if (!selectedUser || subject.length < 3 || startingConversation) return;
+    setStartingConversation(true);
+    setNewConversationError('');
+    try {
+      const socket = socketRef.current;
+      if (!socket?.connected) throw new Error('اتصال چت برقرار نیست؛ کمی صبر کن و دوباره تلاش کن.');
+      const result = await emitConsultationSocket<{
+        conversation: IConsultationConversation;
+        reused: boolean;
+      }>(socket, 'conversation:create-for-user', {
+        userId: selectedUser._id,
+        subject,
+      });
+      const conversation = result.conversation;
+      const changingConversation = selectedId !== conversation.id;
+      setConversations((current) => {
+        const exists = current.some((item) => item.id === conversation.id);
+        return exists
+          ? current.map((item) => item.id === conversation.id ? conversation : item)
+          : [conversation, ...current];
+      });
+      setFilter('open');
+      setSelectedId(conversation.id);
+      setMobileDetailOpen(true);
+      shouldAutoScrollRef.current = true;
+      if (changingConversation) {
+        lastMessageIdRef.current = '';
+        setMessages([]);
+        setDraft('');
+      }
+      setIsNewConversationOpen(false);
+      setSelectedUser(null);
+      setNewConversationSubject('');
+      setError('');
+    } catch (requestError: any) {
+      setNewConversationError(requestError?.message || requestError?.response?.data?.message || 'ایجاد گفت‌وگو انجام نشد.');
+    } finally {
+      setStartingConversation(false);
+    }
+  };
 
   const sendReply = async (event?: FormEvent | KeyboardEvent) => {
     event?.preventDefault();
@@ -353,7 +456,7 @@ export default function AdminConsultationChatPage() {
             پشتیبانی مشتریان
           </div>
           <h1 className="text-2xl font-black text-brand-text">گفت‌وگوهای مشاوره</h1>
-          <p className="mt-1 text-sm text-brand-text-muted">پیام مشتری را بخوان و پاسخ را در همین صفحه بفرست.</p>
+          <p className="mt-1 text-sm text-brand-text-muted">پاسخ بده یا برای یک کاربر گفت‌وگوی تازه‌ای را شروع کن.</p>
         </div>
         <Chip startContent={<CircleDot className={`h-3 w-3 ${realtimeConnected ? 'text-emerald-500' : 'text-amber-500'}`} />} variant="flat" className="border border-brand-border bg-brand-surface text-brand-text-muted">
           {realtimeConnected ? 'اتصال زنده' : 'در حال اتصال…'}
@@ -361,9 +464,127 @@ export default function AdminConsultationChatPage() {
       </div>
 
       <Card className="overflow-hidden rounded-3xl border border-brand-border bg-brand-surface shadow-sm">
-        <div className="grid min-h-[min(76vh,820px)] lg:grid-cols-[340px_minmax(0,1fr)]">
-          <aside className={`${mobileDetailOpen ? 'hidden' : 'flex'} min-h-0 flex-col border-b border-brand-border lg:flex lg:border-b-0 lg:border-l`}>
+        <div className="grid h-[min(76vh,820px)] min-h-[420px] overflow-hidden lg:grid-cols-[340px_minmax(0,1fr)]">
+          <aside className={`${mobileDetailOpen ? 'hidden' : 'flex'} h-full min-h-0 flex-col overflow-hidden border-b border-brand-border lg:flex lg:border-b-0 lg:border-l`}>
+            {isNewConversationOpen ? (
+              <div className="flex min-h-0 flex-1 flex-col">
+                <div className="border-b border-brand-border p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-sm font-extrabold text-brand-text">گفت‌وگوی جدید</h2>
+                      <p className="mt-1 text-[11px] leading-5 text-brand-text-muted">اگر کاربر گفت‌وگوی بازی داشته باشد، همان گفتگو باز می‌شود.</p>
+                    </div>
+                    <Button
+                      type="button"
+                      isIconOnly
+                      aria-label="بازگشت به فهرست گفتگوها"
+                      onPress={() => setIsNewConversationOpen(false)}
+                      className="h-10 min-w-10 rounded-xl bg-brand-surface-elevated text-brand-text"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Input
+                    aria-label="جستجوی کاربر"
+                    value={userSearch}
+                    onValueChange={setUserSearch}
+                    placeholder="نام، شماره یا نام کاربری"
+                    startContent={<Search className="h-4 w-4 text-brand-text-muted" />}
+                    variant="bordered"
+                    classNames={{
+                      inputWrapper: 'h-11 rounded-xl border-brand-border bg-brand-surface-elevated shadow-none data-[hover=true]:border-brand-gold group-data-[focus=true]:border-brand-gold',
+                      input: 'text-sm text-brand-text placeholder:text-brand-text-muted',
+                    }}
+                  />
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                  {loadingUsers ? (
+                    <div className="flex h-36 items-center justify-center"><Spinner color="warning" /></div>
+                  ) : userSearchError ? (
+                    <p role="alert" className="p-5 text-center text-xs text-rose-600 dark:text-rose-300">{userSearchError}</p>
+                  ) : users.length ? (
+                    <div className="divide-y divide-brand-border/70">
+                      {users.map((candidate) => {
+                        const selected = selectedUser?._id === candidate._id;
+                        return (
+                          <button
+                            type="button"
+                            key={candidate._id}
+                            onClick={() => setSelectedUser(candidate)}
+                            aria-pressed={selected}
+                            className={`flex min-h-16 w-full items-center gap-3 px-4 py-3 text-right transition-colors hover:bg-brand-surface-elevated ${selected ? 'bg-brand-surface-elevated' : ''}`}
+                          >
+                            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${selected ? 'bg-brand-gold text-brand-olive' : 'bg-brand-olive text-brand-gold'}`}>
+                              <UserRound className="h-4 w-4" />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-bold text-brand-text">{candidate.fullName || candidate.username || 'کاربر'}</span>
+                              <span className="mt-1 block truncate text-[11px] text-brand-text-muted" dir="ltr">
+                                {candidate.phone || candidate.email || `@${candidate.username}`}
+                              </span>
+                            </span>
+                            {selected && <Check className="h-4 w-4 shrink-0 text-brand-gold" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="px-5 py-10 text-center text-xs leading-6 text-brand-text-muted">کاربری پیدا نشد. نام، شماره یا نام کاربری را جستجو کن.</p>
+                  )}
+                </div>
+                <form onSubmit={(event) => void startConversationForUser(event)} className="space-y-3 border-t border-brand-border p-4">
+                  {selectedUser && (
+                    <div className="flex items-center justify-between gap-3 rounded-xl bg-brand-surface-elevated px-3 py-2">
+                      <span className="min-w-0 truncate text-xs font-bold text-brand-text">گیرنده: {selectedUser.fullName || selectedUser.username}</span>
+                      <button type="button" aria-label="پاک‌کردن انتخاب کاربر" onClick={() => setSelectedUser(null)} className="rounded-lg p-1 text-brand-text-muted hover:bg-brand-surface">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                  <Input
+                    aria-label="موضوع گفت‌وگو"
+                    value={newConversationSubject}
+                    onValueChange={setNewConversationSubject}
+                    minLength={3}
+                    maxLength={120}
+                    placeholder="موضوع گفت‌وگو"
+                    variant="bordered"
+                    classNames={{
+                      inputWrapper: 'h-11 rounded-xl border-brand-border bg-brand-surface-elevated shadow-none data-[hover=true]:border-brand-gold group-data-[focus=true]:border-brand-gold',
+                      input: 'text-sm text-brand-text placeholder:text-brand-text-muted',
+                    }}
+                  />
+                  {newConversationError && <p role="alert" className="text-xs text-rose-600 dark:text-rose-300">{newConversationError}</p>}
+                  <Button
+                    type="submit"
+                    isDisabled={!selectedUser || newConversationSubject.trim().length < 3 || startingConversation || !realtimeConnected}
+                    isLoading={startingConversation}
+                    startContent={!startingConversation && <MessageCircle className="h-4 w-4" />}
+                    className="h-11 w-full rounded-xl bg-brand-gold font-bold text-brand-olive disabled:opacity-45"
+                  >
+                    شروع یا ادامهٔ گفت‌وگو
+                  </Button>
+                  {!realtimeConnected && <p className="text-center text-[10px] text-brand-text-muted">برای شروع گفت‌وگو منتظر اتصال زنده بمان.</p>}
+                </form>
+              </div>
+            ) : (
+              <>
             <div className="border-b border-brand-border p-4">
+              <Button
+                type="button"
+                onPress={() => {
+                  setUserSearch('');
+                  setSelectedUser(null);
+                  setNewConversationSubject('');
+                  setNewConversationError('');
+                  setMobileDetailOpen(false);
+                  setIsNewConversationOpen(true);
+                }}
+                startContent={<Plus className="h-4 w-4" />}
+                className="mb-3 h-11 w-full rounded-xl bg-brand-olive font-bold text-brand-gold"
+              >
+                گفت‌وگوی جدید با کاربر
+              </Button>
               <div className="grid grid-cols-4 gap-1 rounded-2xl bg-brand-surface-elevated p-1">
                 {([
                   ['pending', 'در انتظار'],
@@ -441,12 +662,14 @@ export default function AdminConsultationChatPage() {
                 </div>
               )}
             </div>
+              </>
+            )}
           </aside>
 
-          <section className={`${mobileDetailOpen ? 'flex' : 'hidden'} min-h-[min(76vh,820px)] min-w-0 flex-col lg:flex lg:min-h-0`}>
+          <section className={`${mobileDetailOpen ? 'flex' : 'hidden'} h-full min-h-0 min-w-0 flex-col overflow-hidden lg:flex`}>
             {selectedConversation ? (
               <>
-                <header className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-border px-3 py-3 sm:px-5">
+                <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-brand-border px-3 py-3 sm:px-5">
                   <div className="flex min-w-0 items-center gap-3">
                     <Button
                       type="button"
@@ -518,7 +741,17 @@ export default function AdminConsultationChatPage() {
                   </div>
                 </header>
 
-                <div className="flex-1 space-y-3 overflow-y-auto bg-brand-surface-elevated/35 px-3 py-4 sm:px-6">
+                <div
+                  ref={messagesPaneRef}
+                  role="log"
+                  aria-label="پیام‌های گفت‌وگو"
+                  aria-live="polite"
+                  onScroll={(event) => {
+                    const pane = event.currentTarget;
+                    shouldAutoScrollRef.current = pane.scrollHeight - pane.scrollTop - pane.clientHeight < 120;
+                  }}
+                  className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain bg-brand-surface-elevated/35 px-3 py-4 sm:px-6"
+                >
                   {selectedConversation.status === 'pending' ? (
                     <div className="flex h-full min-h-48 flex-col items-center justify-center text-center">
                       <Clock3 className="h-8 w-8 text-amber-600 dark:text-amber-300" />
@@ -540,7 +773,7 @@ export default function AdminConsultationChatPage() {
                           className={`flex ${mine ? 'justify-start' : 'justify-end'}`}
                         >
                           <div className={`flex max-w-[88%] flex-col ${mine ? 'items-start' : 'items-end'} sm:max-w-[75%]`}>
-                            <div className={`rounded-2xl px-4 py-2.5 ${mine ? 'rounded-tr-md bg-brand-olive text-[#f7f4ee]' : 'rounded-tl-md border border-brand-border bg-brand-surface text-brand-text'}`}>
+                            <div className={`rounded-2xl px-4 py-2.5 ${mine ? 'rounded-tr-md bg-brand-gold text-brand-olive shadow-sm ring-1 ring-brand-border/40' : 'rounded-tl-md border border-brand-border bg-brand-surface text-brand-text dark:border-[#465247] dark:bg-[#29322b]'}`}>
                               {!mine && <p className="mb-1 text-[11px] font-extrabold text-brand-gold">{message.senderName}</p>}
                               <p className="whitespace-pre-wrap break-words text-sm leading-7">{message.body}</p>
                             </div>
@@ -556,13 +789,12 @@ export default function AdminConsultationChatPage() {
                       );
                     })}
                   </AnimatePresence>
-                  <div ref={bottomRef} />
                 </div>
 
                 {error && <div role="status" className="border-t border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">{error}</div>}
 
                 {selectedConversation.status === 'open' ? (
-                  <form onSubmit={(event) => void sendReply(event)} className="border-t border-brand-border p-3 sm:p-4">
+                  <form onSubmit={(event) => void sendReply(event)} className="shrink-0 border-t border-brand-border p-3 sm:p-4">
                     <div className="flex items-end gap-2 sm:gap-3">
                       <Textarea
                         className="min-w-0 flex-1"

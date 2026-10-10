@@ -76,7 +76,8 @@ export function ConsultationChat() {
   const [confirmNewRequest, setConfirmNewRequest] = useState(false);
   const [connectionError, setConnectionError] = useState('');
   const lastMessageIdRef = useRef('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesPaneRef = useRef<HTMLDivElement>(null);
+  const shouldAutoScrollRef = useRef(true);
   const socketRef = useRef<ConsultationSocket | null>(null);
   const selectedConversationIdRef = useRef('');
   const markReadTimerRef = useRef<number | undefined>(undefined);
@@ -196,6 +197,19 @@ export function ConsultationChat() {
         return next.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
       });
     };
+    const onConversationCreated = (conversation: IConsultationConversation) => {
+      if (disposed) return;
+      setConversations((current) => {
+        const exists = current.some((item) => item.id === conversation.id);
+        const next = exists
+          ? current.map((item) => item.id === conversation.id ? conversation : item)
+          : [...current, conversation];
+        return next.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+      });
+      selectedConversationIdRef.current = conversation.id;
+      setSelectedConversationId(conversation.id);
+      setMobileView('chat');
+    };
     const onConversationDeleted = ({ id }: { id: string }) => {
       if (disposed) return;
       setConversations((current) => current.filter((item) => item.id !== id));
@@ -221,6 +235,7 @@ export function ConsultationChat() {
     socket.on('connect', onConnect);
     socket.on('connect_error', onConnectError);
     socket.on('conversation:updated', onConversationUpdated);
+    socket.on('conversation:created', onConversationCreated);
     socket.on('conversation:deleted', onConversationDeleted);
     socket.on('message:new', onNewMessage);
 
@@ -230,6 +245,7 @@ export function ConsultationChat() {
       socket.off('connect', onConnect);
       socket.off('connect_error', onConnectError);
       socket.off('conversation:updated', onConversationUpdated);
+      socket.off('conversation:created', onConversationCreated);
       socket.off('conversation:deleted', onConversationDeleted);
       socket.off('message:new', onNewMessage);
       socket.disconnect();
@@ -273,10 +289,20 @@ export function ConsultationChat() {
   }, [selectedConversationId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: reduceMotion ? 'auto' : 'smooth',
-      block: 'end',
+    shouldAutoScrollRef.current = true;
+  }, [selectedConversationId]);
+
+  useEffect(() => {
+    const pane = messagesPaneRef.current;
+    if (!pane || !shouldAutoScrollRef.current) return;
+    const frame = window.requestAnimationFrame(() => {
+      const currentPane = messagesPaneRef.current;
+      currentPane?.scrollTo({
+        top: currentPane.scrollHeight,
+        behavior: reduceMotion ? 'auto' : 'smooth',
+      });
     });
+    return () => window.cancelAnimationFrame(frame);
   }, [messages, reduceMotion]);
 
   const selectConversation = (conversationId: string) => {
@@ -525,7 +551,7 @@ export function ConsultationChat() {
               className={`flex ${mine ? 'justify-start' : 'justify-end'}`}
             >
               <div className={`flex max-w-[88%] flex-col sm:max-w-[75%] ${mine ? 'items-start' : 'items-end'}`}>
-                <div className={`rounded-2xl px-4 py-2.5 shadow-xs ${mine ? 'rounded-tr-md bg-brand-olive text-[#f7f4ee]' : 'rounded-tl-md border border-brand-border bg-brand-surface text-brand-text'}`}>
+                <div className={`rounded-2xl px-4 py-2.5 shadow-xs ${mine ? 'rounded-tr-md bg-brand-gold text-brand-olive ring-1 ring-brand-border/40' : 'rounded-tl-md border border-brand-border bg-brand-surface text-brand-text dark:border-[#465247] dark:bg-[#29322b]'}`}>
                   {!mine && <div className="mb-1 text-[11px] font-extrabold text-brand-gold">ادمین</div>}
                   <p className="whitespace-pre-wrap break-words text-sm leading-7">{message.body}</p>
                 </div>
@@ -749,12 +775,18 @@ export function ConsultationChat() {
                   </div>
 
                   <div
-                    className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-brand-surface-elevated/40 px-3 py-4 sm:px-6 sm:py-6"
+                    ref={messagesPaneRef}
+                    role="log"
+                    aria-label="پیام‌های گفت‌وگو"
+                    onScroll={(event) => {
+                      const pane = event.currentTarget;
+                      shouldAutoScrollRef.current = pane.scrollHeight - pane.scrollTop - pane.clientHeight < 120;
+                    }}
+                    className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain bg-brand-surface-elevated/40 px-3 py-4 sm:px-6 sm:py-6"
                     aria-live="polite"
                     aria-relevant="additions text"
                   >
                     {renderMessageThread()}
-                    <div ref={messagesEndRef} />
                   </div>
 
                   {connectionError && (
