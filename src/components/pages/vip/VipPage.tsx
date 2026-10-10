@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { Card, CardBody, Button, Chip } from '@heroui/react';
 import { Crown, Sparkles, CheckCircle2, Zap, ShieldCheck, Gift, Star } from 'lucide-react';
 import { IVipPlan } from '@/common/interfaces';
@@ -191,53 +192,81 @@ export function VipPage({ plans }: VipPageProps) {
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            <div className="group relative z-0 p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:z-10 hover:scale-[1.05] hover:shadow-xl hover:border-brand-gold/70 motion-reduce:transition-none">
-              <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none">
-                <Zap className="w-5 h-5 text-brand-gold" />
+            <motion.div
+              whileHover={{ y: -3, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+              className="relative z-0 h-full hover:z-10"
+            >
+              <div className="group h-full p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-all duration-200 hover:border-brand-gold/80 hover:shadow-md">
+                <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
+                  <Zap className="w-5 h-5 text-brand-gold" />
+                </div>
+                <h4 className="font-bold text-sm text-brand-text">
+                  {t.vip.freeShippingPerk}
+                </h4>
+                <p className="text-xs text-brand-text-muted">
+                  {t.vip.freeShippingPerkSub}
+                </p>
               </div>
-              <h4 className="font-bold text-sm text-brand-text">
-                {t.vip.freeShippingPerk}
-              </h4>
-              <p className="text-xs text-brand-text-muted">
-                {t.vip.freeShippingPerkSub}
-              </p>
-            </div>
+            </motion.div>
 
-            <div className="group relative z-0 p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:z-10 hover:scale-[1.05] hover:shadow-xl hover:border-brand-gold/70 motion-reduce:transition-none">
-              <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none">
-                <Star className="w-5 h-5 text-brand-gold" />
+            <motion.div
+              whileHover={{ y: -3, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+              className="relative z-0 h-full hover:z-10"
+            >
+              <div className="group h-full p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-all duration-200 hover:border-brand-gold/80 hover:shadow-md">
+                <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
+                  <Star className="w-5 h-5 text-brand-gold" />
+                </div>
+                <h4 className="font-bold text-sm text-brand-text">
+                  {t.vip.permanentDiscountPerk}
+                </h4>
+                <p className="text-xs text-brand-text-muted">
+                  {t.vip.permanentDiscountPerkSub}
+                </p>
               </div>
-              <h4 className="font-bold text-sm text-brand-text">
-                {t.vip.permanentDiscountPerk}
-              </h4>
-              <p className="text-xs text-brand-text-muted">
-                {t.vip.permanentDiscountPerkSub}
-              </p>
-            </div>
+            </motion.div>
 
-            <div className="group relative z-0 p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:z-10 hover:scale-[1.05] hover:shadow-xl hover:border-brand-gold/70 motion-reduce:transition-none">
-              <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none">
-                <Gift className="w-5 h-5 text-brand-gold" />
+            <motion.div
+              whileHover={{ y: -3, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+              className="relative z-0 h-full hover:z-10"
+            >
+              <div className="group h-full p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-all duration-200 hover:border-brand-gold/80 hover:shadow-md">
+                <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
+                  <Gift className="w-5 h-5 text-brand-gold" />
+                </div>
+                <h4 className="font-bold text-sm text-brand-text">
+                  {t.vip.samplesPerk}
+                </h4>
+                <p className="text-xs text-brand-text-muted">
+                  {t.vip.samplesPerkSub}
+                </p>
               </div>
-              <h4 className="font-bold text-sm text-brand-text">
-                {t.vip.samplesPerk}
-              </h4>
-              <p className="text-xs text-brand-text-muted">
-                {t.vip.samplesPerkSub}
-              </p>
-            </div>
+            </motion.div>
 
-            <div className="group relative z-0 p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-[transform,box-shadow,border-color] duration-300 ease-out hover:z-10 hover:scale-[1.05] hover:shadow-xl hover:border-brand-gold/70 motion-reduce:transition-none">
-              <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none">
-                <ShieldCheck className="w-5 h-5 text-brand-gold" />
+            <motion.div
+              whileHover={{ y: -3, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 26 }}
+              className="relative z-0 h-full hover:z-10"
+            >
+              <div className="group h-full p-4 rounded-2xl bg-brand-surface-elevated border border-brand-border space-y-2 transition-all duration-200 hover:border-brand-gold/80 hover:shadow-md">
+                <div className="w-10 h-10 rounded-2xl bg-brand-olive text-brand-champagne flex items-center justify-center mx-auto border border-brand-gold/30">
+                  <ShieldCheck className="w-5 h-5 text-brand-gold" />
+                </div>
+                <h4 className="font-bold text-sm text-brand-text">
+                  {t.vip.consultationPerk}
+                </h4>
+                <p className="text-xs text-brand-text-muted">
+                  {t.vip.consultationPerkSub}
+                </p>
               </div>
-              <h4 className="font-bold text-sm text-brand-text">
-                {t.vip.consultationPerk}
-              </h4>
-              <p className="text-xs text-brand-text-muted">
-                {t.vip.consultationPerkSub}
-              </p>
-            </div>
+            </motion.div>
           </div>
         </CardBody>
       </Card>
