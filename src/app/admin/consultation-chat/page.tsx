@@ -17,6 +17,7 @@ import {
   Send,
 } from 'lucide-react';
 import { adminApi } from '@/common/api/admin';
+import { connectConsultationSocket, emitConsultationSocket, type ConsultationSocket } from '@/common/socket/consultation-chat';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import type { IConsultationConversation, IConsultationMessage } from '@/common/interfaces';
 import { toPersianDigits } from '@/common/utils';
@@ -60,9 +61,31 @@ export default function AdminConsultationChatPage() {
   const [conversationToClose, setConversationToClose] = useState<IConsultationConversation | null>(null);
   const [conversationToDelete, setConversationToDelete] = useState<IConsultationConversation | null>(null);
   const [error, setError] = useState('');
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
   const lastMessageIdRef = useRef('');
   const conversationRequestIdRef = useRef(0);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<ConsultationSocket | null>(null);
+  const selectedIdRef = useRef('');
+  const filterRef = useRef<ConversationFilter>(filter);
+  const markReadTimerRef = useRef<number | undefined>(undefined);
+  selectedIdRef.current = selectedId;
+  filterRef.current = filter;
+
+  const appendMessages = useCallback((incoming: IConsultationMessage[]) => {
+    if (!incoming.length) return;
+    const newestIncomingId = incoming.at(-1)?.id;
+    if (newestIncomingId && newestIncomingId > lastMessageIdRef.current) {
+      lastMessageIdRef.current = newestIncomingId;
+    }
+    setMessages((current) => {
+      const known = new Set(current.map((message) => message.id));
+      const additions = incoming.filter((message) => !known.has(message.id));
+      return additions.length
+        ? [...current, ...additions].sort((a, b) => a.id.localeCompare(b.id))
+        : current;
+    });
+  }, []);
 
   const loadConversations = useCallback(async () => {
     if (!isAdmin) {
@@ -88,63 +111,140 @@ export default function AdminConsultationChatPage() {
     }
   }, [filter, isAdmin]);
 
+  const loadConversationsRef = useRef(loadConversations);
+  loadConversationsRef.current = loadConversations;
+
   useEffect(() => {
     void loadConversations();
-    const timer = window.setInterval(() => void loadConversations(), 5000);
-    return () => window.clearInterval(timer);
   }, [loadConversations]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    let disposed = false;
+    let firstConnection = true;
+    const socket = connectConsultationSocket();
+    socketRef.current = socket;
+
+    const syncAfterReconnect = async () => {
+      void loadConversationsRef.current();
+      const conversationId = selectedIdRef.current;
+      if (!conversationId) return;
+      try {
+        const incoming = await adminApi.getConsultationMessages(
+          conversationId,
+          lastMessageIdRef.current || undefined,
+        );
+        if (!disposed && selectedIdRef.current === conversationId) appendMessages(incoming);
+      } catch {
+        if (!disposed) setError('گفت‌وگو دوباره وصل شد؛ بارگذاری پیام‌های ازدست‌رفته ناموفق بود.');
+      }
+    };
+
+    const onConnect = () => {
+      setRealtimeConnected(true);
+      setError((current) => current.includes('اتصال') ? '' : current);
+      const conversationId = selectedIdRef.current;
+      if (conversationId) {
+        void emitConsultationSocket(socket, 'conversation:join', { conversationId })
+          .catch((socketError: Error) => { if (!disposed) setError(socketError.message); });
+      }
+      if (firstConnection) {
+        firstConnection = false;
+        return;
+      }
+      void syncAfterReconnect();
+    };
+    const onDisconnect = () => {
+      setRealtimeConnected(false);
+    };
+    const onConnectError = () => {
+      if (!disposed) setError('اتصال زنده برقرار نشد؛ در حال تلاش دوباره…');
+    };
+    const onConversationUpdated = (conversation: IConsultationConversation) => {
+      if (disposed) return;
+      const currentFilter = filterRef.current;
+      const matchesFilter = currentFilter === 'all' || conversation.status === currentFilter;
+      setConversations((current) => {
+        if (!matchesFilter) return current.filter((item) => item.id !== conversation.id);
+        const exists = current.some((item) => item.id === conversation.id);
+        const next = exists
+          ? current.map((item) => item.id === conversation.id ? conversation : item)
+          : [conversation, ...current];
+        return next.sort((a, b) => {
+          const statusOrder = a.status.localeCompare(b.status);
+          return statusOrder || new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime();
+        });
+      });
+    };
+    const onConversationDeleted = ({ id }: { id: string }) => {
+      if (disposed) return;
+      setConversations((current) => current.filter((item) => item.id !== id));
+      if (selectedIdRef.current === id) {
+        setSelectedId('');
+        setMessages([]);
+        lastMessageIdRef.current = '';
+        setMobileDetailOpen(false);
+      }
+    };
+    const onNewMessage = (message: IConsultationMessage) => {
+      if (!disposed && message.conversationId === selectedIdRef.current) {
+        appendMessages([message]);
+        if (message.senderRole === 'customer') {
+          if (markReadTimerRef.current !== undefined) window.clearTimeout(markReadTimerRef.current);
+          markReadTimerRef.current = window.setTimeout(() => {
+            if (socket.connected) socket.emit('conversation:read');
+            markReadTimerRef.current = undefined;
+          }, 500);
+        }
+      }
+    };
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.on('connect_error', onConnectError);
+    socket.on('conversation:updated', onConversationUpdated);
+    socket.on('conversation:deleted', onConversationDeleted);
+    socket.on('message:new', onNewMessage);
+    return () => {
+      disposed = true;
+      if (markReadTimerRef.current !== undefined) window.clearTimeout(markReadTimerRef.current);
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.off('connect_error', onConnectError);
+      socket.off('conversation:updated', onConversationUpdated);
+      socket.off('conversation:deleted', onConversationDeleted);
+      socket.off('message:new', onNewMessage);
+      socket.disconnect();
+      if (socketRef.current === socket) socketRef.current = null;
+      setRealtimeConnected(false);
+    };
+  }, [appendMessages, isAdmin]);
 
   useEffect(() => {
     setMessages([]);
     lastMessageIdRef.current = '';
     if (!selectedId || !isAdmin) return;
     let cancelled = false;
-    let pollBusy = false;
-
-    const pollMessages = async () => {
-      if (cancelled || pollBusy) return;
-      pollBusy = true;
-      try {
-        const incoming = await adminApi.getConsultationMessages(
-          selectedId,
-          lastMessageIdRef.current || undefined,
-        );
-        if (cancelled || !incoming.length) return;
-        const newestIncomingId = incoming.at(-1)?.id;
-        if (newestIncomingId && newestIncomingId > lastMessageIdRef.current) {
-          lastMessageIdRef.current = newestIncomingId;
-        }
-        setMessages((current) => {
-          const known = new Set(current.map((message) => message.id));
-          const additions = incoming.filter((message) => !known.has(message.id));
-          return [...current, ...additions].sort((a, b) => a.id.localeCompare(b.id));
-        });
-      } catch {
-        // Keep the current messages visible and retry on the next poll.
-      } finally {
-        pollBusy = false;
-      }
-    };
-
-    let timer: number | undefined;
     void adminApi.getConsultationMessages(selectedId)
       .then((history) => {
         if (cancelled) return;
-        setMessages(history);
-        lastMessageIdRef.current = history.at(-1)?.id || '';
+        appendMessages(history);
       })
       .catch((requestError: any) => {
         if (!cancelled) setError(requestError?.response?.data?.message || 'بارگذاری پیام‌ها ناموفق بود.');
-      })
-      .finally(() => {
-        if (!cancelled) timer = window.setInterval(() => void pollMessages(), 3000);
       });
 
     return () => {
       cancelled = true;
-      if (timer !== undefined) window.clearInterval(timer);
     };
-  }, [isAdmin, selectedId]);
+  }, [appendMessages, isAdmin, selectedId]);
+
+  useEffect(() => {
+    const socket = socketRef.current;
+    if (!socket?.connected || !selectedId) return;
+    void emitConsultationSocket(socket, 'conversation:join', { conversationId: selectedId })
+      .catch((socketError: Error) => setError(socketError.message));
+  }, [selectedId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'end' });
@@ -159,16 +259,16 @@ export default function AdminConsultationChatPage() {
     setSending(true);
     setError('');
     try {
-      const message = await adminApi.sendConsultationMessage(selectedId, body);
-      if (message.id > lastMessageIdRef.current) lastMessageIdRef.current = message.id;
-      setMessages((current) => {
-        if (current.some((item) => item.id === message.id)) return current;
-        return [...current, message].sort((a, b) => a.id.localeCompare(b.id));
+      const socket = socketRef.current;
+      if (!socket?.connected) throw new Error('اتصال چت برقرار نیست؛ کمی صبر کن و دوباره تلاش کن.');
+      const message = await emitConsultationSocket<IConsultationMessage>(socket, 'message:send', {
+        conversationId: selectedId,
+        body,
       });
+      appendMessages([message]);
       setDraft('');
-      void loadConversations();
     } catch (requestError: any) {
-      setError(requestError?.response?.data?.message || 'پاسخ ارسال نشد. دوباره تلاش کن.');
+      setError(requestError?.message || requestError?.response?.data?.message || 'پاسخ ارسال نشد. دوباره تلاش کن.');
     } finally {
       setSending(false);
     }
@@ -181,7 +281,12 @@ export default function AdminConsultationChatPage() {
     if (updatingStatus) return false;
     setUpdatingStatus(true);
     try {
-      const updated = await adminApi.setConsultationConversationStatus(conversationId, nextStatus);
+      const socket = socketRef.current;
+      if (!socket?.connected) throw new Error('اتصال چت برقرار نیست؛ کمی صبر کن و دوباره تلاش کن.');
+      const updated = await emitConsultationSocket<IConsultationConversation>(socket, 'conversation:status', {
+        conversationId,
+        status: nextStatus,
+      });
       const closedAt = new Date().toISOString();
       setConversations((current) => current.map((item) => {
         if (item.id === updated.id) return updated;
@@ -194,7 +299,7 @@ export default function AdminConsultationChatPage() {
       setError('');
       return true;
     } catch (requestError: any) {
-      setError(requestError?.response?.data?.message || 'وضعیت گفت‌وگو تغییر نکرد.');
+      setError(requestError?.message || requestError?.response?.data?.message || 'وضعیت گفت‌وگو تغییر نکرد.');
       return false;
     } finally {
       setUpdatingStatus(false);
@@ -205,7 +310,11 @@ export default function AdminConsultationChatPage() {
     if (!conversationToDelete || deletingConversation) return;
     setDeletingConversation(true);
     try {
-      await adminApi.deleteConsultationConversation(conversationToDelete.id);
+      const socket = socketRef.current;
+      if (!socket?.connected) throw new Error('اتصال چت برقرار نیست؛ کمی صبر کن و دوباره تلاش کن.');
+      await emitConsultationSocket<{ id: string; deleted: boolean }>(socket, 'conversation:delete', {
+        conversationId: conversationToDelete.id,
+      });
       const remaining = conversations.filter((item) => item.id !== conversationToDelete.id);
       setConversations(remaining);
       if (selectedId === conversationToDelete.id) {
@@ -216,7 +325,7 @@ export default function AdminConsultationChatPage() {
       setConversationToDelete(null);
       setError('');
     } catch (requestError: any) {
-      setError(requestError?.response?.data?.message || 'حذف گفت‌وگو انجام نشد.');
+      setError(requestError?.message || requestError?.response?.data?.message || 'حذف گفت‌وگو انجام نشد.');
     } finally {
       setDeletingConversation(false);
     }
@@ -246,8 +355,8 @@ export default function AdminConsultationChatPage() {
           <h1 className="text-2xl font-black text-brand-text">گفت‌وگوهای مشاوره</h1>
           <p className="mt-1 text-sm text-brand-text-muted">پیام مشتری را بخوان و پاسخ را در همین صفحه بفرست.</p>
         </div>
-        <Chip startContent={<CircleDot className="h-3 w-3 text-emerald-500" />} variant="flat" className="border border-brand-border bg-brand-surface text-brand-text-muted">
-          همگام‌سازی خودکار
+        <Chip startContent={<CircleDot className={`h-3 w-3 ${realtimeConnected ? 'text-emerald-500' : 'text-amber-500'}`} />} variant="flat" className="border border-brand-border bg-brand-surface text-brand-text-muted">
+          {realtimeConnected ? 'اتصال زنده' : 'در حال اتصال…'}
         </Chip>
       </div>
 

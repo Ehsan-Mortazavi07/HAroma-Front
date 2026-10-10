@@ -17,6 +17,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { consultationChatApi } from '@/common/api/consultation-chat';
+import { connectConsultationSocket, emitConsultationSocket, type ConsultationSocket } from '@/common/socket/consultation-chat';
 import type { IConsultationConversation, IConsultationMessage } from '@/common/interfaces';
 import { toPersianDigits } from '@/common/utils';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
@@ -76,6 +77,10 @@ export function ConsultationChat() {
   const [connectionError, setConnectionError] = useState('');
   const lastMessageIdRef = useRef('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<ConsultationSocket | null>(null);
+  const selectedConversationIdRef = useRef('');
+  const markReadTimerRef = useRef<number | undefined>(undefined);
+  selectedConversationIdRef.current = selectedConversationId;
 
   const selectedConversation = conversations.find(
     (conversation) => conversation.id === selectedConversationId,
@@ -135,38 +140,104 @@ export function ConsultationChat() {
 
   useEffect(() => {
     if (!sessionToken) return;
-    let cancelled = false;
-    let busy = false;
+    let disposed = false;
+    let firstConnection = true;
+    const socket = connectConsultationSocket(sessionToken);
+    socketRef.current = socket;
 
-    const syncConversations = async () => {
-      if (busy) return;
-      busy = true;
+    const syncAfterReconnect = async () => {
       try {
         const items = await consultationChatApi.getConversations(sessionToken);
-        if (cancelled) return;
+        if (disposed) return;
         setConversations(items);
         setSelectedConversationId((current) =>
           current && items.some((conversation) => conversation.id === current)
             ? current
             : items[0]?.id || '',
         );
-        setConnectionError('');
+        const conversationId = selectedConversationIdRef.current;
+        if (conversationId) {
+          const incoming = await consultationChatApi.getMessages(
+            sessionToken,
+            conversationId,
+            lastMessageIdRef.current || undefined,
+          );
+          if (!disposed && selectedConversationIdRef.current === conversationId) appendMessages(incoming);
+        }
+        if (!disposed) setConnectionError('');
       } catch {
-        if (!cancelled) setConnectionError('ارتباط موقتاً قطع شده؛ در حال تلاش دوباره…');
-      } finally {
-        busy = false;
+        if (!disposed) setConnectionError('همگام‌سازی پس از اتصال مجدد انجام نشد؛ دوباره تلاش کن.');
       }
     };
 
-    const intervalId = window.setInterval(() => void syncConversations(), 4000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
+    const onConnect = () => {
+      setConnectionError('');
+      const conversationId = selectedConversationIdRef.current;
+      if (conversationId) {
+        void emitConsultationSocket(socket, 'conversation:join', { conversationId })
+          .catch((error: Error) => { if (!disposed) setConnectionError(error.message); });
+      }
+      if (firstConnection) {
+        firstConnection = false;
+        return;
+      }
+      void syncAfterReconnect();
     };
-  }, [sessionToken]);
+    const onConnectError = () => {
+      if (!disposed) setConnectionError('اتصال زنده برقرار نشد؛ در حال تلاش دوباره…');
+    };
+    const onConversationUpdated = (conversation: IConsultationConversation) => {
+      if (disposed) return;
+      setConversations((current) => {
+        const exists = current.some((item) => item.id === conversation.id);
+        const next = exists
+          ? current.map((item) => item.id === conversation.id ? conversation : item)
+          : [...current, conversation];
+        return next.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+      });
+    };
+    const onConversationDeleted = ({ id }: { id: string }) => {
+      if (disposed) return;
+      setConversations((current) => current.filter((item) => item.id !== id));
+      if (selectedConversationIdRef.current === id) {
+        setSelectedConversationId('');
+        setMessages([]);
+        lastMessageIdRef.current = '';
+      }
+    };
+    const onNewMessage = (message: IConsultationMessage) => {
+      if (!disposed && message.conversationId === selectedConversationIdRef.current) {
+        appendMessages([message]);
+        if (message.senderRole === 'admin') {
+          if (markReadTimerRef.current !== undefined) window.clearTimeout(markReadTimerRef.current);
+          markReadTimerRef.current = window.setTimeout(() => {
+            if (socket.connected) socket.emit('conversation:read');
+            markReadTimerRef.current = undefined;
+          }, 500);
+        }
+      }
+    };
+
+    socket.on('connect', onConnect);
+    socket.on('connect_error', onConnectError);
+    socket.on('conversation:updated', onConversationUpdated);
+    socket.on('conversation:deleted', onConversationDeleted);
+    socket.on('message:new', onNewMessage);
+
+    return () => {
+      disposed = true;
+      if (markReadTimerRef.current !== undefined) window.clearTimeout(markReadTimerRef.current);
+      socket.off('connect', onConnect);
+      socket.off('connect_error', onConnectError);
+      socket.off('conversation:updated', onConversationUpdated);
+      socket.off('conversation:deleted', onConversationDeleted);
+      socket.off('message:new', onNewMessage);
+      socket.disconnect();
+      if (socketRef.current === socket) socketRef.current = null;
+    };
+  }, [appendMessages, sessionToken]);
 
   useEffect(() => {
-    let cancelled = false;
     lastMessageIdRef.current = '';
     setMessages([]);
 
@@ -176,11 +247,11 @@ export function ConsultationChat() {
     }
 
     setLoadingMessages(true);
+    let cancelled = false;
     void consultationChatApi.getMessages(sessionToken, selectedConversationId)
       .then((history) => {
         if (cancelled) return;
-        setMessages(history);
-        lastMessageIdRef.current = history.at(-1)?.id || '';
+        appendMessages(history);
       })
       .catch(() => {
         if (!cancelled) setConnectionError('بارگذاری تاریخچهٔ گفت‌وگو ناموفق بود. دوباره تلاش کن.');
@@ -192,40 +263,14 @@ export function ConsultationChat() {
     return () => {
       cancelled = true;
     };
-  }, [selectedConversationId, sessionToken]);
+  }, [appendMessages, selectedConversationId, sessionToken]);
 
   useEffect(() => {
-    if (!sessionToken || !selectedConversationId || selectedConversation?.status !== 'open' || loadingMessages) {
-      return;
-    }
-
-    let cancelled = false;
-    let busy = false;
-    const pollMessages = async () => {
-      if (cancelled || busy) return;
-      busy = true;
-      try {
-        const incoming = await consultationChatApi.getMessages(
-          sessionToken,
-          selectedConversationId,
-          lastMessageIdRef.current || undefined,
-        );
-        if (cancelled) return;
-        appendMessages(incoming);
-        setConnectionError('');
-      } catch {
-        if (!cancelled) setConnectionError('ارتباط موقتاً قطع شده؛ در حال تلاش دوباره…');
-      } finally {
-        busy = false;
-      }
-    };
-
-    const intervalId = window.setInterval(() => void pollMessages(), 2500);
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
-    };
-  }, [appendMessages, loadingMessages, selectedConversation?.status, selectedConversationId, sessionToken]);
+    const socket = socketRef.current;
+    if (!socket?.connected || !selectedConversationId) return;
+    void emitConsultationSocket(socket, 'conversation:join', { conversationId: selectedConversationId })
+      .catch((error: Error) => setConnectionError(error.message));
+  }, [selectedConversationId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -261,11 +306,12 @@ export function ConsultationChat() {
     setSending(true);
     setConnectionError('');
     try {
-      const next = await consultationChatApi.startConversation(
-        sessionToken,
-        subject.trim(),
-        isAuthenticated ? user?.fullName : guestName.trim(),
-      );
+      const socket = socketRef.current;
+      if (!socket?.connected) throw new Error('اتصال چت برقرار نیست؛ کمی صبر کن و دوباره تلاش کن.');
+      const next = await emitConsultationSocket<IConsultationConversation>(socket, 'conversation:start', {
+        subject: subject.trim(),
+        guestName: isAuthenticated ? undefined : guestName.trim(),
+      });
       const closedAt = new Date().toISOString();
       setConversations((current) => [
         ...current
@@ -287,7 +333,7 @@ export function ConsultationChat() {
         }
       }
     } catch (requestError: any) {
-      setConnectionError(requestError?.response?.data?.message || 'درخواست گفت‌وگو ثبت نشد. دوباره تلاش کن.');
+      setConnectionError(requestError?.message || requestError?.response?.data?.message || 'درخواست گفت‌وگو ثبت نشد. دوباره تلاش کن.');
     } finally {
       setSending(false);
       setConfirmNewRequest(false);
@@ -310,7 +356,12 @@ export function ConsultationChat() {
     setSending(true);
     setConnectionError('');
     try {
-      const message = await consultationChatApi.sendMessage(sessionToken, selectedConversation.id, body);
+      const socket = socketRef.current;
+      if (!socket?.connected) throw new Error('اتصال چت برقرار نیست؛ کمی صبر کن و دوباره تلاش کن.');
+      const message = await emitConsultationSocket<IConsultationMessage>(socket, 'message:send', {
+        conversationId: selectedConversation.id,
+        body,
+      });
       appendMessages([message]);
       setConversations((current) => current.map((item) => item.id === selectedConversation.id
         ? { ...item, lastMessageText: body, lastMessageAt: message.createdAt }
@@ -318,7 +369,7 @@ export function ConsultationChat() {
       setDraft('');
     } catch (error: any) {
       setConnectionError(
-        error?.response?.data?.message || 'پیام ارسال نشد. اتصال را بررسی کن و دوباره بفرست.',
+        error?.message || error?.response?.data?.message || 'پیام ارسال نشد. اتصال را بررسی کن و دوباره بفرست.',
       );
     } finally {
       setSending(false);
