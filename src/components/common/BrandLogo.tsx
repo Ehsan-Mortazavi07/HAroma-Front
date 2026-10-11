@@ -4,7 +4,6 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { PATHS } from '@/common/constants/PATHS';
-import { useTranslation } from '@/common/i18n';
 
 interface BrandLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -25,8 +24,6 @@ export function BrandLogo({
   variant = 'auto',
   simple = false,
 }: BrandLogoProps) {
-  const { isPersian } = useTranslation();
-
   const sizeClasses = {
     sm: {
       icon: 'w-12 h-8 sm:w-16 sm:h-10',
@@ -97,11 +94,6 @@ export function BrandLogo({
             >
               Hatef Aroma
             </span>
-            {!simple && (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#bfa27a]/25 text-[#d4be9b] border border-[#bfa27a]/40 shadow-xs">
-                {isPersian ? 'هاتف آروما' : 'Niche'}
-              </span>
-            )}
           </div>
           {!simple && (
             <span className={`${sizeClasses.sub} ${subColor} tracking-wider font-medium -mt-0.5 font-latin`}>
