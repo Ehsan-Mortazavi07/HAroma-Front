@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { FormEvent, KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Card, CardBody, Chip, Input, Spinner, Textarea } from '@heroui/react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
@@ -23,11 +23,18 @@ import {
 import { adminApi } from '@/common/api/admin';
 import { connectConsultationSocket, emitConsultationSocket, type ConsultationSocket } from '@/common/socket/consultation-chat';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
+import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import type { IConsultationConversation, IConsultationMessage, IUser } from '@/common/interfaces';
 import { toPersianDigits } from '@/common/utils';
 import { useAppSelector } from '@/stores/hooks';
 
 type ConversationFilter = 'pending' | 'open' | 'closed' | 'all';
+type ConversationGroup = {
+  key: string;
+  name: string;
+  contact: string;
+  conversations: IConsultationConversation[];
+};
 
 function statusLabel(status: IConsultationConversation['status']) {
   if (status === 'pending') return 'در انتظار تأیید';
@@ -64,6 +71,9 @@ export default function AdminConsultationChatPage() {
   const [deletingConversation, setDeletingConversation] = useState(false);
   const [conversationToClose, setConversationToClose] = useState<IConsultationConversation | null>(null);
   const [conversationToDelete, setConversationToDelete] = useState<IConsultationConversation | null>(null);
+  const [selectedConversationIds, setSelectedConversationIds] = useState<Set<string>>(() => new Set());
+  const [bulkConfirmAction, setBulkConfirmAction] = useState<'open' | 'close' | 'delete' | null>(null);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const [error, setError] = useState('');
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false);
@@ -179,6 +189,14 @@ export default function AdminConsultationChatPage() {
       if (disposed) return;
       const currentFilter = filterRef.current;
       const matchesFilter = currentFilter === 'all' || conversation.status === currentFilter;
+      if (!matchesFilter) {
+        setSelectedConversationIds((current) => {
+          if (!current.has(conversation.id)) return current;
+          const next = new Set(current);
+          next.delete(conversation.id);
+          return next;
+        });
+      }
       setConversations((current) => {
         if (!matchesFilter) return current.filter((item) => item.id !== conversation.id);
         const exists = current.some((item) => item.id === conversation.id);
@@ -194,6 +212,12 @@ export default function AdminConsultationChatPage() {
     const onConversationDeleted = ({ id }: { id: string }) => {
       if (disposed) return;
       setConversations((current) => current.filter((item) => item.id !== id));
+      setSelectedConversationIds((current) => {
+        if (!current.has(id)) return current;
+        const next = new Set(current);
+        next.delete(id);
+        return next;
+      });
       if (selectedIdRef.current === id) {
         setSelectedId('');
         setMessages([]);
@@ -310,6 +334,129 @@ export default function AdminConsultationChatPage() {
   }, [isNewConversationOpen, userSearch]);
 
   const selectedConversation = conversations.find((conversation) => conversation.id === selectedId) || null;
+  const conversationGroups = useMemo<ConversationGroup[]>(() => {
+    const groups = new Map<string, IConsultationConversation[]>();
+    conversations.forEach((conversation) => {
+      const phone = conversation.guestPhone.replace(/\D/g, '');
+      const email = conversation.guestEmail.trim().toLowerCase();
+      const key = conversation.userId
+        ? `user:${conversation.userId}`
+        : phone
+          ? `phone:${phone}`
+          : email
+            ? `email:${email}`
+            : `conversation:${conversation.id}`;
+      const items = groups.get(key) || [];
+      items.push(conversation);
+      groups.set(key, items);
+    });
+
+    return [...groups.entries()]
+      .map(([key, items]) => ({
+        key,
+        name: items[0].guestName || 'مشتری مهمان',
+        contact: items[0].guestPhone || items[0].guestEmail || (items[0].guestUsername ? `@${items[0].guestUsername}` : ''),
+        conversations: [...items].sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()),
+      }))
+      .sort((a, b) => new Date(b.conversations[0].lastMessageAt).getTime() - new Date(a.conversations[0].lastMessageAt).getTime());
+  }, [conversations]);
+  const visibleSelectedIds = conversations
+    .filter((conversation) => selectedConversationIds.has(conversation.id))
+    .map((conversation) => conversation.id);
+  const selectedOpenableCount = conversations.filter(
+    (conversation) => selectedConversationIds.has(conversation.id) && conversation.status !== 'open',
+  ).length;
+  const selectedClosableCount = conversations.filter(
+    (conversation) => selectedConversationIds.has(conversation.id) && conversation.status !== 'closed',
+  ).length;
+  const selectedClosedCount = conversations.filter(
+    (conversation) => selectedConversationIds.has(conversation.id) && conversation.status === 'closed',
+  ).length;
+  const allVisibleSelected = conversations.length > 0 && visibleSelectedIds.length === conversations.length;
+  const someVisibleSelected = visibleSelectedIds.length > 0 && !allVisibleSelected;
+
+  const toggleConversationSelection = (conversationId: string, checked: boolean) => {
+    if (checked && !selectedConversationIds.has(conversationId) && visibleSelectedIds.length >= 100) {
+      setError('در هر تغییر گروهی حداکثر ۱۰۰ گفت‌وگو را انتخاب کن.');
+      return;
+    }
+    setSelectedConversationIds((current) => {
+      const next = new Set(current);
+      if (checked) next.add(conversationId);
+      else next.delete(conversationId);
+      return next;
+    });
+  };
+
+  const applyBulkStatus = async (status: 'open' | 'closed') => {
+    const ids = conversations
+      .filter((conversation) => selectedConversationIds.has(conversation.id)
+        && (status === 'open' ? conversation.status !== 'open' : conversation.status !== 'closed'))
+      .map((conversation) => conversation.id);
+    if (!ids.length || bulkActionLoading) return;
+    setBulkActionLoading(true);
+    setError('');
+    try {
+      const updated = status === 'open'
+        ? await adminApi.bulkOpenConsultationConversations(ids)
+        : await adminApi.bulkCloseConsultationConversations(ids);
+      const updatedById = new Map(updated.map((conversation) => [conversation.id, conversation]));
+      const updatedIds = new Set(updatedById.keys());
+      const nextConversations = conversations
+        .map((conversation) => updatedById.get(conversation.id) || conversation)
+        .filter((conversation) => filterRef.current === 'all' || conversation.status === filterRef.current);
+      setConversations((current) => current
+        .map((conversation) => updatedById.get(conversation.id) || conversation)
+        .filter((conversation) => filterRef.current === 'all' || conversation.status === filterRef.current));
+      setSelectedConversationIds(new Set());
+      setBulkConfirmAction(null);
+
+      if (
+        updatedIds.has(selectedIdRef.current) && !nextConversations.some((conversation) => conversation.id === selectedIdRef.current)
+      ) {
+        setSelectedId(nextConversations[0]?.id || '');
+        setMessages([]);
+        lastMessageIdRef.current = '';
+        setMobileDetailOpen(false);
+      }
+    } catch (requestError: any) {
+      const fallback = status === 'open' ? 'بازگشایی گروهی گفت‌وگوها انجام نشد.' : 'بستن گروهی گفت‌وگوها انجام نشد.';
+      setError(requestError?.response?.data?.message || fallback);
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const deleteSelectedConversations = async () => {
+    const ids = visibleSelectedIds;
+    if (!ids.length || bulkActionLoading) return;
+    setBulkActionLoading(true);
+    setError('');
+    try {
+      const result = await adminApi.bulkDeleteConsultationConversations(ids);
+      const deletedIds = new Set(result.ids);
+      const remaining = conversations.filter((conversation) => !deletedIds.has(conversation.id));
+      setConversations((current) => current.filter((conversation) => !deletedIds.has(conversation.id)));
+      setSelectedConversationIds(new Set());
+      setBulkConfirmAction(null);
+      if (deletedIds.has(selectedIdRef.current)) {
+        setSelectedId(remaining[0]?.id || '');
+        setMessages([]);
+        lastMessageIdRef.current = '';
+        setMobileDetailOpen(false);
+      }
+    } catch (requestError: any) {
+      setError(requestError?.response?.data?.message || 'حذف گروهی گفت‌وگوها انجام نشد.');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const runBulkConfirmation = async () => {
+    if (bulkConfirmAction === 'close') await applyBulkStatus('closed');
+    else if (bulkConfirmAction === 'open') await applyBulkStatus('open');
+    else if (bulkConfirmAction === 'delete') await deleteSelectedConversations();
+  };
 
   const startConversationForUser = async (event: FormEvent) => {
     event.preventDefault();
@@ -597,7 +744,11 @@ export default function AdminConsultationChatPage() {
                     type="button"
                     size="sm"
                     variant={filter === value ? 'solid' : 'light'}
-                    onPress={() => setFilter(value)}
+                    onPress={() => {
+                      setSelectedConversationIds(new Set());
+                      setError('');
+                      setFilter(value);
+                    }}
                     className={`h-11 min-w-0 rounded-xl text-[11px] font-bold ${filter === value ? 'bg-brand-gold text-brand-olive' : 'text-brand-text-muted'}`}
                   >
                     {label}
@@ -605,6 +756,35 @@ export default function AdminConsultationChatPage() {
                 ))}
               </div>
             </div>
+
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-brand-border px-3 py-2">
+              <div className="flex min-h-9 items-center gap-2">
+                <SmoothCheckbox
+                  size="sm"
+                  ariaLabel="انتخاب گفت‌وگوهای فهرست"
+                  isSelected={allVisibleSelected}
+                  isIndeterminate={someVisibleSelected}
+                  onValueChange={(checked) => {
+                    if (checked) {
+                      setSelectedConversationIds(new Set(conversations.slice(0, 100).map((conversation) => conversation.id)));
+                      setError(conversations.length > 100 ? 'برای تغییر گروهی حداکثر ۱۰۰ گفت‌وگو انتخاب شد.' : '');
+                    } else {
+                      setSelectedConversationIds(new Set());
+                      setError('');
+                    }
+                  }}
+                  className="gap-2"
+                >
+                  انتخاب همه
+                </SmoothCheckbox>
+                {visibleSelectedIds.length > 0 && (
+                  <span className="rounded-full bg-brand-gold/15 px-2.5 py-1 text-[10px] font-extrabold text-brand-gold">
+                    {toPersianDigits(visibleSelectedIds.length)} انتخاب
+                  </span>
+                )}
+              </div>
+            </div>
+            {error && visibleSelectedIds.length > 0 && <p role="status" className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-[11px] text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">{error}</p>}
 
             <div className="min-h-0 flex-1 overflow-y-auto">
               {loadingInbox ? (
@@ -616,49 +796,68 @@ export default function AdminConsultationChatPage() {
                   <p className="mt-1 text-xs leading-6 text-brand-text-muted">پیام‌های جدید مشتریان اینجا نمایش داده می‌شود.</p>
                 </div>
               ) : (
-                <div className="divide-y divide-brand-border/70">
-                  {conversations.map((item) => {
-                    const selected = item.id === selectedId;
-                    return (
-                      <button
-                        type="button"
-                        key={item.id}
-                        onClick={() => {
-                          setSelectedId(item.id);
-                          setMobileDetailOpen(true);
-                        }}
-                        className={`w-full px-4 py-4 text-right transition-colors hover:bg-brand-surface-elevated ${selected ? 'bg-brand-surface-elevated' : 'bg-transparent'}`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-extrabold ${selected ? 'bg-brand-gold text-brand-olive' : 'bg-brand-olive text-brand-gold'}`}>
-                            {(item.guestName || 'م').slice(0, 1)}
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="flex items-center justify-between gap-2">
-                              <span className="truncate text-sm font-extrabold text-brand-text">{item.guestName || 'مشتری مهمان'}</span>
-                              <time className="shrink-0 text-[10px] text-brand-text-muted" dateTime={item.lastMessageAt}>{shortTime(item.lastMessageAt)}</time>
-                            </span>
-                            <span className="mt-1 block truncate text-[11px] font-bold text-brand-gold">{item.subject || 'مشاوره'}</span>
-                            <span className="mt-1 flex items-center justify-between gap-2">
-                              <span className="truncate text-xs text-brand-text-muted">{item.lastMessageText || (item.status === 'pending' ? 'درخواست مشاوره ثبت شده' : 'گفت‌وگو آغاز شده است')}</span>
-                              {!!item.unreadForAdmin && (
-                                <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand-gold px-1.5 text-[10px] font-black text-brand-olive">
-                                  {toPersianDigits(item.unreadForAdmin)}
-                                </span>
-                              )}
-                            </span>
-                            <span className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${item.status === 'pending' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300' : item.status === 'open' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-default-100 text-default-500'}`}>
-                              {statusLabel(item.status)}
-                            </span>
-                            <span className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-brand-text-muted" dir="ltr">
-                              {item.guestPhone && <span>{item.guestPhone}</span>}
-                              {item.guestEmail && <span className="max-w-[180px] truncate">{item.guestEmail}</span>}
-                            </span>
-                          </span>
+                <div>
+                  {conversationGroups.map((group) => (
+                    <section key={group.key} className="border-b border-brand-border/70">
+                      <div className="flex items-center gap-3 bg-brand-surface-elevated/60 px-4 py-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-olive text-brand-gold">
+                          <UserRound className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate text-xs font-extrabold text-brand-text">{group.name}</h3>
+                          <p className="mt-0.5 truncate text-[10px] text-brand-text-muted" dir="ltr">
+                            {group.contact || `${toPersianDigits(group.conversations.length)} گفت‌وگو`}
+                          </p>
                         </div>
-                      </button>
-                    );
-                  })}
+                        <span className="shrink-0 rounded-full bg-brand-surface px-2 py-1 text-[10px] font-bold text-brand-gold">
+                          {toPersianDigits(group.conversations.length)} گفتگو
+                        </span>
+                      </div>
+                      <div className="divide-y divide-brand-border/50">
+                        {group.conversations.map((item) => {
+                          const selected = item.id === selectedId;
+                          const checked = selectedConversationIds.has(item.id);
+                          return (
+                            <div key={item.id} className={`flex items-stretch gap-2 px-3 py-2 ${selected ? 'bg-brand-surface-elevated' : 'bg-transparent'}`}>
+                              <span className="flex w-8 shrink-0 items-center justify-center">
+                                <SmoothCheckbox
+                                  size="sm"
+                                  ariaLabel={`انتخاب گفت‌وگوی ${item.subject || 'مشاوره'} با ${item.guestName || 'مشتری مهمان'}`}
+                                  isSelected={checked}
+                                  onValueChange={(value) => toggleConversationSelection(item.id, value)}
+                                  className="gap-0"
+                                />
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedId(item.id);
+                                  setMobileDetailOpen(true);
+                                }}
+                                className="min-w-0 flex-1 rounded-xl px-2 py-2 text-right transition-colors hover:bg-brand-surface-elevated"
+                              >
+                                <span className="flex items-center justify-between gap-2">
+                                  <span className="truncate text-[11px] font-bold text-brand-gold">{item.subject || 'مشاوره'}</span>
+                                  <time className="shrink-0 text-[10px] text-brand-text-muted" dateTime={item.lastMessageAt}>{shortTime(item.lastMessageAt)}</time>
+                                </span>
+                                <span className="mt-1 flex items-center justify-between gap-2">
+                                  <span className="truncate text-xs text-brand-text-muted">{item.lastMessageText || (item.status === 'pending' ? 'درخواست مشاوره ثبت شده' : 'گفت‌وگو آغاز شده است')}</span>
+                                  {!!item.unreadForAdmin && (
+                                    <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand-gold px-1.5 text-[10px] font-black text-brand-olive">
+                                      {toPersianDigits(item.unreadForAdmin)}
+                                    </span>
+                                  )}
+                                </span>
+                                <span className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${item.status === 'pending' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300' : item.status === 'open' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-default-100 text-default-500'}`}>
+                                  {statusLabel(item.status)}
+                                </span>
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))}
                 </div>
               )}
             </div>
@@ -847,6 +1046,89 @@ export default function AdminConsultationChatPage() {
           </section>
         </div>
       </Card>
+      <AnimatePresence>
+        {visibleSelectedIds.length > 0 && (
+          <div className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-3 sm:bottom-7 sm:px-4">
+            <motion.div
+              initial={{ opacity: 0, y: reduceMotion ? 0 : 30, scale: reduceMotion ? 1 : 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: reduceMotion ? 0 : 22, scale: reduceMotion ? 1 : 0.97 }}
+              transition={{ duration: reduceMotion ? 0.01 : 0.32, ease: [0.16, 1, 0.3, 1] }}
+              className="pointer-events-auto flex w-[min(100%,36rem)] flex-col gap-2 rounded-2xl border border-brand-gold/40 bg-[#141a14]/[.97] p-2.5 text-[#f7f4ee] shadow-2xl shadow-black/40 backdrop-blur-2xl sm:w-auto sm:max-w-[calc(100vw-2rem)] sm:flex-row sm:items-center sm:gap-3 sm:rounded-full sm:p-2 sm:ps-3.5 sm:pe-2"
+            >
+              <div className="flex items-center justify-between gap-3 px-1 sm:px-0">
+                <span className="flex items-center gap-2 text-xs font-extrabold text-brand-gold">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-brand-gold" />
+                  {toPersianDigits(visibleSelectedIds.length)} گفت‌وگو انتخاب شده
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="light"
+                  isDisabled={bulkActionLoading}
+                  onPress={() => setSelectedConversationIds(new Set())}
+                  className="h-8 min-w-0 rounded-full px-2 text-[11px] font-bold text-neutral-300 hover:bg-white/10 hover:text-white sm:hidden"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  انصراف
+                </Button>
+              </div>
+
+              <span className="hidden h-5 w-px bg-white/15 sm:block" />
+              <div className="grid grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-2">
+                {selectedClosableCount > 0 && (filter === 'open' || filter === 'all') && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    isLoading={bulkActionLoading}
+                    isDisabled={bulkActionLoading}
+                    onPress={() => setBulkConfirmAction('close')}
+                    startContent={!bulkActionLoading && <Archive className="h-3.5 w-3.5" />}
+                    className="h-9 min-w-0 rounded-full border border-amber-400/30 bg-amber-500/15 px-3 text-[11px] font-extrabold text-amber-200 transition-colors hover:bg-amber-500/25"
+                  >
+                    {filter === 'all' ? 'بستن گروهی' : 'بستن انتخاب‌شده‌ها'}
+                  </Button>
+                )}
+                {selectedOpenableCount > 0 && (filter === 'closed' || filter === 'pending' || filter === 'all') && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    isLoading={bulkActionLoading}
+                    isDisabled={bulkActionLoading}
+                    onPress={() => setBulkConfirmAction('open')}
+                    startContent={!bulkActionLoading && (filter === 'pending' ? <Check className="h-3.5 w-3.5" /> : <RotateCcw className="h-3.5 w-3.5" />)}
+                    className="h-9 min-w-0 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 text-[11px] font-extrabold text-emerald-200 transition-colors hover:bg-emerald-500/25"
+                  >
+                    {filter === 'pending' ? 'تأیید گروهی' : 'بازگشایی گروهی'}
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  isLoading={bulkActionLoading}
+                  isDisabled={bulkActionLoading}
+                  onPress={() => setBulkConfirmAction('delete')}
+                  startContent={!bulkActionLoading && <Trash2 className="h-3.5 w-3.5" />}
+                  className="h-9 min-w-0 rounded-full border border-rose-400/30 bg-rose-500/15 px-3 text-[11px] font-extrabold text-rose-200 transition-colors hover:bg-rose-500/25"
+                >
+                  حذف گروهی
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="light"
+                  isDisabled={bulkActionLoading}
+                  onPress={() => setSelectedConversationIds(new Set())}
+                  className="hidden h-9 min-w-0 rounded-full px-2.5 text-[11px] font-bold text-neutral-300 hover:bg-white/10 hover:text-white sm:flex"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  انصراف
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       <AdminConfirmModal
         isOpen={conversationToClose !== null}
         onOpenChange={(open) => {
@@ -886,6 +1168,40 @@ export default function AdminConsultationChatPage() {
         icon={<Trash2 className="h-4 w-4" />}
         isLoading={deletingConversation}
         onConfirm={deleteConversation}
+      />
+      <AdminConfirmModal
+        isOpen={bulkConfirmAction !== null}
+        onOpenChange={(open) => {
+          if (!open && !bulkActionLoading) setBulkConfirmAction(null);
+        }}
+        title={bulkConfirmAction === 'delete'
+          ? 'حذف گروهی گفت‌وگوها'
+          : bulkConfirmAction === 'open'
+            ? filter === 'pending' ? 'تأیید گروهی گفت‌وگوها' : 'بازگشایی گروهی گفت‌وگوها'
+            : 'بستن گروهی گفت‌وگوها'}
+        description={(
+          <p>
+            {bulkConfirmAction === 'delete'
+              ? `${toPersianDigits(visibleSelectedIds.length)} گفت‌وگو و تمام پیام‌های وابسته به آن‌ها برای همیشه حذف می‌شوند. این کار قابل بازگشت نیست.`
+              : bulkConfirmAction === 'open'
+                ? `وضعیت ${toPersianDigits(selectedOpenableCount)} گفت‌وگوی انتخاب‌شده به «باز» تغییر می‌کند. برای هر کاربر فقط یک گفت‌وگوی بازگشایی‌شده مجاز است؛ اگر چند گفت‌وگو از یک کاربر انتخاب شود، عملیات انجام نمی‌شود.`
+                : `وضعیت ${toPersianDigits(selectedClosableCount)} گفت‌وگوی باز یا در انتظار به «بسته» تغییر می‌کند. پیام‌ها و سوابق آن‌ها باقی می‌ماند.`}
+          </p>
+        )}
+        confirmText={bulkConfirmAction === 'delete'
+          ? 'حذف گفت‌وگوها و پیام‌ها'
+          : bulkConfirmAction === 'open'
+            ? filter === 'pending' ? 'تأیید و بازکردن' : 'بازگشایی گفت‌وگوها'
+            : 'بستن گفت‌وگوهای انتخاب‌شده'}
+        cancelText="انصراف"
+        confirmColor={bulkConfirmAction === 'delete' ? 'danger' : bulkConfirmAction === 'open' ? 'success' : 'warning'}
+        icon={bulkConfirmAction === 'delete'
+          ? <Trash2 className="h-4 w-4" />
+          : bulkConfirmAction === 'open'
+            ? <RotateCcw className="h-4 w-4" />
+            : <Archive className="h-4 w-4" />}
+        isLoading={bulkActionLoading}
+        onConfirm={runBulkConfirmation}
       />
     </main>
   );

@@ -18,6 +18,27 @@ export const adminApi = {
     );
     return res.data;
   },
+  bulkCloseConsultationConversations: async (ids: string[]) => {
+    const res = await axiosInstance.patch<IConsultationConversation[]>(
+      '/admin/consultation-chat/conversations/bulk/close',
+      { ids },
+    );
+    return res.data;
+  },
+  bulkOpenConsultationConversations: async (ids: string[]) => {
+    const res = await axiosInstance.patch<IConsultationConversation[]>(
+      '/admin/consultation-chat/conversations/bulk/open',
+      { ids },
+    );
+    return res.data;
+  },
+  bulkDeleteConsultationConversations: async (ids: string[]) => {
+    const res = await axiosInstance.delete<{ ids: string[]; deleted: boolean }>(
+      '/admin/consultation-chat/conversations/bulk',
+      { data: { ids } },
+    );
+    return res.data;
+  },
   getConsultationMessages: async (conversationId: string, afterId?: string) => {
     const res = await axiosInstance.get<IConsultationMessage[]>(
       `/admin/consultation-chat/conversations/${encodeURIComponent(conversationId)}/messages`,
