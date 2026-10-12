@@ -17,13 +17,17 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { consultationChatApi } from '@/common/api/consultation-chat';
-import { connectConsultationSocket, emitConsultationSocket, type ConsultationSocket } from '@/common/socket/consultation-chat';
+import {
+  connectConsultationSocket,
+  emitConsultationSocket,
+  type ConsultationSocket,
+  CONSULTATION_SESSION_STORAGE_KEY,
+} from '@/common/socket/consultation-chat';
 import type { IConsultationConversation, IConsultationMessage } from '@/common/interfaces';
 import { toPersianDigits } from '@/common/utils';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { useAppSelector } from '@/stores/hooks';
 
-const SESSION_STORAGE_KEY = 'hatefaroma_consultation_session';
 const NAME_STORAGE_KEY = 'hatefaroma_consultation_name';
 
 type MobileView = 'list' | 'chat' | 'request';
@@ -81,6 +85,7 @@ export function ConsultationChat() {
   const socketRef = useRef<ConsultationSocket | null>(null);
   const selectedConversationIdRef = useRef('');
   const markReadTimerRef = useRef<number | undefined>(undefined);
+  const socketIdentityRef = useRef<string | null>(null);
   selectedConversationIdRef.current = selectedConversationId;
 
   const selectedConversation = conversations.find(
@@ -108,11 +113,11 @@ export function ConsultationChat() {
     let token = '';
     let savedName = '';
     try {
-      token = window.localStorage.getItem(SESSION_STORAGE_KEY) || '';
+      token = window.localStorage.getItem(CONSULTATION_SESSION_STORAGE_KEY) || '';
       savedName = window.localStorage.getItem(NAME_STORAGE_KEY) || '';
       if (!token) {
         token = createSessionToken();
-        window.localStorage.setItem(SESSION_STORAGE_KEY, token);
+        window.localStorage.setItem(CONSULTATION_SESSION_STORAGE_KEY, token);
       }
     } catch {
       token = createSessionToken();
@@ -143,6 +148,7 @@ export function ConsultationChat() {
     if (!sessionToken) return;
     let disposed = false;
     let firstConnection = true;
+    const socketIdentity = user?._id ? String(user._id) : 'guest';
     const socket = connectConsultationSocket(sessionToken);
     socketRef.current = socket;
 
@@ -180,8 +186,12 @@ export function ConsultationChat() {
       }
       if (firstConnection) {
         firstConnection = false;
+        const previousIdentity = socketIdentityRef.current;
+        socketIdentityRef.current = socketIdentity;
+        if (previousIdentity && previousIdentity !== socketIdentity) void syncAfterReconnect();
         return;
       }
+      socketIdentityRef.current = socketIdentity;
       void syncAfterReconnect();
     };
     const onConnectError = () => {
@@ -251,7 +261,7 @@ export function ConsultationChat() {
       socket.disconnect();
       if (socketRef.current === socket) socketRef.current = null;
     };
-  }, [appendMessages, sessionToken]);
+  }, [appendMessages, sessionToken, user?._id]);
 
   useEffect(() => {
     lastMessageIdRef.current = '';
@@ -462,10 +472,10 @@ export function ConsultationChat() {
         }}
       />
 
-      {pendingConversation && (
+      {(pendingConversation || openConversation) && (
         <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-200">
           <Clock3 className="mt-0.5 h-4 w-4 shrink-0" />
-          <p className="leading-6">درخواست «{pendingConversation.subject}» هنوز بررسی نشده است. با ثبت درخواست تازه، این درخواست بسته و درخواست جدید جایگزین آن می‌شود.</p>
+          <p className="leading-6">با ثبت درخواست تازه، همهٔ گفتگوهای باز و درخواست‌های در انتظار قبلی بسته می‌شوند.</p>
         </div>
       )}
       <div className="mt-auto pt-6">
@@ -816,13 +826,11 @@ export function ConsultationChat() {
         title="ثبت گفت‌وگوی تازه؟"
         description={(
           <p>
-            {pendingConversation
-              ? <>درخواست در انتظار «<strong>{pendingConversation.subject}</strong>» بسته می‌شود و درخواست تازه برای بررسی ادمین ثبت خواهد شد.</>
-              : <>گفت‌وگوی فعال «<strong>{openConversation?.subject || 'مشاوره قبلی'}</strong>» بسته می‌شود و درخواست تازه پس از تأیید ادمین قابل چت خواهد بود.</>}
+            همهٔ گفتگوهای باز و درخواست‌های در انتظار قبلی بسته می‌شوند؛ سپس درخواست تازه ثبت می‌شود و پس از تأیید ادمین امکان چت خواهد داشت.
           </p>
         )}
         confirmText="ثبت درخواست تازه"
-        cancelText={pendingConversation ? 'بازگشت' : 'ادامهٔ گفت‌وگوی فعلی'}
+        cancelText="بازگشت به گفتگوها"
         confirmColor="warning"
         isLoading={sending}
         onConfirm={submitNewConversation}

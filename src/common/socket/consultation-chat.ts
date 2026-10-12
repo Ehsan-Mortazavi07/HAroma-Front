@@ -8,6 +8,7 @@ export type ConsultationSocketAck<T> =
   | { ok: false; error: string };
 
 export type ConsultationSocket = Socket;
+export const CONSULTATION_SESSION_STORAGE_KEY = 'hatefaroma_consultation_session';
 
 export function connectConsultationSocket(sessionToken?: string): ConsultationSocket {
   const apiOrigin = new URL(BASE_API_URL, window.location.origin).origin;

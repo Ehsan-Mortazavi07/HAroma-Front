@@ -7,6 +7,14 @@ import type {
 const sessionHeaders = (sessionToken: string) => ({ 'X-Chat-Session': sessionToken });
 
 export const consultationChatApi = {
+  claimGuestConversations: async (sessionToken: string) => {
+    const response = await axiosInstance.post<{ claimedCount: number }>(
+      '/consultation-chat/claim',
+      {},
+      { headers: sessionHeaders(sessionToken) },
+    );
+    return response.data;
+  },
   getConversations: async (sessionToken: string) => {
     const response = await axiosInstance.get<IConsultationConversation[]>(
       '/consultation-chat/conversations',

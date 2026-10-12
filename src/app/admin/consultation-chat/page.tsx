@@ -1219,7 +1219,7 @@ export default function AdminConsultationChatPage() {
             {bulkConfirmAction === 'delete'
               ? `${toPersianDigits(visibleSelectedIds.length)} گفت‌وگو و تمام پیام‌های وابسته به آن‌ها برای همیشه حذف می‌شوند. این کار قابل بازگشت نیست.`
               : bulkConfirmAction === 'open'
-                ? `وضعیت ${toPersianDigits(selectedOpenableCount)} گفت‌وگوی انتخاب‌شده به «باز» تغییر می‌کند. برای هر کاربر فقط یک گفت‌وگوی بازگشایی‌شده مجاز است؛ اگر چند گفت‌وگو از یک کاربر انتخاب شود، عملیات انجام نمی‌شود.`
+                ? `وضعیت ${toPersianDigits(selectedOpenableCount)} گفت‌وگوی انتخاب‌شده به «باز» تغییر می‌کند. اگر چند گفت‌وگو از یک کاربر انتخاب شده باشد، با همین تأیید همهٔ آن‌ها باز می‌مانند و کاربر می‌تواند هم‌زمان در چند گفتگو پیام بدهد.`
                 : `وضعیت ${toPersianDigits(selectedClosableCount)} گفت‌وگوی باز یا در انتظار به «بسته» تغییر می‌کند. پیام‌ها و سوابق آن‌ها باقی می‌ماند.`}
           </p>
         )}
