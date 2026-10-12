@@ -27,6 +27,7 @@ import {
   ShieldAlert,
   Crown,
   ShoppingBag,
+  MessageCircle,
   Copy,
   Check,
   Clock,
@@ -49,7 +50,7 @@ import {
   RefreshCw,
   Plus,
 } from 'lucide-react';
-import { IUser, IUserAddress, IOrder, UserRole } from '@/common/interfaces';
+import { IUser, IUserAddress, IOrder, IConsultationConversationListItem, UserRole } from '@/common/interfaces';
 import { adminApi } from '@/common/api/admin';
 import { formatToman, toPersianDigits, toEnglishDigits, toast } from '@/common/utils';
 import { formatDisplayBirthDate, parseIsoDate, gregorianToJalali } from '@/common/utils/date';
@@ -141,6 +142,10 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   const [selectedEditTab, setSelectedEditTab] = useState<string>('identity');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [orders, setOrders] = useState<IOrder[]>([]);
+  const [consultationConversations, setConsultationConversations] = useState<IConsultationConversationListItem[]>([]);
+  const [loadingConsultationConversations, setLoadingConsultationConversations] = useState(false);
+  const [consultationConversationsLoadFailed, setConsultationConversationsLoadFailed] = useState(false);
+  const [consultationConversationsReloadCount, setConsultationConversationsReloadCount] = useState(0);
   const [adminChangeNotesByOrder, setAdminChangeNotesByOrder] = useState<Record<string, IOrder['adminChangeNotes']>>({});
   const [loadingAdminNotesId, setLoadingAdminNotesId] = useState<string | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
@@ -224,6 +229,8 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     if (!shouldResetEditor) return;
 
     setSelectedTab('profile');
+    setConsultationConversations([]);
+    setConsultationConversationsLoadFailed(false);
     setSelectedEditTab('identity');
     setExpandedOrderId(null);
     setEditingOrderId(null);
@@ -300,6 +307,33 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       setShowPassword(false);
     }
   }, [isOpen, currentUserData?._id]);
+
+  useEffect(() => {
+    if (!isOpen || !isAdmin || !user?._id) {
+      setConsultationConversations([]);
+      setLoadingConsultationConversations(false);
+      setConsultationConversationsLoadFailed(false);
+      return;
+    }
+
+    let isCurrentRequest = true;
+    setLoadingConsultationConversations(true);
+    setConsultationConversationsLoadFailed(false);
+    adminApi.getUserConsultationConversations(user._id)
+      .then((items) => {
+        if (isCurrentRequest) setConsultationConversations(Array.isArray(items) ? items : []);
+      })
+      .catch(() => {
+        if (isCurrentRequest) setConsultationConversationsLoadFailed(true);
+      })
+      .finally(() => {
+        if (isCurrentRequest) setLoadingConsultationConversations(false);
+      });
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [isAdmin, isOpen, user?._id, consultationConversationsReloadCount]);
 
   const fetchUserOrders = async (userId: string) => {
     setLoadingOrders(true);
@@ -1066,6 +1100,20 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                       </div>
                     }
                   />
+                  {isAdmin && (
+                    <Tab
+                      key="conversations"
+                      title={
+                        <div className="flex items-center gap-2">
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          <span>{isPersian ? 'گفت‌وگوها' : 'Consultations'}</span>
+                          <Chip size="sm" variant="flat" className="h-4 px-1 text-[10px] font-bold">
+                            {toPersianDigits(consultationConversations.length)}
+                          </Chip>
+                        </div>
+                      }
+                    />
+                  )}
                 </Tabs>
               </div>
             ) : (
@@ -2270,6 +2318,82 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                           </div>
                         )}
                       </div>
+                    )}
+
+                    {selectedTab === 'conversations' && isAdmin && (
+                      <section className="space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <h3 className="text-sm font-black text-brand-text">
+                              {isPersian ? 'فهرست گفت‌وگوهای کاربر' : 'Customer consultations'}
+                            </h3>
+                            <p className="mt-1 text-[11px] text-brand-text-muted">
+                              {isPersian ? 'فقط موضوع، وضعیت و زمان گفت‌وگو نمایش داده می‌شود.' : 'Only each conversation’s subject, status, and date are shown.'}
+                            </p>
+                          </div>
+                          {!loadingConsultationConversations && !consultationConversationsLoadFailed && (
+                            <Chip size="sm" variant="flat" className="shrink-0 bg-brand-gold/10 text-brand-bronze dark:text-brand-gold">
+                              {toPersianDigits(consultationConversations.length)} {isPersian ? 'گفت‌وگو' : 'chats'}
+                            </Chip>
+                          )}
+                        </div>
+
+                        {loadingConsultationConversations ? (
+                          <div className="space-y-2">
+                            {[1, 2, 3].map((index) => <Skeleton key={index} className="h-16 w-full rounded-xl" />)}
+                          </div>
+                        ) : consultationConversationsLoadFailed ? (
+                          <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4">
+                            <p className="text-xs leading-6 text-rose-700 dark:text-rose-300">
+                              {isPersian ? 'فهرست گفت‌وگوها بارگذاری نشد.' : 'Could not load this customer’s conversations.'}
+                            </p>
+                            <Button
+                              size="sm"
+                              variant="flat"
+                              onPress={() => setConsultationConversationsReloadCount((count) => count + 1)}
+                              startContent={<RefreshCw className="h-3.5 w-3.5" />}
+                              className="h-9 rounded-xl bg-brand-surface-elevated px-3 text-xs font-bold text-brand-text"
+                            >
+                              {isPersian ? 'تلاش دوباره' : 'Retry'}
+                            </Button>
+                          </div>
+                        ) : consultationConversations.length === 0 ? (
+                          <div className="flex min-h-36 flex-col items-center justify-center rounded-2xl bg-brand-surface-elevated/50 px-5 text-center">
+                            <MessageCircle className="h-6 w-6 text-brand-text-muted/60" />
+                            <p className="mt-2 text-xs font-bold text-brand-text">
+                              {isPersian ? 'گفت‌وگویی برای این کاربر ثبت نشده است.' : 'This customer has no consultations yet.'}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="max-h-96 divide-y divide-brand-border/70 overflow-y-auto rounded-2xl border border-brand-border/70">
+                            {consultationConversations.map((conversation) => (
+                              <div key={conversation.id} className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-brand-surface-elevated/50">
+                                <div className="min-w-0">
+                                  <p className="truncate text-xs font-bold text-brand-text">{conversation.subject}</p>
+                                  <p className="mt-1 text-[10px] text-brand-text-muted">{formatDateTime(conversation.lastMessageAt || conversation.createdAt)}</p>
+                                </div>
+                                <Chip
+                                  size="sm"
+                                  variant="flat"
+                                  className={`h-6 shrink-0 px-2 text-[10px] font-bold ${
+                                    conversation.status === 'open'
+                                      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                                      : conversation.status === 'pending'
+                                        ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                                        : 'bg-default-100 text-default-500'
+                                  }`}
+                                >
+                                  {conversation.status === 'open'
+                                    ? isPersian ? 'باز' : 'Open'
+                                    : conversation.status === 'pending'
+                                      ? isPersian ? 'در انتظار' : 'Pending'
+                                      : isPersian ? 'بسته' : 'Closed'}
+                                </Chip>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </section>
                     )}
                   </motion.div>
                 )}

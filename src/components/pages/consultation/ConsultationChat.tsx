@@ -319,7 +319,7 @@ export function ConsultationChat() {
   };
 
   const submitNewConversation = async () => {
-    if (!sessionToken || sending || pendingConversation) return;
+    if (!sessionToken || sending) return;
     if (!isAuthenticated && !guestName.trim()) {
       setConnectionError('برای شروع گفت‌وگو نامت را وارد کن.');
       return;
@@ -342,7 +342,7 @@ export function ConsultationChat() {
       setConversations((current) => [
         ...current
           .filter((item) => item.id !== next.id)
-          .map((item) => item.status === 'open'
+          .map((item) => item.status === 'open' || item.status === 'pending'
             ? { ...item, status: 'closed' as const, closedAt, closedByAdminId: null, closedByAdminName: '' }
             : item),
         next,
@@ -367,7 +367,7 @@ export function ConsultationChat() {
   };
 
   const requestNewConversation = () => {
-    if (openConversation) {
+    if (openConversation || pendingConversation) {
       setConfirmNewRequest(true);
       return;
     }
@@ -462,26 +462,25 @@ export function ConsultationChat() {
         }}
       />
 
-      {pendingConversation ? (
+      {pendingConversation && (
         <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-200">
           <Clock3 className="mt-0.5 h-4 w-4 shrink-0" />
-          <p className="leading-6">درخواست «{pendingConversation.subject}» منتظر بررسی ادمین است. برای ثبت درخواست تازه، ابتدا باید این درخواست بررسی شود.</p>
-        </div>
-      ) : (
-        <div className="mt-auto pt-6">
-          <Button
-            type="button"
-            onPress={requestNewConversation}
-            isDisabled={sending || subject.trim().length < 3 || (!isAuthenticated && !guestName.trim()) || authLoading}
-            isLoading={sending}
-            startContent={!sending && <Plus className="h-4 w-4" />}
-            className="h-12 w-full rounded-2xl bg-brand-gold font-black text-brand-olive shadow-sm disabled:opacity-50"
-          >
-            ثبت درخواست مشاوره
-          </Button>
-          <p className="mt-3 text-center text-[11px] leading-5 text-brand-text-muted">تا زمان تأیید ادمین، پیام‌رسانی فعال نیست.</p>
+          <p className="leading-6">درخواست «{pendingConversation.subject}» هنوز بررسی نشده است. با ثبت درخواست تازه، این درخواست بسته و درخواست جدید جایگزین آن می‌شود.</p>
         </div>
       )}
+      <div className="mt-auto pt-6">
+        <Button
+          type="button"
+          onPress={requestNewConversation}
+          isDisabled={sending || subject.trim().length < 3 || (!isAuthenticated && !guestName.trim()) || authLoading}
+          isLoading={sending}
+          startContent={!sending && <Plus className="h-4 w-4" />}
+          className="h-12 w-full rounded-2xl bg-brand-gold font-black text-brand-olive shadow-sm disabled:opacity-50"
+        >
+          ثبت درخواست مشاوره
+        </Button>
+        <p className="mt-3 text-center text-[11px] leading-5 text-brand-text-muted">تا زمان تأیید ادمین، پیام‌رسانی فعال نیست.</p>
+      </div>
     </div>
   );
 
@@ -585,7 +584,6 @@ export function ConsultationChat() {
           <Button
             type="button"
             onPress={openRequestForm}
-            isDisabled={!!pendingConversation}
             startContent={<RefreshCw className="h-4 w-4" />}
             className="min-h-11 rounded-full bg-brand-gold px-5 font-bold text-brand-olive"
           >
@@ -673,7 +671,7 @@ export function ConsultationChat() {
           <Button
             type="button"
             size="sm"
-            isDisabled={sending || !!pendingConversation || authLoading}
+            isDisabled={sending || authLoading}
             onPress={openRequestForm}
             startContent={<Plus className="h-4 w-4" />}
             className="h-11 shrink-0 rounded-full bg-brand-gold px-3 text-xs font-bold text-brand-olive sm:px-4"
@@ -694,7 +692,7 @@ export function ConsultationChat() {
                 <Button
                   type="button"
                   size="sm"
-                  isDisabled={sending || !!pendingConversation || authLoading}
+                  isDisabled={sending || authLoading}
                   onPress={openRequestForm}
                   startContent={<Plus className="h-3.5 w-3.5" />}
                   className="h-10 rounded-full border border-brand-border bg-brand-surface-elevated px-3 text-xs font-bold text-brand-text"
@@ -818,11 +816,13 @@ export function ConsultationChat() {
         title="ثبت گفت‌وگوی تازه؟"
         description={(
           <p>
-            اگر درخواست تازه را ثبت کنی، گفت‌وگوی فعال «<strong>{openConversation?.subject || 'مشاوره قبلی'}</strong>» بسته می‌شود. درخواست جدید پس از تأیید ادمین قابل چت خواهد بود.
+            {pendingConversation
+              ? <>درخواست در انتظار «<strong>{pendingConversation.subject}</strong>» بسته می‌شود و درخواست تازه برای بررسی ادمین ثبت خواهد شد.</>
+              : <>گفت‌وگوی فعال «<strong>{openConversation?.subject || 'مشاوره قبلی'}</strong>» بسته می‌شود و درخواست تازه پس از تأیید ادمین قابل چت خواهد بود.</>}
           </p>
         )}
         confirmText="ثبت درخواست تازه"
-        cancelText="ادامهٔ گفت‌وگوی فعلی"
+        cancelText={pendingConversation ? 'بازگشت' : 'ادامهٔ گفت‌وگوی فعلی'}
         confirmColor="warning"
         isLoading={sending}
         onConfirm={submitNewConversation}

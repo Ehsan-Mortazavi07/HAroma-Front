@@ -1,6 +1,7 @@
 import axiosInstance from '../axiosInstance';
 import type {
   IConsultationConversation,
+  IConsultationConversationListItem,
   IConsultationMessage,
   IAdminOrderChangeNote,
   IAdminOrderUpdate,
@@ -15,6 +16,12 @@ export const adminApi = {
     const res = await axiosInstance.get<IConsultationConversation[]>(
       '/admin/consultation-chat/conversations',
       { params: { status } },
+    );
+    return res.data;
+  },
+  getUserConsultationConversations: async (userId: string) => {
+    const res = await axiosInstance.get<IConsultationConversationListItem[]>(
+      `/admin/consultation-chat/users/${encodeURIComponent(userId)}/conversations`,
     );
     return res.data;
   },

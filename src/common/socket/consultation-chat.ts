@@ -15,7 +15,7 @@ export function connectConsultationSocket(sessionToken?: string): ConsultationSo
     transports: ['websocket'],
     upgrade: false,
     withCredentials: true,
-    auth: sessionToken ? { sessionToken } : {},
+    auth: sessionToken ? { sessionToken, chatMode: 'customer' } : {},
     reconnection: true,
     reconnectionAttempts: Infinity,
     reconnectionDelay: 500,

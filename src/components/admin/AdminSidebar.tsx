@@ -31,8 +31,8 @@ import {
   Menu,
   X,
 } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/stores/hooks';
-import { logout } from '@/stores/auth/authSlice';
+import { useAppSelector } from '@/stores/hooks';
+import { useLogoutConfirmation } from '@/stores/auth/useLogoutConfirmation';
 import { PATHS } from '@/common/constants/PATHS';
 import { useTranslation } from '@/common/i18n';
 import { useAdminSidebar } from './AdminSidebarContext';
@@ -47,9 +47,9 @@ interface NavItem {
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const { isPersian, isRTL } = useTranslation();
+  const { requestLogout, dialog: logoutDialog } = useLogoutConfirmation(isPersian);
   const isAdmin = user?.role === 'admin';
   const { isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar, closeMobileSidebar } =
     useAdminSidebar();
@@ -217,7 +217,7 @@ export function AdminSidebar() {
                   </Button>
 
                   <Button
-                    onPress={() => dispatch(logout())}
+                    onPress={requestLogout}
                     variant="light"
                     size="sm"
                     className="w-full h-9 justify-start gap-2.5 px-3 text-xs font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl"
@@ -376,7 +376,7 @@ export function AdminSidebar() {
                 </Button>
 
                 <Button
-                  onPress={() => dispatch(logout())}
+                  onPress={requestLogout}
                   variant="light"
                   radius="full"
                   className="w-full h-10 justify-start gap-2.5 px-3.5 text-xs font-black text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
@@ -500,7 +500,7 @@ export function AdminSidebar() {
                 >
                   <button
                     type="button"
-                    onClick={() => dispatch(logout())}
+                    onClick={requestLogout}
                     className="flex items-center justify-center w-11 h-11 rounded-2xl text-rose-500 hover:text-rose-400 hover:bg-rose-500/15 transition-colors cursor-pointer group"
                   >
                     <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -511,6 +511,7 @@ export function AdminSidebar() {
           )}
         </Card>
       </div>
+      {logoutDialog}
     </>
   );
 }

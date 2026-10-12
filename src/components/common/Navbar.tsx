@@ -38,7 +38,7 @@ import {
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { toggleCartDrawer } from '@/stores/ui/uiSlice';
 import { updateQuantity, removeFromCart } from '@/stores/cart/cartSlice';
-import { logout } from '@/stores/auth/authSlice';
+import { useLogoutConfirmation } from '@/stores/auth/useLogoutConfirmation';
 import { PATHS } from '@/common/constants/PATHS';
 import { resolveMediaUrl } from '@/common/constants/URL';
 import { ThemeToggle } from './ThemeToggle';
@@ -183,6 +183,7 @@ export function Navbar() {
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const { isPersian, t } = useTranslation();
+  const { requestLogout, dialog: logoutDialog } = useLogoutConfirmation(isPersian);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
@@ -469,7 +470,7 @@ export function Navbar() {
                             <div className="w-full h-px bg-[#2e3a2e] my-1" />
                             <button
                               onClick={() => {
-                                dispatch(logout());
+                                requestLogout();
                                 setIsProfileOpen(false);
                               }}
                               className="flex items-center gap-2.5 p-2.5 rounded-xl text-rose-500 hover:text-rose-400 font-black transition-colors text-right w-full"
@@ -1038,6 +1039,7 @@ export function Navbar() {
             onClose={() => setIsSearchModalOpen(false)}
           />
         )}
+        {logoutDialog}
 
       </div>
     </header>

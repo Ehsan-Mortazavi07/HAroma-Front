@@ -26,6 +26,11 @@ export interface IConsultationConversation {
   updatedAt: string;
 }
 
+export type IConsultationConversationListItem = Pick<
+  IConsultationConversation,
+  'id' | 'subject' | 'status' | 'createdAt' | 'lastMessageAt'
+>;
+
 export interface IConsultationMessage {
   id: string;
   conversationId: string;

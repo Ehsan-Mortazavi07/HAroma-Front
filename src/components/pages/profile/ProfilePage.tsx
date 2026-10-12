@@ -62,7 +62,7 @@ import {
 } from '@heroui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
-import { logout, updateUser, fetchProfile } from '@/stores/auth/authSlice';
+import { updateUser, fetchProfile } from '@/stores/auth/authSlice';
 import { PATHS } from '@/common/constants/PATHS';
 import { formatToman, toPersianDigits, toEnglishDigits, toast, getApiErrorMessage } from '@/common/utils';
 import { isoToJalali } from '@/common/utils/date';
@@ -76,6 +76,7 @@ import axiosInstance from '@/common/axiosInstance';
 import { useTranslation } from '@/common/i18n';
 import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
+import { useLogoutConfirmation } from '@/stores/auth/useLogoutConfirmation';
 
 const VALID_TABS = ['dashboard', 'orders', 'addresses', 'edit', 'vip'] as const;
 type TabType = (typeof VALID_TABS)[number];
@@ -107,6 +108,7 @@ export function ProfilePage() {
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const isAuthLoading = useAppSelector((state) => state.auth.isLoading);
   const { t, isPersian } = useTranslation();
+  const { requestLogout, dialog: logoutDialog } = useLogoutConfirmation(isPersian);
 
   // Restore URL and saved tab preferences in the existing effect after hydration.
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
@@ -1054,10 +1056,7 @@ export function ProfilePage() {
                 color="danger"
                 radius="lg"
                 fullWidth
-                onPress={() => {
-                  dispatch(logout());
-                  router.push(PATHS.HOME);
-                }}
+                onPress={requestLogout}
                 startContent={<LogOut className="w-4 h-4 shrink-0" />}
                 className="font-bold text-xs h-11 transition-colors rounded-2xl text-rose-500 hover:bg-rose-500/10 cursor-pointer"
               >
@@ -3083,6 +3082,7 @@ export function ProfilePage() {
         isLoading={Boolean(deletingAddressId)}
         onConfirm={handleConfirmDeleteAddress}
       />
+      {logoutDialog}
     </div>
   );
 }

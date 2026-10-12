@@ -31,8 +31,8 @@ import {
   Menu,
   X,
 } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/stores/hooks';
-import { logout } from '@/stores/auth/authSlice';
+import { useAppSelector } from '@/stores/hooks';
+import { useLogoutConfirmation } from '@/stores/auth/useLogoutConfirmation';
 import { useAdminSidebar } from './AdminSidebarContext';
 import { PATHS } from '@/common/constants/PATHS';
 import { BrandLogo } from '../common/BrandLogo';
@@ -71,10 +71,10 @@ const floatingPanelVariants = {
 
 export function AdminNavbar() {
   const pathname = usePathname();
-  const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const { isPersian, isRTL } = useTranslation();
+  const { requestLogout, dialog: logoutDialog } = useLogoutConfirmation(isPersian);
   const { isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar } = useAdminSidebar();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -326,7 +326,7 @@ export function AdminNavbar() {
 
                             <button
                               onClick={() => {
-                                dispatch(logout());
+                                requestLogout();
                                 setIsProfileOpen(false);
                               }}
                               className="flex items-center gap-2.5 p-2.5 rounded-xl text-rose-500 hover:text-rose-400 font-black transition-colors text-right w-full cursor-pointer"
@@ -345,6 +345,7 @@ export function AdminNavbar() {
           </NavbarContent>
         </HeroNavbar>
       </div>
+      {logoutDialog}
     </header>
   );
 }

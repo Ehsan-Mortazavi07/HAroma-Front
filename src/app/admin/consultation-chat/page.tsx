@@ -728,7 +728,8 @@ export default function AdminConsultationChatPage() {
                   setIsNewConversationOpen(true);
                 }}
                 startContent={<Plus className="h-4 w-4" />}
-                className="mb-3 h-11 w-full rounded-xl bg-brand-olive font-bold text-brand-gold"
+                className="group mb-3 h-12 w-full justify-between rounded-2xl border border-[#bfa27a]/55 bg-[#273027] px-3 text-xs font-black text-[#f7f4ee] shadow-[0_8px_22px_rgba(0,0,0,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#d4be9b] hover:bg-[#303a30] hover:text-white hover:shadow-[0_12px_28px_rgba(0,0,0,0.24)] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4be9b] focus-visible:ring-offset-2 focus-visible:ring-offset-[#141914]"
+                endContent={<MessageCircle className="h-4 w-4 text-[#d4be9b] transition-transform duration-200 group-hover:scale-110" />}
               >
                 گفت‌وگوی جدید با کاربر
               </Button>
@@ -797,9 +798,31 @@ export default function AdminConsultationChatPage() {
                 </div>
               ) : (
                 <div>
-                  {conversationGroups.map((group) => (
+                  {conversationGroups.map((group) => {
+                    const selectedInGroup = group.conversations.filter((item) => selectedConversationIds.has(item.id)).length;
+                    const isGroupSelected = selectedInGroup === group.conversations.length;
+                    const isGroupPartiallySelected = selectedInGroup > 0 && !isGroupSelected;
+                    return (
                     <section key={group.key} className="border-b border-brand-border/70">
                       <div className="flex items-center gap-3 bg-brand-surface-elevated/60 px-4 py-3">
+                        <SmoothCheckbox
+                          size="sm"
+                          ariaLabel={`انتخاب همه گفتگوهای ${group.name}`}
+                          isSelected={isGroupSelected}
+                          isIndeterminate={isGroupPartiallySelected}
+                          onValueChange={(checked) => {
+                            setSelectedConversationIds((current) => {
+                              const next = new Set(current);
+                              group.conversations.forEach((conversation) => {
+                                if (checked) next.add(conversation.id);
+                                else next.delete(conversation.id);
+                              });
+                              return next;
+                            });
+                            setError('');
+                          }}
+                          className="gap-0"
+                        />
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-olive text-brand-gold">
                           <UserRound className="h-4 w-4" />
                         </span>
@@ -837,7 +860,18 @@ export default function AdminConsultationChatPage() {
                                 className="min-w-0 flex-1 rounded-xl px-2 py-2 text-right transition-colors hover:bg-brand-surface-elevated"
                               >
                                 <span className="flex items-center justify-between gap-2">
-                                  <span className="truncate text-[11px] font-bold text-brand-gold">{item.subject || 'مشاوره'}</span>
+                                  <span className="flex min-w-0 items-center gap-1.5">
+                                    <span className="truncate text-[11px] font-bold text-brand-gold">{item.subject || 'مشاوره'}</span>
+                                    <Chip
+                                      size="sm"
+                                      variant="flat"
+                                      className={`h-[18px] shrink-0 px-1.5 text-[9px] font-bold ${item.userId
+                                        ? 'bg-brand-gold/10 text-brand-bronze dark:text-brand-gold'
+                                        : 'bg-default-100 text-default-500'}`}
+                                    >
+                                      {item.userId ? 'کاربر سایت' : 'مهمان'}
+                                    </Chip>
+                                  </span>
                                   <time className="shrink-0 text-[10px] text-brand-text-muted" dateTime={item.lastMessageAt}>{shortTime(item.lastMessageAt)}</time>
                                 </span>
                                 <span className="mt-1 flex items-center justify-between gap-2">
@@ -857,7 +891,8 @@ export default function AdminConsultationChatPage() {
                         })}
                       </div>
                     </section>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
