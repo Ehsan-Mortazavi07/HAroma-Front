@@ -161,6 +161,8 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [addressToDelete, setAddressToDelete] = useState<IUserAddress | null>(null);
   const [isDeletingAddress, setIsDeletingAddress] = useState(false);
+  const [conversationToDelete, setConversationToDelete] = useState<IConsultationConversationListItem | null>(null);
+  const [isDeletingConversation, setIsDeletingConversation] = useState(false);
 
   // Edit form state
   const [showPassword, setShowPassword] = useState(false);
@@ -187,6 +189,8 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     if (isOpen) return;
     setAddressToDelete(null);
     setIsDeletingAddress(false);
+    setConversationToDelete(null);
+    setIsDeletingConversation(false);
   }, [isOpen]);
 
   const [formData, setFormData] = useState({
@@ -660,6 +664,24 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       toast.error(Array.isArray(message) ? message[0] : message);
     } finally {
       setIsDeletingAddress(false);
+    }
+  };
+
+  const handleConfirmDeleteConversation = async () => {
+    if (!conversationToDelete) return;
+
+    setIsDeletingConversation(true);
+    try {
+      await adminApi.deleteConsultationConversation(conversationToDelete.id);
+      setConsultationConversations((current) => current.filter((item) => item.id !== conversationToDelete.id));
+      setConversationToDelete(null);
+      toast.success(isPersian ? 'گفت‌وگو و پیام‌های آن حذف شد.' : 'Conversation and its messages were deleted.');
+    } catch (error: any) {
+      console.error('Failed to delete user conversation', error);
+      const message = error?.response?.data?.message || (isPersian ? 'حذف گفت‌وگو انجام نشد.' : 'Failed to delete the conversation.');
+      toast.error(Array.isArray(message) ? message[0] : message);
+    } finally {
+      setIsDeletingConversation(false);
     }
   };
 
@@ -2367,28 +2389,40 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                         ) : (
                           <div className="max-h-96 divide-y divide-brand-border/70 overflow-y-auto rounded-2xl border border-brand-border/70">
                             {consultationConversations.map((conversation) => (
-                              <div key={conversation.id} className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-brand-surface-elevated/50">
-                                <div className="min-w-0">
+                              <div key={conversation.id} className="flex items-center justify-between gap-3 px-3 py-3 transition-colors hover:bg-brand-surface-elevated/50 sm:px-4">
+                                <div className="min-w-0 flex-1">
                                   <p className="truncate text-xs font-bold text-brand-text">{conversation.subject}</p>
                                   <p className="mt-1 text-[10px] text-brand-text-muted">{formatDateTime(conversation.lastMessageAt || conversation.createdAt)}</p>
                                 </div>
-                                <Chip
-                                  size="sm"
-                                  variant="flat"
-                                  className={`h-6 shrink-0 px-2 text-[10px] font-bold ${
-                                    conversation.status === 'open'
-                                      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                                <div className="flex shrink-0 items-center gap-2">
+                                  <Chip
+                                    size="sm"
+                                    variant="flat"
+                                    className={`h-6 shrink-0 px-2 text-[10px] font-bold ${
+                                      conversation.status === 'open'
+                                        ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                                        : conversation.status === 'pending'
+                                          ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                                          : 'bg-default-100 text-default-500'
+                                    }`}
+                                  >
+                                    {conversation.status === 'open'
+                                      ? isPersian ? 'باز' : 'Open'
                                       : conversation.status === 'pending'
-                                        ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
-                                        : 'bg-default-100 text-default-500'
-                                  }`}
-                                >
-                                  {conversation.status === 'open'
-                                    ? isPersian ? 'باز' : 'Open'
-                                    : conversation.status === 'pending'
-                                      ? isPersian ? 'در انتظار' : 'Pending'
-                                      : isPersian ? 'بسته' : 'Closed'}
-                                </Chip>
+                                        ? isPersian ? 'در انتظار' : 'Pending'
+                                        : isPersian ? 'بسته' : 'Closed'}
+                                  </Chip>
+                                  <Button
+                                    isIconOnly
+                                    size="sm"
+                                    variant="light"
+                                    aria-label={isPersian ? `حذف گفت‌وگوی ${conversation.subject}` : `Delete ${conversation.subject}`}
+                                    onPress={() => setConversationToDelete(conversation)}
+                                    className="h-8 min-w-8 rounded-lg text-rose-600 hover:bg-rose-500/10 dark:text-rose-400"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -2546,6 +2580,29 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       confirmColor="danger"
       isLoading={isDeletingAddress}
       onConfirm={handleConfirmDeleteAddress}
+    />
+    <AdminConfirmModal
+      isOpen={Boolean(conversationToDelete)}
+      onOpenChange={(open) => {
+        if (!open && !isDeletingConversation) setConversationToDelete(null);
+      }}
+      title={isPersian ? 'حذف گفت‌وگوی کاربر' : 'Delete user conversation'}
+      description={isPersian ? (
+        <div>
+          <p>گفت‌وگوی <strong>«{conversationToDelete?.subject || 'مشاوره'}»</strong> و تمام پیام‌های آن حذف شود؟</p>
+          <p className="mt-1 text-rose-500">این عملیات قابل بازگشت نیست.</p>
+        </div>
+      ) : (
+        <div>
+          <p>Delete <strong>&quot;{conversationToDelete?.subject || 'Consultation'}&quot;</strong> and all its messages?</p>
+          <p className="mt-1 text-rose-500">This action cannot be undone.</p>
+        </div>
+      )}
+      confirmText={isPersian ? 'حذف گفت‌وگو' : 'Delete conversation'}
+      cancelText={isPersian ? 'انصراف' : 'Cancel'}
+      confirmColor="danger"
+      isLoading={isDeletingConversation}
+      onConfirm={handleConfirmDeleteConversation}
     />
     </>
   );

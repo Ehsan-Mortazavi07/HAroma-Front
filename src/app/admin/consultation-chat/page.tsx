@@ -9,6 +9,7 @@ import {
   Check,
   CheckCheck,
   CircleDot,
+  ChevronDown,
   Clock3,
   Inbox,
   MessageCircle,
@@ -33,6 +34,7 @@ type ConversationGroup = {
   key: string;
   name: string;
   contact: string;
+  kind: 'user' | 'guest';
   conversations: IConsultationConversation[];
 };
 
@@ -40,6 +42,17 @@ function statusLabel(status: IConsultationConversation['status']) {
   if (status === 'pending') return 'در انتظار تأیید';
   if (status === 'open') return 'باز';
   return 'بسته';
+}
+
+function historyActionLabel(action: NonNullable<IConsultationConversation['statusHistory']>[number]['action']) {
+  switch (action) {
+    case 'requested': return 'درخواست مشاوره ثبت شد';
+    case 'accepted': return 'درخواست پذیرفته شد';
+    case 'opened': return 'گفت‌وگو باز شد';
+    case 'reopened': return 'گفت‌وگو بازگشایی شد';
+    case 'closed': return 'گفت‌وگو بسته شد';
+    default: return 'گفت‌وگو ثبت شد';
+  }
 }
 
 function shortTime(value: string) {
@@ -63,6 +76,7 @@ export default function AdminConsultationChatPage() {
   const [conversations, setConversations] = useState<IConsultationConversation[]>([]);
   const [selectedId, setSelectedId] = useState('');
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
+  const [isAuditExpanded, setIsAuditExpanded] = useState(false);
   const [messages, setMessages] = useState<IConsultationMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [loadingInbox, setLoadingInbox] = useState(true);
@@ -337,15 +351,7 @@ export default function AdminConsultationChatPage() {
   const conversationGroups = useMemo<ConversationGroup[]>(() => {
     const groups = new Map<string, IConsultationConversation[]>();
     conversations.forEach((conversation) => {
-      const phone = conversation.guestPhone.replace(/\D/g, '');
-      const email = conversation.guestEmail.trim().toLowerCase();
-      const key = conversation.userId
-        ? `user:${conversation.userId}`
-        : phone
-          ? `phone:${phone}`
-          : email
-            ? `email:${email}`
-            : `conversation:${conversation.id}`;
+      const key = conversation.userId ? `user:${conversation.userId}` : 'guests';
       const items = groups.get(key) || [];
       items.push(conversation);
       groups.set(key, items);
@@ -354,8 +360,11 @@ export default function AdminConsultationChatPage() {
     return [...groups.entries()]
       .map(([key, items]) => ({
         key,
-        name: items[0].guestName || 'مشتری مهمان',
-        contact: items[0].guestPhone || items[0].guestEmail || (items[0].guestUsername ? `@${items[0].guestUsername}` : ''),
+        name: items[0].userId ? items[0].guestName || 'کاربر سایت' : 'گفت‌وگوهای مهمان',
+        contact: items[0].userId
+          ? items[0].guestPhone || items[0].guestEmail || (items[0].guestUsername ? `@${items[0].guestUsername}` : '')
+          : 'همهٔ درخواست‌های ثبت‌شده بدون حساب کاربری',
+        kind: items[0].userId ? 'user' as const : 'guest' as const,
         conversations: [...items].sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()),
       }))
       .sort((a, b) => new Date(b.conversations[0].lastMessageAt).getTime() - new Date(a.conversations[0].lastMessageAt).getTime());
@@ -537,14 +546,7 @@ export default function AdminConsultationChatPage() {
         conversationId,
         status: nextStatus,
       });
-      const closedAt = new Date().toISOString();
-      setConversations((current) => current.map((item) => {
-        if (item.id === updated.id) return updated;
-        if (nextStatus === 'open' && updated.userId && item.userId === updated.userId && item.status === 'open') {
-          return { ...item, status: 'closed', closedAt, closedByAdminId: null, closedByAdminName: '' };
-        }
-        return item;
-      }));
+      setConversations((current) => current.map((item) => item.id === updated.id ? updated : item));
       setFilter(nextStatus);
       setError('');
       return true;
@@ -811,6 +813,13 @@ export default function AdminConsultationChatPage() {
                           isSelected={isGroupSelected}
                           isIndeterminate={isGroupPartiallySelected}
                           onValueChange={(checked) => {
+                            const nextSelectedCount = checked
+                              ? selectedConversationIds.size + group.conversations.filter((conversation) => !selectedConversationIds.has(conversation.id)).length
+                              : selectedConversationIds.size;
+                            if (checked && nextSelectedCount > 100) {
+                              setError('برای تغییر گروهی حداکثر ۱۰۰ گفت‌وگو را انتخاب کن؛ گفت‌وگوها را جداگانه انتخاب کن.');
+                              return;
+                            }
                             setSelectedConversationIds((current) => {
                               const next = new Set(current);
                               group.conversations.forEach((conversation) => {
@@ -828,8 +837,8 @@ export default function AdminConsultationChatPage() {
                         </span>
                         <div className="min-w-0 flex-1">
                           <h3 className="truncate text-xs font-extrabold text-brand-text">{group.name}</h3>
-                          <p className="mt-0.5 truncate text-[10px] text-brand-text-muted" dir="ltr">
-                            {group.contact || `${toPersianDigits(group.conversations.length)} گفت‌وگو`}
+                          <p className="mt-0.5 truncate text-[10px] text-brand-text-muted" dir={group.kind === 'guest' ? 'rtl' : 'ltr'}>
+                            {group.kind === 'guest' ? group.contact : group.contact || 'کاربر عضو سایت'}
                           </p>
                         </div>
                         <span className="shrink-0 rounded-full bg-brand-surface px-2 py-1 text-[10px] font-bold text-brand-gold">
@@ -861,7 +870,7 @@ export default function AdminConsultationChatPage() {
                               >
                                 <span className="flex items-center justify-between gap-2">
                                   <span className="flex min-w-0 items-center gap-1.5">
-                                    <span className="truncate text-[11px] font-bold text-brand-gold">{item.subject || 'مشاوره'}</span>
+                                    <span className="truncate text-[11px] font-extrabold text-brand-text">{item.guestName || 'مشتری مهمان'}</span>
                                     <Chip
                                       size="sm"
                                       variant="flat"
@@ -872,16 +881,25 @@ export default function AdminConsultationChatPage() {
                                       {item.userId ? 'کاربر سایت' : 'مهمان'}
                                     </Chip>
                                   </span>
-                                  <time className="shrink-0 text-[10px] text-brand-text-muted" dateTime={item.lastMessageAt}>{shortTime(item.lastMessageAt)}</time>
+                                  <time className="shrink-0 text-[10px] text-brand-text-muted" dateTime={item.createdAt}>ثبت {shortTime(item.createdAt)}</time>
                                 </span>
                                 <span className="mt-1 flex items-center justify-between gap-2">
-                                  <span className="truncate text-xs text-brand-text-muted">{item.lastMessageText || (item.status === 'pending' ? 'درخواست مشاوره ثبت شده' : 'گفت‌وگو آغاز شده است')}</span>
+                                  <span className="truncate text-[11px] font-bold text-brand-gold">موضوع: {item.subject || 'مشاوره'}</span>
+                                  <time className="shrink-0 text-[10px] text-brand-text-muted" dateTime={item.lastMessageAt}>آخرین فعالیت {shortTime(item.lastMessageAt)}</time>
+                                </span>
+                                <span className="mt-1 flex min-w-0 items-center justify-between gap-2">
+                                  <span className="truncate text-[10px] text-brand-text-muted" dir="ltr">
+                                    {[item.guestPhone, item.guestEmail, item.guestUsername ? `@${item.guestUsername}` : ''].filter(Boolean).join(' · ') || (item.userId ? 'عضو سایت' : 'اطلاعات تماس ثبت نشده')}
+                                  </span>
                                   {!!item.unreadForAdmin && (
                                     <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand-gold px-1.5 text-[10px] font-black text-brand-olive">
                                       {toPersianDigits(item.unreadForAdmin)}
                                     </span>
                                   )}
                                 </span>
+                                {item.lastMessageText && (
+                                  <span className="mt-1 block truncate text-[10px] text-brand-text-muted">{item.lastMessageText}</span>
+                                )}
                                 <span className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${item.status === 'pending' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300' : item.status === 'open' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-default-100 text-default-500'}`}>
                                   {statusLabel(item.status)}
                                 </span>
@@ -974,6 +992,61 @@ export default function AdminConsultationChatPage() {
                     </Button>
                   </div>
                 </header>
+
+                <section className="shrink-0 border-b border-brand-border bg-brand-surface px-3 py-2.5 sm:px-5">
+                  <button
+                    type="button"
+                    aria-expanded={isAuditExpanded}
+                    aria-controls="consultation-status-history"
+                    onClick={() => setIsAuditExpanded((expanded) => !expanded)}
+                    className="flex min-h-8 w-full items-center justify-between gap-3 text-right"
+                  >
+                    <span className="flex min-w-0 items-center gap-2 text-xs font-extrabold text-brand-text">
+                      <Clock3 className="h-4 w-4 shrink-0 text-brand-gold" />
+                      تاریخچهٔ درخواست و تغییر وضعیت
+                    </span>
+                    <span className="flex shrink-0 items-center gap-2 text-[10px] text-brand-text-muted">
+                      {toPersianDigits(selectedConversation.statusHistory?.length || 0)} رویداد
+                      <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isAuditExpanded ? 'rotate-180' : ''}`} />
+                    </span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {isAuditExpanded && (
+                      <motion.ol
+                        id="consultation-status-history"
+                        initial={reduceMotion ? false : { opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: reduceMotion ? 0.01 : 0.22, ease: [0.16, 1, 0.3, 1] }}
+                        className="mt-2 max-h-36 space-y-1.5 overflow-y-auto overscroll-contain"
+                      >
+                        {(selectedConversation.statusHistory || []).map((event, index) => (
+                          <li key={`${event.action}-${event.occurredAt}-${index}`} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 rounded-lg bg-brand-surface-elevated/65 px-2.5 py-1.5 text-[10px]">
+                            <span className="font-bold text-brand-text">
+                              {historyActionLabel(event.action)}
+                              {event.fromStatus && event.toStatus && event.fromStatus !== event.toStatus && (
+                                <span className="ms-1 font-normal text-brand-text-muted">({statusLabel(event.fromStatus)} ← {statusLabel(event.toStatus)})</span>
+                              )}
+                            </span>
+                            <time className="shrink-0 text-brand-text-muted" dateTime={event.occurredAt}>
+                              {new Date(event.occurredAt).toLocaleString('fa-IR', { dateStyle: 'medium', timeStyle: 'short' })}
+                            </time>
+                            <span className="w-full text-brand-text-muted">
+                              {event.actorRole === 'admin'
+                                ? `ادمین: ${event.actorName || 'نامشخص'}`
+                                : event.actorRole === 'customer'
+                                  ? `کاربر: ${event.actorName || selectedConversation.guestName}`
+                                  : event.actorName || 'سامانه'}
+                            </span>
+                          </li>
+                        ))}
+                        {!selectedConversation.statusHistory?.length && (
+                          <li className="px-2 py-2 text-[10px] text-brand-text-muted">هنوز رویدادی ثبت نشده است.</li>
+                        )}
+                      </motion.ol>
+                    )}
+                  </AnimatePresence>
+                </section>
 
                 <div
                   ref={messagesPaneRef}

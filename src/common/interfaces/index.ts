@@ -1,6 +1,23 @@
 export type UserRole = 'admin' | 'editor' | 'user';
 
 export type ConsultationConversationStatus = 'pending' | 'open' | 'closed';
+export type ConsultationConversationHistoryAction =
+  | 'created'
+  | 'requested'
+  | 'accepted'
+  | 'opened'
+  | 'reopened'
+  | 'closed';
+
+export interface IConsultationConversationHistoryEvent {
+  action: ConsultationConversationHistoryAction;
+  fromStatus: ConsultationConversationStatus | null;
+  toStatus: ConsultationConversationStatus | null;
+  actorRole: 'customer' | 'admin' | 'system';
+  actorId: string | null;
+  actorName: string;
+  occurredAt: string;
+}
 
 export interface IConsultationConversation {
   id: string;
@@ -22,6 +39,7 @@ export interface IConsultationConversation {
   closedAt: string | null;
   closedByAdminId: string | null;
   closedByAdminName: string;
+  statusHistory: IConsultationConversationHistoryEvent[];
   createdAt: string;
   updatedAt: string;
 }

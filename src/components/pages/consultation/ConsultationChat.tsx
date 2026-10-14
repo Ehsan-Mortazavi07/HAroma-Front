@@ -65,6 +65,7 @@ export function ConsultationChat() {
   const reduceMotion = useReducedMotion();
   const user = useAppSelector((state) => state.auth.user);
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const isAdmin = user?.role === 'admin';
   const authLoading = useAppSelector((state) => state.auth.isLoading);
   const [sessionToken, setSessionToken] = useState('');
   const [guestName, setGuestName] = useState('');
@@ -348,15 +349,18 @@ export function ConsultationChat() {
         subject: subject.trim(),
         guestName: isAuthenticated ? undefined : guestName.trim(),
       });
-      const closedAt = new Date().toISOString();
-      setConversations((current) => [
-        ...current
-          .filter((item) => item.id !== next.id)
-          .map((item) => item.status === 'open' || item.status === 'pending'
+      setConversations((current) => {
+        const existing = current.filter((item) => item.id !== next.id);
+        if (isAdmin) return [...existing, next];
+
+        const closedAt = new Date().toISOString();
+        return [
+          ...existing.map((item) => item.status === 'open' || item.status === 'pending'
             ? { ...item, status: 'closed' as const, closedAt, closedByAdminId: null, closedByAdminName: '' }
             : item),
-        next,
-      ]);
+          next,
+        ];
+      });
       setSelectedConversationId(next.id);
       setMessages([]);
       lastMessageIdRef.current = '';
@@ -377,7 +381,7 @@ export function ConsultationChat() {
   };
 
   const requestNewConversation = () => {
-    if (openConversation || pendingConversation) {
+    if (!isAdmin && (openConversation || pendingConversation)) {
       setConfirmNewRequest(true);
       return;
     }
@@ -472,7 +476,7 @@ export function ConsultationChat() {
         }}
       />
 
-      {(pendingConversation || openConversation) && (
+      {!isAdmin && (pendingConversation || openConversation) && (
         <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-200">
           <Clock3 className="mt-0.5 h-4 w-4 shrink-0" />
           <p className="leading-6">با ثبت درخواست تازه، همهٔ گفتگوهای باز و درخواست‌های در انتظار قبلی بسته می‌شوند.</p>
@@ -489,7 +493,9 @@ export function ConsultationChat() {
         >
           ثبت درخواست مشاوره
         </Button>
-        <p className="mt-3 text-center text-[11px] leading-5 text-brand-text-muted">تا زمان تأیید ادمین، پیام‌رسانی فعال نیست.</p>
+        <p className="mt-3 text-center text-[11px] leading-5 text-brand-text-muted">
+          {isAdmin ? 'گفت‌وگوی ثبت‌شده توسط ادمین بلافاصله باز می‌شود و گفتگوهای دیگر باز می‌مانند.' : 'تا زمان تأیید ادمین، پیام‌رسانی فعال نیست.'}
+        </p>
       </div>
     </div>
   );
