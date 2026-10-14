@@ -19,13 +19,12 @@ import {
   Award,
   Plus,
   Tag,
+  Trash2,
   } from 'lucide-react';
 import {
   Card,
   CardBody,
   Button,
-  Select,
-  SelectItem,
   Modal,
   ModalContent,
   ModalHeader,
@@ -44,6 +43,9 @@ import { ProductVariantManager } from './ProductVariantManager';
 import { useTranslation } from '@/common/i18n';
 import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { AdminPriceInput } from '@/components/admin/AdminPriceInput';
+import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
+import { useAppSelector } from '@/stores/hooks';
+import { CategoryParentSelect } from '@/components/admin/CategoryParentSelect';
 
 
 interface ProductFormProps {
@@ -54,9 +56,13 @@ interface ProductFormProps {
 export function ProductForm({ initialProduct, isEditing = false }: ProductFormProps) {
   const router = useRouter();
   const { isPersian, isRTL } = useTranslation();
+  const currentUser = useAppSelector((state) => state.auth.user);
+  const isAdmin = currentUser?.role === 'admin';
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [brands, setBrands] = useState<IBrand[]>([]);
   const [loading, setLoading] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deletingProduct, setDeletingProduct] = useState(false);
   const [activeDescTab, setActiveDescTab] = useState<'fa' | 'en'>('fa');
 
   // Images, Attributes and Variants local state
@@ -258,8 +264,24 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
     }
   };
 
+  const handleDeleteProduct = async () => {
+    if (!isEditing || !initialProduct || !isAdmin || deletingProduct) return;
+
+    setDeletingProduct(true);
+    try {
+      await adminApi.deleteProduct(initialProduct._id);
+      toast.success(isPersian ? 'محصول با موفقیت حذف شد.' : 'Product deleted successfully.');
+      setDeleteConfirmOpen(false);
+      router.replace(PATHS.ADMIN_PRODUCTS);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || (isPersian ? 'خطا در حذف محصول.' : 'Failed to delete product.'));
+    } finally {
+      setDeletingProduct(false);
+    }
+  };
+
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'} className="space-y-8 max-w-5xl mx-auto pb-16">
+    <div dir={isRTL ? 'rtl' : 'ltr'} className="space-y-8 max-w-5xl mx-auto pb-4">
       {/* Top Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -293,7 +315,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
         enableReinitialize
       >
         {({ values, errors, touched, setFieldValue, handleSubmit: formikSubmit }) => (
-          <Form dir={isRTL ? 'rtl' : 'ltr'} onSubmit={formikSubmit} className="space-y-8">
+          <Form dir={isRTL ? 'rtl' : 'ltr'} onSubmit={formikSubmit} className="space-y-8 pb-20">
             {/* 1. Basic Info Section */}
             <Card className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
               <CardBody className="p-6 sm:p-8 space-y-5">
@@ -781,32 +803,47 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
               </CardBody>
             </Card>
 
-            {/* Submit Action */}
-            <div className="flex gap-4">
-              <Button
-                type="submit"
-                isLoading={loading}
-                radius="full"
-                color="warning"
-                startContent={!loading && <Save className="w-5 h-5" />}
-                className="flex-1 py-6 font-black bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-xl shadow-brand-gold/20 text-sm"
-              >
-                {loading
-                  ? isPersian ? 'در حال ذخیره‌سازی محصول...' : 'Saving Product...'
-                  : isEditing
-                  ? isPersian ? 'به‌روزرسانی و ثبت تغییرات محصول' : 'Update Product'
-                  : isPersian ? 'ثبت و انتشار محصول جدید' : 'Save & Publish Product'}
-              </Button>
-
-              <Button
-                type="button"
-                variant="bordered"
-                radius="full"
-                onPress={() => router.back()}
-                className="px-8 py-6 bg-brand-surface-elevated border border-brand-border text-brand-text text-xs font-bold cursor-pointer transition-all active:scale-95"
-              >
-                {isPersian ? 'انصراف' : 'Cancel'}
-              </Button>
+            {/* Persistent product form actions */}
+            <div className="fixed bottom-4 left-1/2 z-[60] w-[min(30rem,calc(100vw-2rem))] -translate-x-1/2">
+              <div className="flex items-center gap-2 rounded-2xl border border-brand-border bg-brand-surface/95 p-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+                {isEditing && initialProduct && isAdmin && (
+                  <Button
+                    type="button"
+                    radius="full"
+                    aria-label={isPersian ? 'حذف محصول' : 'Delete product'}
+                    title={isPersian ? 'حذف محصول' : 'Delete product'}
+                    onPress={() => setDeleteConfirmOpen(true)}
+                    isDisabled={deletingProduct || loading}
+                    className="h-11 shrink-0 gap-1.5 rounded-full border border-rose-500/25 bg-rose-500/10 px-3 text-xs font-bold text-rose-700 transition-all hover:bg-rose-500/15 active:scale-95 dark:text-rose-300"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {isPersian ? 'حذف' : 'Delete'}
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="bordered"
+                  radius="full"
+                  onPress={() => router.back()}
+                  className="h-11 shrink-0 border border-brand-border bg-brand-surface-elevated px-4 text-xs font-bold text-brand-text transition-all active:scale-95"
+                >
+                  {isPersian ? 'انصراف' : 'Cancel'}
+                </Button>
+                <Button
+                  type="submit"
+                  isLoading={loading}
+                  radius="full"
+                  color="warning"
+                  startContent={!loading && <Save className="h-3.5 w-3.5" />}
+                  className="h-11 min-w-0 flex-1 bg-brand-gold px-3 text-xs font-black text-[#141914] shadow-sm transition-all active:scale-[0.98]"
+                >
+                  {loading
+                    ? isPersian ? 'در حال ذخیره...' : 'Saving...'
+                    : isEditing
+                    ? isPersian ? 'ثبت تغییرات' : 'Save Changes'
+                    : isPersian ? 'ثبت محصول' : 'Save Product'}
+                </Button>
+              </div>
             </div>
           </Form>
         )}
@@ -869,32 +906,13 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                   }}
                 />
 
-                <Select
-                  label={isPersian ? 'دسته والد (اختیاری برای ساب‌کتگوری)' : 'Parent Category (Optional)'}
-                  labelPlacement="outside-top"
-                  selectedKeys={newCatParentId ? new Set([newCatParentId]) : new Set([])}
-                  onSelectionChange={(keys) => {
-                    const selected = Array.from(keys)[0] as string;
-                    setNewCatParentId(selected || '');
-                  }}
-                  variant="bordered"
-                  radius="full"
-                  classNames={{
-                    trigger: 'h-11 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs text-sm font-semibold text-brand-text',
-                    value: 'text-sm font-semibold text-brand-text',
-                    label: 'text-xs font-bold text-brand-text',
-                    popoverContent: 'bg-[#ffffff] dark:bg-[#1c231c] border border-[#e6dcce] dark:border-[#2e3a2e] rounded-2xl shadow-xl',
-                  }}
-                >
-                  {[
-                    { _id: '', name: isPersian ? 'دسته‌بندی سطح اصلی (بدون والد)' : 'Main Category (No Parent)' },
-                    ...categories.map((c) => ({ _id: c._id, name: isPersian ? c.name : c.nameEn || c.name })),
-                  ].map((c) => (
-                    <SelectItem key={c._id} textValue={c.name}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </Select>
+                <CategoryParentSelect
+                  categories={categories}
+                  selectedId={newCatParentId}
+                  onChange={setNewCatParentId}
+                  isPersian={isPersian}
+                  isRTL={isRTL}
+                />
 
                 <Input
                   dir="auto"
@@ -936,6 +954,30 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
           )}
         </ModalContent>
       </Modal>
+
+      <AdminConfirmModal
+        isOpen={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title={isPersian ? 'حذف محصول' : 'Delete product'}
+        description={
+          isPersian ? (
+            <>
+              <p>از حذف محصول <strong>«{initialProduct?.title}»</strong> مطمئن هستید؟</p>
+              <p className="mt-2 text-rose-600 dark:text-rose-400">این عملیات قابل بازگشت نیست.</p>
+            </>
+          ) : (
+            <>
+              <p>Are you sure you want to delete <strong>&quot;{initialProduct?.title}&quot;</strong>?</p>
+              <p className="mt-2 text-rose-600 dark:text-rose-400">This action cannot be undone.</p>
+            </>
+          )
+        }
+        confirmText={isPersian ? 'بله، حذف محصول' : 'Yes, delete product'}
+        cancelText={isPersian ? 'انصراف' : 'Cancel'}
+        confirmColor="danger"
+        isLoading={deletingProduct}
+        onConfirm={handleDeleteProduct}
+      />
 
       {/* Quick Create Brand Modal */}
       <Modal

@@ -10,8 +10,6 @@ import {
   Card,
   CardBody,
   Button,
-  Select,
-  SelectItem,
   Chip,
   Modal,
   ModalContent,
@@ -30,6 +28,7 @@ import { SmoothSwitch } from '@/components/admin/SmoothSwitch';
 import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { SingleImageUploader } from '@/components/admin/SingleImageUploader';
+import { CategoryParentSelect } from '@/components/admin/CategoryParentSelect';
 import { useAppSelector } from '@/stores/hooks';
 
 const containerVariants = {
@@ -55,6 +54,13 @@ const inputClassNames = {
     'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 focus-within:border-brand-gold rounded-full shadow-xs transition-colors',
   input: 'text-sm font-semibold text-brand-text',
   label: 'text-xs font-bold text-brand-text mb-1',
+};
+
+const getCategoryParentId = (category: ICategory) => {
+  if (!category.parentId) return '';
+  return typeof category.parentId === 'string'
+    ? category.parentId
+    : String(category.parentId._id);
 };
 
 export default function AdminCategoriesPage() {
@@ -226,6 +232,20 @@ export default function AdminCategoriesPage() {
 
   const isAllSelected = categories.length > 0 && selectedIds.length === categories.length;
   const isIndeterminate = selectedIds.length > 0 && selectedIds.length < categories.length;
+  const unavailableParentCategoryIds = new Set<string>();
+  if (editingCat) {
+    const descendantsToVisit = [editingCat._id];
+    while (descendantsToVisit.length > 0) {
+      const parentCategoryId = descendantsToVisit.pop()!;
+      if (unavailableParentCategoryIds.has(parentCategoryId)) continue;
+      unavailableParentCategoryIds.add(parentCategoryId);
+      categories.forEach((category) => {
+        if (getCategoryParentId(category) === parentCategoryId) {
+          descendantsToVisit.push(category._id);
+        }
+      });
+    }
+  }
 
   const openCreateModal = () => {
     setEditingCat(null);
@@ -567,7 +587,7 @@ export default function AdminCategoriesPage() {
           footer: "border-t border-brand-border pt-3 px-6 pb-5",
         }}
       >
-        <ModalContent>
+        <ModalContent dir={isRTL ? 'rtl' : 'ltr'}>
           {(onClose) => (
             <>
               <ModalHeader className="font-black text-base">
@@ -624,31 +644,14 @@ export default function AdminCategoriesPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Select
-                    label={isPersian ? 'دسته والد (اختیاری برای ساب‌کتگوری)' : 'Parent Category (Optional)'}
-                    labelPlacement="outside-top"
-                    selectedKeys={parentId ? new Set([parentId]) : new Set([])}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
-                      setParentId(selected || '');
-                    }}
-                    variant="bordered"
-                    radius="full"
-                    classNames={{
-                      trigger: 'h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold/80 rounded-full shadow-xs text-sm font-semibold text-brand-text text-start transition-colors',
-                      value: 'text-sm font-semibold text-brand-text text-start',
-                      label: 'text-xs font-bold text-brand-text mb-1',
-                      popoverContent: 'bg-brand-surface border border-brand-border text-brand-text rounded-2xl shadow-xl',
-                    }}
-                  >
-                    {categories
-                      .filter((c) => !editingCat || c._id !== editingCat._id)
-                      .map((c) => (
-                        <SelectItem key={c._id} textValue={isPersian ? c.name : c.nameEn || c.name}>
-                          {isPersian ? c.name : c.nameEn || c.name}
-                        </SelectItem>
-                      ))}
-                  </Select>
+                  <CategoryParentSelect
+                    categories={categories}
+                    selectedId={parentId}
+                    onChange={setParentId}
+                    isPersian={isPersian}
+                    isRTL={isRTL}
+                    excludedIds={unavailableParentCategoryIds}
+                  />
 
                   <Input
                     dir="auto"

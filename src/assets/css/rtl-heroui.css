@@ -383,6 +383,22 @@ html[dir="rtl"] [data-slot="innerWrapper"] > span {
   z-index: 40 !important;
 }
 
+/* Keep the shared category-parent HeroUI dropdown scrollable in admin dialogs. */
+.admin-category-parent-menu {
+  overscroll-behavior: contain;
+  scrollbar-color: #bfa27a transparent;
+  scrollbar-width: thin;
+}
+
+.admin-category-parent-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-category-parent-menu::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: #bfa27a;
+}
+
 /* Make the admin attribute select's hovered and selected options easy to distinguish. */
 [data-slot="base"].admin-attribute-select-overlay [role="option"][data-hover="true"]:not([data-selected="true"]) {
   background-color: #efe6d8 !important;

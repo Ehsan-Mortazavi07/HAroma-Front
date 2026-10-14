@@ -76,6 +76,7 @@ export default function AdminCouponsPage() {
   const [code, setCode] = useState('');
   const [codeTouched, setCodeTouched] = useState(false);
   const [discountPercent, setDiscountPercent] = useState<number>(10);
+  const [discountPercentLimitError, setDiscountPercentLimitError] = useState(false);
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [minPurchase, setMinPurchase] = useState<number>(200000);
   const [maxDiscount, setMaxDiscount] = useState<number>(300000);
@@ -217,6 +218,7 @@ export default function AdminCouponsPage() {
     setCode('');
     setCodeTouched(false);
     setDiscountPercent(15);
+    setDiscountPercentLimitError(false);
     setDiscountAmount(0);
     setMinPurchase(300000);
     setMaxDiscount(250000);
@@ -229,7 +231,8 @@ export default function AdminCouponsPage() {
     setEditingCoupon(c);
     setCode(c.code);
     setCodeTouched(false);
-    setDiscountPercent(c.discountPercent || 0);
+    setDiscountPercent(Math.min(100, Math.max(0, c.discountPercent || 0)));
+    setDiscountPercentLimitError(false);
     setDiscountAmount(c.discountAmount || 0);
     setMinPurchase(c.minPurchase || 0);
     setMaxDiscount(c.maxDiscount || 0);
@@ -243,6 +246,12 @@ export default function AdminCouponsPage() {
     setCodeTouched(true);
     if (!code.trim()) {
       toast.error(isPersian ? 'وارد کردن کد تخفیف ضروری است.' : 'Coupon code is required.');
+      return;
+    }
+    if (discountPercent > 100) {
+      setDiscountPercent(100);
+      setDiscountPercentLimitError(true);
+      toast.error(isPersian ? 'درصد تخفیف نمی‌تواند بیشتر از ۱۰۰ باشد.' : 'Discount percent cannot be greater than 100.');
       return;
     }
 
@@ -269,7 +278,14 @@ export default function AdminCouponsPage() {
       setModalOpen(false);
       loadCoupons();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || (isPersian ? 'خطا در ذخیره کد تخفیف.' : 'Failed to save coupon.'));
+      const responseMessage = err?.response?.data?.message;
+      const responseText = Array.isArray(responseMessage) ? responseMessage.join(' ') : String(responseMessage || '');
+      const isDiscountPercentError = /discountPercent.*(?:greater than|100)|(?:greater than|100).*discountPercent/i.test(responseText);
+      toast.error(
+        isPersian && isDiscountPercentError
+          ? 'درصد تخفیف نمی‌تواند بیشتر از ۱۰۰ باشد.'
+          : responseMessage || (isPersian ? 'خطا در ذخیره کد تخفیف.' : 'Failed to save coupon.'),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -546,20 +562,39 @@ export default function AdminCouponsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input
-                    label={isPersian ? 'درصد تخفیف (۱ تا ۱۰۰)' : 'Discount %'}
-                    labelPlacement="outside-top"
-                    type="number"
-                    value={String(discountPercent)}
-                    onValueChange={(v) => setDiscountPercent(Number(v) || 0)}
-                    variant="bordered"
-                    radius="full"
-                    classNames={{
-                      inputWrapper: "h-11 px-4 bg-brand-surface-elevated border border-brand-border hover:border-brand-gold rounded-full shadow-xs",
-                      input: "text-sm font-bold text-brand-text",
-                      label: "text-xs font-bold text-brand-text mb-1",
-                    }}
-                  />
+                  <div>
+                    <Input
+                      label={isPersian ? 'درصد تخفیف (۱ تا ۱۰۰)' : 'Discount %'}
+                      labelPlacement="outside-top"
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={String(discountPercent)}
+                      onValueChange={(value) => {
+                        const nextValue = Number(value);
+                        if (value && nextValue > 100) {
+                          setDiscountPercent(100);
+                          setDiscountPercentLimitError(true);
+                          return;
+                        }
+                        setDiscountPercent(Number.isFinite(nextValue) ? Math.max(0, nextValue) : 0);
+                        setDiscountPercentLimitError(false);
+                      }}
+                      variant="bordered"
+                      radius="full"
+                      classNames={{
+                        inputWrapper: `h-11 px-4 bg-brand-surface-elevated border ${discountPercentLimitError ? 'border-rose-500' : 'border-brand-border hover:border-brand-gold'} rounded-full shadow-xs`,
+                        input: "text-sm font-bold text-brand-text",
+                        label: "text-xs font-bold text-brand-text mb-1",
+                      }}
+                    />
+                    {discountPercentLimitError && (
+                      <p className="mt-1.5 text-[11px] font-bold text-rose-500" role="alert">
+                        {isPersian ? 'حداکثر درصد تخفیف ۱۰۰ است.' : 'Discount percent cannot exceed 100.'}
+                      </p>
+                    )}
+                  </div>
 
                   <AdminPriceInput
                     label={isPersian ? 'یا مبلغ ثابت (تومان)' : 'Or Fixed Amount (Toman)'}
