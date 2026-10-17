@@ -436,3 +436,21 @@ textarea,
   border-color: rgba(244, 63, 94, 0.8) !important;
   background-color: rgba(244, 63, 94, 0.05) !important;
 }
+
+
+/*
+ * Light-mode hover parity. Translucent gold/neutral tints are clearly visible on the dark surfaces
+ * but nearly vanish on cream/white, so hovering looked dead in light mode. These unlayered rules
+ * give the same utility classes a solid, visible tint in light mode only.
+ */
+html:not(.dark) [class*="hover:bg-brand-gold/"]:hover,
+html:not(.dark) [class*="data-[hover=true]:bg-brand-gold/"][data-hover="true"] {
+  background-color: color-mix(in srgb, #bfa27a 30%, #ffffff) !important;
+}
+html:not(.dark) [class*="hover:bg-brand-surface-elevated"]:hover,
+html:not(.dark) [class*="hover:bg-brand-champagne"]:hover {
+  background-color: #ece2d2 !important;
+}
+html:not(.dark) [class*="hover:border-brand-gold"]:hover {
+  border-color: #9f815b !important;
+}

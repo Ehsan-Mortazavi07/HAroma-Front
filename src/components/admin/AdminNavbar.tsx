@@ -37,6 +37,7 @@ import { useAdminSidebar } from './AdminSidebarContext';
 import { PATHS } from '@/common/constants/PATHS';
 import { BrandLogo } from '../common/BrandLogo';
 import { ThemeToggle } from '../common/ThemeToggle';
+import { AdminSearch } from './AdminSearch';
 import { useTranslation } from '@/common/i18n';
 
 const floatingPanelVariants = {
@@ -218,6 +219,12 @@ export function AdminNavbar() {
 
           {/* Left Section: View Storefront, Theme Toggle, Profile Menu */}
           <NavbarContent justify="end" className="gap-2 sm:gap-3 shrink-0 flex items-center">
+            {/* Global panel search (Ctrl/Cmd+K) */}
+            <AdminSearch variant="pill" />
+            <div className="md:hidden">
+              <AdminSearch variant="icon" />
+            </div>
+
             {/* View Storefront Quick Button */}
             <Button
               as={Link}

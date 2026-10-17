@@ -1,7 +1,7 @@
 'use client';
 
 import { Input } from '@/components/common/DirectionalFields';
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   motion,
   AnimatePresence } from 'framer-motion';
@@ -38,6 +38,7 @@ import { adminApi } from '@/common/api/admin';
 import { IOrder } from '@/common/interfaces';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
+import { useAdminSearchParam } from '@/common/hooks/useAdminSearchParam';
 import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { OrderDetailsPanel } from '@/components/common/OrderDetailsPanel';
@@ -55,6 +56,8 @@ export default function AdminOrdersPage() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
+  useAdminSearchParam(setSearch);
+  const loadSeq = useRef(0);
   const [loading, setLoading] = useState(true);
 
   // Multi-selection & Bulk action state
@@ -83,6 +86,8 @@ export default function AdminOrdersPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const loadOrders = async () => {
+    // A newer request (e.g. the ?q= from the global search) must not be overwritten by an older, slower one.
+    const seq = ++loadSeq.current;
     setLoading(true);
     try {
       const res = await adminApi.getOrders({
@@ -91,12 +96,13 @@ export default function AdminOrdersPage() {
         status: statusFilter || undefined,
         q: search || undefined,
       });
+      if (seq !== loadSeq.current) return;
       setOrders(res?.items || []);
       setTotal(res?.total || 0);
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      if (seq === loadSeq.current) setLoading(false);
     }
   };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { Input } from '@/components/common/DirectionalFields';
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   motion,
   AnimatePresence } from 'framer-motion';
@@ -45,6 +45,7 @@ import { IUser } from '@/common/interfaces';
 import { toPersianDigits, toast } from '@/common/utils';
 import { formatDisplayBirthDate } from '@/common/utils/date';
 import { useTranslation } from '@/common/i18n';
+import { useAdminSearchParam } from '@/common/hooks/useAdminSearchParam';
 import { useAppSelector } from '@/stores/hooks';
 import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
 import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
@@ -240,6 +241,8 @@ export default function AdminUsersPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  useAdminSearchParam(setSearch);
+  const loadSeq = useRef(0);
   const [roleFilter, setRoleFilter] = useState('');
   const [isRoleFilterOpen, setIsRoleFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -449,6 +452,8 @@ export default function AdminUsersPage() {
   };
 
   const loadUsers = async () => {
+    // A newer request (e.g. the ?q= from the global search) must not be overwritten by an older, slower one.
+    const seq = ++loadSeq.current;
     setLoading(true);
     try {
       const res = await adminApi.getUsers({
@@ -457,12 +462,13 @@ export default function AdminUsersPage() {
         q: search || undefined,
         role: roleFilter || undefined,
       });
+      if (seq !== loadSeq.current) return;
       setUsers(res?.items || []);
       setTotal(res?.total || 0);
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      if (seq === loadSeq.current) setLoading(false);
     }
   };
 

@@ -53,7 +53,7 @@ import { CategoryParentSelect } from '@/components/admin/CategoryParentSelect';
 const CHOICE_CHIP_SELECTED =
   'bg-brand-gold text-[#141914] shadow-sm font-black data-[hover=true]:!bg-[#d4be9b] data-[hover=true]:-translate-y-px';
 const CHOICE_CHIP_IDLE =
-  'bg-[#f8f5f0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e] data-[hover=true]:!border-brand-gold data-[hover=true]:!bg-brand-gold/15 data-[hover=true]:!text-[#7a5d3e] dark:data-[hover=true]:!text-[#d4be9b] data-[hover=true]:-translate-y-px';
+  'bg-[#f8f5f0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e] data-[hover=true]:!border-[#9f815b] data-[hover=true]:!bg-[#efe3cf] data-[hover=true]:!text-[#5e4529] dark:data-[hover=true]:!border-[#bfa27a] dark:data-[hover=true]:!bg-[#bfa27a]/20 dark:data-[hover=true]:!text-[#d4be9b] data-[hover=true]:-translate-y-px';
 
 /** After a failed submit: say so, then jump to the first invalid field. */
 function SubmitErrorFocus({ isPersian }: { isPersian: boolean }) {
