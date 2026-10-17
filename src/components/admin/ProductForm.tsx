@@ -5,7 +5,8 @@ import React, { useState, useEffect } from 'react';
 import {
   useRouter } from 'next/navigation';
 import { Formik,
-  Form } from 'formik';
+  Form,
+  useFormikContext } from 'formik';
 import {
   Package,
   Crown,
@@ -47,6 +48,34 @@ import { AdminConfirmModal } from '@/components/admin/AdminConfirmModal';
 import { useAppSelector } from '@/stores/hooks';
 import { CategoryParentSelect } from '@/components/admin/CategoryParentSelect';
 
+
+// HeroUI buttons only react to `data-[hover=true]`, so plain `hover:` classes never showed.
+const CHOICE_CHIP_SELECTED =
+  'bg-brand-gold text-[#141914] shadow-sm font-black data-[hover=true]:!bg-[#d4be9b] data-[hover=true]:-translate-y-px';
+const CHOICE_CHIP_IDLE =
+  'bg-[#f8f5f0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e] data-[hover=true]:!border-brand-gold data-[hover=true]:!bg-brand-gold/15 data-[hover=true]:!text-[#7a5d3e] dark:data-[hover=true]:!text-[#d4be9b] data-[hover=true]:-translate-y-px';
+
+/** After a failed submit: say so, then jump to the first invalid field. */
+function SubmitErrorFocus({ isPersian }: { isPersian: boolean }) {
+  const { submitCount, isValid, isSubmitting } = useFormikContext();
+  const handled = React.useRef(0);
+  React.useEffect(() => {
+    if (submitCount === handled.current || isSubmitting) return;
+    handled.current = submitCount;
+    if (isValid) return;
+    toast.error(
+      isPersian
+        ? 'برخی فیلدهای ضروری خالی یا نامعتبر است؛ موارد قرمزشده را اصلاح کنید.'
+        : 'Some required fields are empty or invalid. Fix the highlighted fields.',
+    );
+    window.requestAnimationFrame(() => {
+      const invalid = document.querySelector<HTMLElement>('form [aria-invalid="true"], form [data-invalid="true"]');
+      invalid?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      invalid?.focus?.({ preventScroll: true });
+    });
+  }, [submitCount, isValid, isSubmitting, isPersian]);
+  return null;
+}
 
 interface ProductFormProps {
   initialProduct?: IProduct;
@@ -320,7 +349,8 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
         enableReinitialize
       >
         {({ values, errors, touched, setFieldValue, handleSubmit: formikSubmit }) => (
-          <Form dir={isRTL ? 'rtl' : 'ltr'} onSubmit={formikSubmit} className="space-y-8 pb-20">
+          <Form noValidate dir={isRTL ? 'rtl' : 'ltr'} onSubmit={formikSubmit} className="space-y-8 pb-20">
+            <SubmitErrorFocus isPersian={isPersian} />
             {/* 1. Basic Info Section */}
             <Card className="bg-[#ffffff] dark:bg-[#1c231c] rounded-3xl border border-[#e6dcce] dark:border-[#2e3a2e] shadow-xs">
               <CardBody className="p-6 sm:p-8 space-y-5">
@@ -561,9 +591,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                           onPress={() => handleBrandToggle(b._id)}
                           startContent={<Tag className="w-3.5 h-3.5 opacity-60" />}
                           className={`text-xs font-bold transition-all cursor-pointer ${
-                            isSelected
-                              ? 'bg-brand-gold text-[#141914] shadow-sm font-black'
-                              : 'bg-[#f8f5f0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-[#bfa27a]'
+                            isSelected ? CHOICE_CHIP_SELECTED : CHOICE_CHIP_IDLE
                           }`}
                         >
                           <span>{isPersian ? b.name : b.nameEn || b.name}</span>
@@ -623,9 +651,7 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                           variant={isSelected ? 'solid' : 'bordered'}
                           onPress={() => handleCategoryToggle(cat._id)}
                           className={`text-xs font-bold transition-all cursor-pointer ${
-                            isSelected
-                              ? 'bg-brand-gold text-[#141914] shadow-sm font-black'
-                              : 'bg-[#f8f5f0] dark:bg-[#242c24] text-[#73695c] dark:text-[#a69c8e] border-[#e6dcce] dark:border-[#2e3a2e] hover:border-[#bfa27a]'
+                            isSelected ? CHOICE_CHIP_SELECTED : CHOICE_CHIP_IDLE
                           }`}
                         >
                           {isSub && (

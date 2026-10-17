@@ -243,7 +243,7 @@ export function ProductVariantManager({
                     className={`text-xs font-bold transition-all ${
                       isAdded
                         ? 'opacity-50'
-                        : 'bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] border-[#e6dcce] dark:border-[#3e4c3e] hover:border-brand-gold shadow-xs'
+                        : 'bg-[#ffffff] dark:bg-[#1c231c] text-[#1d241d] dark:text-[#f7f4ee] border-[#e6dcce] dark:border-[#3e4c3e] shadow-xs data-[hover=true]:!border-brand-gold data-[hover=true]:!bg-brand-gold/15 data-[hover=true]:-translate-y-px'
                     }`}
                   >
                     <span>{isPersian ? tpl.title : tpl.titleEn || tpl.title}</span>
