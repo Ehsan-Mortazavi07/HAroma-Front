@@ -6,7 +6,8 @@ import Image from 'next/image';
 import { Button, Card, CardBody } from '@heroui/react';
 import { ShoppingBag, Trash2, ArrowLeft, ArrowRight, ShieldCheck, Zap, Minus, Plus } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
-import { updateQuantity, removeFromCart, clearCart } from '@/stores/cart/cartSlice';
+import type { ICartItem } from '@/common/interfaces';
+import { getCartItemStock, refreshCartStock, updateQuantity, removeFromCart, clearCart } from '@/stores/cart/cartSlice';
 import { PATHS } from '@/common/constants/PATHS';
 import { resolveMediaUrl } from '@/common/constants/URL';
 import { formatToman, toPersianDigits, getLocalizedVariantTitle } from '@/common/utils';
@@ -20,7 +21,8 @@ export function CartPage() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    void dispatch(refreshCartStock());
+  }, [dispatch]);
 
   // Filter out any corrupted or malformed items
   const validItems = (items || []).filter(
@@ -87,6 +89,8 @@ export function CartPage() {
           <Card className="bg-brand-surface rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-brand-border/60 shadow-xs">
             <CardBody className="p-0 divide-y divide-brand-border/60">
               {validItems.map(({ product, quantity, selectedVariant, selectedAttributes }, idx) => {
+                const maxQuantity = getCartItemStock({ product, quantity, selectedVariant } as ICartItem);
+                const atMaxStock = (quantity || 1) >= maxQuantity;
                 const itemPrice = selectedVariant
                   ? (selectedVariant.discountPrice && selectedVariant.discountPrice > 0
                       ? selectedVariant.discountPrice
@@ -141,6 +145,13 @@ export function CartPage() {
                         <div className="text-xs font-black text-brand-text mt-1.5">
                           {formatToman(itemPrice, isPersian)}
                         </div>
+                        {atMaxStock && Number.isFinite(maxQuantity) && (
+                          <div className="mt-1 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                            {isPersian
+                              ? `حداکثر موجودی: ${toPersianDigits(maxQuantity)} عدد`
+                              : `Max available: ${maxQuantity}`}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -177,6 +188,7 @@ export function CartPage() {
                           size="sm"
                           radius="full"
                           variant="light"
+                          isDisabled={atMaxStock}
                           onPress={() =>
                             dispatch(
                               updateQuantity({

@@ -6,7 +6,7 @@ import { Plus, Minus } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { shallowEqual } from 'react-redux';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
-import { addToCart, updateQuantity } from '@/stores/cart/cartSlice';
+import { addToCart, getAvailableStock, getCartItemStock, updateQuantity } from '@/stores/cart/cartSlice';
 import { IProduct } from '@/common/interfaces';
 import { toPersianDigits, toast } from '@/common/utils';
 
@@ -28,19 +28,25 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
   const quantity = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
   const primaryItem = cartItems[0];
 
-  const maxStock =
-    primaryItem?.selectedVariant?.stockCount ??
-    (product.stockCount !== undefined && product.stockCount !== null ? product.stockCount : 99);
+  const defaultVariant =
+    product.variants && product.variants.length > 0
+      ? product.variants.find((v) => v.isDefault && v.inStock !== false && v.stockCount > 0) ||
+        product.variants.find((v) => v.inStock !== false && v.stockCount > 0) ||
+        product.variants[0]
+      : undefined;
+  const maxStock = primaryItem ? getCartItemStock(primaryItem) : getAvailableStock(product, defaultVariant);
+  const lineQuantity = primaryItem?.quantity || 0;
+  const atMaxStock = lineQuantity >= maxStock;
+  const isOutOfStock = quantity === 0 && maxStock <= 0;
 
   const handleIncrement = (e?: React.MouseEvent | any) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
     if (quantity === 0) {
-      const defaultVariant =
-        product.variants && product.variants.length > 0
-          ? product.variants.find((v) => v.isDefault) || product.variants[0]
-          : undefined;
-
+      if (isOutOfStock) {
+        toast.error(isPersian ? 'این محصول در حال حاضر موجود نیست.' : 'This item is out of stock.');
+        return;
+      }
       dispatch(
         addToCart({
           product,
@@ -55,17 +61,19 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
           : `"${product.titleEn || product.title}" added to your bag.`,
       );
     } else {
-      if (quantity < maxStock) {
+      if (!atMaxStock) {
         dispatch(
           updateQuantity({
             productId: product._id,
             variantId: primaryItem?.selectedVariant?.id,
-            quantity: (primaryItem?.quantity || quantity) + 1,
+            quantity: lineQuantity + 1,
           }),
         );
       } else {
         toast.error(
-          isPersian ? 'حداکثر موجودی انبار انتخاب شده است.' : 'Maximum stock reached.',
+          isPersian
+            ? `فقط ${toPersianDigits(maxStock)} عدد از این محصول موجود است.`
+            : `Only ${maxStock} of this item available.`,
         );
       }
     }
@@ -103,14 +111,15 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
                 e.preventDefault();
                 e.stopPropagation();
               }}
+              isDisabled={isOutOfStock}
               radius="full"
               aria-label={isPersian ? `افزودن ${product.title} به سبد خرید` : `Add ${product.title} to bag`}
               className={`w-full flex items-center justify-center gap-1.5 font-black transition-all duration-300 ease-out bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-xs hover:shadow-md min-h-[40px] rounded-full touch-manipulation active:scale-95 border border-brand-gold/40 ${
                 size === 'sm' ? 'py-1.5 px-3 text-xs' : size === 'lg' ? 'py-3 px-5 text-base' : 'py-2 px-4 text-xs'
               }`}
             >
-              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>{isPersian ? 'افزودن به سبد' : 'Add to Bag'}</span>
+              {!isOutOfStock && <Plus className="w-3.5 h-3.5 stroke-[2.5]" />}
+              <span>{isOutOfStock ? (isPersian ? 'ناموجود' : 'Out of stock') : isPersian ? 'افزودن به سبد' : 'Add to Bag'}</span>
             </Button>
           </motion.div>
         ) : (
@@ -157,6 +166,7 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
                   e.preventDefault();
                   e.stopPropagation();
                 }}
+                isDisabled={atMaxStock}
                 aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
                 className="min-w-[32px] min-h-[32px] w-8 h-8 flex items-center justify-center rounded-full bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black shadow-xs transition-all duration-200 ease-out active:scale-90 touch-manipulation"
               >

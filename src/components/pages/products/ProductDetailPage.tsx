@@ -27,7 +27,7 @@ import { PATHS } from '@/common/constants/PATHS';
 import { resolveMediaUrl } from '@/common/constants/URL';
 import { formatToman, toPersianDigits, toast } from '@/common/utils';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
-import { addToCart, updateQuantity, removeFromCart } from '@/stores/cart/cartSlice';
+import { addToCart, getAvailableStock, updateQuantity, removeFromCart } from '@/stores/cart/cartSlice';
 import { VipBadge } from '@/components/common/VipBadge';
 import { ProductCard } from '@/components/common/ProductCard';
 import { useTranslation } from '@/common/i18n';
@@ -248,7 +248,19 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
   });
   const cartQuantity = currentCartItem ? currentCartItem.quantity : 0;
 
+  const availableStock = getAvailableStock(product, selectedVariant || undefined);
+
   const handleAddToCart = () => {
+    if (!isAvailable || cartQuantity >= availableStock) {
+      toast.error(
+        !isAvailable || availableStock <= 0
+          ? isPersian ? 'این محصول در حال حاضر موجود نیست.' : 'This item is out of stock.'
+          : isPersian
+            ? `فقط ${toPersianDigits(availableStock)} عدد از این محصول موجود است.`
+            : `Only ${availableStock} of this item available.`,
+      );
+      return;
+    }
     dispatch(
       addToCart({
         product,
@@ -266,9 +278,11 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
   };
 
   const handleIncrement = () => {
-    if (activeStockCount !== undefined && cartQuantity >= activeStockCount) {
+    if (cartQuantity >= availableStock) {
       toast.error(
-        isPersian ? 'حداکثر موجودی این محصول در انبار انتخاب شده است.' : 'Maximum stock reached.',
+        isPersian
+          ? `فقط ${toPersianDigits(availableStock)} عدد از این محصول موجود است.`
+          : `Only ${availableStock} of this item available.`,
       );
       return;
     }
@@ -755,7 +769,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                         radius="full"
                         variant="light"
                         onPress={handleIncrement}
-                        isDisabled={activeStockCount !== undefined && cartQuantity >= activeStockCount}
+                        isDisabled={cartQuantity >= availableStock}
                         className="w-7 h-7 sm:w-8 sm:h-8 min-w-7 sm:min-w-8 rounded-full text-brand-bronze dark:text-brand-gold hover:bg-brand-gold/15 active:scale-90 transition-transform"
                         aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
                       >
@@ -1007,7 +1021,7 @@ export function ProductDetailPage({ product, relatedProducts = [] }: ProductDeta
                     radius="full"
                     variant="light"
                     onPress={handleIncrement}
-                    isDisabled={activeStockCount !== undefined && cartQuantity >= activeStockCount}
+                    isDisabled={cartQuantity >= availableStock}
                     className="w-7 h-7 min-w-7 rounded-full text-brand-bronze dark:text-brand-gold active:scale-90"
                     aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
                   >

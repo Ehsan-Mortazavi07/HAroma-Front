@@ -7,7 +7,7 @@ import { ThemeProvider } from './ThemeProvider';
 import { ToastContainer } from '../common/ToastContainer';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { fetchProfile } from '@/stores/auth/authSlice';
-import { hydrateCart, loadCartFromStorage } from '@/stores/cart/cartSlice';
+import { hydrateCart, loadCartFromStorage, refreshCartStock } from '@/stores/cart/cartSlice';
 import { consultationChatApi } from '@/common/api/consultation-chat';
 import { CONSULTATION_SESSION_STORAGE_KEY } from '@/common/socket/consultation-chat';
 import { AnalyticsTracker } from './AnalyticsTracker';
@@ -24,6 +24,8 @@ function CartInitializer() {
   const dispatch = useAppDispatch();
   useEffect(() => {
     dispatch(hydrateCart(loadCartFromStorage()));
+    // Stored carts can be days old; trim them to what is actually in stock.
+    void dispatch(refreshCartStock());
   }, [dispatch]);
   return null;
 }

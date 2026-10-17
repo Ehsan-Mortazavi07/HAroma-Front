@@ -43,7 +43,7 @@ import {
   Checkbox,
 } from '@heroui/react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
-import { clearCart } from '@/stores/cart/cartSlice';
+import { clearCart, refreshCartStock } from '@/stores/cart/cartSlice';
 import { updateUser } from '@/stores/auth/authSlice';
 import { PATHS } from '@/common/constants/PATHS';
 import { formatToman, toPersianDigits, toEnglishDigits, getLocalizedVariantTitle, toast } from '@/common/utils';
@@ -134,6 +134,11 @@ export function CheckoutPage() {
       setLoadingAddresses(false);
     }
   };
+
+  // Confirm stock before the shopper fills in the form, not when they submit it.
+  React.useEffect(() => {
+    void dispatch(refreshCartStock());
+  }, [dispatch]);
 
   React.useEffect(() => {
     if (isAuthenticated) {

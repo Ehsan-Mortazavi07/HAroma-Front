@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Check, ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { JALALI_MONTHS_EN, JALALI_MONTHS_FA, jalaliToGregorian } from '@/common/utils/date';
 import { toPersianDigits } from '@/common/utils';
 import { instantToJalali, jalaliToInstant } from './format';
@@ -171,9 +171,6 @@ export function JalaliRangePicker({
     );
   };
 
-  const selectClass =
-    'h-8 rounded-full border border-brand-border bg-brand-surface-elevated px-3 text-xs font-bold text-brand-text outline-none focus:border-brand-gold';
-
   return (
     <motion.div
       ref={rootRef}
@@ -183,7 +180,7 @@ export function JalaliRangePicker({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -6, scale: 0.98 }}
       transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-      className="absolute end-3 top-full z-40 mt-2 w-[min(640px,calc(100%-1.5rem))] rounded-3xl border border-brand-border bg-brand-surface p-4 shadow-2xl"
+      className="absolute end-3 top-full z-40 mt-2 w-[min(640px,calc(100%-1.5rem))] rounded-3xl border border-brand-border bg-brand-surface p-4 shadow-2xl dark:border-brand-gold/25 dark:shadow-black/60"
       onPointerLeave={() => setHoverDay(null)}
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -196,28 +193,24 @@ export function JalaliRangePicker({
           >
             {isPersian ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
-          <select aria-label={tr('ماه', 'Month')} value={view[1]} onChange={(event) => setView([view[0], Number(event.target.value)])} className={selectClass}>
-            {months.map((month, index) => (
-              <option key={month} value={index + 1} disabled={view[0] === today[0] && index + 1 > today[1]}>
-                {month}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label={tr('سال', 'Year')}
+          <CalendarSelect
+            ariaLabel={tr('ماه', 'Month')}
+            value={view[1]}
+            onChange={(month) => setView([view[0], month])}
+            options={months.map((month, index) => ({
+              value: index + 1,
+              label: month,
+              disabled: view[0] === today[0] && index + 1 > today[1],
+            }))}
+            width="w-[7.5rem]"
+          />
+          <CalendarSelect
+            ariaLabel={tr('سال', 'Year')}
             value={view[0]}
-            onChange={(event) => {
-              const year = Number(event.target.value);
-              setView([year, year === today[0] ? Math.min(view[1], today[1]) : view[1]]);
-            }}
-            className={selectClass}
-          >
-            {years.map((year) => (
-              <option key={year} value={year}>
-                {digits(year)}
-              </option>
-            ))}
-          </select>
+            onChange={(year) => setView([year, year === today[0] ? Math.min(view[1], today[1]) : view[1]])}
+            options={years.map((year) => ({ value: year, label: digits(year) }))}
+            width="w-[5.5rem]"
+          />
           <button
             type="button"
             disabled={!canGoNext}
@@ -245,20 +238,21 @@ export function JalaliRangePicker({
       </div>
 
       <div className="mt-4 flex flex-col gap-3 border-t border-brand-border pt-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-[11px] font-semibold text-brand-text-muted">
+        {/* Flex items isolate each date, so adjacent numbers never merge under RTL bidi reordering. */}
+        <div className="space-y-1 text-[11px] font-semibold text-brand-text-muted">
           {start ? (
-            <>
-              <span className="font-black text-brand-text">{formatDay(start)}</span>
-              {' '}{tr('تا', 'to')}{' '}
-              <span className="font-black text-brand-text">{formatDay(rangeEnd || start)}</span>
-              <span className="ms-2 rounded-full bg-brand-surface-elevated px-2 py-0.5 font-bold">
+            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+              <span className="rounded-full bg-brand-surface-elevated px-2.5 py-1 font-black text-brand-text">{formatDay(start)}</span>
+              <span>{tr('تا', 'to')}</span>
+              <span className="rounded-full bg-brand-surface-elevated px-2.5 py-1 font-black text-brand-text">{formatDay(rangeEnd || start)}</span>
+              <span className="rounded-full bg-brand-gold/15 px-2.5 py-1 font-bold text-brand-bronze dark:text-brand-gold">
                 {tr(`${digits(span)} روز`, `${span} day${span === 1 ? '' : 's'}`)}
               </span>
-            </>
+            </div>
           ) : (
-            tr('روز شروع را انتخاب کنید', 'Pick a start day')
+            <div>{tr('روز شروع را انتخاب کنید', 'Pick a start day')}</div>
           )}
-          {start && !end && <div className="mt-1">{tr('حالا روز پایان را انتخاب کنید (یا همین یک روز را اعمال کنید).', 'Now pick an end day (or apply this single day).')}</div>}
+          {start && !end && <div>{tr('حالا روز پایان را انتخاب کنید (یا همین یک روز را اعمال کنید).', 'Now pick an end day (or apply this single day).')}</div>}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -281,5 +275,107 @@ export function JalaliRangePicker({
         </div>
       </div>
     </motion.div>
+  );
+}
+
+/** Dropdown styled like the storefront selects (ProvinceCitySelect), replacing native <select>. */
+function CalendarSelect({
+  ariaLabel,
+  value,
+  options,
+  onChange,
+  width,
+}: {
+  ariaLabel: string;
+  value: number;
+  options: { value: number; label: string; disabled?: boolean }[];
+  onChange: (value: number) => void;
+  width: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const selected = options.find((option) => option.value === value);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    // Bring the current value into view inside the scrollable list.
+    requestAnimationFrame(() => {
+      listRef.current?.querySelector('[data-selected="true"]')?.scrollIntoView({ block: 'nearest' });
+    });
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [open]);
+
+  return (
+    <div
+      ref={rootRef}
+      className={`relative ${width}`}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && open) {
+          // Close just this list, not the whole calendar.
+          event.stopPropagation();
+          setOpen(false);
+        }
+      }}
+    >
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={ariaLabel}
+        onClick={() => setOpen((current) => !current)}
+        className={`flex h-9 w-full cursor-pointer select-none items-center justify-between gap-1.5 rounded-2xl border bg-brand-surface px-3 text-start transition-all ${
+          open ? 'border-brand-gold shadow-sm ring-2 ring-brand-gold/20' : 'border-brand-border hover:border-brand-gold/70'
+        }`}
+      >
+        <span className="truncate text-xs font-bold text-brand-text">{selected?.label ?? '—'}</span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-brand-bronze transition-transform duration-200 dark:text-brand-gold ${open ? 'rotate-180' : 'opacity-70'}`}
+        />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute start-0 top-full z-50 mt-2 w-full min-w-[8rem] origin-top rounded-2xl border border-brand-border bg-brand-surface p-1.5 shadow-2xl dark:border-brand-gold/30 dark:bg-brand-surface-elevated dark:shadow-black/60"
+          >
+            <div ref={listRef} role="listbox" aria-label={ariaLabel} className="max-h-56 space-y-0.5 overflow-y-auto overscroll-contain p-0.5">
+              {options.map((option) => {
+                const isSelected = option.value === value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    data-selected={isSelected ? 'true' : 'false'}
+                    disabled={option.disabled}
+                    onClick={() => {
+                      onChange(option.value);
+                      setOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-start text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
+                      isSelected
+                        ? 'bg-brand-gold text-[#141914]'
+                        : 'text-brand-text hover:bg-brand-gold/15 hover:text-brand-bronze dark:hover:text-brand-gold'
+                    }`}
+                  >
+                    <span>{option.label}</span>
+                    {isSelected && <span className="h-1.5 w-1.5 rounded-full bg-[#141914]" />}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

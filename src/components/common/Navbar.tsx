@@ -37,7 +37,8 @@ import {
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { toggleCartDrawer } from '@/stores/ui/uiSlice';
-import { updateQuantity, removeFromCart } from '@/stores/cart/cartSlice';
+import type { ICartItem } from '@/common/interfaces';
+import { getCartItemStock, refreshCartStock, updateQuantity, removeFromCart } from '@/stores/cart/cartSlice';
 import { useLogoutConfirmation } from '@/stores/auth/useLogoutConfirmation';
 import { PATHS } from '@/common/constants/PATHS';
 import { resolveMediaUrl } from '@/common/constants/URL';
@@ -244,6 +245,7 @@ export function Navbar() {
   // The category panel has its own scroll area. Only lock the page for the cart drawer.
   useEffect(() => {
     if (!isCartDrawerOpen) return;
+    void dispatch(refreshCartStock());
 
     if (window.innerWidth < 1024) {
       const previousOverflow = document.body.style.overflow;
@@ -252,7 +254,7 @@ export function Navbar() {
         document.body.style.overflow = previousOverflow;
       };
     }
-  }, [isCartDrawerOpen]);
+  }, [isCartDrawerOpen, dispatch]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -786,6 +788,8 @@ export function Navbar() {
                   {/* Left Column (Items List) */}
                   <div className="lg:col-span-7 xl:col-span-8 space-y-3 max-h-[50vh] overflow-y-auto pr-1">
                     {cartItems.map(({ product, quantity, selectedVariant, selectedAttributes }) => {
+                const maxQuantity = getCartItemStock({ product, quantity, selectedVariant } as ICartItem);
+                const atMaxStock = (quantity || 1) >= maxQuantity;
                       const itemPrice = selectedVariant
                         ? selectedVariant.discountPrice && selectedVariant.discountPrice > 0
                           ? selectedVariant.discountPrice
@@ -843,6 +847,11 @@ export function Navbar() {
                                     {formatToman(itemPrice, isPersian)}
                                   </span>
                                 </div>
+                                {atMaxStock && Number.isFinite(maxQuantity) && (
+                                  <div className="text-[10px] font-bold text-amber-400 mt-1">
+                                    {isPersian ? `حداکثر موجودی: ${toPersianDigits(maxQuantity)} عدد` : `Max available: ${maxQuantity}`}
+                                  </div>
+                                )}
                               </div>
                             </div>
 
@@ -877,6 +886,7 @@ export function Navbar() {
                                   size="sm"
                                   radius="full"
                                   variant="light"
+                                  isDisabled={atMaxStock}
                                   onPress={() =>
                                     dispatch(
                                       updateQuantity({

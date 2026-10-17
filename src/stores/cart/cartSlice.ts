@@ -1,6 +1,26 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { ICartItem, IProduct, IProductVariant } from '@/common/interfaces';
-import { CART_KEY } from '@/common/utils';
+import { CART_KEY, toast } from '@/common/utils';
+import axiosInstance from '@/common/axiosInstance';
+
+/** Units that can be bought: 0 when out of stock, Infinity when stock is not tracked. */
+export function getAvailableStock(product: IProduct, variant?: IProductVariant | null): number {
+  const source = variant || product;
+  if (!source || source.inStock === false) return 0;
+  const count = Number(source.stockCount);
+  return Number.isFinite(count) ? Math.max(0, Math.floor(count)) : Infinity;
+}
+
+/** Stock for a cart line, preferring the product's current variant data over the stored snapshot. */
+export function getCartItemStock(item: ICartItem): number {
+  const variant = item.selectedVariant
+    ? item.product.variants?.find((candidate) => candidate.id === item.selectedVariant!.id) || item.selectedVariant
+    : undefined;
+  return getAvailableStock(item.product, variant);
+}
+
+const sameLine = (item: ICartItem, productId: string, variantId?: string) =>
+  item.product._id === productId && (variantId !== undefined ? item.selectedVariant?.id === variantId : true);
 
 interface CartState {
   items: ICartItem[];
@@ -57,17 +77,23 @@ export const cartSlice = createSlice({
           item.product._id === product._id &&
           ((!item.selectedVariant && !variantId) || item.selectedVariant?.id === variantId),
       );
+      const freshVariant = variantId ? product.variants?.find((variant) => variant.id === variantId) || selectedVariant : undefined;
+      const stock = getAvailableStock(product, freshVariant);
+      const nextQuantity = Math.min((existing?.quantity || 0) + quantity, stock);
 
+      // Never let the cart hold more than the shop can ship.
+      if (nextQuantity <= 0) return;
       if (existing) {
-        existing.quantity += quantity;
-        if (selectedVariant) existing.selectedVariant = selectedVariant;
+        existing.quantity = nextQuantity;
+        existing.product = product;
+        if (freshVariant) existing.selectedVariant = freshVariant;
         if (selectedAttributes) existing.selectedAttributes = selectedAttributes;
       } else {
         state.items.push({
           product,
-          quantity,
-          selectedVariant,
-          selectedAttributes: selectedAttributes || selectedVariant?.title,
+          quantity: nextQuantity,
+          selectedVariant: freshVariant,
+          selectedAttributes: selectedAttributes || freshVariant?.title,
         });
       }
       saveCartToStorage(state.items);
@@ -78,21 +104,35 @@ export const cartSlice = createSlice({
       action: PayloadAction<{ productId: string; variantId?: string; quantity: number }>,
     ) => {
       const { productId, variantId, quantity } = action.payload;
-      const index = state.items.findIndex(
-        (item) =>
-          item.product._id === productId &&
-          (variantId !== undefined
-            ? item.selectedVariant?.id === variantId
-            : true),
-      );
+      const index = state.items.findIndex((item) => sameLine(item, productId, variantId));
 
       if (index !== -1) {
-        if (quantity <= 0) {
+        const clamped = Math.min(quantity, getCartItemStock(state.items[index]));
+        if (clamped <= 0) {
           state.items.splice(index, 1);
         } else {
-          state.items[index].quantity = quantity;
+          state.items[index].quantity = clamped;
         }
       }
+      saveCartToStorage(state.items);
+    },
+
+    /** Replaces stored product snapshots with fresh server data and trims quantities to stock. */
+    syncCartStock: (state, action: PayloadAction<{ products: IProduct[]; missingIds: string[] }>) => {
+      const fresh = new Map(action.payload.products.map((product) => [product._id, product]));
+      const missing = new Set(action.payload.missingIds);
+      state.items = state.items.flatMap((item) => {
+        if (missing.has(item.product._id)) return [];
+        const product = fresh.get(item.product._id);
+        if (!product) return [item];
+        const variant = item.selectedVariant
+          ? product.variants?.find((candidate) => candidate.id === item.selectedVariant!.id)
+          : undefined;
+        if (item.selectedVariant && !variant) return [];
+        const next = { ...item, product, selectedVariant: variant || item.selectedVariant };
+        const stock = getCartItemStock(next);
+        return stock <= 0 ? [] : [{ ...next, quantity: Math.min(item.quantity, stock) }];
+      });
       saveCartToStorage(state.items);
     },
 
@@ -125,5 +165,61 @@ export const cartSlice = createSlice({
   },
 });
 
-export const { hydrateCart, addToCart, updateQuantity, removeFromCart, clearCart } = cartSlice.actions;
+export const { hydrateCart, addToCart, updateQuantity, removeFromCart, clearCart, syncCartStock } = cartSlice.actions;
+
+/**
+ * Re-reads stock for everything in the cart (it may have been added days ago)
+ * and tells the shopper about any line that had to shrink or be removed.
+ */
+// App start, the cart page and the cart panel can all ask at once; one refresh is enough.
+let stockRefreshInFlight = false;
+
+export const refreshCartStock = createAsyncThunk('cart/refreshStock', async (_, { getState, dispatch }) => {
+  stockRefreshInFlight = true;
+  try {
+    await refreshCartStockOnce(getState, dispatch);
+  } finally {
+    stockRefreshInFlight = false;
+  }
+}, { condition: () => !stockRefreshInFlight });
+
+async function refreshCartStockOnce(getState: () => unknown, dispatch: (action: unknown) => unknown) {
+  const state = getState() as { cart: CartState; ui: { lang: string } };
+  const items = state.cart.items;
+  if (!items.length) return;
+  const isPersian = state.ui.lang !== 'en';
+  const slugs = [...new Map(items.map((item) => [item.product._id, item.product.slug || item.product._id])).entries()];
+
+  const results = await Promise.allSettled(
+    slugs.map(([, slug]) => axiosInstance.get<IProduct>(`/products/${encodeURIComponent(slug)}`).then((res) => res.data)),
+  );
+  const products: IProduct[] = [];
+  const missingIds: string[] = [];
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled' && result.value?._id) products.push(result.value);
+    else if (result.status === 'rejected' && (result.reason as any)?.response?.status === 404) missingIds.push(slugs[index][0]);
+  });
+  if (!products.length && !missingIds.length) return;
+
+  const before = new Map(items.map((item) => [`${item.product._id}:${item.selectedVariant?.id || ''}`, item]));
+  dispatch(syncCartStock({ products, missingIds }));
+  const after = new Map(
+    (getState() as { cart: CartState }).cart.items.map((item) => [`${item.product._id}:${item.selectedVariant?.id || ''}`, item]),
+  );
+
+  for (const [key, item] of before) {
+    const title = isPersian ? item.product.title : item.product.titleEn || item.product.title;
+    const updated = after.get(key);
+    if (!updated) {
+      toast.error(isPersian ? `«${title}» دیگر موجود نیست و از سبد خرید حذف شد.` : `"${title}" is no longer available and was removed from your bag.`);
+    } else if (updated.quantity < item.quantity) {
+      toast.info(
+        isPersian
+          ? `از «${title}» فقط ${updated.quantity.toLocaleString('fa-IR')} عدد موجود است؛ تعداد در سبد خرید اصلاح شد.`
+          : `Only ${updated.quantity} of "${title}" left; your bag was updated.`,
+      );
+    }
+  }
+}
+
 export default cartSlice.reducer;
