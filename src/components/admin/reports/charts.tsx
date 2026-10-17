@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 
 /**
@@ -147,6 +147,22 @@ export function TrendChart({
   const innerHeight = height - padding.top - padding.bottom;
   const count = data.length;
 
+  // Hover visuals glide between data points with a spring instead of jumping. The first frame of a
+  // hover session jumps straight to the pointer so nothing slides in from the left edge.
+  const hadHover = useRef(false);
+  const lastHover = useRef(0);
+  const anchor = Math.min(Math.max(hover ?? lastHover.current, 0), Math.max(0, count - 1));
+  const glide =
+    hover !== null && !hadHover.current
+      ? { duration: 0 }
+      : reduceMotion
+        ? { duration: 0 }
+        : { type: 'spring' as const, stiffness: 340, damping: 36, mass: 0.8 };
+  useEffect(() => {
+    hadHover.current = hover !== null;
+    if (hover !== null) lastHover.current = hover;
+  });
+
   const values = data.map((point) =>
     stacked
       ? series.reduce((sum, item) => sum + (Number(point[item.key]) || 0), 0)
@@ -179,60 +195,14 @@ export function TrendChart({
   };
 
   const barWidth = Math.max(3, Math.min(40, band * 0.6));
-  const tooltipX = hover !== null ? x(hover) : 0;
+  const tooltipX = x(anchor);
   const tooltipOnLeft = tooltipX > width * 0.58;
 
-  return (
-    <div ref={containerRef} className="relative w-full select-none" dir="ltr">
-      {width > 0 && (
-        <svg width={width} height={height} role="img" aria-label={ariaLabel} className="block overflow-visible">
-          <defs>
-            {series.map((item, index) => (
-              <linearGradient key={item.key} id={`${gradientId}-${index}`} x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor={item.color} stopOpacity={0.28} />
-                <stop offset="100%" stopColor={item.color} stopOpacity={0} />
-              </linearGradient>
-            ))}
-          </defs>
-
-          {ticks.map((tick, index) => (
-            <g key={tick}>
-              <line
-                x1={padding.left}
-                x2={width - padding.right}
-                y1={y(tick)}
-                y2={y(tick)}
-                stroke="var(--viz-grid)"
-                strokeWidth={1}
-                strokeDasharray={index === 0 ? undefined : '3 5'}
-              />
-              <text x={padding.left - 10} y={y(tick)} dy="0.32em" textAnchor="end" fontSize={10} fontWeight={600} fill="var(--viz-axis)">
-                {axisFormat(tick)}
-              </text>
-            </g>
-          ))}
-
-          {xLabels.map((text, index) =>
-            // Always label the last bucket, dropping a regular label that would collide with it.
-            (index % labelEvery === 0 && count - 1 - index >= Math.ceil(labelEvery * 0.7)) || index === count - 1 ? (
-              <text key={index} x={x(index)} y={height - 8} textAnchor="middle" fontSize={10} fontWeight={600} fill="var(--viz-axis)">
-                {text}
-              </text>
-            ) : null,
-          )}
-
-          {kind === 'bar' && hover !== null && (
-            <rect
-              x={padding.left + band * hover + 2}
-              y={padding.top}
-              width={Math.max(0, band - 4)}
-              height={innerHeight}
-              rx={8}
-              fill="var(--brand-text)"
-              opacity={0.05}
-            />
-          )}
-
+  // Bars and paths are the heavy part; keep their element tree stable while the pointer moves.
+  const dataSignature = data.map((point) => series.map((item) => Number(point[item.key]) || 0).join(',')).join('|');
+  const marks = useMemo(
+    () => (
+      <>
           {kind === 'bar' && !isEmpty && (
             <g key={structureKey}>
               {data.map((point, index) => {
@@ -262,8 +232,7 @@ export function TrendChart({
                       initial={reduceMotion ? false : { d: flat }}
                       animate={{ d: settled }}
                       transition={{ ...morph, delay: introDone || reduceMotion ? 0 : Math.min(0.4, index * 0.025) }}
-                      style={{ opacity: hover === null || hover === index ? 1 : 0.4, transition: 'opacity 150ms ease' }}
-                    />
+                            />
                   );
                 });
               })}
@@ -307,21 +276,89 @@ export function TrendChart({
             </g>
           )}
 
-          {hover !== null && kind !== 'bar' && !isEmpty && (
-            <g pointerEvents="none">
-              <line x1={x(hover)} x2={x(hover)} y1={padding.top} y2={padding.top + innerHeight} stroke="var(--viz-axis)" strokeOpacity={0.6} strokeDasharray="3 3" />
+      </>
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dataSignature, structureKey, width, height, max, introDone, reduceMotion, resizing, gradientId],
+  );
+
+  return (
+    <div ref={containerRef} className="relative w-full select-none" dir="ltr">
+      {width > 0 && (
+        <svg width={width} height={height} role="img" aria-label={ariaLabel} className="block overflow-visible">
+          <defs>
+            {series.map((item, index) => (
+              <linearGradient key={item.key} id={`${gradientId}-${index}`} x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor={item.color} stopOpacity={0.28} />
+                <stop offset="100%" stopColor={item.color} stopOpacity={0} />
+              </linearGradient>
+            ))}
+          </defs>
+
+          {ticks.map((tick, index) => (
+            <g key={tick}>
+              <line
+                x1={padding.left}
+                x2={width - padding.right}
+                y1={y(tick)}
+                y2={y(tick)}
+                stroke="var(--viz-grid)"
+                strokeWidth={1}
+                strokeDasharray={index === 0 ? undefined : '3 5'}
+              />
+              <text x={padding.left - 10} y={y(tick)} dy="0.32em" textAnchor="end" fontSize={10} fontWeight={600} fill="var(--viz-axis)">
+                {axisFormat(tick)}
+              </text>
+            </g>
+          ))}
+
+          {xLabels.map((text, index) =>
+            // Always label the last bucket, dropping a regular label that would collide with it.
+            (index % labelEvery === 0 && count - 1 - index >= Math.ceil(labelEvery * 0.7)) || index === count - 1 ? (
+              <text key={index} x={x(index)} y={height - 8} textAnchor="middle" fontSize={10} fontWeight={600} fill="var(--viz-axis)">
+                {text}
+              </text>
+            ) : null,
+          )}
+
+          {kind === 'bar' && !isEmpty && count > 0 && (
+            <motion.rect
+              y={padding.top}
+              width={Math.max(0, band - 4)}
+              height={innerHeight}
+              rx={8}
+              fill="var(--brand-text)"
+              pointerEvents="none"
+              initial={false}
+              animate={{ x: padding.left + band * anchor + 2, opacity: hover !== null ? 0.06 : 0 }}
+              transition={{ x: glide, opacity: { duration: 0.15 } }}
+            />
+          )}
+
+          {marks}
+
+          {kind !== 'bar' && !isEmpty && count > 0 && (
+            <motion.g
+              pointerEvents="none"
+              initial={false}
+              animate={{ x: x(anchor), opacity: hover !== null ? 1 : 0 }}
+              transition={{ x: glide, opacity: { duration: 0.15 } }}
+            >
+              <line x1={0} x2={0} y1={padding.top} y2={padding.top + innerHeight} stroke="var(--viz-axis)" strokeOpacity={0.6} strokeDasharray="3 3" />
               {series.map((item) => (
-                <circle
+                <motion.circle
                   key={item.key}
-                  cx={x(hover)}
-                  cy={y(Number(data[hover]?.[item.key]) || 0)}
+                  cx={0}
                   r={5}
                   fill={item.color}
                   stroke="var(--brand-surface)"
                   strokeWidth={2.5}
+                  initial={false}
+                  animate={{ cy: y(Number(data[anchor]?.[item.key]) || 0) }}
+                  transition={glide}
                 />
               ))}
-            </g>
+            </motion.g>
           )}
 
           <rect
@@ -330,6 +367,7 @@ export function TrendChart({
             width={innerWidth}
             height={innerHeight}
             fill="transparent"
+            style={{ touchAction: 'pan-y' }}
             onPointerMove={isEmpty ? undefined : onPointerMove}
             onPointerLeave={() => setHover(null)}
           />
@@ -344,25 +382,35 @@ export function TrendChart({
         </div>
       )}
 
-      {hover !== null && data[hover] && (
-        <div
-          dir="auto"
-          style={tooltipOnLeft ? { right: width - tooltipX + 14 } : { left: tooltipX + 14 }}
-          className="pointer-events-none absolute top-1 z-10 min-w-[170px] rounded-2xl border border-brand-border bg-brand-surface/95 px-3 py-2.5 text-[11px] shadow-xl backdrop-blur"
+      {!isEmpty && data[anchor] && (
+        <motion.div
+          initial={false}
+          animate={{ x: tooltipX, opacity: hover !== null ? 1 : 0 }}
+          transition={{ x: glide, opacity: { duration: 0.12 } }}
+          className="pointer-events-none absolute left-0 top-1 z-10"
         >
-          <div className="mb-1.5 font-black text-brand-text">{xLabels[hover]}</div>
-          <div className="space-y-1">
-            {series.map((item) => (
-              <div key={item.key} className="flex items-center justify-between gap-4">
-                <span className="inline-flex items-center gap-1.5 font-semibold text-brand-text-muted">
-                  <span className="h-2 w-2 rounded-[2px]" style={{ background: item.color }} />
-                  {item.name}
-                </span>
-                <span className="font-black text-brand-text">{format(Number(data[hover][item.key]) || 0)}</span>
-              </div>
-            ))}
+          <div
+            dir="auto"
+            style={{
+              transform: tooltipOnLeft ? 'translateX(calc(-100% - 14px))' : 'translateX(14px)',
+              transition: 'transform 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+            className="min-w-[170px] rounded-2xl border border-brand-border bg-brand-surface/95 px-3 py-2.5 text-[11px] shadow-xl backdrop-blur"
+          >
+            <div className="mb-1.5 font-black text-brand-text">{xLabels[anchor]}</div>
+            <div className="space-y-1">
+              {series.map((item) => (
+                <div key={item.key} className="flex items-center justify-between gap-4">
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-brand-text-muted">
+                    <span className="h-2 w-2 rounded-[2px]" style={{ background: item.color }} />
+                    {item.name}
+                  </span>
+                  <span className="font-black text-brand-text">{format(Number(data[anchor][item.key]) || 0)}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );
@@ -389,7 +437,12 @@ export function DonutChart({
   isPersian?: boolean;
 }) {
   const [hover, setHover] = useState<string | null>(null);
+  const [introDone, setIntroDone] = useState(false);
   const reduceMotion = useReducedMotion();
+  useEffect(() => {
+    const timer = window.setTimeout(() => setIntroDone(true), 1500);
+    return () => window.clearTimeout(timer);
+  }, []);
   const total = slices.reduce((sum, slice) => sum + Math.max(0, slice.value), 0);
   const thickness = 20;
   const radius = (size - thickness) / 2;
@@ -422,12 +475,19 @@ export function DonutChart({
                   r={radius}
                   fill="none"
                   stroke={slice.color}
-                  strokeWidth={hover === slice.key ? thickness + 4 : thickness}
                   strokeLinecap="butt"
                   strokeDashoffset={-start}
-                  initial={{ strokeDasharray: `0 ${circumference}` }}
-                  animate={{ strokeDasharray: `${dash} ${circumference - dash}`, opacity: hover === null || hover === slice.key ? 1 : 0.35 }}
-                  transition={{ duration: reduceMotion ? 0 : 0.9, delay: reduceMotion ? 0 : index * 0.12, ease: EASE }}
+                  initial={reduceMotion ? false : { strokeDasharray: `0 ${circumference}`, strokeWidth: thickness }}
+                  animate={{
+                    strokeDasharray: `${dash} ${circumference - dash}`,
+                    strokeWidth: hover === slice.key ? thickness + 4 : thickness,
+                    opacity: hover === null || hover === slice.key ? 1 : 0.35,
+                  }}
+                  transition={{
+                    strokeDasharray: { duration: reduceMotion ? 0 : 0.9, delay: reduceMotion || introDone ? 0 : index * 0.12, ease: EASE },
+                    strokeWidth: { type: 'spring', stiffness: 520, damping: 34 },
+                    opacity: { duration: 0.18 },
+                  }}
                   onPointerEnter={() => setHover(slice.key)}
                   onPointerLeave={() => setHover(null)}
                   style={{ cursor: 'default' }}
@@ -558,15 +618,27 @@ export function Heatmap({
               return (
                 <motion.span
                   key={hour}
-                  className="aspect-square min-h-[10px] rounded-[4px]"
-                  style={{ background: cellColor(value), outline: active ? '2px solid var(--brand-text)' : 'none', outlineOffset: 1 }}
+                  className="aspect-square min-h-[10px]"
                   initial={{ opacity: 0, scale: 0.6 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: (rowIndex * 24 + hour) * 0.002 }}
                   onPointerEnter={() => setHover({ row: rowIndex, hour })}
                   onPointerLeave={() => setHover(null)}
                   aria-label={`${rowLabels[rowIndex]} ${hourLabel(hour)}: ${format(value)}`}
-                />
+                >
+                  {/* Hover lift lives on the inner cell so it is not delayed by the intro stagger. */}
+                  <span
+                    className="block h-full w-full rounded-[4px]"
+                    style={{
+                      background: cellColor(value),
+                      boxShadow: active ? '0 0 0 2px var(--brand-text)' : '0 0 0 0 transparent',
+                      transform: active ? 'scale(1.18)' : 'scale(1)',
+                      transition: 'box-shadow 140ms ease, transform 160ms cubic-bezier(0.16, 1, 0.3, 1)',
+                      position: 'relative',
+                      zIndex: active ? 1 : 0,
+                    }}
+                  />
+                </motion.span>
               );
             })}
           </React.Fragment>
