@@ -1,320 +1,254 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import {
-  Card,
-  CardBody,
-  Button,
-  Chip,
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  Skeleton,
-} from '@heroui/react';
-import {
-  DollarSign,
-  ShoppingBag,
-  Users,
-  Crown,
-  Package,
-  Sparkles,
-  TrendingUp,
-  Clock,
-} from 'lucide-react';
-import { adminApi } from '@/common/api/admin';
-import { formatToman, toPersianDigits } from '@/common/utils';
-import { PATHS } from '@/common/constants/PATHS';
-import { IOrder } from '@/common/interfaces';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
+import { BarChart3, CalendarDays, CalendarRange, LayoutDashboard, Package, RefreshCw, UserRound, Wallet } from 'lucide-react';
 import { useTranslation } from '@/common/i18n';
+import { useAppSelector } from '@/stores/hooks';
+import type { Granularity } from '@/common/api/reports';
+import { OverviewTab } from '@/components/admin/reports/OverviewTab';
+import { FinanceTab } from '@/components/admin/reports/FinanceTab';
+import { TrafficTab } from '@/components/admin/reports/TrafficTab';
+import { ProductDetailModal, ProductsTab } from '@/components/admin/reports/ProductsTab';
+import { VisitorDetailModal, VisitorsTab } from '@/components/admin/reports/VisitorsTab';
+import { Segmented } from '@/components/admin/reports/ui';
+import { JalaliRangePicker } from '@/components/admin/reports/JalaliRangePicker';
+import {
+  RANGE_PRESETS,
+  type RangePreset,
+  defaultGranularity,
+  formatDateTime,
+  formatJalaliLabel,
+  presetRange,
+  toRangeParams,
+} from '@/components/admin/reports/format';
 
-// Stagger variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.05 },
-  },
-};
+type TabKey = 'overview' | 'finance' | 'traffic' | 'products' | 'visitors';
+const AUTO_REFRESH_MS = 60_000;
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.97 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: 'spring' as const, stiffness: 360, damping: 28 },
-  },
-};
-
-const fadeSlideUp = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as const },
-  },
-};
-
-export default function AdminDashboardPage() {
+function DashboardContent() {
   const { isPersian } = useTranslation();
-  const [stats, setStats] = useState({
-    totalRevenue: 34500000,
-    totalOrders: 14,
-    pendingOrders: 3,
-    totalUsers: 28,
-    totalProducts: 8,
-  });
-  const [recentOrders, setRecentOrders] = useState<IOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const role = useAppSelector((state) => state.auth.user?.role);
+  const isAdmin = role === 'admin';
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tr = (fa: string, en: string) => (isPersian ? fa : en);
+
+  const requestedTab = (searchParams.get('tab') as TabKey) || 'overview';
+  const tab: TabKey = requestedTab === 'finance' && !isAdmin ? 'overview' : requestedTab;
+  const setTab = (next: TabKey) => {
+    const query = new URLSearchParams(searchParams.toString());
+    query.set('tab', next);
+    router.replace(`${pathname}?${query.toString()}`, { scroll: false });
+  };
+
+  const [preset, setPreset] = useState<RangePreset>('30d');
+  const [custom, setCustom] = useState<{ from: Date; to: Date } | null>(null);
+  const [granularityOverride, setGranularityOverride] = useState<Granularity | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshedAt, setRefreshedAt] = useState(() => new Date());
+  const [customOpen, setCustomOpen] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [isStuck, setIsStuck] = useState(false);
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        const [statsRes, ordersRes, productsRes] = await Promise.all([
-          adminApi.getDashboardStats(),
-          adminApi.getOrders({ pageSize: 5 }),
-          adminApi.getProducts({ pageSize: 1 }),
-        ]);
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    // The sentinel scrolls past the sticky offset exactly when the bar becomes stuck.
+    const observer = new IntersectionObserver(([entry]) => setIsStuck(!entry.isIntersecting), {
+      rootMargin: `-${window.innerWidth >= 640 ? 89 : 77}px 0px 0px 0px`,
+    });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
+  const [visitorKey, setVisitorKey] = useState<string | null>(null);
+  const [productId, setProductId] = useState<string | null>(null);
 
-        if (statsRes) {
-          setStats((prev) => ({
-            ...prev,
-            totalRevenue: statsRes.totalRevenue || prev.totalRevenue,
-            totalOrders: statsRes.totalOrders || prev.totalOrders,
-            pendingOrders: statsRes.pendingOrders || prev.pendingOrders,
-            totalProducts: productsRes.total || prev.totalProducts,
-          }));
-        }
+  // `to` follows "now" for open-ended presets, so it is recomputed on refresh.
+  const range = useMemo(
+    () => (preset === 'custom' && custom ? custom : presetRange(preset === 'custom' ? '30d' : preset)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [preset, custom, refreshKey],
+  );
+  const granularity = granularityOverride || defaultGranularity(range.from, range.to);
+  const params = useMemo(() => toRangeParams(range.from, range.to, granularity), [range, granularity]);
 
-        if (ordersRes?.items) {
-          setRecentOrders(ordersRes.items);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        setRefreshKey((key) => key + 1);
+        setRefreshedAt(new Date());
       }
-    };
-
-    loadDashboard();
+    }, AUTO_REFRESH_MS);
+    return () => clearInterval(timer);
   }, []);
 
-  const kpiCards = [
-    {
-      title: isPersian ? 'فروش کل فروشگاه' : 'Total Revenue',
-      value: formatToman(stats.totalRevenue, isPersian),
-      subtitle: isPersian ? '+۱۸٪ رشد نسبت به ماه قبل' : '+18% from last month',
-      icon: DollarSign,
-      color: 'bg-[#bfa27a]/20 text-[#bfa27a] border-[#bfa27a]/30',
-    },
-    {
-      title: isPersian ? 'تعداد کل سفارشات' : 'Total Orders',
-      value: isPersian ? `${toPersianDigits(stats.totalOrders)} سفارش` : `${stats.totalOrders} Orders`,
-      subtitle: isPersian ? `${toPersianDigits(stats.pendingOrders)} سفارش در حال پردازش` : `${stats.pendingOrders} Processing`,
-      icon: ShoppingBag,
-      color: 'bg-[#9f815b]/20 text-[#9f815b] border-[#9f815b]/30',
-    },
-    {
-      title: isPersian ? 'محصولات موجود در انبار' : 'Total Products',
-      value: isPersian ? `${toPersianDigits(stats.totalProducts)} عطر و کالا` : `${stats.totalProducts} Fragrances`,
-      subtitle: isPersian ? 'همگی با ویژگی‌های داینامیک' : 'With dynamic attributes',
-      icon: Package,
-      color: 'bg-[#d4be9b]/20 text-[#d4be9b] border-[#d4be9b]/30',
-    },
-    {
-      title: isPersian ? 'کاربران و اعضای VIP' : 'Users & VIP Members',
-      value: isPersian ? `${toPersianDigits(stats.totalUsers)} کاربر` : `${stats.totalUsers} Users`,
-      subtitle: isPersian ? 'دسترسی به تخفیف‌های ویژه' : 'VIP discount access',
-      icon: Crown,
-      color: 'bg-[#bfa27a]/20 text-[#bfa27a] border-[#bfa27a]/30',
-    },
+  const refresh = () => {
+    setRefreshKey((key) => key + 1);
+    setRefreshedAt(new Date());
+  };
+
+  const closeCustom = useCallback(() => setCustomOpen(false), []);
+  const applyCustom = (from: Date, to: Date) => {
+    setCustom({ from, to });
+    setPreset('custom');
+    setGranularityOverride(null);
+    setCustomOpen(false);
+  };
+
+  const tabs: { key: TabKey; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { key: 'overview', label: tr('نمای کلی', 'Overview'), icon: LayoutDashboard },
+    ...(isAdmin ? [{ key: 'finance' as TabKey, label: tr('مالی و حسابداری', 'Finance'), icon: Wallet }] : []),
+    { key: 'traffic', label: tr('بازدید و رفتار', 'Traffic & behaviour'), icon: BarChart3 },
+    { key: 'products', label: tr('تحلیل محصولات', 'Products'), icon: Package },
+    { key: 'visitors', label: tr('کاربران و بازدیدکنندگان', 'People'), icon: UserRound },
   ];
 
-  const getStatusChip = (status: string) => {
-    switch (status) {
-      case 'delivered':
-        return (
-          <Chip size="sm" variant="flat" color="success" className="font-bold text-[10px]">
-            {isPersian ? 'تحویل شد' : 'Delivered'}
-          </Chip>
-        );
-      case 'processing':
-        return (
-          <Chip size="sm" variant="flat" color="warning" className="font-bold text-[10px]">
-            {isPersian ? 'در حال پردازش' : 'Processing'}
-          </Chip>
-        );
-      case 'shipped':
-        return (
-          <Chip size="sm" variant="flat" color="primary" className="font-bold text-[10px]">
-            {isPersian ? 'ارسال شده' : 'Shipped'}
-          </Chip>
-        );
-      default:
-        return (
-          <Chip size="sm" variant="flat" className="font-bold text-[10px] bg-brand-surface-elevated text-brand-text-muted">
-            {isPersian ? 'در انتظار' : 'Pending'}
-          </Chip>
-        );
-    }
+  const tabProps = {
+    params,
+    isPersian,
+    isAdmin,
+    refreshKey,
+    onOpenVisitor: setVisitorKey,
+    onOpenProduct: setProductId,
   };
 
   return (
-    <div className="space-y-8">
-      {/* Top Welcome */}
-      <motion.div
-        variants={fadeSlideUp}
-        initial="hidden"
-        animate="visible"
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+    <div className="space-y-6 pb-10">
+      <motion.header
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between"
       >
         <div>
-          <h1 className="text-2xl font-black text-brand-text">
-            {isPersian ? 'داشبورد مدیریت و تحلیل فروش هاتف آروما' : 'Hatef Aroma Admin Dashboard'}
-          </h1>
-          <p className="text-xs text-brand-text-muted mt-1">
-            {isPersian
-              ? 'وضعیت زنده موجودی، سفارش‌ها، اشتراک‌های ویژه و درآمد فروشگاه'
-              : 'Real-time sales, inventory, orders, and VIP memberships analytics'}
+          <h1 className="text-2xl font-black text-brand-text">{tr('داشبورد تحلیل و حسابداری', 'Analytics & accounting')}</h1>
+          <p className="mt-1 text-xs font-medium text-brand-text-muted">
+            {tr(
+              'درآمد، سفارش‌ها، بازدید سایت، رفتار کاربران و عملکرد محصولات — همه در یک جا',
+              'Revenue, orders, site traffic, visitor behaviour and product performance in one place',
+            )}
           </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <Button
-            as={Link}
-            href={PATHS.ADMIN_PRODUCT_NEW}
-            radius="full"
-            className="h-10 px-5 bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black text-xs shadow-md shadow-brand-gold/20 flex items-center gap-1.5 cursor-pointer rounded-full transition-all active:scale-95"
+        <div className="flex items-center gap-2 text-[11px] font-semibold text-brand-text-muted">
+          <span>
+            {tr('به‌روزرسانی:', 'Updated:')} {formatDateTime(refreshedAt.toISOString(), isPersian)}
+          </span>
+          <button
+            type="button"
+            onClick={refresh}
+            className="inline-flex items-center gap-1.5 rounded-full border border-brand-border px-3 py-1.5 font-bold text-brand-text transition-colors hover:border-brand-gold"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>{isPersian ? '+ تعریف محصول جدید' : '+ Add New Product'}</span>
-          </Button>
+            <RefreshCw className="h-3.5 w-3.5" />
+            {tr('بارگذاری مجدد', 'Refresh')}
+          </button>
         </div>
-      </motion.div>
+      </motion.header>
 
-      {/* KPI Cards Grid */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+      <div ref={sentinelRef} aria-hidden className="mb-0 h-0" />
+      {/* Once stuck, the band above the bar hides content scrolling between it and the floating navbar. */}
+      <div
+        className={`sticky top-[76px] z-20 -mx-1 space-y-3 rounded-3xl border border-brand-border bg-brand-surface p-3 transition-shadow sm:top-[88px] ${
+          isStuck
+            ? "shadow-[0_12px_32px_-18px_rgba(0,0,0,0.4)] before:pointer-events-none before:absolute before:inset-x-[-12px] before:bottom-full before:h-28 before:bg-brand-bg before:content-['']"
+            : ''
+        }`}
       >
-        {kpiCards.map((kpi, idx) => {
-          const Icon = kpi.icon;
-          return (
-            <motion.div key={idx} variants={cardVariants}>
-              <Card className="bg-brand-surface p-6 rounded-3xl border border-brand-border shadow-xs hover:border-brand-gold/40 transition-colors">
-                <CardBody className="p-0 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-brand-text-muted">{kpi.title}</span>
-                    <div className={`w-9 h-9 rounded-2xl flex items-center justify-center border ${kpi.color}`}>
-                      <Icon className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="text-xl sm:text-2xl font-black text-brand-text">
-                    {loading ? <Skeleton className="h-7 w-28 rounded-xl" /> : kpi.value}
-                  </div>
-                  <div className="text-[11px] font-semibold text-brand-text-muted flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3 text-brand-bronze dark:text-brand-gold" />
-                    <span>{kpi.subtitle}</span>
-                  </div>
-                </CardBody>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </motion.div>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+            {tabs.map((item) => {
+              const Icon = item.icon;
+              const active = tab === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setTab(item.key)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-black transition-colors ${
+                    active ? 'bg-brand-text text-brand-bg' : 'text-brand-text-muted hover:bg-brand-surface-elevated hover:text-brand-text'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+          <Segmented<Granularity>
+            size="sm"
+            value={granularity}
+            onChange={setGranularityOverride}
+            options={[
+              { value: 'day', label: tr('روزانه', 'Daily'), disabled: (range.to.getTime() - range.from.getTime()) / 86_400_000 > 400 },
+              { value: 'month', label: tr('ماهانه', 'Monthly') },
+              { value: 'year', label: tr('سالانه', 'Yearly') },
+            ]}
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <CalendarRange className="h-4 w-4 text-brand-text-muted" />
+          {RANGE_PRESETS.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => {
+                setPreset(item.key);
+                setGranularityOverride(null);
+              }}
+              className={`rounded-full px-3 py-1 text-[11px] font-bold transition-colors ${
+                preset === item.key ? 'bg-brand-gold text-[#141914]' : 'bg-brand-surface text-brand-text-muted hover:text-brand-text'
+              }`}
+            >
+              {isPersian ? item.fa : item.en}
+            </button>
+          ))}
+          <button
+            type="button"
+            data-range-trigger
+            aria-expanded={customOpen}
+            onClick={() => setCustomOpen((open) => !open)}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold transition-colors ${
+              preset === 'custom' ? 'bg-brand-gold text-[#141914]' : 'bg-brand-surface text-brand-text-muted hover:text-brand-text'
+            }`}
+          >
+            <CalendarDays className="h-3.5 w-3.5" />
+            {preset === 'custom' && custom
+              ? `${formatJalaliLabel(custom.from, isPersian)} – ${formatJalaliLabel(new Date(custom.to.getTime() - 1), isPersian)}`
+              : tr('انتخاب از تقویم', 'Pick from calendar')}
+          </button>
+        </div>
+        <AnimatePresence>
+          {customOpen && (
+            <JalaliRangePicker
+              isPersian={isPersian}
+              initialFrom={range.from}
+              initialTo={range.to}
+              onApply={applyCustom}
+              onClose={closeCustom}
+            />
+          )}
+        </AnimatePresence>
+      </div>
 
-      {/* Recent Orders Table */}
-      <motion.div
-        variants={fadeSlideUp}
-        initial="hidden"
-        animate="visible"
-        transition={{ delay: 0.3 }}
-      >
-        <Card className="bg-brand-surface rounded-3xl p-6 sm:p-8 border border-brand-border shadow-xs">
-          <CardBody className="p-0 space-y-4">
-            <div className="flex items-center justify-between pb-4 border-b border-brand-border">
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-brand-bronze dark:text-brand-gold" />
-                <h3 className="font-bold text-base text-brand-text">
-                  {isPersian ? 'آخرین سفارشات ثبت‌شده اخیر' : 'Recent Customer Orders'}
-                </h3>
-              </div>
-              <Link
-                href={PATHS.ADMIN_ORDERS}
-                className="text-xs font-bold text-brand-bronze dark:text-brand-gold hover:underline"
-              >
-                {isPersian ? 'مشاهده همه سفارشات' : 'View All Orders'}
-              </Link>
-            </div>
+      {tab === 'overview' && <OverviewTab {...tabProps} />}
+      {tab === 'finance' && isAdmin && <FinanceTab {...tabProps} />}
+      {tab === 'traffic' && <TrafficTab {...tabProps} />}
+      {tab === 'products' && <ProductsTab {...tabProps} />}
+      {tab === 'visitors' && <VisitorsTab {...tabProps} />}
 
-            {loading ? (
-              <div className="space-y-3 py-2">
-                {[...Array(4)].map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full rounded-2xl bg-brand-surface-elevated" />
-                ))}
-              </div>
-            ) : recentOrders.length === 0 ? (
-              <div className="text-center py-8 text-xs text-brand-text-muted">
-                {isPersian ? 'سفارشی برای نمایش موجود نیست.' : 'No recent orders to display.'}
-              </div>
-            ) : (
-              <Table
-                aria-label="Recent Orders Table"
-                classNames={{
-                  wrapper: "p-0 bg-transparent shadow-none border-none",
-                  th: "bg-brand-surface-elevated text-brand-text-muted font-bold text-xs py-3 px-4",
-                  td: "py-3.5 px-4 text-xs font-semibold",
-                  tr: "border-b border-brand-border hover:bg-brand-surface-elevated/60 transition-colors",
-                }}
-              >
-                <TableHeader>
-                  <TableColumn>{isPersian ? 'شماره سفارش' : 'Order ID'}</TableColumn>
-                  <TableColumn>{isPersian ? 'مشتری' : 'Customer'}</TableColumn>
-                  <TableColumn>{isPersian ? 'مبلغ کل' : 'Total'}</TableColumn>
-                  <TableColumn>{isPersian ? 'روش پرداخت' : 'Payment'}</TableColumn>
-                  <TableColumn>{isPersian ? 'وضعیت' : 'Status'}</TableColumn>
-                  <TableColumn>{isPersian ? 'تاریخ' : 'Date'}</TableColumn>
-                </TableHeader>
-                <TableBody>
-                  {recentOrders.map((order) => (
-                    <TableRow key={order._id}>
-                      <TableCell className="font-bold text-brand-bronze dark:text-brand-gold">
-                        {isPersian ? toPersianDigits(order.orderNumber) : order.orderNumber}
-                      </TableCell>
-                      <TableCell className="text-brand-text font-bold">
-                        {order.deliveryAddress?.fullName || 'کاربر مهمان'}
-                      </TableCell>
-                      <TableCell className="font-black text-brand-text">
-                        {formatToman(order.total, isPersian)}
-                      </TableCell>
-                      <TableCell className="text-brand-text-muted">
-                        {order.paymentMethod === 'online'
-                          ? isPersian ? 'آنلاین' : 'Online'
-                          : order.paymentMethod === 'installment'
-                          ? isPersian ? 'اقساطی' : 'Installment'
-                          : isPersian ? 'در محل' : 'COD'}
-                      </TableCell>
-                      <TableCell>
-                        {getStatusChip(order.status)}
-                      </TableCell>
-                      <TableCell className="text-brand-text-muted">
-                        {new Date(order.createdAt).toLocaleDateString(isPersian ? 'fa-IR' : 'en-US')}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardBody>
-        </Card>
-      </motion.div>
+      <VisitorDetailModal visitorKey={visitorKey} params={params} isPersian={isPersian} isAdmin={isAdmin} onClose={() => setVisitorKey(null)} />
+      <ProductDetailModal productId={productId} params={params} isPersian={isPersian} isAdmin={isAdmin} onClose={() => setProductId(null)} />
     </div>
+  );
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardContent />
+    </Suspense>
   );
 }

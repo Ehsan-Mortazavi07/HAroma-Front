@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 import { ReduxProvider } from './ReduxProvider';
 import { HeroUIProviderWrapper } from './HeroUIProviderWrapper';
 import { ThemeProvider } from './ThemeProvider';
@@ -10,6 +10,7 @@ import { fetchProfile } from '@/stores/auth/authSlice';
 import { hydrateCart, loadCartFromStorage } from '@/stores/cart/cartSlice';
 import { consultationChatApi } from '@/common/api/consultation-chat';
 import { CONSULTATION_SESSION_STORAGE_KEY } from '@/common/socket/consultation-chat';
+import { AnalyticsTracker } from './AnalyticsTracker';
 
 function AuthInitializer() {
   const dispatch = useAppDispatch();
@@ -63,6 +64,9 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
       <AuthInitializer />
       <CartInitializer />
       <ConsultationSessionLinker />
+      <Suspense fallback={null}>
+        <AnalyticsTracker />
+      </Suspense>
       <HeroUIProviderWrapper>
         <ThemeProvider>
           {children}

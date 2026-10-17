@@ -53,6 +53,7 @@ import { ProvinceCitySelect } from '@/components/common/ProvinceCitySelect';
 import { AnimatedFieldError } from '@/components/common/AnimatedFieldError';
 import { IUserAddress } from '@/common/interfaces';
 import { SmoothCheckbox } from '@/components/admin/SmoothCheckbox';
+import { trackEvent } from '@/common/analytics/tracker';
 
 export function CheckoutPage() {
   const router = useRouter();
@@ -427,6 +428,7 @@ export function CheckoutPage() {
       };
 
       const res = await axiosInstance.post('/orders', orderPayload);
+      trackEvent('purchase', { value: res.data?.total });
       setCompletedOrder(res.data);
       dispatch(clearCart());
       toast.success(isPersian ? 'سفارش شما با موفقیت ثبت گردید!' : 'Order placed successfully!');

@@ -68,6 +68,15 @@
     --brand-primary-light: #2c352c;
     --brand-accent: #9f815b;
     --brand-accent-hover: #7a5d3e;
+
+    /* Data-viz slots (validated: amber, blue, aqua, violet, red) */
+    --viz-1: #b07a10;
+    --viz-2: #2a78d6;
+    --viz-3: #1baf7a;
+    --viz-4: #6250d6;
+    --viz-5: #e34948;
+    --viz-grid: #ece5d9;
+    --viz-axis: #8a8073;
   }
 
   .dark {
@@ -91,6 +100,14 @@
     --brand-primary-light: #283228;
     --brand-accent: #bfa27a;
     --brand-accent-hover: #d4be9b;
+
+    --viz-1: #b88316;
+    --viz-2: #3987e5;
+    --viz-3: #199e70;
+    --viz-4: #9085e9;
+    --viz-5: #e66767;
+    --viz-grid: #2a352a;
+    --viz-axis: #8f8677;
   }
 
   /* Direction-aware typography system */
