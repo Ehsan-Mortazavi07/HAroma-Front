@@ -7,10 +7,11 @@ import { Button, Card, CardBody } from '@heroui/react';
 import { ShoppingBag, Trash2, ArrowLeft, ArrowRight, ShieldCheck, Zap, Minus, Plus } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import type { ICartItem } from '@/common/interfaces';
-import { getCartItemStock, refreshCartStock, updateQuantity, removeFromCart, clearCart } from '@/stores/cart/cartSlice';
+import { refreshCartStock, updateQuantity, removeFromCart, clearCart } from '@/stores/cart/cartSlice';
+import { getCartItemRules, maxReachedMessage, purchaseHint } from '@/stores/cart/purchaseLimits';
 import { PATHS } from '@/common/constants/PATHS';
 import { resolveMediaUrl } from '@/common/constants/URL';
-import { formatToman, toPersianDigits, getLocalizedVariantTitle } from '@/common/utils';
+import { formatToman, toPersianDigits, getLocalizedVariantTitle, toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 
 export function CartPage() {
@@ -89,8 +90,10 @@ export function CartPage() {
           <Card className="bg-brand-surface rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-brand-border/60 shadow-xs">
             <CardBody className="p-0 divide-y divide-brand-border/60">
               {validItems.map(({ product, quantity, selectedVariant, selectedAttributes }, idx) => {
-                const maxQuantity = getCartItemStock({ product, quantity, selectedVariant } as ICartItem);
-                const atMaxStock = (quantity || 1) >= maxQuantity;
+                const rules = getCartItemRules({ product, selectedVariant } as ICartItem);
+                const atMaxStock = (quantity || 1) >= rules.max;
+                const lineTitle = isPersian ? product.title : product.titleEn || product.title;
+                const lineHint = purchaseHint(rules, quantity || 1, isPersian);
                 const itemPrice = selectedVariant
                   ? (selectedVariant.discountPrice && selectedVariant.discountPrice > 0
                       ? selectedVariant.discountPrice
@@ -145,11 +148,9 @@ export function CartPage() {
                         <div className="text-xs font-black text-brand-text mt-1.5">
                           {formatToman(itemPrice, isPersian)}
                         </div>
-                        {atMaxStock && Number.isFinite(maxQuantity) && (
-                          <div className="mt-1 text-[10px] font-bold text-amber-700 dark:text-amber-400">
-                            {isPersian
-                              ? `حداکثر موجودی: ${toPersianDigits(maxQuantity)} عدد`
-                              : `Max available: ${maxQuantity}`}
+                        {lineHint && (
+                          <div className={`mt-1 text-[10px] font-bold ${atMaxStock ? 'text-amber-700 dark:text-amber-400' : 'text-brand-text-muted'}`}>
+                            {lineHint}
                           </div>
                         )}
                       </div>
@@ -163,15 +164,22 @@ export function CartPage() {
                           size="sm"
                           radius="full"
                           variant="light"
-                          onPress={() =>
+                          onPress={() => {
+                            if (rules.min > 1 && (quantity || 1) - 1 < rules.min) {
+                              toast.info(
+                                isPersian
+                                  ? `«${lineTitle}» از سبد خرید حذف شد (حداقل خرید ${toPersianDigits(rules.min)} عدد است).`
+                                  : `"${lineTitle}" was removed (minimum order is ${rules.min}).`,
+                              );
+                            }
                             dispatch(
                               updateQuantity({
                                 productId: product._id,
                                 variantId: selectedVariant?.id,
                                 quantity: (quantity || 1) - 1,
                               }),
-                            )
-                          }
+                            );
+                          }}
                           className="w-7 h-7 min-w-7 max-w-7 min-h-7 max-h-7 rounded-full text-brand-text-muted hover:text-brand-text hover:bg-brand-surface transition-colors p-0 cursor-pointer active:scale-90"
                           aria-label={isPersian ? 'کاهش تعداد' : 'Decrease quantity'}
                         >
@@ -188,17 +196,25 @@ export function CartPage() {
                           size="sm"
                           radius="full"
                           variant="light"
-                          isDisabled={atMaxStock}
-                          onPress={() =>
+                          onPress={() => {
+                            if (atMaxStock) {
+                              toast.error(maxReachedMessage(rules, lineTitle, isPersian));
+                              return;
+                            }
                             dispatch(
                               updateQuantity({
                                 productId: product._id,
                                 variantId: selectedVariant?.id,
                                 quantity: (quantity || 1) + 1,
                               }),
-                            )
-                          }
-                          className="w-7 h-7 min-w-7 max-w-7 min-h-7 max-h-7 rounded-full text-brand-text-muted hover:text-brand-gold hover:bg-brand-gold/15 transition-colors p-0 cursor-pointer active:scale-90"
+                            );
+                          }}
+                          className={`w-7 h-7 min-w-7 max-w-7 min-h-7 max-h-7 rounded-full transition-colors p-0 active:scale-90 ${
+                            atMaxStock
+                              ? 'cursor-not-allowed opacity-30 text-brand-text-muted'
+                              : 'cursor-pointer text-brand-text-muted hover:text-brand-gold hover:bg-brand-gold/15'
+                          }`}
+                          aria-disabled={atMaxStock}
                           aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
                         >
                           <Plus className="w-3.5 h-3.5 stroke-[2.5]" />

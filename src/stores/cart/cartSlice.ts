@@ -3,21 +3,9 @@ import { ICartItem, IProduct, IProductVariant } from '@/common/interfaces';
 import { CART_KEY, toast } from '@/common/utils';
 import axiosInstance from '@/common/axiosInstance';
 
-/** Units that can be bought: 0 when out of stock, Infinity when stock is not tracked. */
-export function getAvailableStock(product: IProduct, variant?: IProductVariant | null): number {
-  const source = variant || product;
-  if (!source || source.inStock === false) return 0;
-  const count = Number(source.stockCount);
-  return Number.isFinite(count) ? Math.max(0, Math.floor(count)) : Infinity;
-}
+import { getCartItemRules, getPurchaseRules } from './purchaseLimits';
 
-/** Stock for a cart line, preferring the product's current variant data over the stored snapshot. */
-export function getCartItemStock(item: ICartItem): number {
-  const variant = item.selectedVariant
-    ? item.product.variants?.find((candidate) => candidate.id === item.selectedVariant!.id) || item.selectedVariant
-    : undefined;
-  return getAvailableStock(item.product, variant);
-}
+export { getAvailableStock, getCartItemRules, getPurchaseRules } from './purchaseLimits';
 
 const sameLine = (item: ICartItem, productId: string, variantId?: string) =>
   item.product._id === productId && (variantId !== undefined ? item.selectedVariant?.id === variantId : true);
@@ -78,11 +66,13 @@ export const cartSlice = createSlice({
           ((!item.selectedVariant && !variantId) || item.selectedVariant?.id === variantId),
       );
       const freshVariant = variantId ? product.variants?.find((variant) => variant.id === variantId) || selectedVariant : undefined;
-      const stock = getAvailableStock(product, freshVariant);
-      const nextQuantity = Math.min((existing?.quantity || 0) + quantity, stock);
+      const rules = getPurchaseRules(product, freshVariant);
 
-      // Never let the cart hold more than the shop can ship.
-      if (nextQuantity <= 0) return;
+      // The cart never holds more than stock/maximum allow, nor fewer than the minimum order.
+      if (!rules.canBuy) return;
+      const wanted = existing ? existing.quantity + quantity : Math.max(quantity, rules.min);
+      const nextQuantity = Math.min(wanted, rules.max);
+      if (nextQuantity < rules.min) return;
       if (existing) {
         existing.quantity = nextQuantity;
         existing.product = product;
@@ -107,11 +97,12 @@ export const cartSlice = createSlice({
       const index = state.items.findIndex((item) => sameLine(item, productId, variantId));
 
       if (index !== -1) {
-        const clamped = Math.min(quantity, getCartItemStock(state.items[index]));
-        if (clamped <= 0) {
+        const rules = getCartItemRules(state.items[index]);
+        // Going below the minimum order removes the line instead of leaving an invalid quantity.
+        if (!rules.canBuy || quantity < rules.min) {
           state.items.splice(index, 1);
         } else {
-          state.items[index].quantity = clamped;
+          state.items[index].quantity = Math.min(quantity, rules.max);
         }
       }
       saveCartToStorage(state.items);
@@ -130,8 +121,8 @@ export const cartSlice = createSlice({
           : undefined;
         if (item.selectedVariant && !variant) return [];
         const next = { ...item, product, selectedVariant: variant || item.selectedVariant };
-        const stock = getCartItemStock(next);
-        return stock <= 0 ? [] : [{ ...next, quantity: Math.min(item.quantity, stock) }];
+        const rules = getCartItemRules(next);
+        return rules.canBuy ? [{ ...next, quantity: Math.min(Math.max(item.quantity, rules.min), rules.max) }] : [];
       });
       saveCartToStorage(state.items);
     },
@@ -212,6 +203,12 @@ async function refreshCartStockOnce(getState: () => unknown, dispatch: (action: 
     const updated = after.get(key);
     if (!updated) {
       toast.error(isPersian ? `«${title}» دیگر موجود نیست و از سبد خرید حذف شد.` : `"${title}" is no longer available and was removed from your bag.`);
+    } else if (updated.quantity > item.quantity) {
+      toast.info(
+        isPersian
+          ? `حداقل خرید «${title}» ${updated.quantity.toLocaleString('fa-IR')} عدد است؛ تعداد در سبد خرید اصلاح شد.`
+          : `"${title}" has a minimum order of ${updated.quantity}; your bag was updated.`,
+      );
     } else if (updated.quantity < item.quantity) {
       toast.info(
         isPersian

@@ -38,14 +38,15 @@ import {
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
 import { toggleCartDrawer } from '@/stores/ui/uiSlice';
 import type { ICartItem } from '@/common/interfaces';
-import { getCartItemStock, refreshCartStock, updateQuantity, removeFromCart } from '@/stores/cart/cartSlice';
+import { refreshCartStock, updateQuantity, removeFromCart } from '@/stores/cart/cartSlice';
+import { getCartItemRules, maxReachedMessage, purchaseHint } from '@/stores/cart/purchaseLimits';
 import { useLogoutConfirmation } from '@/stores/auth/useLogoutConfirmation';
 import { PATHS } from '@/common/constants/PATHS';
 import { resolveMediaUrl } from '@/common/constants/URL';
 import { ThemeToggle } from './ThemeToggle';
 import { BrandLogo } from './BrandLogo';
 import { VipBadge } from './VipBadge';
-import { formatToman, toPersianDigits, getLocalizedVariantTitle } from '@/common/utils';
+import { formatToman, toPersianDigits, getLocalizedVariantTitle, toast } from '@/common/utils';
 import { useTranslation } from '@/common/i18n';
 
 const SearchModal = dynamic(() =>
@@ -788,8 +789,10 @@ export function Navbar() {
                   {/* Left Column (Items List) */}
                   <div className="lg:col-span-7 xl:col-span-8 space-y-3 max-h-[50vh] overflow-y-auto pr-1">
                     {cartItems.map(({ product, quantity, selectedVariant, selectedAttributes }) => {
-                const maxQuantity = getCartItemStock({ product, quantity, selectedVariant } as ICartItem);
-                const atMaxStock = (quantity || 1) >= maxQuantity;
+                const rules = getCartItemRules({ product, selectedVariant } as ICartItem);
+                const atMaxStock = (quantity || 1) >= rules.max;
+                const lineTitle = isPersian ? product.title : product.titleEn || product.title;
+                const lineHint = purchaseHint(rules, quantity || 1, isPersian);
                       const itemPrice = selectedVariant
                         ? selectedVariant.discountPrice && selectedVariant.discountPrice > 0
                           ? selectedVariant.discountPrice
@@ -847,9 +850,9 @@ export function Navbar() {
                                     {formatToman(itemPrice, isPersian)}
                                   </span>
                                 </div>
-                                {atMaxStock && Number.isFinite(maxQuantity) && (
-                                  <div className="text-[10px] font-bold text-amber-400 mt-1">
-                                    {isPersian ? `حداکثر موجودی: ${toPersianDigits(maxQuantity)} عدد` : `Max available: ${maxQuantity}`}
+                                {lineHint && (
+                                  <div className={`text-[10px] font-bold mt-1 ${atMaxStock ? 'text-amber-400' : 'text-[#a69c8e]'}`}>
+                                    {lineHint}
                                   </div>
                                 )}
                               </div>
@@ -864,15 +867,22 @@ export function Navbar() {
                                   size="sm"
                                   radius="full"
                                   variant="light"
-                                  onPress={() =>
+                                  onPress={() => {
+                                    if (rules.min > 1 && quantity - 1 < rules.min) {
+                                      toast.info(
+                                        isPersian
+                                          ? `«${lineTitle}» از سبد خرید حذف شد (حداقل خرید ${toPersianDigits(rules.min)} عدد است).`
+                                          : `"${lineTitle}" was removed (minimum order is ${rules.min}).`,
+                                      );
+                                    }
                                     dispatch(
                                       updateQuantity({
                                         productId: product._id,
                                         variantId: selectedVariant?.id,
                                         quantity: quantity - 1,
                                       }),
-                                    )
-                                  }
+                                    );
+                                  }}
                                   className="w-6 h-6 min-w-6 max-w-6 min-h-6 max-h-6 rounded-full text-[#a69c8e] hover:text-[#f7f4ee] hover:bg-[#2e3a2e] transition-colors p-0"
                                   aria-label="کاهش تعداد"
                                 >
@@ -886,17 +896,25 @@ export function Navbar() {
                                   size="sm"
                                   radius="full"
                                   variant="light"
-                                  isDisabled={atMaxStock}
-                                  onPress={() =>
+                                  onPress={() => {
+                                    if (atMaxStock) {
+                                      toast.error(maxReachedMessage(rules, lineTitle, isPersian));
+                                      return;
+                                    }
                                     dispatch(
                                       updateQuantity({
                                         productId: product._id,
                                         variantId: selectedVariant?.id,
                                         quantity: quantity + 1,
                                       }),
-                                    )
-                                  }
-                                  className="w-6 h-6 min-w-6 max-w-6 min-h-6 max-h-6 rounded-full text-[#a69c8e] hover:text-[#bfa27a] hover:bg-[#bfa27a]/15 transition-colors p-0"
+                                    );
+                                  }}
+                                  className={`w-6 h-6 min-w-6 max-w-6 min-h-6 max-h-6 rounded-full transition-colors p-0 ${
+                                    atMaxStock
+                                      ? 'cursor-not-allowed opacity-30 text-[#a69c8e]'
+                                      : 'text-[#a69c8e] hover:text-[#bfa27a] hover:bg-[#bfa27a]/15'
+                                  }`}
+                                  aria-disabled={atMaxStock}
                                   aria-label="افزایش تعداد"
                                 >
                                   <Plus className="w-3 h-3 stroke-[2.5]" />

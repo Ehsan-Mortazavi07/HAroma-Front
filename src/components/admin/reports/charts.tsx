@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 
 /**
@@ -40,10 +40,13 @@ function niceMax(value: number): number {
   return nice * exponent;
 }
 
+/** Rounded so path strings never contain exponent notation, which breaks path morphing. */
+const f = (value: number) => Math.round(value * 100) / 100;
+
 /** Monotone cubic (Fritsch–Carlson) path: smooth, but never overshoots below zero or above peaks. */
 function smoothPath(points: [number, number][]): string {
   if (points.length === 0) return '';
-  if (points.length < 3) return points.map(([x, y], index) => `${index ? 'L' : 'M'}${x},${y}`).join(' ');
+  if (points.length < 3) return points.map(([x, y], index) => `${index ? 'L' : 'M'}${f(x)},${f(y)}`).join(' ');
   const n = points.length;
   const dx: number[] = [];
   const slope: number[] = [];
@@ -71,12 +74,12 @@ function smoothPath(points: [number, number][]): string {
       tangent[i + 1] = t * b * slope[i];
     }
   }
-  let d = `M${points[0][0]},${points[0][1]}`;
+  let d = `M${f(points[0][0])},${f(points[0][1])}`;
   for (let i = 0; i < n - 1; i++) {
     const [x0, y0] = points[i];
     const [x1, y1] = points[i + 1];
     const third = dx[i] / 3;
-    d += ` C${x0 + third},${y0 + tangent[i] * third} ${x1 - third},${y1 - tangent[i + 1] * third} ${x1},${y1}`;
+    d += ` C${f(x0 + third)},${f(y0 + tangent[i] * third)} ${f(x1 - third)},${f(y1 - tangent[i + 1] * third)} ${f(x1)},${f(y1)}`;
   }
   return d;
 }
@@ -123,11 +126,21 @@ export function TrendChart({
   const [hover, setHover] = useState<number | null>(null);
   const reduceMotion = useReducedMotion();
   const gradientId = useId().replace(/:/g, '');
-  // Re-run the entry animation whenever the plotted numbers change.
-  const signature = useMemo(
-    () => data.map((point) => series.map((item) => Number(point[item.key]) || 0).join(',')).join('|'),
-    [data, series],
-  );
+  // The entry animation plays once per chart structure. Later data changes (live refresh,
+  // range switch) morph the existing shapes instead of redrawing them from scratch.
+  const [introDone, setIntroDone] = useState(false);
+  const lastWidth = useRef(0);
+  const resizing = lastWidth.current !== 0 && lastWidth.current !== width;
+  useEffect(() => {
+    lastWidth.current = width;
+  });
+  useEffect(() => {
+    if (width <= 0) return;
+    const timer = window.setTimeout(() => setIntroDone(true), 1200);
+    return () => window.clearTimeout(timer);
+  }, [width > 0]);
+  const structureKey = `${kind}-${stacked ? 's' : 'g'}-${data.length}-${series.map((item) => item.key).join('.')}`;
+  const morph = { duration: reduceMotion || resizing ? 0 : 0.65, ease: EASE };
 
   const padding = { top: 16, right: 12, bottom: 30, left: 68 };
   const innerWidth = Math.max(10, width - padding.left - padding.right);
@@ -168,7 +181,6 @@ export function TrendChart({
   const barWidth = Math.max(3, Math.min(40, band * 0.6));
   const tooltipX = hover !== null ? x(hover) : 0;
   const tooltipOnLeft = tooltipX > width * 0.58;
-  const duration = reduceMotion ? 0 : 0.9;
 
   return (
     <div ref={containerRef} className="relative w-full select-none" dir="ltr">
@@ -222,7 +234,7 @@ export function TrendChart({
           )}
 
           {kind === 'bar' && !isEmpty && (
-            <g key={signature}>
+            <g key={structureKey}>
               {data.map((point, index) => {
                 let base = 0;
                 const stackTotal = values[index];
@@ -239,19 +251,18 @@ export function TrendChart({
                   const h = Math.max(1.5, bottom - top - gap);
                   const left = x(index) + offset - widthEach / 2;
                   const r = isTop ? Math.min(5, widthEach / 2, h) : 0;
-                  const path = `M${left},${top + h} V${top + r} Q${left},${top} ${left + r},${top} H${left + widthEach - r} Q${left + widthEach},${top} ${left + widthEach},${top + r} V${top + h} Z`;
+                  const shape = (barTop: number, barHeight: number, radius: number) =>
+                    `M${f(left)},${f(barTop + barHeight)} V${f(barTop + radius)} Q${f(left)},${f(barTop)} ${f(left + radius)},${f(barTop)} H${f(left + widthEach - radius)} Q${f(left + widthEach)},${f(barTop)} ${f(left + widthEach)},${f(barTop + radius)} V${f(barTop + barHeight)} Z`;
+                  const settled = shape(top, h, r);
+                  const flat = shape(top + h - 1, 1, Math.min(r, 0.5));
                   return (
                     <motion.path
                       key={`${index}-${item.key}`}
-                      d={path}
                       fill={item.color}
-                      style={{ transformBox: 'fill-box', transformOrigin: '50% 100%' }}
-                      initial={{ scaleY: 0, opacity: 0 }}
-                      animate={{ scaleY: 1, opacity: hover === null || hover === index ? 1 : 0.4 }}
-                      transition={{
-                        scaleY: { duration: duration * 0.8, ease: EASE, delay: reduceMotion ? 0 : Math.min(0.4, index * 0.025) },
-                        opacity: { duration: 0.2 },
-                      }}
+                      initial={reduceMotion ? false : { d: flat }}
+                      animate={{ d: settled }}
+                      transition={{ ...morph, delay: introDone || reduceMotion ? 0 : Math.min(0.4, index * 0.025) }}
+                      style={{ opacity: hover === null || hover === index ? 1 : 0.4, transition: 'opacity 150ms ease' }}
                     />
                   );
                 });
@@ -260,33 +271,34 @@ export function TrendChart({
           )}
 
           {kind !== 'bar' && !isEmpty && (
-            <g key={signature}>
+            <g key={structureKey}>
               {series.map((item, seriesIndex) => {
                 const points = data.map((point, index) => [x(index), y(Number(point[item.key]) || 0)] as [number, number]);
                 if (!points.length) return null;
+                const flatPoints = points.map(([px]) => [px, y(0)] as [number, number]);
+                const closeArea = (path: string, list: [number, number][]) =>
+                  `${path} L${f(list[list.length - 1][0])},${f(y(0))} L${f(list[0][0])},${f(y(0))} Z`;
                 const line = smoothPath(points);
-                const area = `${line} L${points[points.length - 1][0]},${y(0)} L${points[0][0]},${y(0)} Z`;
+                const flatLine = smoothPath(flatPoints);
                 return (
                   <g key={item.key}>
                     {kind === 'area' && (
                       <motion.path
-                        d={area}
                         fill={`url(#${gradientId}-${seriesIndex})`}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration, delay: duration * 0.35, ease: EASE }}
+                        initial={reduceMotion ? false : { d: closeArea(flatLine, flatPoints), opacity: 0 }}
+                        animate={{ d: closeArea(line, points), opacity: 1 }}
+                        transition={{ d: { ...morph, delay: introDone ? 0 : seriesIndex * 0.06 }, opacity: { duration: 0.6 } }}
                       />
                     )}
                     <motion.path
-                      d={line}
                       fill="none"
                       stroke={item.color}
                       strokeWidth={2.25}
                       strokeLinejoin="round"
                       strokeLinecap="round"
-                      initial={{ pathLength: 0, opacity: 0 }}
-                      animate={{ pathLength: 1, opacity: 1 }}
-                      transition={{ duration: duration * 1.2, ease: EASE, delay: seriesIndex * 0.08 }}
+                      initial={reduceMotion ? false : { d: flatLine }}
+                      animate={{ d: line }}
+                      transition={{ ...morph, delay: introDone || reduceMotion ? 0 : seriesIndex * 0.06 }}
                     />
                     {count <= 1 && <circle cx={points[0][0]} cy={points[0][1]} r={4} fill={item.color} />}
                   </g>
@@ -332,32 +344,26 @@ export function TrendChart({
         </div>
       )}
 
-      <AnimatePresence>
-        {hover !== null && data[hover] && (
-          <motion.div
-            key="tooltip"
-            dir="auto"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0, ...(tooltipOnLeft ? { right: width - tooltipX + 14, left: 'auto' } : { left: tooltipX + 14, right: 'auto' }) }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="pointer-events-none absolute top-1 z-10 min-w-[170px] rounded-2xl border border-brand-border bg-brand-surface/95 px-3 py-2.5 text-[11px] shadow-xl backdrop-blur"
-          >
-            <div className="mb-1.5 font-black text-brand-text">{xLabels[hover]}</div>
-            <div className="space-y-1">
-              {series.map((item) => (
-                <div key={item.key} className="flex items-center justify-between gap-4">
-                  <span className="inline-flex items-center gap-1.5 font-semibold text-brand-text-muted">
-                    <span className="h-2 w-2 rounded-[2px]" style={{ background: item.color }} />
-                    {item.name}
-                  </span>
-                  <span className="font-black text-brand-text">{format(Number(data[hover][item.key]) || 0)}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {hover !== null && data[hover] && (
+        <div
+          dir="auto"
+          style={tooltipOnLeft ? { right: width - tooltipX + 14 } : { left: tooltipX + 14 }}
+          className="pointer-events-none absolute top-1 z-10 min-w-[170px] rounded-2xl border border-brand-border bg-brand-surface/95 px-3 py-2.5 text-[11px] shadow-xl backdrop-blur"
+        >
+          <div className="mb-1.5 font-black text-brand-text">{xLabels[hover]}</div>
+          <div className="space-y-1">
+            {series.map((item) => (
+              <div key={item.key} className="flex items-center justify-between gap-4">
+                <span className="inline-flex items-center gap-1.5 font-semibold text-brand-text-muted">
+                  <span className="h-2 w-2 rounded-[2px]" style={{ background: item.color }} />
+                  {item.name}
+                </span>
+                <span className="font-black text-brand-text">{format(Number(data[hover][item.key]) || 0)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

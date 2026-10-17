@@ -221,6 +221,8 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
     price: initialProduct?.price || 0,
     discountPrice: initialProduct?.discountPrice || '',
     stockCount: initialProduct?.stockCount !== undefined ? initialProduct.stockCount : 10,
+    minPurchaseQuantity: initialProduct?.minPurchaseQuantity ?? 1,
+    maxPurchaseQuantity: initialProduct?.maxPurchaseQuantity ?? '',
     description: initialProduct?.description || '',
     descriptionEn: initialProduct?.descriptionEn || '',
     shortDescription: initialProduct?.shortDescription || '',
@@ -239,6 +241,9 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
         price: Number(values.price),
         discountPrice: values.discountPrice ? Number(values.discountPrice) : undefined,
         stockCount: Number(values.stockCount),
+        minPurchaseQuantity: Math.max(1, Math.floor(Number(values.minPurchaseQuantity) || 1)),
+        // Empty means "no cap"; null clears a cap that was set earlier.
+        maxPurchaseQuantity: values.maxPurchaseQuantity === '' || values.maxPurchaseQuantity === null ? null : Number(values.maxPurchaseQuantity),
         brand: selectedBrands.length > 0 ? selectedBrands[0] : null,
         brands: selectedBrands,
         categories: selectedCategories,
@@ -443,6 +448,45 @@ export function ProductForm({ initialProduct, isEditing = false }: ProductFormPr
                     type="number"
                     value={String(values.stockCount)}
                     onValueChange={(val) => setFieldValue('stockCount', val)}
+                    variant="bordered"
+                    radius="full"
+                    classNames={{
+                      inputWrapper: 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                      input: 'text-sm font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                    }}
+                  />
+
+                  <Input
+                    label={isPersian ? 'حداقل تعداد خرید (در هر سفارش)' : 'Minimum order quantity'}
+                    labelPlacement="outside-top"
+                    type="number"
+                    min={1}
+                    value={String(values.minPurchaseQuantity)}
+                    onValueChange={(val) => setFieldValue('minPurchaseQuantity', val)}
+                    isInvalid={Boolean(errors.minPurchaseQuantity && touched.minPurchaseQuantity)}
+                    errorMessage={errors.minPurchaseQuantity && touched.minPurchaseQuantity ? String(errors.minPurchaseQuantity) : undefined}
+                    description={isPersian ? 'مثلاً ۲ یعنی این محصول را باید دست‌کم ۲ عدد خرید.' : 'e.g. 2 means customers must buy at least 2.'}
+                    variant="bordered"
+                    radius="full"
+                    classNames={{
+                      inputWrapper: 'h-12 px-4 bg-[#f8f5f0] dark:bg-[#242c24] border border-[#e6dcce] dark:border-[#2e3a2e] hover:border-brand-gold rounded-full shadow-xs',
+                      input: 'text-sm font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                      label: 'text-xs font-bold text-[#1d241d] dark:text-[#f7f4ee]',
+                    }}
+                  />
+
+                  <Input
+                    label={isPersian ? 'حداکثر تعداد خرید (در هر سفارش)' : 'Maximum order quantity'}
+                    labelPlacement="outside-top"
+                    type="number"
+                    min={1}
+                    value={String(values.maxPurchaseQuantity ?? '')}
+                    onValueChange={(val) => setFieldValue('maxPurchaseQuantity', val)}
+                    isInvalid={Boolean(errors.maxPurchaseQuantity && touched.maxPurchaseQuantity)}
+                    errorMessage={errors.maxPurchaseQuantity && touched.maxPurchaseQuantity ? String(errors.maxPurchaseQuantity) : undefined}
+                    placeholder={isPersian ? 'خالی = بدون محدودیت (فقط موجودی)' : 'Empty = no limit (stock only)'}
+                    description={isPersian ? 'مثلاً ۲ یعنی هر سفارش حداکثر ۲ عدد از این محصول.' : 'e.g. 2 means at most 2 per order.'}
                     variant="bordered"
                     radius="full"
                     classNames={{

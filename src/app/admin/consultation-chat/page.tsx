@@ -33,7 +33,8 @@ type ConversationFilter = 'pending' | 'open' | 'closed' | 'all';
 type ConversationGroup = {
   key: string;
   name: string;
-  contact: string;
+  /** User details shown on the user row (phone, email, username, city); empty for the guest bucket. */
+  contactParts: string[];
   kind: 'user' | 'guest';
   conversations: IConsultationConversation[];
 };
@@ -361,9 +362,14 @@ export default function AdminConsultationChatPage() {
       .map(([key, items]) => ({
         key,
         name: items[0].userId ? items[0].guestName || 'کاربر سایت' : 'گفت‌وگوهای مهمان',
-        contact: items[0].userId
-          ? items[0].guestPhone || items[0].guestEmail || (items[0].guestUsername ? `@${items[0].guestUsername}` : '')
-          : 'همهٔ درخواست‌های ثبت‌شده بدون حساب کاربری',
+        contactParts: items[0].userId
+          ? [
+              items[0].guestPhone,
+              items[0].guestEmail,
+              items[0].guestUsername ? `@${items[0].guestUsername}` : '',
+              [items[0].guestCity, items[0].guestProvince].filter(Boolean).join('، '),
+            ].filter((part): part is string => Boolean(part))
+          : [],
         kind: items[0].userId ? 'user' as const : 'guest' as const,
         conversations: [...items].sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()),
       }))
@@ -663,7 +669,7 @@ export default function AdminConsultationChatPage() {
                             aria-pressed={selected}
                             className={`flex min-h-16 w-full items-center gap-3 px-4 py-3 text-right transition-colors hover:bg-brand-surface-elevated ${selected ? 'bg-brand-surface-elevated' : ''}`}
                           >
-                            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${selected ? 'bg-brand-gold text-brand-olive' : 'bg-brand-olive text-brand-gold'}`}>
+                            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${selected ? 'bg-brand-gold text-brand-olive' : 'border border-brand-gold/25 bg-brand-gold/15 text-brand-bronze dark:text-brand-gold'}`}>
                               <UserRound className="h-4 w-4" />
                             </span>
                             <span className="min-w-0 flex-1">
@@ -832,18 +838,30 @@ export default function AdminConsultationChatPage() {
                           }}
                           className="gap-0"
                         />
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-olive text-brand-gold">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-brand-gold/25 bg-brand-gold/15 text-brand-bronze dark:text-brand-gold">
                           <UserRound className="h-4 w-4" />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <h3 className="truncate text-xs font-extrabold text-brand-text">{group.name}</h3>
-                          <p className="mt-0.5 truncate text-[10px] text-brand-text-muted" dir={group.kind === 'guest' ? 'rtl' : 'ltr'}>
-                            {group.kind === 'guest' ? group.contact : group.contact || 'کاربر عضو سایت'}
-                          </p>
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className="min-w-0 truncate text-xs font-extrabold text-brand-text">{group.name}</h3>
+                            <span className="shrink-0 rounded-full bg-brand-surface px-2 py-0.5 text-[10px] font-bold text-brand-bronze dark:text-brand-gold">
+                              {toPersianDigits(group.conversations.length)} گفتگو
+                            </span>
+                          </div>
+                          {group.kind === 'guest' ? (
+                            <p className="mt-0.5 truncate text-[10px] text-brand-text-muted">همهٔ درخواست‌های ثبت‌شده بدون حساب کاربری</p>
+                          ) : (
+                            <p className="mt-1 flex flex-wrap gap-x-2.5 gap-y-0.5 text-[10px] text-brand-text-muted">
+                              {group.contactParts.length === 0 ? (
+                                <span>کاربر عضو سایت</span>
+                              ) : (
+                                group.contactParts.map((part) => (
+                                  <span key={part} dir={/^[\x20-\x7E]+$/.test(part) ? 'ltr' : 'rtl'} className="break-words">{part}</span>
+                                ))
+                              )}
+                            </p>
+                          )}
                         </div>
-                        <span className="shrink-0 rounded-full bg-brand-surface px-2 py-1 text-[10px] font-bold text-brand-gold">
-                          {toPersianDigits(group.conversations.length)} گفتگو
-                        </span>
                       </div>
                       <div className="divide-y divide-brand-border/50">
                         {group.conversations.map((item) => {
@@ -887,16 +905,23 @@ export default function AdminConsultationChatPage() {
                                   <span className="truncate text-[11px] font-bold text-brand-gold">موضوع: {item.subject || 'مشاوره'}</span>
                                   <time className="shrink-0 text-[10px] text-brand-text-muted" dateTime={item.lastMessageAt}>آخرین فعالیت {shortTime(item.lastMessageAt)}</time>
                                 </span>
-                                <span className="mt-1 flex min-w-0 items-center justify-between gap-2">
-                                  <span className="truncate text-[10px] text-brand-text-muted" dir="ltr">
-                                    {[item.guestPhone, item.guestEmail, item.guestUsername ? `@${item.guestUsername}` : ''].filter(Boolean).join(' · ') || (item.userId ? 'عضو سایت' : 'اطلاعات تماس ثبت نشده')}
+                                {/* Registered users' details live on their user row; guests have no row of their own. */}
+                                {(!item.userId || !!item.unreadForAdmin) && (
+                                  <span className="mt-1 flex min-w-0 items-center justify-between gap-2">
+                                    {!item.userId ? (
+                                      <span className="truncate text-[10px] text-brand-text-muted" dir="ltr">
+                                        {[item.guestPhone, item.guestEmail, item.guestUsername ? `@${item.guestUsername}` : ''].filter(Boolean).join(' · ') || 'اطلاعات تماس ثبت نشده'}
+                                      </span>
+                                    ) : (
+                                      <span />
+                                    )}
+                                    {!!item.unreadForAdmin && (
+                                      <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand-gold px-1.5 text-[10px] font-black text-brand-olive">
+                                        {toPersianDigits(item.unreadForAdmin)}
+                                      </span>
+                                    )}
                                   </span>
-                                  {!!item.unreadForAdmin && (
-                                    <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand-gold px-1.5 text-[10px] font-black text-brand-olive">
-                                      {toPersianDigits(item.unreadForAdmin)}
-                                    </span>
-                                  )}
-                                </span>
+                                )}
                                 {item.lastMessageText && (
                                   <span className="mt-1 block truncate text-[10px] text-brand-text-muted">{item.lastMessageText}</span>
                                 )}
@@ -932,8 +957,8 @@ export default function AdminConsultationChatPage() {
                     >
                       <ArrowRight className="h-5 w-5" />
                     </Button>
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-olive font-extrabold text-brand-gold">
-                      {(selectedConversation.guestName || 'م').slice(0, 1)}
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-brand-gold/30 bg-brand-gold/15 text-brand-bronze dark:text-brand-gold">
+                      <UserRound className="h-5 w-5" />
                     </span>
                     <div className="min-w-0">
                       <h2 className="truncate text-sm font-extrabold text-brand-text">{selectedConversation.guestName || 'مشتری مهمان'}</h2>
@@ -945,6 +970,8 @@ export default function AdminConsultationChatPage() {
                             ? `گفت‌وگوی باز · شروع ${shortTime(selectedConversation.createdAt)}`
                             : `پایان ${selectedConversation.closedAt ? shortTime(selectedConversation.closedAt) : ''}${selectedConversation.closedByAdminName ? ` توسط ${selectedConversation.closedByAdminName}` : ''}`}
                       </p>
+                      {/* Registered users' details are on their row in the list; only guests need them here. */}
+                      {!selectedConversation.userId && (
                       <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-brand-text-muted">
                         {selectedConversation.guestPhone && <span dir="ltr">{selectedConversation.guestPhone}</span>}
                         {selectedConversation.guestEmail && <span dir="ltr">{selectedConversation.guestEmail}</span>}
@@ -953,6 +980,7 @@ export default function AdminConsultationChatPage() {
                           <span>{[selectedConversation.guestCity, selectedConversation.guestProvince].filter(Boolean).join('، ')}</span>
                         )}
                       </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-wrap items-center gap-2">

@@ -131,6 +131,25 @@ export const getProductFormSchema = (isPersian = true) =>
     stockCount: Yup.number()
       .min(0, isPersian ? 'موجودی نمی‌تواند منفی باشد.' : 'Stock cannot be negative.')
       .default(10),
+    minPurchaseQuantity: Yup.number()
+      .typeError(isPersian ? 'یک عدد معتبر وارد کنید.' : 'Enter a valid number.')
+      .integer(isPersian ? 'حداقل خرید باید عدد صحیح باشد.' : 'Minimum must be a whole number.')
+      .min(1, isPersian ? 'حداقل خرید باید دست‌کم ۱ باشد.' : 'Minimum must be at least 1.')
+      .default(1),
+    maxPurchaseQuantity: Yup.mixed()
+      .transform((value) => (value === '' || value === null || value === undefined ? null : Number(value)))
+      .test('valid', isPersian ? 'حداکثر خرید باید عدد صحیح و دست‌کم ۱ باشد (یا خالی بماند).' : 'Maximum must be a whole number of at least 1, or empty.', (value) =>
+        value === null || (typeof value === 'number' && Number.isInteger(value) && value >= 1),
+      )
+      .test(
+        'not-below-min',
+        isPersian ? 'حداکثر خرید نمی‌تواند از حداقل خرید کمتر باشد.' : 'Maximum cannot be lower than the minimum.',
+        function (value) {
+          const min = Number(this.parent.minPurchaseQuantity) || 1;
+          return value === null || value === undefined || (value as number) >= min;
+        },
+      )
+      .nullable(),
     description: Yup.string().required(
       isPersian ? 'این فیلد ضروری است (توضیحات کامل محصول).' : 'Product description is required.',
     ),

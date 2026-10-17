@@ -195,6 +195,10 @@ export interface IProduct {
   variants?: IProductVariant[];
   stockCount: number;
   inStock: boolean;
+  /** Smallest quantity a customer may order (default 1). */
+  minPurchaseQuantity?: number;
+  /** Largest quantity per order; null/undefined = limited by stock only. */
+  maxPurchaseQuantity?: number | null;
   isVipOnly: boolean;
   rating: number;
   reviewCount: number;

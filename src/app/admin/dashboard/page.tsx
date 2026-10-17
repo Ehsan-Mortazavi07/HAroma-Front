@@ -168,7 +168,7 @@ function DashboardContent() {
                   onClick={() => setTab(item.key)}
                   aria-current={active ? 'page' : undefined}
                   className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-xs font-black transition-colors ${
-                    active ? 'bg-brand-text text-brand-bg' : 'text-brand-text-muted hover:bg-brand-surface-elevated hover:text-brand-text'
+                    active ? 'bg-brand-gold text-[#141914] shadow-md shadow-brand-gold/25' : 'text-brand-text-muted hover:bg-brand-surface-elevated hover:text-brand-text'
                   }`}
                 >
                   <Icon className="h-4 w-4" />

@@ -6,7 +6,8 @@ import { Plus, Minus } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { shallowEqual } from 'react-redux';
 import { useAppDispatch, useAppSelector } from '@/stores/hooks';
-import { addToCart, getAvailableStock, getCartItemStock, updateQuantity } from '@/stores/cart/cartSlice';
+import { addToCart, updateQuantity } from '@/stores/cart/cartSlice';
+import { cannotBuyMessage, getCartItemRules, getPurchaseRules, maxReachedMessage } from '@/stores/cart/purchaseLimits';
 import { IProduct } from '@/common/interfaces';
 import { toPersianDigits, toast } from '@/common/utils';
 
@@ -34,17 +35,18 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
         product.variants.find((v) => v.inStock !== false && v.stockCount > 0) ||
         product.variants[0]
       : undefined;
-  const maxStock = primaryItem ? getCartItemStock(primaryItem) : getAvailableStock(product, defaultVariant);
+  const rules = primaryItem ? getCartItemRules(primaryItem) : getPurchaseRules(product, defaultVariant);
   const lineQuantity = primaryItem?.quantity || 0;
-  const atMaxStock = lineQuantity >= maxStock;
-  const isOutOfStock = quantity === 0 && maxStock <= 0;
+  const atMaxStock = lineQuantity >= rules.max;
+  const cannotAdd = quantity === 0 && !rules.canBuy;
+  const title = isPersian ? product.title : product.titleEn || product.title;
 
   const handleIncrement = (e?: React.MouseEvent | any) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
     if (quantity === 0) {
-      if (isOutOfStock) {
-        toast.error(isPersian ? 'این محصول در حال حاضر موجود نیست.' : 'This item is out of stock.');
+      if (cannotAdd) {
+        toast.error(cannotBuyMessage(rules, title, isPersian));
         return;
       }
       dispatch(
@@ -56,26 +58,24 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
         }),
       );
       toast.success(
-        isPersian
-          ? `«${product.title}» به سبد خرید اضافه شد.`
-          : `"${product.titleEn || product.title}" added to your bag.`,
+        rules.min > 1
+          ? isPersian
+            ? `«${product.title}» با حداقل خرید ${toPersianDigits(rules.min)} عدد به سبد خرید اضافه شد.`
+            : `"${title}" added to your bag (minimum order is ${rules.min}).`
+          : isPersian
+            ? `«${product.title}» به سبد خرید اضافه شد.`
+            : `"${title}" added to your bag.`,
       );
+    } else if (atMaxStock) {
+      toast.error(maxReachedMessage(rules, title, isPersian));
     } else {
-      if (!atMaxStock) {
-        dispatch(
-          updateQuantity({
-            productId: product._id,
-            variantId: primaryItem?.selectedVariant?.id,
-            quantity: lineQuantity + 1,
-          }),
-        );
-      } else {
-        toast.error(
-          isPersian
-            ? `فقط ${toPersianDigits(maxStock)} عدد از این محصول موجود است.`
-            : `Only ${maxStock} of this item available.`,
-        );
-      }
+      dispatch(
+        updateQuantity({
+          productId: product._id,
+          variantId: primaryItem?.selectedVariant?.id,
+          quantity: lineQuantity + 1,
+        }),
+      );
     }
   };
 
@@ -83,6 +83,13 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
     e?.preventDefault?.();
     e?.stopPropagation?.();
     if (quantity > 0 && primaryItem) {
+      if (rules.min > 1 && primaryItem.quantity - 1 < rules.min) {
+        toast.info(
+          isPersian
+            ? `«${product.title}» از سبد خرید حذف شد (حداقل خرید ${toPersianDigits(rules.min)} عدد است).`
+            : `"${title}" was removed (minimum order is ${rules.min}).`,
+        );
+      }
       dispatch(
         updateQuantity({
           productId: product._id,
@@ -111,15 +118,15 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
                 e.preventDefault();
                 e.stopPropagation();
               }}
-              isDisabled={isOutOfStock}
+              isDisabled={cannotAdd && rules.stock <= 0}
               radius="full"
               aria-label={isPersian ? `افزودن ${product.title} به سبد خرید` : `Add ${product.title} to bag`}
               className={`w-full flex items-center justify-center gap-1.5 font-black transition-all duration-300 ease-out bg-brand-gold hover:bg-[#d4be9b] text-[#141914] shadow-xs hover:shadow-md min-h-[40px] rounded-full touch-manipulation active:scale-95 border border-brand-gold/40 ${
                 size === 'sm' ? 'py-1.5 px-3 text-xs' : size === 'lg' ? 'py-3 px-5 text-base' : 'py-2 px-4 text-xs'
               }`}
             >
-              {!isOutOfStock && <Plus className="w-3.5 h-3.5 stroke-[2.5]" />}
-              <span>{isOutOfStock ? (isPersian ? 'ناموجود' : 'Out of stock') : isPersian ? 'افزودن به سبد' : 'Add to Bag'}</span>
+              {!(cannotAdd && rules.stock <= 0) && <Plus className="w-3.5 h-3.5 stroke-[2.5]" />}
+              <span>{cannotAdd && rules.stock <= 0 ? (isPersian ? 'ناموجود' : 'Out of stock') : isPersian ? 'افزودن به سبد' : 'Add to Bag'}</span>
             </Button>
           </motion.div>
         ) : (
@@ -166,9 +173,11 @@ export function QuantityCounter({ product, size = 'md' }: QuantityCounterProps) 
                   e.preventDefault();
                   e.stopPropagation();
                 }}
-                isDisabled={atMaxStock}
+                aria-disabled={atMaxStock}
                 aria-label={isPersian ? 'افزایش تعداد' : 'Increase quantity'}
-                className="min-w-[32px] min-h-[32px] w-8 h-8 flex items-center justify-center rounded-full bg-brand-gold hover:bg-[#d4be9b] text-[#141914] font-black shadow-xs transition-all duration-200 ease-out active:scale-90 touch-manipulation"
+                className={`min-w-[32px] min-h-[32px] w-8 h-8 flex items-center justify-center rounded-full text-[#141914] font-black shadow-xs transition-all duration-200 ease-out active:scale-90 touch-manipulation ${
+                  atMaxStock ? 'cursor-not-allowed bg-brand-gold/30 opacity-60' : 'bg-brand-gold hover:bg-[#d4be9b]'
+                }`}
               >
                 <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
               </Button>
